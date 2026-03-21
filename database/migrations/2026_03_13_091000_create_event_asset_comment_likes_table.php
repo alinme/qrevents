@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('event_guest_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['event_asset_comment_id', 'event_guest_id']);
+            $table->unique(['event_asset_comment_id', 'event_guest_id'], 'eacl_comment_guest_unique');
         });
     }
 
