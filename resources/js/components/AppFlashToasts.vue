@@ -2,6 +2,10 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import {
+    parseVisitPath,
+    shouldShowDefaultSuccessToast,
+} from '@/lib/flash-toasts';
 
 type SharedFlash = {
     success?: string | null;
@@ -45,14 +49,16 @@ let removeSuccessListener: (() => void) | null = null;
 let removeErrorListener: (() => void) | null = null;
 let removeStartListener: (() => void) | null = null;
 let lastVisitMethod = 'get';
+let lastVisitPath = '/';
 
 onMounted(() => {
     removeStartListener = router.on('start', (event) => {
         lastVisitMethod = String(event.detail.visit.method).toLowerCase();
+        lastVisitPath = parseVisitPath(event.detail.visit.url, window.location.origin);
     });
 
     removeSuccessListener = router.on('success', (event) => {
-        if (lastVisitMethod === 'get') {
+        if (!shouldShowDefaultSuccessToast(lastVisitMethod, lastVisitPath)) {
             return;
         }
 

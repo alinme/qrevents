@@ -8,13 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
-use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
 class SocialAuthController extends Controller
 {
-    public function redirect(): RedirectResponse|SymfonyRedirectResponse
+    public function redirect(Request $request): RedirectResponse|SymfonyResponse
     {
         if (! $this->googleIsConfigured()) {
             return to_route('login')->with('social_auth_error', 'Google sign-in is not configured yet.');
@@ -24,9 +25,15 @@ class SocialAuthController extends Controller
             return to_route('dashboard');
         }
 
-        return Socialite::driver('google')
+        $redirectResponse = Socialite::driver('google')
             ->scopes(['openid', 'profile', 'email'])
             ->redirect();
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($redirectResponse);
+        }
+
+        return $redirectResponse;
     }
 
     public function callback(Request $request): RedirectResponse

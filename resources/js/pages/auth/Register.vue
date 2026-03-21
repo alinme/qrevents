@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, Link } from '@inertiajs/vue3';
+import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -38,7 +38,7 @@ defineProps<{
                 variant="outline"
                 class="h-11 w-full rounded-full border-zinc-300 bg-white text-promo-ink hover:bg-zinc-50"
             >
-                <Link :href="googleAuthUrl!"> Continue with Google </Link>
+                <a :href="googleAuthUrl!"> Continue with Google </a>
             </Button>
 
             <div

@@ -5,6 +5,7 @@ use App\Models\Plan;
 use App\Models\User;
 use App\Support\StripeCheckoutGateway;
 use Inertia\Testing\AssertableInertia as Assert;
+use Stripe\WebhookSignature;
 
 test('event owners can see online checkout when stripe billing is configured', function () {
     config(['services.stripe.secret' => 'sk_test_123']);
@@ -192,4 +193,54 @@ test('stripe webhook retries keep the original payment timestamp', function () {
     expect($event->paid_at?->toIso8601String())->toBe($firstPaidAt?->toIso8601String())
         ->and($event->stripe_checkout_session_id)->toBe('cs_test_456')
         ->and($event->stripe_payment_intent_id)->toBe('pi_test_456');
+});
+
+test('stripe webhook parser preserves checkout session metadata', function () {
+    config(['services.stripe.webhook_secret' => 'whsec_test_123']);
+
+    $payload = json_encode([
+        'id' => 'evt_test',
+        'object' => 'event',
+        'type' => 'checkout.session.completed',
+        'data' => [
+            'object' => [
+                'id' => 'cs_test_789',
+                'object' => 'checkout.session',
+                'payment_status' => 'paid',
+                'payment_intent' => 'pi_test_789',
+                'amount_total' => 2000,
+                'currency' => 'eur',
+                'metadata' => [
+                    'plan_id' => '1',
+                    'event_id' => '1',
+                    'owner_id' => '1',
+                ],
+            ],
+        ],
+    ], JSON_THROW_ON_ERROR);
+
+    $timestamp = time();
+    $signature = WebhookSignature::computeSignature(
+        $timestamp.'.'.$payload,
+        'whsec_test_123',
+    );
+
+    $parsed = app(StripeCheckoutGateway::class)->parseWebhookEvent(
+        $payload,
+        "t={$timestamp},v1={$signature}",
+    );
+
+    expect($parsed)->toMatchArray([
+        'type' => 'checkout.session.completed',
+        'sessionId' => 'cs_test_789',
+        'paymentStatus' => 'paid',
+        'paymentIntentId' => 'pi_test_789',
+        'amountTotal' => 2000,
+        'currency' => 'eur',
+        'metadata' => [
+            'plan_id' => '1',
+            'event_id' => '1',
+            'owner_id' => '1',
+        ],
+    ]);
 });

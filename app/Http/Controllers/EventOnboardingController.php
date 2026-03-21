@@ -44,6 +44,7 @@ class EventOnboardingController extends Controller
         $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
         $eventDate = $this->resolvePrimaryEventDate($validated['event_date'] ?? null, $eventDates, $subEvents);
         $windows = $this->buildEventWindows($eventDate, $timezone);
+        $branding = $this->initialBranding($validated);
 
         $event = $request->user()->events()->create([
             'plan_id' => $plan->id,
@@ -58,6 +59,7 @@ class EventOnboardingController extends Controller
             'status' => $windows['status'],
             'onboarding_step' => 'creating',
             'currency' => $plan->currency,
+            'branding' => $branding !== [] ? $branding : null,
             'payment_due_at' => $windows['grace_ends_at'],
             'upload_window_starts_at' => $windows['upload_window_starts_at'],
             'upload_window_ends_at' => $windows['upload_window_ends_at'],
@@ -129,6 +131,33 @@ class EventOnboardingController extends Controller
             'eventName' => $event->name,
             'dashboardUrl' => route('dashboard'),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function initialBranding(array $validated): array
+    {
+        if (($validated['type'] ?? null) !== 'wedding') {
+            return [];
+        }
+
+        $partnerOneFirstName = trim((string) ($validated['wedding_partner_one_first_name'] ?? ''));
+        $partnerTwoFirstName = trim((string) ($validated['wedding_partner_two_first_name'] ?? ''));
+        $familyName = trim((string) ($validated['wedding_family_name'] ?? ''));
+
+        if ($partnerOneFirstName === '' || $partnerTwoFirstName === '' || $familyName === '') {
+            return [];
+        }
+
+        return [
+            'event_naming' => [
+                'partner_one_first_name' => $partnerOneFirstName,
+                'partner_two_first_name' => $partnerTwoFirstName,
+                'family_name' => $familyName,
+            ],
+        ];
     }
 
     private function assertOwnership(Request $request, Event $event): void

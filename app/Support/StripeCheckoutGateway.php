@@ -6,6 +6,7 @@ use RuntimeException;
 use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
+use Stripe\StripeObject;
 use Stripe\Webhook;
 use UnexpectedValueException;
 
@@ -58,7 +59,7 @@ class StripeCheckoutGateway
             'paymentIntentId' => is_string($paymentIntentId) ? $paymentIntentId : null,
             'amountTotal' => (int) ($session->amount_total ?? 0),
             'currency' => is_string($session->currency) ? $session->currency : null,
-            'metadata' => is_array($session->metadata) ? $session->metadata : [],
+            'metadata' => $this->normalizeMetadata($session->metadata ?? []),
         ];
     }
 
@@ -92,5 +93,37 @@ class StripeCheckoutGateway
         }
 
         return $webhookSecret;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function normalizeMetadata(mixed $metadata): array
+    {
+        if ($metadata instanceof StripeObject) {
+            $metadata = $metadata->toArray();
+        } elseif ($metadata instanceof \Traversable) {
+            $metadata = iterator_to_array($metadata);
+        } elseif (is_object($metadata)) {
+            $metadata = get_object_vars($metadata);
+        }
+
+        if (! is_array($metadata)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($metadata as $key => $value) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $normalized[$key] = (string) $value;
+            }
+        }
+
+        return $normalized;
     }
 }

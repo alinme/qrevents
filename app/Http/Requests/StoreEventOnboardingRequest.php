@@ -32,6 +32,9 @@ class StoreEventOnboardingRequest extends FormRequest
                 'other',
             ])],
             'name' => ['required', 'string', 'min:3', 'max:120'],
+            'wedding_partner_one_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
+            'wedding_partner_two_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
+            'wedding_family_name' => ['nullable', 'string', 'max:80', 'required_if:type,wedding'],
             'venue_address' => ['required', 'string', 'min:6', 'max:500'],
             'attendee_estimate' => ['required', 'integer', 'min:1', 'max:100000'],
             'event_date' => [
@@ -70,6 +73,9 @@ class StoreEventOnboardingRequest extends FormRequest
         $months = (int) config('events.event_date_max_months', 18);
 
         return [
+            'wedding_partner_one_first_name.required_if' => 'Add the first partner name so we can suggest a polished wedding title.',
+            'wedding_partner_two_first_name.required_if' => 'Add the second partner name so we can suggest a polished wedding title.',
+            'wedding_family_name.required_if' => 'Add the family name so we can build wedding title suggestions.',
             'event_date.before_or_equal' => "Event dates can be at most {$months} months in the future.",
             'event_date.after_or_equal' => 'Event date cannot be in the past.',
             'event_dates.required' => 'Add at least one event date so we can prepare your album timeline.',
