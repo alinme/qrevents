@@ -1,0 +1,5691 @@
+<script setup lang="ts">
+import { Head, router, useForm } from '@inertiajs/vue3';
+import {
+    ArrowUp,
+    AlertTriangle,
+    CalendarDays,
+    Camera,
+    ChevronLeft,
+    ChevronRight,
+    CheckCircle2,
+    Clock3,
+    Columns2,
+    Columns3,
+    Copy,
+    Download,
+    EyeOff,
+    Film,
+    Heart,
+    Info,
+    Images,
+    Lock,
+    Menu,
+    MessageCircle,
+    MessageSquareText,
+    MoreHorizontal,
+    Rows3,
+    Send,
+    Trash2,
+    LoaderCircle,
+    UploadCloud,
+    X,
+} from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    Drawer,
+    DrawerContent,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+} from '@/components/ui/drawer';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+    InputGroupText,
+} from '@/components/ui/input-group';
+import {
+    Item,
+    ItemContent,
+    ItemDescription,
+    ItemMedia,
+    ItemTitle,
+} from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+
+type Limits = {
+    storageLimitBytes: number;
+    storageUsedBytes: number;
+    storageRemainingBytes: number;
+    uploadLimit: number;
+    uploadCount: number;
+    uploadRemaining: number;
+    photoMaxSizeBytes: number;
+    videoMaxSizeBytes: number;
+    videoMinDurationSeconds: number;
+    videoMaxDurationSeconds: number;
+};
+
+type AssetItem = {
+    id: number;
+    kind: 'photo' | 'video' | 'text';
+    moderationStatus: string;
+    thumbnailUrl: string | null;
+    previewUrl: string | null;
+    videoProcessing: boolean;
+    downloadUrl: string;
+    deleteUrl: string;
+    likeToggleUrl: string;
+    sizeBytes: number;
+    text: string | null;
+    textThemeId: number | null;
+    textThemeSlug: string | null;
+    textThemeImageUrl: string | null;
+    textThemeBackgroundColor: string | null;
+    textThemeTextColor: string | null;
+    guestName: string | null;
+    guestAvatarUrl: string | null;
+    message: string | null;
+    originalFilename: string | null;
+    mimeType: string | null;
+    createdAt: string | null;
+    uploadBatchId: string | null;
+    uploadBatchIndex: number | null;
+    galleryGroupKey: string;
+    captionTitle: string | null;
+    captionSubtitle: string | null;
+    likeCount: number;
+    commentCount: number;
+    commentsUrl: string;
+    commentStoreUrl: string;
+};
+
+type AssetComment = {
+    id: number;
+    body: string;
+    guestName: string;
+    guestAvatarUrl: string | null;
+    createdAt: string | null;
+    likeCount: number;
+    liked: boolean;
+    likeToggleUrl: string;
+};
+
+type UploadPreviewItem = {
+    key: string;
+    kind: 'photo' | 'video';
+    name: string;
+    objectUrl: string;
+};
+
+type TextPostThemeOption = {
+    id: number;
+    slug: string;
+    name: string;
+    imageUrl: string;
+    backgroundColor: string | null;
+    textColor: string;
+};
+
+type GalleryStack = {
+    key: string;
+    preview: AssetItem;
+    assets: AssetItem[];
+    guestName: string;
+    latestCreatedAt: string | null;
+    latestTimestamp: number;
+    mediaCount: number;
+};
+
+type GuestIntent =
+    | 'upload_media'
+    | 'video_testimonial'
+    | 'text_wish'
+    | 'browse_gallery';
+
+type UploadMode = 'mixed' | 'video_only';
+type GalleryViewMode = 'grid3' | 'grid2' | 'feed';
+
+type WelcomeField = {
+    id: string;
+    type: 'text' | 'email' | 'phone' | 'number';
+    label: string;
+    help_text: string;
+    attach_to: 'caption_title' | 'caption_subtitle' | 'file_name' | null;
+    required: boolean;
+    enabled: boolean;
+};
+
+type WelcomeScreenConfig = {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    font: 'montserrat' | 'poppins' | 'playfair_display' | 'dm_sans';
+    animated: boolean;
+    logoUrl?: string | null;
+    collectName: boolean;
+    collectEmail: boolean;
+    collectPhone: boolean;
+    fields?: WelcomeField[];
+    backgroundUrl: string | null;
+};
+
+type PublicLinks = {
+    album: string;
+    wall: string;
+};
+
+type AppearanceConfig = {
+    primaryColor: string | null;
+    accentColor: string | null;
+    logoUrl: string | null;
+    hideSideImages: boolean;
+    hideQrCode: boolean;
+    hideCaption: boolean;
+    captionTheme: 'dark' | 'light';
+    albumBackgroundEnabled: boolean;
+    albumBackgroundMode: 'rotate' | 'solid' | 'image';
+    albumBackgroundColor: string;
+    albumBackgroundImageUrl: string | null;
+};
+
+type GuestProfilePayload = {
+    id: number;
+    guestToken: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    avatarUrl: string | null;
+    guestFields: Record<string, string>;
+    lastIntent: GuestIntent | null;
+};
+
+const props = defineProps<{
+    shareToken: string;
+    eventName: string;
+    eventDate: string | null;
+    uploadWindowStartsAt: string | null;
+    uploadWindowEndsAt: string | null;
+    isUploadOpen: boolean;
+    isUploadAllowed: boolean;
+    isPaymentLocked: boolean;
+    isPreEventTestMode: boolean;
+    canViewGallery: boolean;
+    preEventTestUploadLimit: number;
+    preEventTestUploadsRemaining: number;
+    guestProfileUrl: string;
+    guestProfileUpsertUrl: string;
+    uploadUrl: string;
+    textPostUrl: string;
+    textPostThemes: TextPostThemeOption[];
+    allowTextPosts: boolean;
+    allowedMediaTypes: string[];
+    canGuestDownload: boolean;
+    links: PublicLinks;
+    assetFeedUrl: string;
+    albumQrDataUrl: string;
+    appearance: AppearanceConfig;
+    welcomeScreen: WelcomeScreenConfig;
+    limits: Limits;
+    assets: AssetItem[];
+    assetsNextCursor: number | null;
+    assetsHasMore: boolean;
+}>();
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const guestAvatarInputRef = ref<HTMLInputElement | null>(null);
+const textComposerRef = ref<HTMLDivElement | null>(null);
+const loadMoreSentinelRef = ref<HTMLElement | null>(null);
+const menuOpen = ref(false);
+const onboardingStep = ref<1 | 2>(1);
+const onboardingDone = ref(false);
+const guestToken = ref('');
+const guestFieldValues = ref<Record<string, string>>({
+    name: '',
+    email: '',
+    phone: '',
+});
+const guestAvatarUrl = ref<string | null>(null);
+const guestAvatarPreviewUrl = ref<string | null>(null);
+const guestAvatarFile = ref<File | null>(null);
+const removeGuestAvatar = ref(false);
+const onboardingErrors = ref<Record<string, string>>({});
+const guestProfileError = ref<string | null>(null);
+const guestProfileProcessing = ref(false);
+const selectedIntent = ref<GuestIntent>('browse_gallery');
+const activeView = ref<GuestIntent>('browse_gallery');
+const pendingComposerIntent = ref<GuestIntent | null>(null);
+const galleryView = ref<GalleryViewMode>('grid3');
+const isValidatingVideos = ref(false);
+const clientValidationErrors = ref<string[]>([]);
+const assetItems = ref<AssetItem[]>([...props.assets]);
+const likedAssetIds = ref<Record<number, boolean>>({});
+const likeAnimatingAssetIds = ref<Record<number, boolean>>({});
+const likePendingAssetIds = ref<Record<number, boolean>>({});
+const commentItemsByAssetId = ref<Record<number, AssetComment[]>>({});
+const commentLoadingAssetIds = ref<Record<number, boolean>>({});
+const commentPendingAssetIds = ref<Record<number, boolean>>({});
+const commentLikePendingIds = ref<Record<number, boolean>>({});
+const expandedMessageKeys = ref<Record<string, boolean>>({});
+const uploadPreviewItems = ref<UploadPreviewItem[]>([]);
+const commentDraft = ref('');
+const commentError = ref<string | null>(null);
+const activeStackKey = ref<string | null>(null);
+const activeStackSlideIndex = ref(0);
+const activeInfoStackKey = ref<string | null>(null);
+const activeInfoSlideIndex = ref(0);
+const activeCommentsStackKey = ref<string | null>(null);
+const isAssetInfoOpen = ref(false);
+const isAssetCommentsOpen = ref(false);
+const isComposerOpen = ref(false);
+const isPreEventInfoOpen = ref(false);
+const isHeaderCollapsed = ref(false);
+const showScrollTopButton = ref(false);
+const heroSectionRef = ref<HTMLElement | null>(null);
+const heroGlassCardRef = ref<HTMLElement | null>(null);
+const isTextComposerFocused = ref(false);
+const loadedPhotoAssetIds = ref<Record<number, boolean>>({});
+const viewerTouchStartX = ref<number | null>(null);
+const viewerTouchStartY = ref<number | null>(null);
+const viewerTouchCurrentX = ref<number | null>(null);
+const viewerTouchCurrentY = ref<number | null>(null);
+const isAlbumRefreshing = ref(false);
+const isLoadingMoreAssets = ref(false);
+const hasPendingAlbumUpdate = ref(false);
+const pendingAlbumUpdateCount = ref(0);
+const pullRefreshStartY = ref<number | null>(null);
+const pullRefreshDistance = ref(0);
+const useMorphingHeader = false;
+const morphingHeaderState = ref({
+    progress: 0,
+    left: 12,
+    top: 12,
+    width: 0,
+    height: 0,
+    radius: 32,
+    viewportHeight: 0,
+});
+let morphingHeaderFrameId: number | null = null;
+let heroGlassCardResizeObserver: ResizeObserver | null = null;
+let albumUpdatePollId: number | null = null;
+let processingVideoPollId: number | null = null;
+let loadMoreObserver: IntersectionObserver | null = null;
+let composerOpenTimeoutId: number | null = null;
+let lockedScrollY = 0;
+const commentEmojiOptions = [
+    '❤️',
+    '👏',
+    '😍',
+    '🥹',
+    '🔥',
+    '🎉',
+    '😂',
+    '🙏',
+    '💯',
+    '🤍',
+    '✨',
+    '🥂',
+    '🫶',
+    '😘',
+    '😭',
+    '🙌',
+];
+const uploadMessageEmojiOptions = ['❤️', '🥂', '✨', '🎉', '📸', '🤍', '🫶', '🥹'];
+
+const uploadForm = useForm<{
+    files: File[];
+    guest_name: string;
+    guest_email: string | null;
+    guest_phone: string | null;
+    message: string | null;
+    guest_token: string | null;
+    guest_fields: Record<string, string>;
+    guest_intent: GuestIntent | null;
+}>({
+    files: [],
+    guest_name: '',
+    guest_email: null,
+    guest_phone: null,
+    message: null,
+    guest_token: null,
+    guest_fields: {},
+    guest_intent: null,
+});
+
+const textForm = useForm<{
+    text: string;
+    text_post_theme_id: number | null;
+    guest_name: string;
+    guest_email: string | null;
+    guest_phone: string | null;
+    guest_token: string | null;
+    guest_fields: Record<string, string>;
+    guest_intent: GuestIntent | null;
+}>({
+    text: '',
+    text_post_theme_id: null,
+    guest_name: '',
+    guest_email: null,
+    guest_phone: null,
+    guest_token: null,
+    guest_fields: {},
+    guest_intent: null,
+});
+
+const deleteAssetForm = useForm<{
+    guest_name: string;
+    guest_token: string | null;
+}>({
+    guest_name: '',
+    guest_token: null,
+});
+
+const guestStorageKey = computed(() => `kululu-guest-profile:${props.shareToken}`);
+const galleryViewStorageKey = computed(
+    () => `kululu-gallery-view:${props.shareToken}`,
+);
+const assetNextCursor = ref<number | null>(props.assetsNextCursor);
+const hasMoreAssets = ref(props.assetsHasMore);
+const sortStackAssets = (assets: AssetItem[]): AssetItem[] => {
+    return [...assets].sort((left, right) => {
+        if (left.createdAt && right.createdAt) {
+            const createdAtDelta =
+                new Date(right.createdAt).getTime() -
+                new Date(left.createdAt).getTime();
+            if (createdAtDelta !== 0) {
+                return createdAtDelta;
+            }
+        } else if (left.createdAt || right.createdAt) {
+            return right.createdAt ? 1 : -1;
+        }
+
+        if (
+            left.uploadBatchId !== null &&
+            left.uploadBatchId === right.uploadBatchId &&
+            left.uploadBatchIndex !== null &&
+            right.uploadBatchIndex !== null
+        ) {
+            return left.uploadBatchIndex - right.uploadBatchIndex;
+        }
+
+        return right.id - left.id;
+    });
+};
+const galleryStacks = computed<GalleryStack[]>(() => {
+    const stacks = new Map<string, GalleryStack>();
+
+    for (const asset of assetItems.value) {
+        const key = asset.galleryGroupKey;
+        const guestName =
+            asset.guestName && asset.guestName.trim().length > 0
+                ? asset.guestName.trim()
+                : 'Guest';
+        const createdAt = asset.createdAt;
+        const createdAtTimestamp = createdAt
+            ? new Date(createdAt).getTime()
+            : asset.id;
+
+        const existing = stacks.get(key);
+        if (!existing) {
+            stacks.set(key, {
+                key,
+                preview: asset,
+                assets: [asset],
+                guestName,
+                latestCreatedAt: createdAt,
+                latestTimestamp: createdAtTimestamp,
+                mediaCount: asset.kind === 'text' ? 0 : 1,
+            });
+            continue;
+        }
+
+        existing.assets.push(asset);
+        const hadNewerTimestamp = createdAtTimestamp > existing.latestTimestamp;
+        existing.latestTimestamp = Math.max(existing.latestTimestamp, createdAtTimestamp);
+        if (
+            existing.latestCreatedAt === null ||
+            (createdAt && hadNewerTimestamp)
+        ) {
+            existing.latestCreatedAt = createdAt;
+        }
+        if (asset.kind !== 'text') {
+            existing.mediaCount += 1;
+        }
+    }
+
+    return Array.from(stacks.values())
+        .map((stack) => {
+            const sortedAssets = sortStackAssets(stack.assets);
+            return {
+                ...stack,
+                assets: sortedAssets,
+                preview: sortedAssets[0] ?? stack.preview,
+                mediaCount: sortedAssets.filter((asset) => asset.kind !== 'text')
+                    .length,
+            };
+        })
+        .sort((left, right) => right.latestTimestamp - left.latestTimestamp);
+});
+const hasProcessingVideoAssets = computed(() =>
+    assetItems.value.some(
+        (asset) => asset.kind === 'video' && asset.videoProcessing,
+    ),
+);
+const selectedStack = computed(() => {
+    if (activeStackKey.value === null) {
+        return null;
+    }
+
+    return (
+        galleryStacks.value.find((stack) => stack.key === activeStackKey.value) ??
+        null
+    );
+});
+const selectedInfoStack = computed(() => {
+    if (activeInfoStackKey.value === null) {
+        return null;
+    }
+
+    return (
+        galleryStacks.value.find((stack) => stack.key === activeInfoStackKey.value) ??
+        null
+    );
+});
+const selectedCommentsStack = computed(() => {
+    if (activeCommentsStackKey.value === null) {
+        return null;
+    }
+
+    return (
+        galleryStacks.value.find((stack) => stack.key === activeCommentsStackKey.value) ??
+        null
+    );
+});
+const selectedStackAssets = computed<AssetItem[]>(
+    () => selectedStack.value?.assets ?? [],
+);
+const selectedInfoStackAssets = computed<AssetItem[]>(
+    () => selectedInfoStack.value?.assets ?? [],
+);
+const selectedCommentsAsset = computed<AssetItem | null>(
+    () => selectedCommentsStack.value?.preview ?? null,
+);
+const selectedComments = computed<AssetComment[]>(() => {
+    const assetId = selectedCommentsAsset.value?.id ?? null;
+
+    return assetId !== null ? (commentItemsByAssetId.value[assetId] ?? []) : [];
+});
+const selectedAsset = computed(() => {
+    if (selectedStackAssets.value.length === 0) {
+        return null;
+    }
+
+    const safeIndex = Math.min(
+        Math.max(activeStackSlideIndex.value, 0),
+        selectedStackAssets.value.length - 1,
+    );
+
+    return selectedStackAssets.value[safeIndex] ?? null;
+});
+const selectedInfoAsset = computed(() => {
+    if (selectedInfoStackAssets.value.length === 0) {
+        return null;
+    }
+
+    const safeIndex = Math.min(
+        Math.max(activeInfoSlideIndex.value, 0),
+        selectedInfoStackAssets.value.length - 1,
+    );
+
+    return selectedInfoStackAssets.value[safeIndex] ?? null;
+});
+const hasMultipleInSelectedStack = computed(
+    () => selectedStackAssets.value.length > 1,
+);
+const selectedAssetCanDelete = computed(() =>
+    canDeleteAsset(selectedAsset.value),
+);
+const selectedAssetCanDownload = computed(() =>
+    canDownloadAsset(selectedAsset.value),
+);
+
+const isPhotoLoaded = (assetId: number): boolean =>
+    loadedPhotoAssetIds.value[assetId] === true;
+
+const markPhotoAsLoaded = (assetId: number): void => {
+    loadedPhotoAssetIds.value = {
+        ...loadedPhotoAssetIds.value,
+        [assetId]: true,
+    };
+};
+
+const canUpload = computed(
+    () => props.isUploadAllowed && !props.isPaymentLocked,
+);
+const customWelcomeEnabled = computed(() => props.welcomeScreen.enabled);
+const showQrCode = computed(() => !props.appearance.hideQrCode);
+const showCaptions = computed(() => !props.appearance.hideCaption);
+const showPreviewWatermark = computed(() => !props.canGuestDownload);
+const canUploadText = computed(() => canUpload.value && props.allowTextPosts);
+const canUploadPhotos = computed(() => props.allowedMediaTypes.includes('photo'));
+const canUploadVideos = computed(() => props.allowedMediaTypes.includes('video'));
+const selectedTextPostTheme = computed<TextPostThemeOption | null>(() => {
+    const selectedId = textForm.text_post_theme_id;
+    if (selectedId !== null) {
+        const selected = props.textPostThemes.find((theme) => theme.id === selectedId);
+        if (selected) {
+            return selected;
+        }
+    }
+
+    return props.textPostThemes[0] ?? null;
+});
+
+const fileAccept = computed(() => {
+    const accepted: string[] = [];
+    if (canUploadPhotos.value) {
+        accepted.push('image/*');
+    }
+    if (canUploadVideos.value) {
+        accepted.push('video/*');
+    }
+
+    return accepted.join(',');
+});
+
+const uploadMode = computed<UploadMode>(() =>
+    activeView.value === 'video_testimonial' ? 'video_only' : 'mixed',
+);
+const uploadAccept = computed(() => {
+    if (uploadMode.value === 'video_only') {
+        return canUploadVideos.value ? 'video/*' : '';
+    }
+
+    return fileAccept.value;
+});
+
+const usageStoragePercent = computed(() => {
+    if (props.limits.storageLimitBytes <= 0) {
+        return 0;
+    }
+
+    return Math.min(
+        100,
+        Math.round(
+            (props.limits.storageUsedBytes / props.limits.storageLimitBytes) *
+                100,
+        ),
+    );
+});
+
+const usageUploadsPercent = computed(() => {
+    if (props.limits.uploadLimit <= 0) {
+        return 0;
+    }
+
+    return Math.min(
+        100,
+        Math.round((props.limits.uploadCount / props.limits.uploadLimit) * 100),
+    );
+});
+const preEventUsedUploads = computed(() =>
+    Math.max(
+        0,
+        props.preEventTestUploadLimit - props.preEventTestUploadsRemaining,
+    ),
+);
+
+const statusCard = computed(() => {
+    if (props.isPaymentLocked) {
+        return {
+            title: 'Event locked until payment',
+            description:
+                'Guests can preview content, but uploads and full-quality access are locked.',
+            classes: 'border-rose-200 bg-rose-50 text-rose-800',
+            icon: Lock,
+        };
+    }
+
+    if (props.isUploadOpen) {
+        return {
+            title: 'Uploads are open',
+            description:
+                'Guests can upload photos, short videos, and messages right now.',
+            classes: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            icon: CheckCircle2,
+        };
+    }
+
+    if (props.isPreEventTestMode) {
+        return {
+            title: 'Pre-event test mode',
+            description: `Testing is open: ${preEventUsedUploads.value}/${props.preEventTestUploadLimit} used (${props.preEventTestUploadsRemaining} remaining).`,
+            classes: 'border-sky-200 bg-sky-50 text-sky-800',
+            icon: AlertTriangle,
+        };
+    }
+
+    return {
+        title: 'Uploads are currently paused',
+        description: 'Uploads become available during the event upload window.',
+        classes: 'border-amber-200 bg-amber-50 text-amber-900',
+        icon: Clock3,
+    };
+});
+
+const uploadTitle = computed(() =>
+    uploadMode.value === 'video_only'
+        ? 'Leave a video testimonial'
+        : 'Upload event photos & videos',
+);
+const uploadDescription = computed(() =>
+    uploadMode.value === 'video_only'
+        ? `Record or select a short clip (${props.limits.videoMinDurationSeconds}-${props.limits.videoMaxDurationSeconds}s).`
+        : 'Share beautiful moments from the event directly to this album.',
+);
+const uploadButtonLabel = computed(() =>
+    uploadMode.value === 'video_only'
+        ? 'Upload testimonial'
+        : 'Upload selected files',
+);
+
+const intentOptions = computed(() => [
+    {
+        value: 'upload_media' as GuestIntent,
+        label: 'Upload event photos',
+        description: 'Share images and short clips from your phone.',
+        icon: Camera,
+        enabled: canUploadPhotos.value || canUploadVideos.value,
+    },
+    {
+        value: 'video_testimonial' as GuestIntent,
+        label: 'Leave video testimonial',
+        description: 'Upload one short congratulation video.',
+        icon: Film,
+        enabled: canUploadVideos.value,
+    },
+    {
+        value: 'text_wish' as GuestIntent,
+        label: 'Write a text wish',
+        description: 'Post a message for the couple and family.',
+        icon: MessageSquareText,
+        enabled: props.allowTextPosts,
+    },
+    {
+        value: 'browse_gallery' as GuestIntent,
+        label: 'Just view gallery',
+        description: 'See what guests already shared.',
+        icon: Images,
+        enabled: props.canViewGallery,
+    },
+]);
+
+const defaultIntent = (): GuestIntent =>
+    intentOptions.value.find((option) => option.enabled)?.value ?? 'browse_gallery';
+
+const welcomeGuestFields = computed<WelcomeField[]>(() => {
+    if (!customWelcomeEnabled.value) {
+        return [
+            {
+                id: 'name',
+                type: 'text',
+                label: 'Name',
+                help_text: 'Write your name',
+                attach_to: null,
+                required: true,
+                enabled: true,
+            },
+        ];
+    }
+
+    const configured = Array.isArray(props.welcomeScreen.fields)
+        ? props.welcomeScreen.fields.filter((field) => field.enabled)
+        : [];
+    if (configured.length > 0) {
+        return configured;
+    }
+
+    const fallback: WelcomeField[] = [
+        {
+            id: 'name',
+            type: 'text',
+            label: 'Name',
+            help_text: 'Write your name',
+            attach_to: null,
+            required: true,
+            enabled: true,
+        },
+    ];
+    if (props.welcomeScreen.collectEmail) {
+        fallback.push({
+            id: 'email',
+            type: 'email',
+            label: 'Email',
+            help_text: 'Write your email',
+            attach_to: null,
+            required: false,
+            enabled: true,
+        });
+    }
+    if (props.welcomeScreen.collectPhone) {
+        fallback.push({
+            id: 'phone',
+            type: 'phone',
+            label: 'Phone',
+            help_text: 'Write your phone',
+            attach_to: null,
+            required: false,
+            enabled: true,
+        });
+    }
+
+    return fallback;
+});
+
+const guestName = computed(() => guestFieldValues.value.name ?? '');
+const guestEmail = computed(() => guestFieldValues.value.email ?? '');
+const guestPhone = computed(() => guestFieldValues.value.phone ?? '');
+const currentGuestAvatarUrl = computed(
+    () => guestAvatarPreviewUrl.value ?? guestAvatarUrl.value,
+);
+const albumAvatarFallback = computed(() =>
+    (welcomeTitle.value || props.eventName || 'K').trim().charAt(0).toUpperCase(),
+);
+const albumLogoUrl = computed(
+    () => props.welcomeScreen.logoUrl ?? props.appearance.logoUrl ?? null,
+);
+const heroAccentStyle = computed(() => {
+    return {
+        backgroundColor: props.appearance.primaryColor || '#0f172a',
+    };
+});
+const albumBodyStyle = computed((): Record<string, string> => {
+    const style: Record<string, string> = {};
+
+    if (!onboardingDone.value || !props.appearance.albumBackgroundEnabled) {
+        return style;
+    }
+
+    if (props.appearance.albumBackgroundMode === 'solid') {
+        style.backgroundColor =
+            props.appearance.albumBackgroundColor || '#ffffff';
+
+        return style;
+    }
+
+    if (
+        props.appearance.albumBackgroundMode === 'image' &&
+        props.appearance.albumBackgroundImageUrl
+    ) {
+        style.backgroundImage = `url(${props.appearance.albumBackgroundImageUrl})`;
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center';
+        style.backgroundAttachment = 'fixed';
+    }
+
+    return style;
+});
+
+const welcomeTitle = computed(() => {
+    if (!customWelcomeEnabled.value) {
+        return props.eventName;
+    }
+
+    const value = props.welcomeScreen.title?.trim();
+    return value && value.length > 0 ? value : props.eventName;
+});
+
+const welcomeSubtitle = computed(() => {
+    if (!customWelcomeEnabled.value) {
+        return 'Share your photos & videos with us!';
+    }
+
+    const value = props.welcomeScreen.subtitle?.trim();
+    return value && value.length > 0
+        ? value
+        : 'Share your photos & videos with us!';
+});
+
+const welcomeButtonText = computed(() => {
+    if (!customWelcomeEnabled.value) {
+        return 'Continue';
+    }
+
+    const value = props.welcomeScreen.buttonText?.trim();
+    return value && value.length > 0 ? value : 'Continue';
+});
+
+const welcomeFontClass = computed(() => {
+    switch (props.welcomeScreen.font) {
+        case 'poppins':
+            return 'font-[Poppins,sans-serif]';
+        case 'playfair_display':
+            return 'font-[\"Playfair_Display\",serif]';
+        case 'dm_sans':
+            return 'font-[\"DM_Sans\",sans-serif]';
+        default:
+            return 'font-[Montserrat,sans-serif]';
+    }
+});
+
+const welcomeConfigFingerprint = computed(() =>
+    JSON.stringify({
+        enabled: customWelcomeEnabled.value,
+        title: welcomeTitle.value,
+        subtitle: welcomeSubtitle.value,
+        buttonText: welcomeButtonText.value,
+        font: props.welcomeScreen.font,
+        animated: props.welcomeScreen.animated,
+        logoUrl: albumLogoUrl.value,
+        backgroundUrl: props.welcomeScreen.backgroundUrl,
+        fields: welcomeGuestFields.value.map((field) => ({
+            id: field.id,
+            type: field.type,
+            label: field.label,
+            help_text: field.help_text,
+            required: field.required,
+            enabled: field.enabled,
+        })),
+    }),
+);
+const galleryGridClass = computed(() =>
+    galleryView.value === 'grid2' ? 'grid-cols-2' : 'grid-cols-3',
+);
+const latestKnownAssetId = ref(
+    props.assets.reduce((max, asset) => Math.max(max, asset.id), 0),
+);
+const pullRefreshThreshold = 84;
+const pullRefreshVisible = computed(
+    () => pullRefreshDistance.value > 0 || isAlbumRefreshing.value,
+);
+const pullRefreshReady = computed(
+    () => pullRefreshDistance.value >= pullRefreshThreshold,
+);
+const pullRefreshIndicatorStyle = computed((): Record<string, string> => ({
+    opacity: `${
+        isAlbumRefreshing.value
+            ? 1
+            : Math.min(1, pullRefreshDistance.value / 42)
+    }`,
+    transform: `translate(-50%, ${
+        isAlbumRefreshing.value
+            ? 18
+            : Math.max(0, pullRefreshDistance.value - 10)
+    }px)`,
+}));
+const albumContentStyle = computed((): Record<string, string> => ({
+    ...(pullRefreshDistance.value > 0 || isAlbumRefreshing.value
+        ? {
+              transform: `translateY(${pullRefreshDistance.value}px)`,
+              transition:
+                  pullRefreshStartY.value === null
+                      ? 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)'
+                      : 'none',
+          }
+        : {}),
+}));
+const morphingHeaderProgress = computed(
+    () => morphingHeaderState.value.progress,
+);
+const morphingHeaderRadiusProgress = computed(() =>
+    clampNumber((morphingHeaderProgress.value - 0.72) / 0.28, 0, 1),
+);
+const morphingHeaderVisualProgress = computed(() =>
+    menuOpen.value ? 0 : morphingHeaderProgress.value,
+);
+const morphingHeaderVisible = computed(
+    () => useMorphingHeader && (morphingHeaderProgress.value > 0.001 || menuOpen.value),
+);
+const morphingHeaderExpandedHeight = computed(() =>
+    Math.min(
+        Math.max(morphingHeaderState.value.viewportHeight - 24, 360),
+        640,
+    ),
+);
+const morphingHeaderStyle = computed((): Record<string, string> => ({
+    left: `${morphingHeaderState.value.left}px`,
+    top: `${morphingHeaderState.value.top}px`,
+    width: `${morphingHeaderState.value.width}px`,
+    height: `${
+        menuOpen.value
+            ? morphingHeaderExpandedHeight.value
+            : morphingHeaderState.value.height
+    }px`,
+    borderRadius: `${
+        menuOpen.value
+            ? 32
+            : interpolateNumber(32, 999, morphingHeaderRadiusProgress.value)
+    }px`,
+    opacity: `${menuOpen.value ? 1 : Math.min(1, morphingHeaderProgress.value * 1.45)}`,
+    pointerEvents:
+        menuOpen.value || morphingHeaderProgress.value > 0.08 ? 'auto' : 'none',
+    transition:
+        'height 260ms ease, border-radius 260ms ease, opacity 220ms ease',
+}));
+const morphingHeaderIdentityStyle = computed((): Record<string, string> => ({
+    transform: `scale(${interpolateNumber(1, 0.78, morphingHeaderVisualProgress.value)})`,
+    transformOrigin: 'top left',
+}));
+const morphingHeaderLowerStyle = computed((): Record<string, string> => ({
+    opacity: `${1 - clampNumber(morphingHeaderVisualProgress.value * 2.3, 0, 1)}`,
+    transform: `translateY(${-12 * morphingHeaderVisualProgress.value}px)`,
+}));
+const morphingHeaderMaskStyle = computed((): Record<string, string> => ({
+    opacity: `${clampNumber(morphingHeaderVisualProgress.value * 1.15, 0, 0.92)}`,
+}));
+const heroGlassCardStyle = computed((): Record<string, string> => ({
+    opacity: useMorphingHeader
+        ? `${menuOpen.value ? 0 : 1 - clampNumber(morphingHeaderProgress.value * 1.4, 0, 1)}`
+        : '1',
+}));
+const morphingHeaderTextShadowStyle = computed((): Record<string, string> => ({
+    textShadow:
+        morphingHeaderProgress.value > 0.35
+            ? '0 1px 2px rgba(15,23,42,0.5), 0 6px 18px rgba(15,23,42,0.22)'
+            : '0 1px 2px rgba(15,23,42,0.26)',
+}));
+const morphingHeaderIconShadowStyle = computed((): Record<string, string> => ({
+    filter:
+        morphingHeaderProgress.value > 0.35
+            ? 'drop-shadow(0 1px 2px rgba(15,23,42,0.45)) drop-shadow(0 6px 18px rgba(15,23,42,0.18))'
+            : 'drop-shadow(0 1px 2px rgba(15,23,42,0.2))',
+}));
+const avatarToneClasses = [
+    'bg-rose-500 text-white',
+    'bg-sky-500 text-white',
+    'bg-emerald-500 text-white',
+    'bg-amber-500 text-white',
+    'bg-violet-500 text-white',
+    'bg-fuchsia-500 text-white',
+] as const;
+const selectedAssetLiked = computed(() =>
+    selectedAsset.value !== null
+        ? likedAssetIds.value[selectedAsset.value.id] === true
+        : false,
+);
+
+const textPostSurfaceStyle = (item: {
+    textThemeImageUrl: string | null;
+    textThemeBackgroundColor: string | null;
+}): Record<string, string> => {
+    const style: Record<string, string> = {
+        backgroundColor: item.textThemeBackgroundColor || '#0f172a',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+    };
+
+    if (item.textThemeImageUrl) {
+        style.backgroundImage = `url(${item.textThemeImageUrl})`;
+    }
+
+    return style;
+};
+
+const textPostContentStyle = (item: {
+    textThemeTextColor: string | null;
+}): Record<string, string> => ({
+    color: item.textThemeTextColor || '#ffffff',
+});
+
+const syncTextComposerElement = (value: string): void => {
+    if (!textComposerRef.value) {
+        return;
+    }
+
+    const normalizedValue = value.replace(/\r/g, '');
+    if ((textComposerRef.value.innerText || '').replace(/\r/g, '') === normalizedValue) {
+        return;
+    }
+
+    textComposerRef.value.innerText = normalizedValue;
+};
+
+const focusTextComposer = (): void => {
+    textComposerRef.value?.focus();
+};
+
+const onTextComposerInput = (): void => {
+    if (!textComposerRef.value) {
+        return;
+    }
+
+    const normalizedValue = (textComposerRef.value.innerText || '')
+        .replace(/\r/g, '')
+        .replace(/\u00A0/g, ' ');
+
+    if (normalizedValue.length > 500) {
+        const trimmedValue = normalizedValue.slice(0, 500);
+        textForm.text = trimmedValue;
+        syncTextComposerElement(trimmedValue);
+        return;
+    }
+
+    textForm.text = normalizedValue;
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes === 0) {
+        return '0 B';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const index = Math.min(
+        Math.floor(Math.log(bytes) / Math.log(1024)),
+        units.length - 1,
+    );
+    const value = bytes / 1024 ** index;
+
+    return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+};
+
+const formatDateTime = (value: string | null): string => {
+    if (!value) {
+        return 'Not set';
+    }
+
+    return new Intl.DateTimeFormat(
+        typeof navigator !== 'undefined' ? navigator.language : 'en-GB',
+        {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        },
+    ).format(new Date(value));
+};
+
+const formatRelativeTime = (value: string | null): string => {
+    if (!value) {
+        return 'Just now';
+    }
+
+    const deltaSeconds = Math.round(
+        (new Date(value).getTime() - Date.now()) / 1000,
+    );
+    const absoluteSeconds = Math.abs(deltaSeconds);
+    const formatter = new Intl.RelativeTimeFormat(
+        typeof navigator !== 'undefined' ? navigator.language : 'en-GB',
+        { numeric: 'auto' },
+    );
+
+    if (absoluteSeconds < 60) {
+        return formatter.format(deltaSeconds, 'second');
+    }
+    if (absoluteSeconds < 3600) {
+        return formatter.format(Math.round(deltaSeconds / 60), 'minute');
+    }
+    if (absoluteSeconds < 86400) {
+        return formatter.format(Math.round(deltaSeconds / 3600), 'hour');
+    }
+    if (absoluteSeconds < 604800) {
+        return formatter.format(Math.round(deltaSeconds / 86400), 'day');
+    }
+
+    return formatter.format(Math.round(deltaSeconds / 604800), 'week');
+};
+
+const formatDate = (value: string | null): string => {
+    if (!value) {
+        return 'Not set';
+    }
+
+    return new Intl.DateTimeFormat(
+        typeof navigator !== 'undefined' ? navigator.language : 'en-GB',
+        {
+            dateStyle: 'long',
+        },
+    ).format(new Date(value));
+};
+
+const formatLikeCount = (count: number): string => {
+    if (count < 1000) {
+        return `${count}`;
+    }
+
+    if (count < 10000) {
+        return `${(count / 1000).toFixed(1)}k`;
+    }
+
+    return `${Math.round(count / 1000)}k`;
+};
+
+const stackUploadSummary = (stack: GalleryStack): string | null => {
+    if (stack.mediaCount <= 1) {
+        return null;
+    }
+
+    const mediaAssets = stack.assets.filter((asset) => asset.kind !== 'text');
+    const photoCount = mediaAssets.filter((asset) => asset.kind === 'photo').length;
+    const videoCount = mediaAssets.filter((asset) => asset.kind === 'video').length;
+
+    if (videoCount === 0) {
+        return `uploaded ${stack.mediaCount} photos`;
+    }
+
+    if (photoCount === 0) {
+        return `uploaded ${stack.mediaCount} videos`;
+    }
+
+    return `uploaded ${stack.mediaCount} items`;
+};
+
+const messagePreviewLimit = 180;
+
+const hasLongStackMessage = (stack: GalleryStack): boolean =>
+    (stack.preview.message?.trim().length ?? 0) > messagePreviewLimit;
+
+const isStackMessageExpanded = (stackKey: string): boolean =>
+    expandedMessageKeys.value[stackKey] === true;
+
+const displayedStackMessage = (stack: GalleryStack): string => {
+    const value = stack.preview.message?.trim() ?? '';
+    if (!hasLongStackMessage(stack) || isStackMessageExpanded(stack.key)) {
+        return value;
+    }
+
+    return `${value.slice(0, messagePreviewLimit).trimEnd()}...`;
+};
+
+const toggleStackMessageExpansion = (stackKey: string): void => {
+    expandedMessageKeys.value = {
+        ...expandedMessageKeys.value,
+        [stackKey]: !isStackMessageExpanded(stackKey),
+    };
+};
+
+const assetSummaryText = (asset: AssetItem): string | null => {
+    const primaryText =
+        asset.text?.trim() ||
+        asset.message?.trim() ||
+        asset.captionTitle?.trim() ||
+        asset.captionSubtitle?.trim() ||
+        null;
+
+    return primaryText && primaryText.length > 0 ? primaryText : null;
+};
+
+const latestAssetIdFromItems = (items: Array<{ id: number }>): number =>
+    items.reduce((max, item) => Math.max(max, item.id), 0);
+
+const mergeAssetItems = (
+    existingItems: AssetItem[],
+    nextItems: AssetItem[],
+): AssetItem[] => {
+    const merged = new Map<number, AssetItem>();
+
+    for (const item of existingItems) {
+        merged.set(item.id, item);
+    }
+
+    for (const item of nextItems) {
+        merged.set(item.id, item);
+    }
+
+    return Array.from(merged.values()).sort((left, right) => right.id - left.id);
+};
+
+const guestInitials = (value: string | null): string => {
+    const normalized = (value ?? '').trim();
+    if (normalized.length === 0) {
+        return 'G';
+    }
+
+    const parts = normalized.split(/\s+/).slice(0, 2);
+    return parts
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('');
+};
+
+const avatarFallbackClass = (value: string | null): string => {
+    const normalized = (value ?? '').trim();
+    const source = normalized.length > 0 ? normalized : 'guest';
+    const hash = Array.from(source).reduce(
+        (sum, character) => sum + character.charCodeAt(0),
+        0,
+    );
+
+    return avatarToneClasses[hash % avatarToneClasses.length];
+};
+
+const csrfToken = (): string => {
+    if (typeof document === 'undefined') {
+        return '';
+    }
+
+    return (
+        document
+            .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? ''
+    );
+};
+
+const clampNumber = (value: number, min: number, max: number): number =>
+    Math.min(Math.max(value, min), max);
+
+const interpolateNumber = (
+    start: number,
+    end: number,
+    progress: number,
+): number => start + (end - start) * progress;
+
+const updateAssetItem = (
+    assetId: number,
+    patch: Partial<AssetItem>,
+): void => {
+    assetItems.value = assetItems.value.map((asset) =>
+        asset.id === assetId
+            ? {
+                  ...asset,
+                  ...patch,
+              }
+            : asset,
+    );
+};
+
+const applyGuestProfilePayload = (payload: {
+    guest: GuestProfilePayload | null;
+    likedAssetIds: number[];
+}): void => {
+    if (payload.guest !== null) {
+        guestFieldValues.value = {
+            ...guestFieldValues.value,
+            ...payload.guest.guestFields,
+            name: payload.guest.name,
+            email: payload.guest.email ?? '',
+            phone: payload.guest.phone ?? '',
+        };
+        guestAvatarUrl.value = payload.guest.avatarUrl;
+    }
+
+    likedAssetIds.value = payload.likedAssetIds.reduce<Record<number, boolean>>(
+        (result, assetId) => {
+            result[assetId] = true;
+            return result;
+        },
+        {},
+    );
+};
+
+const updateMorphingHeader = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    showScrollTopButton.value =
+        onboardingDone.value &&
+        window.scrollY > 720 &&
+        activeStackKey.value === null &&
+        !menuOpen.value &&
+        !isComposerOpen.value &&
+        !isAssetCommentsOpen.value &&
+        !isAssetInfoOpen.value &&
+        !isPreEventInfoOpen.value;
+
+    if (!onboardingDone.value || heroSectionRef.value === null) {
+        isHeaderCollapsed.value = false;
+        return;
+    }
+
+    const revealOffset = 88;
+    const heroBottom =
+        heroSectionRef.value.offsetTop + heroSectionRef.value.offsetHeight;
+
+    isHeaderCollapsed.value = window.scrollY + revealOffset >= heroBottom;
+};
+
+const scrollAlbumToTop = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+    });
+};
+
+const scheduleMorphingHeaderUpdate = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (morphingHeaderFrameId !== null) {
+        return;
+    }
+
+    morphingHeaderFrameId = window.requestAnimationFrame(() => {
+        morphingHeaderFrameId = null;
+        updateMorphingHeader();
+    });
+};
+
+const syncHeroGlassCardObserver = (): void => {
+    heroGlassCardResizeObserver?.disconnect();
+    heroGlassCardResizeObserver = null;
+
+    if (
+        heroSectionRef.value === null
+    ) {
+        return;
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+        heroGlassCardResizeObserver = new ResizeObserver(() => {
+            scheduleMorphingHeaderUpdate();
+        });
+        heroGlassCardResizeObserver.observe(heroSectionRef.value);
+    }
+};
+
+const createGuestToken = (): string => {
+    if (
+        typeof crypto !== 'undefined' &&
+        typeof crypto.randomUUID === 'function'
+    ) {
+        return crypto.randomUUID();
+    }
+
+    return `guest-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+};
+
+const isIntentEnabled = (intent: GuestIntent): boolean => {
+    const found = intentOptions.value.find((option) => option.value === intent);
+
+    return found?.enabled ?? false;
+};
+
+watch(
+    intentOptions,
+    () => {
+        if (!isIntentEnabled(selectedIntent.value)) {
+            selectedIntent.value = defaultIntent();
+        }
+
+        if (!isIntentEnabled(activeView.value)) {
+            activeView.value = defaultIntent();
+        }
+    },
+    { immediate: true },
+);
+
+const persistGalleryView = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.localStorage.setItem(galleryViewStorageKey.value, galleryView.value);
+};
+
+const hydrateGalleryView = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const raw = window.localStorage.getItem(galleryViewStorageKey.value);
+    if (raw === 'grid2' || raw === 'feed' || raw === 'grid3') {
+        galleryView.value = raw;
+    }
+};
+
+const revokeGuestAvatarPreview = (): void => {
+    if (
+        guestAvatarPreviewUrl.value !== null &&
+        guestAvatarPreviewUrl.value.startsWith('blob:')
+    ) {
+        URL.revokeObjectURL(guestAvatarPreviewUrl.value);
+    }
+
+    guestAvatarPreviewUrl.value = null;
+};
+
+const onGuestAvatarSelectionChange = (event: Event): void => {
+    const target = event.target as HTMLInputElement | null;
+    const file = target?.files?.[0] ?? null;
+
+    if (file === null) {
+        return;
+    }
+
+    guestProfileError.value = null;
+    guestAvatarFile.value = file;
+    removeGuestAvatar.value = false;
+    revokeGuestAvatarPreview();
+    guestAvatarPreviewUrl.value = URL.createObjectURL(file);
+};
+
+const clearGuestAvatarSelection = (): void => {
+    guestAvatarFile.value = null;
+    removeGuestAvatar.value = true;
+    revokeGuestAvatarPreview();
+    if (guestAvatarInputRef.value) {
+        guestAvatarInputRef.value.value = '';
+    }
+};
+
+const revokeUploadPreviews = (): void => {
+    for (const preview of uploadPreviewItems.value) {
+        if (preview.objectUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(preview.objectUrl);
+        }
+    }
+
+    uploadPreviewItems.value = [];
+};
+
+const syncUploadPreviews = (files: File[]): void => {
+    revokeUploadPreviews();
+
+    uploadPreviewItems.value = files
+        .filter(
+            (file) =>
+                file.type.startsWith('image/') || file.type.startsWith('video/'),
+        )
+        .map((file, index) => ({
+            key: `${file.name}-${file.size}-${index}`,
+            kind: file.type.startsWith('video/') ? 'video' : 'photo',
+            name: file.name,
+            objectUrl: URL.createObjectURL(file),
+        }));
+};
+
+const openUploadFilePicker = (): void => {
+    if (
+        !canUpload.value ||
+        uploadAccept.value.length === 0 ||
+        uploadForm.processing ||
+        isValidatingVideos.value
+    ) {
+        return;
+    }
+
+    fileInputRef.value?.click();
+};
+
+const appendUploadMessageEmoji = (emoji: string): void => {
+    const currentValue = uploadForm.message ?? '';
+    const nextValue = `${currentValue}${emoji}`;
+    uploadForm.message = nextValue.slice(0, 500);
+};
+
+const syncGuestProfile = async (): Promise<void> => {
+    if (guestToken.value.trim().length === 0) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${props.guestProfileUrl}?guest_token=${encodeURIComponent(guestToken.value)}`,
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            },
+        );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const payload = (await response.json()) as {
+            guest: GuestProfilePayload | null;
+            likedAssetIds: number[];
+        };
+        applyGuestProfilePayload(payload);
+    } catch {
+        // Best-effort sync for public guests; keep local profile state if this fails.
+    }
+};
+
+const upsertGuestProfile = async (): Promise<boolean> => {
+    guestProfileProcessing.value = true;
+    guestProfileError.value = null;
+
+    const formData = new FormData();
+    formData.set('guest_token', guestToken.value);
+    formData.set('guest_name', guestName.value.trim());
+    if (guestEmail.value.trim().length > 0) {
+        formData.set('guest_email', guestEmail.value.trim());
+    }
+    if (guestPhone.value.trim().length > 0) {
+        formData.set('guest_phone', guestPhone.value.trim());
+    }
+    formData.set('guest_intent', selectedIntent.value);
+    Object.entries(guestFieldValues.value)
+        .filter(([, value]) => value.trim().length > 0)
+        .forEach(([key, value]) => {
+            formData.set(`guest_fields[${key}]`, value.trim());
+        });
+    if (guestAvatarFile.value !== null) {
+        formData.set('avatar_file', guestAvatarFile.value);
+    }
+    if (removeGuestAvatar.value) {
+        formData.set('remove_avatar', '1');
+    }
+
+    try {
+        const response = await fetch(props.guestProfileUpsertUrl, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: formData,
+        });
+
+        const payload = (await response.json().catch(() => null)) as
+            | {
+                  guest: GuestProfilePayload | null;
+                  likedAssetIds: number[];
+                  message?: string;
+                  errors?: Record<string, string[]>;
+              }
+            | null;
+
+        if (!response.ok || payload === null) {
+            guestProfileError.value =
+                payload?.errors
+                    ? Object.values(payload.errors)
+                          .flat()
+                          .find((message) => typeof message === 'string') ?? null
+                    : null;
+            if (guestProfileError.value === null) {
+                guestProfileError.value =
+                    'We could not save your guest profile right now.';
+            }
+            guestProfileProcessing.value = false;
+            return false;
+        }
+
+        applyGuestProfilePayload(payload);
+        guestAvatarFile.value = null;
+        removeGuestAvatar.value = false;
+        revokeGuestAvatarPreview();
+        if (guestAvatarInputRef.value) {
+            guestAvatarInputRef.value.value = '';
+        }
+        guestProfileProcessing.value = false;
+        return true;
+    } catch {
+        guestProfileError.value = 'We could not save your guest profile right now.';
+        guestProfileProcessing.value = false;
+        return false;
+    }
+};
+
+const persistGuestProfile = (): void => {
+    if (typeof window === 'undefined' || !onboardingDone.value) {
+        return;
+    }
+
+    window.localStorage.setItem(
+        guestStorageKey.value,
+        JSON.stringify({
+            fields: guestFieldValues.value,
+            intent: activeView.value,
+            welcomeFingerprint: welcomeConfigFingerprint.value,
+            guestToken: guestToken.value,
+        }),
+    );
+};
+
+const hydrateGuestProfile = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const raw = window.localStorage.getItem(guestStorageKey.value);
+    if (!raw) {
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as {
+            fields?: unknown;
+            intent?: unknown;
+            welcomeFingerprint?: unknown;
+            guestToken?: unknown;
+        };
+        const storedWelcomeFingerprint =
+            typeof parsed.welcomeFingerprint === 'string'
+                ? parsed.welcomeFingerprint
+                : null;
+        if (
+            storedWelcomeFingerprint === null ||
+            storedWelcomeFingerprint !== welcomeConfigFingerprint.value
+        ) {
+            window.localStorage.removeItem(guestStorageKey.value);
+            return;
+        }
+        if (
+            parsed.fields === null ||
+            typeof parsed.fields !== 'object' ||
+            Array.isArray(parsed.fields)
+        ) {
+            return;
+        }
+        const fields = parsed.fields as Record<string, unknown>;
+        const nextValues: Record<string, string> = {};
+        for (const [key, value] of Object.entries(fields)) {
+            nextValues[key] = typeof value === 'string' ? value : '';
+        }
+        if ((nextValues.name ?? '').trim().length < 2) {
+            return;
+        }
+        guestFieldValues.value = {
+            ...guestFieldValues.value,
+            ...nextValues,
+        };
+        const parsedIntent =
+            typeof parsed.intent === 'string'
+                ? (parsed.intent as GuestIntent)
+                : defaultIntent();
+        guestToken.value =
+            typeof parsed.guestToken === 'string' && parsed.guestToken.length > 0
+                ? parsed.guestToken
+                : createGuestToken();
+        activeView.value = isIntentEnabled(parsedIntent)
+            ? parsedIntent
+            : defaultIntent();
+        selectedIntent.value = activeView.value;
+        onboardingDone.value = true;
+        onboardingStep.value = 2;
+    } catch {
+        window.localStorage.removeItem(guestStorageKey.value);
+    }
+};
+
+onMounted(() => {
+    hydrateGuestProfile();
+    hydrateGalleryView();
+    latestKnownAssetId.value = latestAssetIdFromItems(props.assets);
+    assetNextCursor.value = props.assetsNextCursor;
+    hasMoreAssets.value = props.assetsHasMore;
+    if (guestToken.value === '') {
+        guestToken.value = createGuestToken();
+    }
+    if (onboardingDone.value) {
+        void syncGuestProfile();
+    }
+    syncHeroGlassCardObserver();
+    updateMorphingHeader();
+    syncBodyScrollLock();
+    window.addEventListener('scroll', scheduleMorphingHeaderUpdate, {
+        passive: true,
+    });
+    window.addEventListener('resize', scheduleMorphingHeaderUpdate, {
+        passive: true,
+    });
+    syncLoadMoreObserver();
+    albumUpdatePollId = window.setInterval(() => {
+        void checkForAlbumUpdates();
+    }, 30000);
+    syncProcessingVideoPoll();
+});
+
+onUnmounted(() => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    heroGlassCardResizeObserver?.disconnect();
+    if (morphingHeaderFrameId !== null) {
+        window.cancelAnimationFrame(morphingHeaderFrameId);
+    }
+    if (albumUpdatePollId !== null) {
+        window.clearInterval(albumUpdatePollId);
+        albumUpdatePollId = null;
+    }
+    if (processingVideoPollId !== null) {
+        window.clearInterval(processingVideoPollId);
+        processingVideoPollId = null;
+    }
+    if (composerOpenTimeoutId !== null) {
+        window.clearTimeout(composerOpenTimeoutId);
+        composerOpenTimeoutId = null;
+    }
+    loadMoreObserver?.disconnect();
+    loadMoreObserver = null;
+    window.removeEventListener('scroll', scheduleMorphingHeaderUpdate);
+    window.removeEventListener('resize', scheduleMorphingHeaderUpdate);
+    revokeUploadPreviews();
+    revokeGuestAvatarPreview();
+    unlockBodyScroll();
+});
+
+watch(
+    () => props.textPostThemes,
+    (themes) => {
+        if (textForm.text_post_theme_id === null && themes.length > 0) {
+            textForm.text_post_theme_id = themes[0].id;
+        }
+    },
+    { immediate: true },
+);
+
+watch(heroSectionRef, () => {
+    syncHeroGlassCardObserver();
+    scheduleMorphingHeaderUpdate();
+});
+
+watch(loadMoreSentinelRef, () => {
+    syncLoadMoreObserver();
+});
+
+watch(hasProcessingVideoAssets, () => {
+    syncProcessingVideoPoll();
+});
+
+watch(onboardingDone, async () => {
+    await nextTick();
+    syncHeroGlassCardObserver();
+    scheduleMorphingHeaderUpdate();
+});
+
+watch(
+    () => textForm.text,
+    (value) => {
+        syncTextComposerElement(value);
+    },
+);
+
+watch(
+    () => props.assets,
+    (nextAssets) => {
+        assetItems.value = [...nextAssets];
+        loadedPhotoAssetIds.value = {};
+        latestKnownAssetId.value = latestAssetIdFromItems(nextAssets);
+        hasPendingAlbumUpdate.value = false;
+        pendingAlbumUpdateCount.value = 0;
+        assetNextCursor.value = props.assetsNextCursor;
+        hasMoreAssets.value = props.assetsHasMore;
+        if (activeStackKey.value === null) {
+            return;
+        }
+
+        const nextStack = galleryStacks.value.find(
+            (stack) => stack.key === activeStackKey.value,
+        );
+        if (!nextStack) {
+            closeAssetViewer();
+            return;
+        }
+
+        activeStackSlideIndex.value = Math.min(
+            activeStackSlideIndex.value,
+            Math.max(0, nextStack.assets.length - 1),
+        );
+    },
+);
+
+watch(isComposerOpen, (open) => {
+    if (open) {
+        return;
+    }
+
+    activeView.value = defaultIntent();
+    selectedIntent.value = activeView.value;
+    revokeUploadPreviews();
+    uploadForm.reset();
+    uploadForm.clearErrors();
+    textForm.reset('text');
+    textForm.clearErrors();
+    clientValidationErrors.value = [];
+    if (fileInputRef.value) {
+        fileInputRef.value.value = '';
+    }
+    persistGuestProfile();
+});
+
+watch(galleryView, () => {
+    persistGalleryView();
+});
+
+watch(menuOpen, (open) => {
+    if (open) {
+        return;
+    }
+
+    const nextIntent = pendingComposerIntent.value;
+    if (nextIntent === null || nextIntent === 'browse_gallery') {
+        return;
+    }
+
+    if (typeof window === 'undefined') {
+        pendingComposerIntent.value = null;
+        isComposerOpen.value = true;
+        return;
+    }
+
+    if (composerOpenTimeoutId !== null) {
+        window.clearTimeout(composerOpenTimeoutId);
+        composerOpenTimeoutId = null;
+    }
+
+    composerOpenTimeoutId = window.setTimeout(() => {
+        composerOpenTimeoutId = null;
+        pendingComposerIntent.value = null;
+        void nextTick(() => {
+            isComposerOpen.value = true;
+        });
+    }, 260);
+});
+
+const isValidEmail = (value: string): boolean =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+const validateGuestStepOne = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    for (const field of welcomeGuestFields.value) {
+        const value = (guestFieldValues.value[field.id] ?? '').trim();
+        if (field.required && value.length === 0) {
+            errors[field.id] = `Please enter ${field.label.toLowerCase()}.`;
+            continue;
+        }
+        if (field.id === 'name' && value.length < 2) {
+            errors[field.id] = 'Please enter your name.';
+            continue;
+        }
+        if (field.type === 'email' && value.length > 0 && !isValidEmail(value)) {
+            errors[field.id] = 'Use a valid email address.';
+        }
+    }
+
+    onboardingErrors.value = errors;
+
+    return Object.keys(errors).length === 0;
+};
+
+const goToIntentStep = (): void => {
+    if (!validateGuestStepOne()) {
+        return;
+    }
+
+    onboardingStep.value = 2;
+};
+
+const completeOnboarding = async (): Promise<void> => {
+    if (!validateGuestStepOne()) {
+        onboardingStep.value = 1;
+        return;
+    }
+
+    const nextIntent = isIntentEnabled(selectedIntent.value)
+        ? selectedIntent.value
+        : defaultIntent();
+
+    const saved = await upsertGuestProfile();
+    if (!saved) {
+        onboardingStep.value = 1;
+        return;
+    }
+
+    activeView.value = nextIntent;
+    selectedIntent.value = nextIntent;
+    onboardingDone.value = true;
+    menuOpen.value = false;
+    persistGuestProfile();
+
+    if (nextIntent !== 'browse_gallery') {
+        openComposerForView(nextIntent);
+    }
+};
+
+const resetGuestOnboarding = (): void => {
+    onboardingDone.value = false;
+    onboardingStep.value = 1;
+    menuOpen.value = false;
+    uploadForm.reset();
+    textForm.clearErrors();
+    clientValidationErrors.value = [];
+    if (fileInputRef.value) {
+        fileInputRef.value.value = '';
+    }
+
+    if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(guestStorageKey.value);
+    }
+
+    guestFieldValues.value = {
+        name: '',
+        email: '',
+        phone: '',
+    };
+    guestAvatarUrl.value = null;
+    guestProfileError.value = null;
+    clearGuestAvatarSelection();
+    onboardingErrors.value = {};
+};
+
+const openComposerForView = (view: GuestIntent): void => {
+    if (!isIntentEnabled(view)) {
+        return;
+    }
+
+    activeView.value = view;
+    selectedIntent.value = view;
+
+    if (view === 'browse_gallery') {
+        if (composerOpenTimeoutId !== null && typeof window !== 'undefined') {
+            window.clearTimeout(composerOpenTimeoutId);
+            composerOpenTimeoutId = null;
+        }
+        pendingComposerIntent.value = null;
+        menuOpen.value = false;
+        isComposerOpen.value = false;
+        persistGuestProfile();
+        return;
+    }
+
+    if (menuOpen.value) {
+        pendingComposerIntent.value = view;
+        menuOpen.value = false;
+        return;
+    }
+
+    if (typeof window === 'undefined') {
+        pendingComposerIntent.value = null;
+        isComposerOpen.value = true;
+        return;
+    }
+
+    if (composerOpenTimeoutId !== null) {
+        window.clearTimeout(composerOpenTimeoutId);
+        composerOpenTimeoutId = null;
+    }
+
+    const open = () => {
+        composerOpenTimeoutId = null;
+        pendingComposerIntent.value = null;
+        void nextTick(() => {
+            isComposerOpen.value = true;
+        });
+    };
+
+    open();
+};
+
+const setActiveView = (view: GuestIntent): void => {
+    openComposerForView(view);
+};
+
+const setMenuActiveView = (view: GuestIntent): void => {
+    if (!isIntentEnabled(view)) {
+        return;
+    }
+
+    activeView.value = view;
+    selectedIntent.value = view;
+
+    if (composerOpenTimeoutId !== null && typeof window !== 'undefined') {
+        window.clearTimeout(composerOpenTimeoutId);
+        composerOpenTimeoutId = null;
+    }
+
+    pendingComposerIntent.value = null;
+    menuOpen.value = false;
+
+    if (view === 'browse_gallery') {
+        isComposerOpen.value = false;
+        persistGuestProfile();
+        return;
+    }
+
+    if (typeof window === 'undefined') {
+        isComposerOpen.value = true;
+        return;
+    }
+
+    composerOpenTimeoutId = window.setTimeout(() => {
+        composerOpenTimeoutId = null;
+        isComposerOpen.value = true;
+    }, 320);
+};
+
+const closeComposer = (): void => {
+    if (composerOpenTimeoutId !== null && typeof window !== 'undefined') {
+        window.clearTimeout(composerOpenTimeoutId);
+        composerOpenTimeoutId = null;
+    }
+    pendingComposerIntent.value = null;
+    isComposerOpen.value = false;
+};
+
+const lockBodyScroll = (): void => {
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+        return;
+    }
+
+    if (document.body.dataset.albumScrollLocked === 'true') {
+        return;
+    }
+
+    lockedScrollY = window.scrollY;
+    document.body.dataset.albumScrollLocked = 'true';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehavior = 'none';
+};
+
+const unlockBodyScroll = (): void => {
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+        return;
+    }
+
+    const shouldRestoreScroll =
+        document.body.dataset.albumScrollLocked === 'true';
+
+    document.body.dataset.albumScrollLocked = 'false';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
+
+    if (shouldRestoreScroll) {
+        window.scrollTo(0, lockedScrollY);
+    }
+};
+
+const syncBodyScrollLock = (): void => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    const shouldLock =
+        activeStackKey.value !== null ||
+        isComposerOpen.value ||
+        isAssetCommentsOpen.value ||
+        isAssetInfoOpen.value ||
+        menuOpen.value ||
+        isPreEventInfoOpen.value;
+
+    if (shouldLock) {
+        lockBodyScroll();
+        return;
+    }
+
+    unlockBodyScroll();
+};
+
+watch(
+    [
+        isComposerOpen,
+        menuOpen,
+        isPreEventInfoOpen,
+        isAssetCommentsOpen,
+        isAssetInfoOpen,
+        activeStackKey,
+    ],
+    () => {
+        syncBodyScrollLock();
+    },
+);
+
+const openAssetViewer = (stackKey: string, slideIndex = 0): void => {
+    activeStackKey.value = stackKey;
+    activeStackSlideIndex.value = slideIndex;
+};
+
+const openAssetInfo = (stackKey: string, slideIndex = 0): void => {
+    activeInfoStackKey.value = stackKey;
+    activeInfoSlideIndex.value = slideIndex;
+    isAssetInfoOpen.value = true;
+};
+
+const closeAssetViewer = (): void => {
+    activeStackKey.value = null;
+    activeStackSlideIndex.value = 0;
+    viewerTouchStartX.value = null;
+    viewerTouchStartY.value = null;
+    viewerTouchCurrentX.value = null;
+    viewerTouchCurrentY.value = null;
+};
+
+const closeAssetInfo = (): void => {
+    isAssetInfoOpen.value = false;
+    activeInfoStackKey.value = null;
+    activeInfoSlideIndex.value = 0;
+};
+
+const isAssetCommentsLoading = (assetId: number | null): boolean =>
+    assetId !== null && commentLoadingAssetIds.value[assetId] === true;
+
+const isAssetCommentPending = (assetId: number | null): boolean =>
+    assetId !== null && commentPendingAssetIds.value[assetId] === true;
+
+const isCommentLikePending = (commentId: number): boolean =>
+    commentLikePendingIds.value[commentId] === true;
+
+const loadAssetComments = async (asset: AssetItem): Promise<void> => {
+    if (isAssetCommentsLoading(asset.id)) {
+        return;
+    }
+
+    commentLoadingAssetIds.value = {
+        ...commentLoadingAssetIds.value,
+        [asset.id]: true,
+    };
+
+    try {
+        const commentsUrl =
+            guestToken.value.trim().length > 0
+                ? `${asset.commentsUrl}?guest_token=${encodeURIComponent(guestToken.value)}`
+                : asset.commentsUrl;
+        const response = await fetch(commentsUrl, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+        if (!response.ok) {
+            throw new Error('Failed to load comments.');
+        }
+
+        const payload = (await response.json()) as {
+            comments: AssetComment[];
+            commentCount: number;
+        };
+        commentItemsByAssetId.value = {
+            ...commentItemsByAssetId.value,
+            [asset.id]: payload.comments,
+        };
+        updateAssetItem(asset.id, {
+            commentCount: payload.commentCount,
+        });
+    } catch {
+        commentError.value = 'We could not load comments right now.';
+    } finally {
+        commentLoadingAssetIds.value = omitAssetId(
+            commentLoadingAssetIds.value,
+            asset.id,
+        );
+    }
+};
+
+const openAssetComments = async (stackKey: string): Promise<void> => {
+    activeCommentsStackKey.value = stackKey;
+    isAssetCommentsOpen.value = true;
+    commentError.value = null;
+
+    const stack =
+        galleryStacks.value.find((galleryStack) => galleryStack.key === stackKey) ??
+        null;
+    const asset = stack?.preview ?? null;
+    if (asset === null) {
+        return;
+    }
+
+    await loadAssetComments(asset);
+};
+
+const closeAssetComments = (): void => {
+    isAssetCommentsOpen.value = false;
+    activeCommentsStackKey.value = null;
+    commentDraft.value = '';
+    commentError.value = null;
+};
+
+const appendCommentEmoji = (emoji: string): void => {
+    commentDraft.value = `${commentDraft.value}${emoji}`;
+};
+
+const isAssetLiked = (asset: AssetItem | null): boolean =>
+    asset !== null && likedAssetIds.value[asset.id] === true;
+
+const isAssetLikePending = (asset: AssetItem | null): boolean =>
+    asset !== null && likePendingAssetIds.value[asset.id] === true;
+
+const isAssetLikeAnimating = (asset: AssetItem | null): boolean =>
+    asset !== null && likeAnimatingAssetIds.value[asset.id] === true;
+
+const omitAssetId = <T extends Record<number, boolean>>(
+    collection: T,
+    assetId: number,
+): T =>
+    Object.fromEntries(
+        Object.entries(collection).filter(([key]) => Number(key) !== assetId),
+    ) as T;
+
+const triggerLikeAnimation = (assetId: number): void => {
+    likeAnimatingAssetIds.value = {
+        ...likeAnimatingAssetIds.value,
+        [assetId]: true,
+    };
+
+    window.setTimeout(() => {
+        likeAnimatingAssetIds.value = omitAssetId(
+            likeAnimatingAssetIds.value,
+            assetId,
+        );
+    }, 360);
+};
+
+const canDeleteAsset = (asset: AssetItem | null): boolean => {
+    if (asset === null) {
+        return false;
+    }
+
+    return (
+        guestToken.value.trim().length > 0 &&
+        asset.guestName !== null &&
+        asset.guestName.trim().toLowerCase() === guestName.value.trim().toLowerCase()
+    );
+};
+
+const canDownloadAsset = (asset: AssetItem | null): boolean =>
+    asset !== null && props.canGuestDownload;
+
+const currentFeedAssetCanDelete = (stack: GalleryStack): boolean =>
+    canDeleteAsset(stack.preview);
+
+const currentFeedAssetCanDownload = (stack: GalleryStack): boolean =>
+    canDownloadAsset(stack.preview);
+
+const showNextInStack = (): void => {
+    if (selectedStackAssets.value.length <= 1) {
+        return;
+    }
+
+    activeStackSlideIndex.value =
+        (activeStackSlideIndex.value + 1) % selectedStackAssets.value.length;
+};
+
+const showPreviousInStack = (): void => {
+    if (selectedStackAssets.value.length <= 1) {
+        return;
+    }
+
+    activeStackSlideIndex.value =
+        (activeStackSlideIndex.value - 1 + selectedStackAssets.value.length) %
+        selectedStackAssets.value.length;
+};
+
+const onViewerTouchStart = (event: TouchEvent): void => {
+    const touch = event.changedTouches[0];
+
+    viewerTouchStartX.value = touch?.clientX ?? null;
+    viewerTouchStartY.value = touch?.clientY ?? null;
+    viewerTouchCurrentX.value = touch?.clientX ?? null;
+    viewerTouchCurrentY.value = touch?.clientY ?? null;
+};
+
+const onViewerTouchMove = (event: TouchEvent): void => {
+    const touch = event.changedTouches[0];
+
+    viewerTouchCurrentX.value = touch?.clientX ?? null;
+    viewerTouchCurrentY.value = touch?.clientY ?? null;
+};
+
+const resetViewerTouchGesture = (): void => {
+    viewerTouchStartX.value = null;
+    viewerTouchStartY.value = null;
+    viewerTouchCurrentX.value = null;
+    viewerTouchCurrentY.value = null;
+};
+
+const onViewerTouchEnd = (event: TouchEvent): void => {
+    const startX = viewerTouchStartX.value;
+    const startY = viewerTouchStartY.value;
+    const endX =
+        viewerTouchCurrentX.value ?? event.changedTouches[0]?.clientX ?? null;
+    const endY =
+        viewerTouchCurrentY.value ?? event.changedTouches[0]?.clientY ?? null;
+
+    resetViewerTouchGesture();
+
+    if (startX === null || endX === null || !hasMultipleInSelectedStack.value) {
+        return;
+    }
+
+    if (startY === null || endY === null) {
+        return;
+    }
+
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+        return;
+    }
+
+    if (deltaX < 0) {
+        showNextInStack();
+        return;
+    }
+
+    showPreviousInStack();
+};
+
+const onViewerTouchCancel = (): void => {
+    resetViewerTouchGesture();
+};
+
+const deleteAsset = (asset: AssetItem): void => {
+    if (!canDeleteAsset(asset) || deleteAssetForm.processing) {
+        return;
+    }
+
+    deleteAssetForm.guest_name = guestName.value.trim();
+    deleteAssetForm.guest_token = guestToken.value;
+    deleteAssetForm.post(asset.deleteUrl, {
+        preserveScroll: true,
+        onSuccess: () => {
+            assetItems.value = assetItems.value.filter(
+                (item) => item.id !== asset.id,
+            );
+            likedAssetIds.value = omitAssetId(likedAssetIds.value, asset.id);
+            const remainingInStack = selectedStackAssets.value.length;
+            if (remainingInStack <= 0) {
+                closeAssetViewer();
+            } else {
+                activeStackSlideIndex.value = Math.min(
+                    activeStackSlideIndex.value,
+                    remainingInStack - 1,
+                );
+                closeAssetInfo();
+            }
+            deleteAssetForm.reset();
+        },
+    });
+};
+
+const deleteSelectedAsset = (): void => {
+    if (selectedAsset.value === null) {
+        return;
+    }
+
+    deleteAsset(selectedAsset.value);
+};
+
+const toggleAssetLike = async (asset: AssetItem): Promise<void> => {
+    if (!onboardingDone.value || guestToken.value.trim().length === 0) {
+        return;
+    }
+
+    if (isAssetLikePending(asset)) {
+        return;
+    }
+
+    likePendingAssetIds.value = {
+        ...likePendingAssetIds.value,
+        [asset.id]: true,
+    };
+
+    try {
+        const formData = new FormData();
+        formData.set('guest_token', guestToken.value);
+        const response = await fetch(asset.likeToggleUrl, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: formData,
+        });
+        if (!response.ok) {
+            return;
+        }
+
+        const payload = (await response.json()) as {
+            liked: boolean;
+            likeCount: number;
+        };
+        likedAssetIds.value = payload.liked
+            ? {
+                  ...likedAssetIds.value,
+                  [asset.id]: true,
+              }
+            : Object.fromEntries(
+                  Object.entries(likedAssetIds.value).filter(
+                      ([key]) => Number(key) !== asset.id,
+                  ),
+              );
+        updateAssetItem(asset.id, {
+            likeCount: payload.likeCount,
+        });
+        triggerLikeAnimation(asset.id);
+    } catch {
+        toast.error('We could not update this like right now.');
+    } finally {
+        likePendingAssetIds.value = omitAssetId(
+            likePendingAssetIds.value,
+            asset.id,
+        );
+    }
+};
+
+const toggleSelectedAssetLike = async (): Promise<void> => {
+    if (selectedAsset.value === null) {
+        return;
+    }
+
+    await toggleAssetLike(selectedAsset.value);
+};
+
+const shareAsset = async (asset: AssetItem): Promise<void> => {
+    const shareUrl = props.links.album;
+    const shareTitle = `${asset.guestName || 'Guest'} on ${props.eventName}`;
+    const shareText =
+        asset.captionTitle?.trim() ||
+        asset.captionSubtitle?.trim() ||
+        `Check out this moment from ${props.eventName}.`;
+
+    if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function'
+    ) {
+        try {
+            await navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl,
+            });
+            return;
+        } catch {
+            // Fall back to clipboard copy below.
+        }
+    }
+
+    if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText === 'function'
+    ) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Album link copied.');
+        return;
+    }
+
+    toast.error('Sharing is not available on this device.');
+};
+
+const shareSelectedAsset = async (): Promise<void> => {
+    if (selectedAsset.value === null) {
+        return;
+    }
+
+    await shareAsset(selectedAsset.value);
+};
+
+const submitAssetComment = async (): Promise<void> => {
+    const asset = selectedCommentsAsset.value;
+    if (asset === null) {
+        return;
+    }
+    if (!onboardingDone.value || guestToken.value.trim().length === 0) {
+        commentError.value = 'Complete guest onboarding before commenting.';
+        return;
+    }
+
+    const body = commentDraft.value.trim();
+    if (body.length === 0) {
+        commentError.value = 'Write a comment first.';
+        return;
+    }
+    if (isAssetCommentPending(asset.id)) {
+        return;
+    }
+
+    commentPendingAssetIds.value = {
+        ...commentPendingAssetIds.value,
+        [asset.id]: true,
+    };
+    commentError.value = null;
+
+    try {
+        const formData = new FormData();
+        formData.set('guest_token', guestToken.value);
+        formData.set('body', body);
+
+        const response = await fetch(asset.commentStoreUrl, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: formData,
+        });
+        const payload = (await response.json().catch(() => null)) as
+            | {
+                  comment?: AssetComment;
+                  commentCount?: number;
+                  errors?: Record<string, string[]>;
+              }
+            | null;
+
+        if (!response.ok || payload?.comment === undefined) {
+            commentError.value =
+                payload?.errors
+                    ? Object.values(payload.errors)
+                          .flat()
+                          .find((message) => typeof message === 'string') ?? null
+                    : 'We could not publish your comment.';
+            return;
+        }
+
+        const nextComments = [...(commentItemsByAssetId.value[asset.id] ?? []), payload.comment];
+        commentItemsByAssetId.value = {
+            ...commentItemsByAssetId.value,
+            [asset.id]: nextComments,
+        };
+        updateAssetItem(asset.id, {
+            commentCount: payload.commentCount ?? nextComments.length,
+        });
+        commentDraft.value = '';
+        toast.success('Comment posted.');
+    } catch {
+        commentError.value = 'We could not publish your comment.';
+    } finally {
+        commentPendingAssetIds.value = omitAssetId(
+            commentPendingAssetIds.value,
+            asset.id,
+        );
+    }
+};
+
+const toggleCommentLike = async (comment: AssetComment): Promise<void> => {
+    if (!onboardingDone.value || guestToken.value.trim().length === 0) {
+        commentError.value = 'Complete guest onboarding before liking comments.';
+        return;
+    }
+    if (isCommentLikePending(comment.id)) {
+        return;
+    }
+
+    commentLikePendingIds.value = {
+        ...commentLikePendingIds.value,
+        [comment.id]: true,
+    };
+
+    try {
+        const formData = new FormData();
+        formData.set('guest_token', guestToken.value);
+        const response = await fetch(comment.likeToggleUrl, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: formData,
+        });
+        if (!response.ok || selectedCommentsAsset.value === null) {
+            throw new Error('Failed to update comment like.');
+        }
+
+        const payload = (await response.json()) as {
+            liked: boolean;
+            likeCount: number;
+        };
+        const assetId = selectedCommentsAsset.value.id;
+        commentItemsByAssetId.value = {
+            ...commentItemsByAssetId.value,
+            [assetId]: (commentItemsByAssetId.value[assetId] ?? []).map(
+                (item) =>
+                    item.id === comment.id
+                        ? {
+                              ...item,
+                              liked: payload.liked,
+                              likeCount: payload.likeCount,
+                          }
+                        : item,
+            ),
+        };
+    } catch {
+        commentError.value = 'We could not update that comment like right now.';
+    } finally {
+        commentLikePendingIds.value = omitAssetId(
+            commentLikePendingIds.value,
+            comment.id,
+        );
+    }
+};
+
+const readVideoDurationSeconds = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        const objectUrl = URL.createObjectURL(file);
+
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(video.duration);
+        };
+        video.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Unable to read video duration.'));
+        };
+
+        video.src = objectUrl;
+    });
+};
+
+const validateSelectedFiles = async (
+    selectedFiles: File[],
+    mode: UploadMode,
+): Promise<File[]> => {
+    const accepted: File[] = [];
+    const errors: string[] = [];
+
+    isValidatingVideos.value = true;
+
+    for (const file of selectedFiles) {
+        if (file.type.startsWith('image/')) {
+            if (mode === 'video_only') {
+                errors.push(`${file.name}: only video files are allowed here.`);
+                continue;
+            }
+            if (!canUploadPhotos.value) {
+                errors.push(`${file.name}: photo uploads are disabled.`);
+                continue;
+            }
+
+            if (file.size > props.limits.photoMaxSizeBytes) {
+                errors.push(
+                    `${file.name}: photo exceeds ${formatBytes(props.limits.photoMaxSizeBytes)}.`,
+                );
+                continue;
+            }
+
+            accepted.push(file);
+            continue;
+        }
+
+        if (file.type.startsWith('video/')) {
+            if (!canUploadVideos.value) {
+                errors.push(`${file.name}: video uploads are disabled.`);
+                continue;
+            }
+
+            if (file.size > props.limits.videoMaxSizeBytes) {
+                errors.push(
+                    `${file.name}: video exceeds ${formatBytes(props.limits.videoMaxSizeBytes)}.`,
+                );
+                continue;
+            }
+
+            try {
+                const duration = await readVideoDurationSeconds(file);
+                if (
+                    duration < props.limits.videoMinDurationSeconds ||
+                    duration > props.limits.videoMaxDurationSeconds
+                ) {
+                    errors.push(
+                        `${file.name}: video must be ${props.limits.videoMinDurationSeconds}-${props.limits.videoMaxDurationSeconds} seconds.`,
+                    );
+                    continue;
+                }
+            } catch {
+                errors.push(`${file.name}: unable to validate video duration.`);
+                continue;
+            }
+
+            accepted.push(file);
+            continue;
+        }
+
+        errors.push(`${file.name}: unsupported file type.`);
+    }
+
+    isValidatingVideos.value = false;
+    clientValidationErrors.value = errors;
+
+    return accepted;
+};
+
+const onFileSelectionChange = async (event: Event): Promise<void> => {
+    const target = event.target as HTMLInputElement;
+    const selectedFiles = Array.from(target.files ?? []);
+
+    if (selectedFiles.length === 0) {
+        revokeUploadPreviews();
+        uploadForm.files = [];
+        clientValidationErrors.value = [];
+        return;
+    }
+
+    uploadForm.files = await validateSelectedFiles(selectedFiles, uploadMode.value);
+    syncUploadPreviews(uploadForm.files);
+};
+
+const uploadFiles = (): void => {
+    if (
+        !onboardingDone.value ||
+        !canUpload.value ||
+        uploadForm.files.length === 0 ||
+        uploadForm.processing
+    ) {
+        return;
+    }
+
+    const normalizedGuestName = guestName.value.trim();
+    if (normalizedGuestName.length < 2) {
+        resetGuestOnboarding();
+        return;
+    }
+
+    uploadForm.guest_name = normalizedGuestName;
+    uploadForm.guest_email =
+        guestEmail.value.trim().length > 0 ? guestEmail.value.trim() : null;
+    uploadForm.guest_phone =
+        guestPhone.value.trim().length > 0 ? guestPhone.value.trim() : null;
+    uploadForm.message =
+        uploadForm.message?.trim().length
+            ? uploadForm.message.trim()
+            : null;
+    uploadForm.guest_token = guestToken.value;
+    uploadForm.guest_fields = Object.fromEntries(
+        Object.entries(guestFieldValues.value)
+            .filter(([, value]) => value.trim().length > 0)
+            .map(([key, value]) => [key, value.trim()]),
+    );
+    uploadForm.guest_intent = activeView.value;
+
+    uploadForm.post(props.uploadUrl, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            revokeUploadPreviews();
+            uploadForm.reset();
+            clientValidationErrors.value = [];
+            if (fileInputRef.value) {
+                fileInputRef.value.value = '';
+            }
+            isComposerOpen.value = false;
+        },
+    });
+};
+
+const submitTextPost = (): void => {
+    if (!onboardingDone.value || !canUploadText.value || textForm.processing) {
+        return;
+    }
+
+    if (textForm.text.trim().length === 0) {
+        textForm.setError('text', 'Text post cannot be empty.');
+        return;
+    }
+    if (selectedTextPostTheme.value === null) {
+        textForm.setError('text', 'Please choose a background.');
+        return;
+    }
+
+    const normalizedGuestName = guestName.value.trim();
+    if (normalizedGuestName.length < 2) {
+        resetGuestOnboarding();
+        return;
+    }
+
+    textForm.guest_name = normalizedGuestName;
+    textForm.guest_email =
+        guestEmail.value.trim().length > 0 ? guestEmail.value.trim() : null;
+    textForm.guest_phone =
+        guestPhone.value.trim().length > 0 ? guestPhone.value.trim() : null;
+    textForm.guest_token = guestToken.value;
+    textForm.text_post_theme_id = selectedTextPostTheme.value.id;
+    textForm.guest_fields = Object.fromEntries(
+        Object.entries(guestFieldValues.value)
+            .filter(([, value]) => value.trim().length > 0)
+            .map(([key, value]) => [key, value.trim()]),
+    );
+    textForm.guest_intent = activeView.value;
+
+    textForm.post(props.textPostUrl, {
+        preserveScroll: true,
+        onSuccess: () => {
+            textForm.reset('text');
+            textForm.clearErrors();
+        },
+    });
+};
+
+const resetPullRefreshState = (): void => {
+    pullRefreshStartY.value = null;
+    pullRefreshDistance.value = 0;
+};
+
+const canStartPullRefresh = (): boolean =>
+    typeof window !== 'undefined' &&
+    onboardingDone.value &&
+    window.scrollY <= 0 &&
+    activeStackKey.value === null &&
+    !menuOpen.value &&
+    !isComposerOpen.value &&
+    !isAssetCommentsOpen.value &&
+    !isAssetInfoOpen.value &&
+    !isPreEventInfoOpen.value &&
+    !isAlbumRefreshing.value;
+
+const refreshAlbum = (reason: 'banner' | 'pull' | 'manual' = 'manual'): void => {
+    if (isAlbumRefreshing.value) {
+        return;
+    }
+
+    isAlbumRefreshing.value = true;
+    hasPendingAlbumUpdate.value = false;
+    pendingAlbumUpdateCount.value = 0;
+
+    router.visit(window.location.href, {
+        method: 'get',
+        only: ['assets', 'assetsNextCursor', 'assetsHasMore', 'limits'],
+        preserveState: true,
+        preserveScroll: reason !== 'pull',
+        onError: () => {
+            toast.error('Could not refresh the album right now.');
+        },
+        onFinish: () => {
+            isAlbumRefreshing.value = false;
+            resetPullRefreshState();
+        },
+    });
+};
+
+const loadMoreAssets = async (): Promise<void> => {
+    if (
+        isLoadingMoreAssets.value ||
+        isAlbumRefreshing.value ||
+        !hasMoreAssets.value ||
+        assetNextCursor.value === null
+    ) {
+        return;
+    }
+
+    isLoadingMoreAssets.value = true;
+
+    try {
+        const response = await fetch(
+            `${props.assetFeedUrl}?before_cursor=${encodeURIComponent(String(assetNextCursor.value))}`,
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error('Failed to load more assets.');
+        }
+
+        const payload = (await response.json()) as {
+            assets: AssetItem[];
+            nextCursor: number | null;
+            hasMore: boolean;
+        };
+
+        assetItems.value = mergeAssetItems(assetItems.value, payload.assets);
+        assetNextCursor.value = payload.nextCursor;
+        hasMoreAssets.value = payload.hasMore;
+    } catch {
+        toast.error('Could not load more posts right now.');
+    } finally {
+        isLoadingMoreAssets.value = false;
+    }
+};
+
+const syncLoadMoreObserver = (): void => {
+    loadMoreObserver?.disconnect();
+    loadMoreObserver = null;
+
+    if (
+        typeof window === 'undefined' ||
+        typeof IntersectionObserver === 'undefined' ||
+        loadMoreSentinelRef.value === null
+    ) {
+        return;
+    }
+
+    loadMoreObserver = new IntersectionObserver(
+        (entries) => {
+            const visibleEntry = entries.find((entry) => entry.isIntersecting);
+            if (!visibleEntry) {
+                return;
+            }
+
+            void loadMoreAssets();
+        },
+        {
+            rootMargin: '640px 0px 640px 0px',
+        },
+    );
+
+    loadMoreObserver.observe(loadMoreSentinelRef.value);
+};
+
+const checkForAlbumUpdates = async (): Promise<void> => {
+    if (
+        typeof window === 'undefined' ||
+        typeof document === 'undefined' ||
+        document.visibilityState !== 'visible' ||
+        isAlbumRefreshing.value ||
+        !props.canViewGallery
+    ) {
+        return;
+    }
+
+    try {
+        const response = await fetch(props.assetFeedUrl, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        const payload = (await response.json()) as {
+            assets?: AssetItem[];
+        };
+        const nextAssets = Array.isArray(payload.assets) ? payload.assets : [];
+        const nextLatestAssetId = latestAssetIdFromItems(nextAssets);
+
+        if (nextLatestAssetId <= latestKnownAssetId.value) {
+            return;
+        }
+
+        const nextNewCount = nextAssets.filter(
+            (asset) => asset.id > latestKnownAssetId.value,
+        ).length;
+
+        hasPendingAlbumUpdate.value = true;
+        pendingAlbumUpdateCount.value = Math.max(1, nextNewCount);
+    } catch {
+        // Best-effort polling only.
+    }
+};
+
+const refreshProcessingVideos = async (): Promise<void> => {
+    if (
+        typeof window === 'undefined' ||
+        isAlbumRefreshing.value ||
+        !props.canViewGallery ||
+        !hasProcessingVideoAssets.value
+    ) {
+        return;
+    }
+
+    try {
+        const response = await fetch(props.assetFeedUrl, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        const payload = (await response.json()) as {
+            assets?: AssetItem[];
+        };
+        const nextAssets = Array.isArray(payload.assets) ? payload.assets : [];
+        if (nextAssets.length === 0) {
+            return;
+        }
+
+        const nextById = new Map(nextAssets.map((asset) => [asset.id, asset]));
+        let changed = false;
+
+        assetItems.value = assetItems.value.map((asset) => {
+            if (asset.kind !== 'video' || !asset.videoProcessing) {
+                return asset;
+            }
+
+            const refreshedAsset = nextById.get(asset.id);
+            if (!refreshedAsset) {
+                return asset;
+            }
+
+            if (
+                refreshedAsset.videoProcessing !== asset.videoProcessing ||
+                refreshedAsset.thumbnailUrl !== asset.thumbnailUrl ||
+                refreshedAsset.previewUrl !== asset.previewUrl
+            ) {
+                changed = true;
+
+                return refreshedAsset;
+            }
+
+            return asset;
+        });
+
+        if (changed) {
+            latestKnownAssetId.value = Math.max(
+                latestKnownAssetId.value,
+                latestAssetIdFromItems(assetItems.value),
+            );
+        }
+    } catch {
+        // Best-effort polling only.
+    }
+};
+
+const syncProcessingVideoPoll = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (processingVideoPollId !== null) {
+        window.clearInterval(processingVideoPollId);
+        processingVideoPollId = null;
+    }
+
+    if (!hasProcessingVideoAssets.value) {
+        return;
+    }
+
+    processingVideoPollId = window.setInterval(() => {
+        void refreshProcessingVideos();
+    }, 5000);
+};
+
+const onAlbumTouchStart = (event: TouchEvent): void => {
+    if (!canStartPullRefresh() || event.touches.length !== 1) {
+        return;
+    }
+
+    pullRefreshStartY.value = event.touches[0]?.clientY ?? null;
+    pullRefreshDistance.value = 0;
+};
+
+const onAlbumTouchMove = (event: TouchEvent): void => {
+    if (pullRefreshStartY.value === null || typeof window === 'undefined') {
+        return;
+    }
+
+    if (window.scrollY > 0) {
+        resetPullRefreshState();
+        return;
+    }
+
+    const currentY = event.touches[0]?.clientY ?? pullRefreshStartY.value;
+    const deltaY = currentY - pullRefreshStartY.value;
+
+    if (deltaY <= 0) {
+        pullRefreshDistance.value = 0;
+        return;
+    }
+
+    pullRefreshDistance.value = Math.min(96, deltaY * 0.45);
+    event.preventDefault();
+};
+
+const onAlbumTouchEnd = (): void => {
+    if (pullRefreshStartY.value === null) {
+        return;
+    }
+
+    if (pullRefreshDistance.value >= pullRefreshThreshold) {
+        pullRefreshDistance.value = 56;
+        pullRefreshStartY.value = null;
+        refreshAlbum('pull');
+        return;
+    }
+
+    resetPullRefreshState();
+};
+
+const onAlbumTouchCancel = (): void => {
+    resetPullRefreshState();
+};
+</script>
+
+<template>
+    <Head :title="`${eventName} Album`" />
+
+    <main
+        class="min-h-screen text-slate-900"
+        :style="albumBodyStyle"
+        :class="
+            onboardingDone
+                ? props.appearance.albumBackgroundEnabled &&
+                  props.appearance.albumBackgroundMode === 'image' &&
+                  props.appearance.albumBackgroundImageUrl
+                    ? 'bg-slate-950'
+                    : 'bg-white'
+                : !onboardingDone && customWelcomeEnabled && welcomeScreen.backgroundUrl
+                  ? 'bg-slate-950'
+                  : 'bg-gradient-to-b from-rose-50 via-white to-amber-50'
+        "
+        @touchstart="onAlbumTouchStart"
+        @touchmove="onAlbumTouchMove"
+        @touchend="onAlbumTouchEnd"
+        @touchcancel="onAlbumTouchCancel"
+    >
+        <div
+            v-if="onboardingDone && pullRefreshVisible"
+            class="pointer-events-none fixed left-1/2 top-0 z-50 safe-top"
+            :style="pullRefreshIndicatorStyle"
+        >
+            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/92 px-4 py-2 text-xs font-medium text-slate-700 shadow-lg backdrop-blur">
+                <UploadCloud class="size-4" :class="isAlbumRefreshing ? 'animate-bounce' : ''" />
+                <span>
+                    {{
+                        isAlbumRefreshing
+                            ? 'Refreshing album...'
+                            : pullRefreshReady
+                              ? 'Release to refresh'
+                              : 'Pull to refresh'
+                    }}
+                </span>
+            </div>
+        </div>
+        <div
+            class="relative w-full"
+            :class="
+                onboardingDone
+                    ? 'pb-24'
+                    : !onboardingDone && customWelcomeEnabled
+                    ? ''
+                    : 'mx-auto max-w-md px-4 pb-24 pt-5 sm:max-w-lg'
+            "
+            :style="albumContentStyle"
+        >
+            <div
+                v-if="!onboardingDone && !customWelcomeEnabled"
+                class="pointer-events-none absolute -left-24 -top-20 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
+            />
+            <div
+                v-if="!onboardingDone && !customWelcomeEnabled"
+                class="pointer-events-none absolute -right-24 top-52 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
+            />
+
+            <section
+                v-if="!onboardingDone"
+                class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 text-white"
+            >
+                <img
+                    v-if="customWelcomeEnabled && welcomeScreen.backgroundUrl"
+                    :src="welcomeScreen.backgroundUrl"
+                    alt="Welcome background"
+                    class="absolute inset-0 h-full w-full object-cover"
+                    :class="
+                        customWelcomeEnabled && welcomeScreen.animated
+                            ? 'welcome-bg-animate-slow'
+                            : ''
+                    "
+                />
+                <div
+                    v-else-if="customWelcomeEnabled"
+                    class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"
+                    :class="
+                        customWelcomeEnabled && welcomeScreen.animated
+                            ? 'welcome-bg-animate-slow'
+                            : ''
+                    "
+                />
+                <div
+                    v-if="customWelcomeEnabled"
+                    class="absolute inset-0 bg-black/45"
+                />
+                <div
+                    v-else
+                    class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"
+                />
+                <div
+                    class="relative w-full max-w-sm rounded-[1.75rem] border border-white/25 bg-white/10 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-5"
+                >
+                    <header class="mb-5 text-center">
+                        <div class="mb-3 flex justify-center">
+                            <div
+                                class="size-14 overflow-hidden rounded-full border border-white/80 bg-white/20 shadow-md"
+                            >
+                                <img
+                                    v-if="albumLogoUrl"
+                                    :src="albumLogoUrl"
+                                    alt="Event logo"
+                                    class="h-full w-full object-cover"
+                                />
+                                <div
+                                    v-else
+                                    class="flex h-full w-full items-center justify-center text-base font-semibold text-white"
+                                >
+                                    {{ eventName.charAt(0).toUpperCase() }}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/85">
+                            Digital Album
+                        </p>
+                        <h1
+                            class="mt-2 text-3xl leading-tight font-semibold text-white"
+                            :class="welcomeFontClass"
+                        >
+                            {{ welcomeTitle }}
+                        </h1>
+                        <p class="mt-2 text-sm text-white/90">
+                            {{ welcomeSubtitle }}
+                        </p>
+                    </header>
+
+                    <div
+                        v-if="onboardingStep === 1"
+                        class="space-y-3"
+                    >
+                        <div class="space-y-2">
+                            <p class="text-sm font-medium text-white">
+                                Avatar
+                                <span class="text-white/65">(optional)</span>
+                            </p>
+                            <div class="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/8 px-3 py-3">
+                                <Avatar class="size-16 border border-white/25">
+                                    <AvatarImage
+                                        v-if="currentGuestAvatarUrl"
+                                        :src="currentGuestAvatarUrl"
+                                        alt="Guest avatar"
+                                    />
+                                    <AvatarFallback
+                                        :class="avatarFallbackClass(guestName)"
+                                    >
+                                        {{ guestInitials(guestName) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-white">
+                                        Add a profile photo
+                                    </p>
+                                    <p class="mt-1 text-xs text-white/75">
+                                        This will appear next to your uploads in the album feed.
+                                    </p>
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-10 items-center justify-center rounded-2xl bg-white px-3 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
+                                            @click="guestAvatarInputRef?.click()"
+                                        >
+                                            <Camera class="mr-2 size-4" />
+                                            Choose avatar
+                                        </button>
+                                        <button
+                                            v-if="currentGuestAvatarUrl"
+                                            type="button"
+                                            class="inline-flex h-10 items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-3 text-sm font-medium text-white transition hover:bg-white/15"
+                                            @click="clearGuestAvatarSelection"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                    <input
+                                        ref="guestAvatarInputRef"
+                                        type="file"
+                                        accept="image/*"
+                                        class="hidden"
+                                        @change="onGuestAvatarSelectionChange"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-for="field in welcomeGuestFields"
+                            :key="`guest-field-${field.id}`"
+                            class="space-y-2"
+                        >
+                            <label
+                                :for="`guest-${field.id}`"
+                                class="text-sm font-medium text-white"
+                            >
+                                {{ field.label }}
+                                <span
+                                    v-if="field.required"
+                                    class="text-rose-300"
+                                >
+                                    *
+                                </span>
+                            </label>
+                            <input
+                                :id="`guest-${field.id}`"
+                                v-model="guestFieldValues[field.id]"
+                                :type="
+                                    field.type === 'phone'
+                                        ? 'tel'
+                                        : field.type === 'number'
+                                          ? 'number'
+                                          : field.type
+                                "
+                                :maxlength="field.type === 'email' ? 255 : 80"
+                                :autocomplete="
+                                    field.id === 'name'
+                                        ? 'name'
+                                        : field.type === 'email'
+                                          ? 'email'
+                                          : field.type === 'phone'
+                                            ? 'tel'
+                                            : 'off'
+                                "
+                                :placeholder="
+                                    field.help_text.length > 0
+                                        ? field.help_text
+                                        : `Write your ${field.label.toLowerCase()}`
+                                "
+                                class="h-12 w-full rounded-2xl border border-white/20 bg-white/95 px-4 text-base text-slate-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                            />
+                            <p
+                                v-if="onboardingErrors[field.id]"
+                                class="text-xs text-rose-200"
+                            >
+                                {{ onboardingErrors[field.id] }}
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-100 px-4 text-sm font-medium text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                            data-test="guest-onboarding-next"
+                            @click="goToIntentStep"
+                        >
+                            {{ welcomeButtonText }}
+                        </button>
+                        <p
+                            v-if="guestProfileError"
+                            class="text-xs text-rose-200"
+                        >
+                            {{ guestProfileError }}
+                        </p>
+                    </div>
+
+                    <div
+                        v-else
+                        class="space-y-3"
+                    >
+                        <p class="text-sm font-medium text-white">
+                            Nice to meet you, {{ guestName.trim() }}. What would you like to do first?
+                        </p>
+                        <button
+                            v-for="option in intentOptions"
+                            :key="option.value"
+                            type="button"
+                            class="w-full rounded-2xl border p-4 text-left transition"
+                            :data-test="`guest-intent-${option.value}`"
+                            :class="
+                                selectedIntent === option.value
+                                    ? 'border-rose-300 ring-4 ring-rose-100 bg-white'
+                                    : 'border-white/30 bg-white/10 hover:border-white/50'
+                            "
+                            :disabled="!option.enabled"
+                            @click="selectedIntent = option.value"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="mt-0.5 rounded-xl p-2"
+                                    :class="
+                                        selectedIntent === option.value
+                                            ? 'bg-rose-100 text-rose-700'
+                                            : 'bg-white/20 text-white'
+                                    "
+                                >
+                                    <component :is="option.icon" class="size-4" />
+                                </div>
+                                <div class="min-w-0">
+                                    <p
+                                        class="text-sm font-semibold"
+                                        :class="
+                                            selectedIntent === option.value
+                                                ? 'text-slate-900'
+                                                : 'text-white'
+                                        "
+                                    >
+                                        {{ option.label }}
+                                    </p>
+                                    <p
+                                        class="mt-1 text-xs"
+                                        :class="
+                                            selectedIntent === option.value
+                                                ? 'text-slate-600'
+                                                : 'text-white/80'
+                                        "
+                                    >
+                                        {{ option.description }}
+                                    </p>
+                                    <p
+                                        v-if="!option.enabled"
+                                        class="mt-1 text-xs font-medium"
+                                        :class="
+                                            selectedIntent === option.value
+                                                ? 'text-amber-700'
+                                                : 'text-amber-200'
+                                        "
+                                    >
+                                        This option is disabled for this event.
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button
+                                type="button"
+                                class="inline-flex h-11 items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+                                @click="onboardingStep = 1"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-100 px-4 text-sm font-medium text-slate-900 transition hover:bg-white"
+                                :disabled="guestProfileProcessing"
+                                data-test="guest-onboarding-complete"
+                                @click="completeOnboarding"
+                            >
+                                {{
+                                    guestProfileProcessing
+                                        ? 'Saving...'
+                                        : welcomeButtonText
+                                }}
+                            </button>
+                        </div>
+                        <p
+                            v-if="guestProfileError"
+                            class="text-xs text-rose-200"
+                        >
+                            {{ guestProfileError }}
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                v-else
+                class="relative pb-6"
+            >
+                <header
+                    v-if="useMorphingHeader"
+                    class="pointer-events-none fixed inset-0 z-40"
+                >
+                    <div
+                        v-if="morphingHeaderVisible"
+                        class="fixed overflow-hidden border border-white/20 bg-white/12 text-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl"
+                        :style="morphingHeaderStyle"
+                    >
+                        <div class="relative h-full p-4">
+                            <div
+                                class="flex justify-between gap-3"
+                                :class="menuOpen ? 'items-center' : 'h-full items-center'"
+                            >
+                                <div
+                                    class="flex min-w-0 items-center gap-3"
+                                    :style="morphingHeaderIdentityStyle"
+                                >
+                                    <Avatar class="size-16 border border-white/30">
+                                        <AvatarImage
+                                            v-if="albumLogoUrl"
+                                            :src="albumLogoUrl"
+                                            alt="Event logo"
+                                        />
+                                        <AvatarFallback class="bg-white/20 text-lg font-semibold text-white">
+                                            {{ albumAvatarFallback }}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-xs font-semibold uppercase tracking-[0.2em] text-white/80"
+                                            :style="morphingHeaderTextShadowStyle"
+                                        >
+                                            Digital album
+                                        </p>
+                                        <h1
+                                            class="mt-1 truncate text-3xl leading-tight font-semibold text-white"
+                                            :class="welcomeFontClass"
+                                            :style="morphingHeaderTextShadowStyle"
+                                        >
+                                            {{ welcomeTitle }}
+                                        </h1>
+                                    </div>
+                                </div>
+
+                                <div class="pointer-events-auto ml-auto flex shrink-0 items-center gap-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-14 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+                                        :style="morphingHeaderIconShadowStyle"
+                                        :aria-label="menuOpen ? 'Close menu' : 'Open menu'"
+                                        @click="menuOpen = !menuOpen"
+                                    >
+                                        <Menu class="size-5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="menuOpen"
+                                class="mt-5 flex h-[calc(100%-4.5rem)] flex-col"
+                            >
+                                <div class="rounded-[1.5rem] border border-black/12 bg-black/42 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/72">
+                                        Guest menu
+                                    </p>
+                                    <p class="mt-2 text-sm text-white/82">
+                                        Signed in as
+                                        <span class="font-semibold text-white">{{ guestName.trim() }}</span>
+                                    </p>
+                                </div>
+
+                                <div class="mt-3 grid flex-1 content-start gap-2 overflow-y-auto pr-1">
+                                    <button
+                                        v-for="option in intentOptions"
+                                        :key="`morph-menu-${option.value}`"
+                                        type="button"
+                                        class="flex w-full items-center gap-3 rounded-[1.35rem] border px-4 py-3 text-left text-[15px] font-medium transition"
+                                        :class="
+                                            (option.value === 'browse_gallery' &&
+                                                activeView === 'browse_gallery' &&
+                                                !isComposerOpen) ||
+                                            (option.value !== 'browse_gallery' &&
+                                                isComposerOpen &&
+                                                activeView === option.value)
+                                                ? 'border-white/30 bg-white text-slate-900'
+                                                : 'border-black/12 bg-black/38 text-white hover:bg-black/46'
+                                        "
+                                        :disabled="!option.enabled"
+                                        @click="setActiveView(option.value)"
+                                    >
+                                        <component :is="option.icon" class="size-4 shrink-0" />
+                                        <span>{{ option.label }}</span>
+                                    </button>
+                                    <a
+                                        :href="links.wall"
+                                        class="flex w-full items-center gap-3 rounded-[1.35rem] border border-black/12 bg-black/38 px-4 py-3 text-left text-[15px] font-semibold text-white transition hover:bg-black/46"
+                                    >
+                                        <Images class="size-4 shrink-0" />
+                                        <span>Open Photo Wall</span>
+                                    </a>
+                                    <button
+                                        v-if="isPreEventTestMode"
+                                        type="button"
+                                        class="flex w-full items-center gap-3 rounded-[1.35rem] border border-amber-200/35 bg-amber-500/26 px-4 py-3 text-left text-[15px] font-medium text-white transition hover:bg-amber-500/32"
+                                        @click="isPreEventInfoOpen = true"
+                                    >
+                                        <AlertTriangle class="size-4 shrink-0 text-amber-100" />
+                                        <span>Pre-event test mode</span>
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="mt-3 inline-flex h-12 items-center justify-center rounded-[1.35rem] border border-black/16 bg-black/55 px-4 text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-black/62"
+                                    @click="resetGuestOnboarding"
+                                >
+                                    Reset guest onboarding
+                                </button>
+                            </div>
+
+                            <div
+                                v-else
+                                class="mt-3 space-y-3"
+                                :style="morphingHeaderLowerStyle"
+                            >
+                                <p class="text-sm leading-relaxed text-white/85">
+                                    {{ welcomeSubtitle }}
+                                </p>
+
+                                <div
+                                    v-if="eventDate || uploadWindowStartsAt || uploadWindowEndsAt"
+                                    class="flex flex-col gap-2 text-xs text-white/82"
+                                >
+                                    <p
+                                        v-if="eventDate"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <CalendarDays class="size-3.5 text-white/65" />
+                                        Event date:
+                                        <span class="font-medium text-white">{{ formatDate(eventDate) }}</span>
+                                    </p>
+                                    <p
+                                        v-if="uploadWindowStartsAt || uploadWindowEndsAt"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <Clock3 class="size-3.5 text-white/65" />
+                                        Upload window:
+                                        <span class="font-medium text-white">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
+                                    </p>
+                                </div>
+
+                                <div
+                                    v-if="showQrCode"
+                                    class="rounded-[1.5rem] border border-white/15 bg-black/20 p-3"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <img
+                                            :src="albumQrDataUrl"
+                                            alt="Album QR code"
+                                            class="size-16 rounded-lg border border-white/20 bg-white p-1"
+                                        />
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                                                Share Album
+                                            </p>
+                                            <p class="mt-1 text-xs text-white/80">
+                                                Guests can scan this code to open the album instantly.
+                                            </p>
+                                            <a
+                                                :href="links.wall"
+                                                class="mt-2 inline-flex text-xs font-medium text-white/95 underline underline-offset-4"
+                                            >
+                                                Open Photo Wall
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="!menuOpen"
+                                class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/15 to-transparent"
+                                :style="morphingHeaderMaskStyle"
+                            />
+                        </div>
+                    </div>
+                </header>
+
+                <header
+                    v-if="!useMorphingHeader"
+                    class="pointer-events-none fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/92 transition-all duration-300 backdrop-blur safe-top safe-x supports-[backdrop-filter]:bg-white/80"
+                    :class="isHeaderCollapsed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
+                >
+                    <div class="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 py-3">
+                        <div class="pointer-events-auto min-w-0 flex items-center gap-3">
+                            <Avatar class="size-11 border border-slate-200">
+                                <AvatarImage
+                                    v-if="albumLogoUrl"
+                                    :src="albumLogoUrl"
+                                    alt="Event logo"
+                                />
+                                <AvatarFallback class="bg-slate-900 text-white">
+                                    {{ albumAvatarFallback }}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div class="min-w-0">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                    Digital album
+                                </p>
+                                <p
+                                    class="truncate text-base font-semibold text-slate-900"
+                                    :class="welcomeFontClass"
+                                >
+                                    {{ welcomeTitle }}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="pointer-events-auto inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+                            aria-label="Open menu"
+                            data-test="album-header-menu-button"
+                            @click="menuOpen = true"
+                        >
+                            <Menu class="size-5" />
+                        </button>
+                    </div>
+                </header>
+
+                <section
+                    ref="heroSectionRef"
+                    class="relative min-h-[58svh] overflow-hidden"
+                >
+                    <img
+                        v-if="welcomeScreen.backgroundUrl"
+                        :src="welcomeScreen.backgroundUrl"
+                        alt="Album background"
+                        class="absolute inset-0 h-full w-full object-cover"
+                        :class="welcomeScreen.animated ? 'welcome-bg-animate-slow' : ''"
+                    />
+                    <div
+                        v-else
+                        class="absolute inset-0 bg-gradient-to-br from-amber-200 via-orange-100 to-white"
+                    />
+                    <div
+                        class="absolute inset-0"
+                        :class="
+                            props.appearance.albumBackgroundEnabled &&
+                            props.appearance.albumBackgroundMode === 'image'
+                                ? 'bg-gradient-to-b from-black/30 via-black/45 to-black/75'
+                                : 'bg-gradient-to-b from-black/20 via-black/35 to-black/65'
+                        "
+                    />
+
+                    <div class="relative mx-auto flex min-h-[58svh] w-full max-w-2xl items-end px-3 pb-4 pt-24">
+                        <div
+                            ref="heroGlassCardRef"
+                            class="w-full rounded-[2rem] border border-white/20 bg-white/12 p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl transition-opacity duration-200"
+                            :style="heroGlassCardStyle"
+                        >
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <Avatar class="size-16 border border-white/30">
+                                        <AvatarImage
+                                            v-if="albumLogoUrl"
+                                            :src="albumLogoUrl"
+                                            alt="Event logo"
+                                        />
+                                        <AvatarFallback class="bg-white/20 text-lg font-semibold text-white">
+                                            {{ albumAvatarFallback }}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+                                            Digital album
+                                        </p>
+                                        <h1
+                                            class="mt-1 text-3xl leading-tight font-semibold text-white"
+                                            :class="welcomeFontClass"
+                                        >
+                                            {{ welcomeTitle }}
+                                        </h1>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="ml-auto inline-flex size-14 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+                                    aria-label="Open menu"
+                                    data-test="album-hero-menu-button"
+                                    @click="menuOpen = true"
+                                >
+                                    <Menu class="size-5" />
+                                </button>
+                            </div>
+
+                            <p class="mt-3 text-sm leading-relaxed text-white/85">
+                                {{ welcomeSubtitle }}
+                            </p>
+
+                            <div
+                                v-if="eventDate || uploadWindowStartsAt || uploadWindowEndsAt"
+                                class="mt-3 flex flex-col gap-2 text-xs text-white/82"
+                            >
+                                <p
+                                    v-if="eventDate"
+                                    class="flex items-center gap-2"
+                                >
+                                    <CalendarDays class="size-3.5 text-white/65" />
+                                    Event date:
+                                    <span class="font-medium text-white">{{ formatDate(eventDate) }}</span>
+                                </p>
+                                <p
+                                    v-if="uploadWindowStartsAt || uploadWindowEndsAt"
+                                    class="flex items-center gap-2"
+                                >
+                                    <Clock3 class="size-3.5 text-white/65" />
+                                    Upload window:
+                                    <span class="font-medium text-white">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="showQrCode"
+                                class="mt-4 rounded-[1.5rem] border border-white/15 bg-black/20 p-3"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <img
+                                        :src="albumQrDataUrl"
+                                        alt="Album QR code"
+                                        class="size-16 rounded-lg border border-white/20 bg-white p-1"
+                                    />
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                                            Share Album
+                                        </p>
+                                        <p class="mt-1 text-xs text-white/80">
+                                            Guests can scan this code to open the album instantly.
+                                        </p>
+                                        <a
+                                            :href="links.wall"
+                                            class="mt-2 inline-flex text-xs font-medium text-white/95 underline underline-offset-4"
+                                        >
+                                            Open Photo Wall
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mx-auto w-full max-w-2xl px-0 pt-3">
+                    <div
+                        v-if="props.canViewGallery"
+                        class="mb-3 flex items-center justify-between gap-3 px-2"
+                    >
+                        <h2 class="text-sm font-semibold text-slate-900">
+                            Guest gallery
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        galleryView === 'grid3'
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                    "
+                                    aria-label="Show 3-column gallery"
+                                    title="3-column gallery"
+                                    @click="galleryView = 'grid3'"
+                                >
+                                    <Columns3 class="size-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        galleryView === 'grid2'
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                    "
+                                    aria-label="Show 2-column gallery"
+                                    title="2-column gallery"
+                                    @click="galleryView = 'grid2'"
+                                >
+                                    <Columns2 class="size-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        galleryView === 'feed'
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                    "
+                                    aria-label="Show feed view"
+                                    title="Feed view"
+                                    @click="galleryView = 'feed'"
+                                >
+                                    <Rows3 class="size-4" />
+                                </button>
+                            </div>
+                            <span class="text-xs text-slate-500">
+                                {{ assetItems.length }} items
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="hasPendingAlbumUpdate"
+                        class="px-2 pb-3"
+                    >
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between gap-3 rounded-[1.35rem] border border-sky-200 bg-sky-50 px-4 py-3 text-left text-sky-900 transition hover:bg-sky-100"
+                            :disabled="isAlbumRefreshing"
+                            @click="refreshAlbum('banner')"
+                        >
+                            <div class="flex items-center gap-3">
+                                <div class="inline-flex size-10 items-center justify-center rounded-full bg-sky-500 text-white">
+                                    <UploadCloud class="size-4" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold">
+                                        New posts available
+                                    </p>
+                                    <p class="text-xs text-sky-800/80">
+                                        {{
+                                            pendingAlbumUpdateCount > 0
+                                                ? `${pendingAlbumUpdateCount} new post${pendingAlbumUpdateCount === 1 ? '' : 's'} waiting`
+                                                : 'Tap to load the latest posts'
+                                        }}
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-semibold uppercase tracking-[0.14em]">
+                                Refresh
+                            </span>
+                        </button>
+                    </div>
+
+                    <div
+                        v-if="!props.canViewGallery"
+                        class="px-2 py-6"
+                    >
+                        <Empty class="rounded-[1.75rem] border bg-white py-14">
+                            <EmptyHeader>
+                                <EmptyMedia variant="icon">
+                                    <EyeOff class="size-5" />
+                                </EmptyMedia>
+                                <EmptyTitle>Gallery viewing is disabled</EmptyTitle>
+                                <EmptyDescription>
+                                    {{
+                                        canUpload
+                                            ? 'Guests can still upload memories, but only the host can browse the gallery right now.'
+                                            : 'This event is collecting uploads without showing the guest gallery right now.'
+                                    }}
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
+                    </div>
+
+                    <div
+                        v-else-if="assetItems.length === 0"
+                        class="px-2 py-6"
+                    >
+                        <Empty class="rounded-[1.75rem] border bg-white py-14">
+                            <EmptyHeader>
+                                <EmptyMedia variant="icon">
+                                    <Images class="size-5" />
+                                </EmptyMedia>
+                                <EmptyTitle>No uploads yet</EmptyTitle>
+                                <EmptyDescription>
+                                    Be the first guest to share a memory in this album.
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
+                    </div>
+
+                    <div
+                        v-else-if="galleryView === 'feed'"
+                        class="space-y-0"
+                    >
+                        <article
+                            v-for="stack in galleryStacks"
+                            :key="`feed-${stack.key}`"
+                            class="overflow-hidden bg-white"
+                        >
+                            <div class="flex items-center justify-between gap-3 px-3 py-3">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <Avatar class="size-11 border border-slate-200">
+                                        <AvatarImage
+                                            v-if="stack.preview.guestAvatarUrl"
+                                            :src="stack.preview.guestAvatarUrl ?? ''"
+                                            :alt="stack.guestName || 'Guest avatar'"
+                                        />
+                                        <AvatarFallback
+                                            :class="avatarFallbackClass(stack.guestName)"
+                                        >
+                                            {{ guestInitials(stack.guestName) }}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div class="min-w-0">
+                                        <div class="flex min-w-0 items-baseline gap-2">
+                                            <p class="truncate text-sm font-semibold text-slate-900">
+                                                {{ stack.guestName }}
+                                            </p>
+                                            <span
+                                                v-if="stackUploadSummary(stack)"
+                                                class="shrink-0 text-xs text-slate-500"
+                                            >
+                                                {{ stackUploadSummary(stack) }}
+                                            </span>
+                                        </div>
+                                        <p class="truncate text-xs text-slate-500">
+                                            {{ formatDateTime(stack.preview.createdAt) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger :as-child="true">
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                                            aria-label="Open upload options"
+                                        >
+                                            <MoreHorizontal class="size-4" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" class="w-48">
+                                        <DropdownMenuItem
+                                            @select.prevent="openAssetViewer(stack.key)"
+                                        >
+                                            Open viewer
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            @select.prevent="openAssetInfo(stack.key)"
+                                        >
+                                            Info
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            @select.prevent="shareAsset(stack.preview)"
+                                        >
+                                            Copy album link
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            v-if="currentFeedAssetCanDownload(stack)"
+                                            :as-child="true"
+                                        >
+                                            <a :href="stack.preview.downloadUrl">
+                                                Download
+                                            </a>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            v-if="currentFeedAssetCanDelete(stack)"
+                                            variant="destructive"
+                                            @select.prevent="deleteAsset(stack.preview)"
+                                        >
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+                            <div class="relative overflow-hidden bg-slate-100">
+                                <button
+                                    type="button"
+                                    class="block w-full border-0 bg-transparent text-left"
+                                    @click="openAssetViewer(stack.key)"
+                                >
+                                    <template
+                                        v-if="
+                                            stack.preview.kind === 'photo' &&
+                                            (stack.preview.thumbnailUrl ||
+                                                stack.preview.previewUrl)
+                                        "
+                                    >
+                                        <img
+                                            :src="
+                                                stack.preview.thumbnailUrl ??
+                                                stack.preview.previewUrl ??
+                                                undefined
+                                            "
+                                            alt="Uploaded event photo"
+                                            loading="lazy"
+                                            decoding="async"
+                                            class="block aspect-[4/5] w-full object-cover transition-opacity duration-300"
+                                            :class="
+                                                isPhotoLoaded(stack.preview.id)
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                            "
+                                            @load="markPhotoAsLoaded(stack.preview.id)"
+                                            @error="markPhotoAsLoaded(stack.preview.id)"
+                                        />
+                                        <div
+                                            v-if="!isPhotoLoaded(stack.preview.id)"
+                                            class="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
+                                        />
+                                    </template>
+                                    <img
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.thumbnailUrl
+                                        "
+                                        :src="stack.preview.thumbnailUrl"
+                                        alt="Uploaded event video"
+                                        loading="lazy"
+                                        decoding="async"
+                                        class="block aspect-[4/5] w-full object-cover transition-opacity duration-300"
+                                        :class="
+                                            isPhotoLoaded(stack.preview.id)
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="markPhotoAsLoaded(stack.preview.id)"
+                                        @error="markPhotoAsLoaded(stack.preview.id)"
+                                    />
+                                    <video
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.previewUrl
+                                        "
+                                        :src="stack.preview.previewUrl ?? undefined"
+                                        class="block aspect-[4/5] w-full object-cover"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                        preload="auto"
+                                    />
+                                    <div
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.videoProcessing
+                                        "
+                                        class="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-slate-100 text-slate-500"
+                                    >
+                                        <LoaderCircle class="size-8 animate-spin text-slate-400" />
+                                        <div class="space-y-1 text-center">
+                                            <p class="text-sm font-semibold text-slate-700">
+                                                Processing video
+                                            </p>
+                                            <p class="text-xs text-slate-500">
+                                                Preview will appear in a moment.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-else-if="stack.preview.kind === 'text'"
+                                        class="flex aspect-[4/5] w-full items-center justify-center p-6"
+                                        :style="textPostSurfaceStyle(stack.preview)"
+                                    >
+                                        <p
+                                            class="max-w-md whitespace-pre-wrap text-center text-base font-medium leading-relaxed"
+                                            :style="textPostContentStyle(stack.preview)"
+                                        >
+                                            {{ stack.preview.text ?? 'Text post' }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="flex aspect-[4/5] w-full items-center justify-center text-xs text-slate-500"
+                                    >
+                                        Preview unavailable
+                                    </div>
+                                </button>
+
+                                <div
+                                    v-if="stack.mediaCount > 1"
+                                    class="pointer-events-none absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-white/35 bg-black/38 p-2 text-white shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+                                >
+                                    <Images class="size-8" />
+                                </div>
+
+                                <div
+                                    v-if="
+                                        showPreviewWatermark &&
+                                        (stack.preview.kind === 'photo' ||
+                                            stack.preview.kind === 'video')
+                                    "
+                                    class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15"
+                                >
+                                    <span class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                                        Preview only
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <div class="px-3 pb-3 pt-3">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="inline-flex items-center gap-2 text-slate-700">
+                                            <button
+                                                type="button"
+                                                class="inline-flex size-12 items-center justify-center rounded-full transition hover:text-slate-950"
+                                                :class="
+                                                    isAssetLiked(stack.preview)
+                                                        ? 'text-rose-600'
+                                                        : 'text-slate-700'
+                                                "
+                                                :disabled="isAssetLikePending(stack.preview)"
+                                                :aria-pressed="isAssetLiked(stack.preview)"
+                                                @click="toggleAssetLike(stack.preview)"
+                                            >
+                                                <Heart
+                                                    class="size-6 transition-transform duration-200"
+                                                    :class="
+                                                        [
+                                                            isAssetLiked(stack.preview)
+                                                                ? 'fill-rose-500 text-rose-500'
+                                                                : 'text-slate-700',
+                                                            isAssetLikeAnimating(stack.preview)
+                                                                ? 'scale-125'
+                                                                : '',
+                                                            isAssetLikePending(stack.preview)
+                                                                ? 'opacity-60'
+                                                                : '',
+                                                        ]
+                                                    "
+                                                />
+                                            </button>
+                                            <span
+                                                v-if="
+                                                    !isAssetLikePending(stack.preview) &&
+                                                    stack.preview.likeCount > 0
+                                                "
+                                                class="text-sm font-semibold leading-none text-slate-700"
+                                            >
+                                                {{ formatLikeCount(stack.preview.likeCount) }}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-12 items-center justify-center rounded-full text-slate-700 transition hover:text-slate-950"
+                                            aria-label="Share post"
+                                            @click="shareAsset(stack.preview)"
+                                        >
+                                            <Send class="size-6" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex min-w-0 items-center justify-center gap-1 rounded-full px-1 text-slate-700 transition hover:text-slate-950"
+                                            aria-label="Open post comments"
+                                            @click="openAssetComments(stack.key)"
+                                        >
+                                            <MessageCircle class="size-6" />
+                                            <span
+                                                v-if="stack.preview.commentCount > 0"
+                                                class="text-sm font-semibold leading-none"
+                                            >
+                                                {{ formatLikeCount(stack.preview.commentCount) }}
+                                            </span>
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-12 items-center justify-center rounded-full text-slate-700 transition hover:text-slate-950"
+                                        aria-label="Open post info"
+                                        @click="openAssetInfo(stack.key)"
+                                    >
+                                        <Info class="size-6" />
+                                    </button>
+                                </div>
+                                <div
+                                    v-if="stack.preview.kind !== 'text' && stack.preview.message"
+                                    class="mt-0.5 space-y-0.5"
+                                >
+                                    <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                                        {{ displayedStackMessage(stack) }}
+                                    </p>
+                                    <button
+                                        v-if="hasLongStackMessage(stack)"
+                                        type="button"
+                                        class="text-sm font-medium text-slate-500 transition hover:text-slate-900"
+                                        @click="toggleStackMessageExpansion(stack.key)"
+                                    >
+                                        {{
+                                            isStackMessageExpanded(stack.key)
+                                                ? 'Show less'
+                                                : 'Show more'
+                                        }}
+                                    </button>
+                                </div>
+                                <p
+                                    v-if="
+                                        showCaptions &&
+                                        stack.preview.kind !== 'text' &&
+                                        !stack.preview.message &&
+                                        assetSummaryText(stack.preview)
+                                    "
+                                    class="mt-1 text-sm leading-relaxed text-slate-600"
+                                >
+                                    {{ assetSummaryText(stack.preview) }}
+                                </p>
+                            </div>
+
+                            <Separator
+                                v-if="galleryStacks[galleryStacks.length - 1]?.key !== stack.key"
+                                class="bg-slate-200 sm:hidden"
+                            />
+                        </article>
+
+                        <div
+                            v-if="!hasMoreAssets"
+                            class="px-3 py-8 sm:px-0"
+                        >
+                            <Empty class="border-0 bg-transparent py-0 shadow-none">
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon" class="bg-slate-100 text-slate-500">
+                                        <Images class="size-5" />
+                                    </EmptyMedia>
+                                    <EmptyTitle class="text-slate-900">
+                                        You reached the end
+                                    </EmptyTitle>
+                                    <EmptyDescription class="text-slate-500">
+                                        That&apos;s everything shared in this album so far.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        </div>
+                    </div>
+
+                    <div
+                        v-else
+                        class="space-y-8"
+                    >
+                        <div :class="['grid gap-px bg-slate-200', galleryGridClass]">
+                            <article
+                                v-for="stack in galleryStacks"
+                                :key="stack.key"
+                                class="overflow-hidden bg-white"
+                            >
+                                <button
+                                    type="button"
+                                    class="relative block aspect-square w-full overflow-hidden border-0 bg-slate-100 text-left"
+                                    @click="openAssetViewer(stack.key)"
+                                >
+                                    <template
+                                        v-if="
+                                            stack.preview.kind === 'photo' &&
+                                            (stack.preview.thumbnailUrl ||
+                                                stack.preview.previewUrl)
+                                        "
+                                    >
+                                        <img
+                                            :src="
+                                                stack.preview.thumbnailUrl ??
+                                                stack.preview.previewUrl ??
+                                                undefined
+                                            "
+                                            alt="Uploaded event photo"
+                                            loading="lazy"
+                                            decoding="async"
+                                            fetchpriority="low"
+                                            class="block h-full w-full object-cover transition-opacity duration-300"
+                                            :class="
+                                                isPhotoLoaded(stack.preview.id)
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                            "
+                                            @load="markPhotoAsLoaded(stack.preview.id)"
+                                            @error="markPhotoAsLoaded(stack.preview.id)"
+                                        />
+                                        <div
+                                            v-if="!isPhotoLoaded(stack.preview.id)"
+                                            class="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
+                                        />
+                                    </template>
+                                    <img
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.thumbnailUrl
+                                        "
+                                        :src="stack.preview.thumbnailUrl"
+                                        alt="Uploaded event video"
+                                        loading="lazy"
+                                        decoding="async"
+                                        fetchpriority="low"
+                                        class="block h-full w-full object-cover transition-opacity duration-300"
+                                        :class="
+                                            isPhotoLoaded(stack.preview.id)
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="markPhotoAsLoaded(stack.preview.id)"
+                                        @error="markPhotoAsLoaded(stack.preview.id)"
+                                    />
+                                    <video
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.previewUrl
+                                        "
+                                        :src="stack.preview.previewUrl"
+                                        class="block h-full w-full object-cover"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                        preload="auto"
+                                    />
+                                    <div
+                                        v-else-if="
+                                            stack.preview.kind === 'video' &&
+                                            stack.preview.videoProcessing
+                                        "
+                                        class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 px-4 text-center text-slate-500"
+                                    >
+                                        <LoaderCircle class="size-7 animate-spin text-slate-400" />
+                                        <p class="text-xs font-semibold text-slate-700">
+                                            Processing video
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-else-if="stack.preview.kind === 'text'"
+                                        class="flex h-full w-full items-center justify-center p-3"
+                                        :style="textPostSurfaceStyle(stack.preview)"
+                                    >
+                                        <p
+                                            class="line-clamp-6 whitespace-pre-wrap text-center text-xs font-medium"
+                                            :style="textPostContentStyle(stack.preview)"
+                                        >
+                                            {{ stack.preview.text ?? 'Text post' }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="flex h-full w-full items-center justify-center text-xs text-slate-500"
+                                    >
+                                        Preview unavailable
+                                    </div>
+
+                                    <div
+                                        v-if="stack.mediaCount > 1"
+                                        class="pointer-events-none absolute right-2 top-2 inline-flex items-center justify-center rounded-full border border-white/35 bg-black/38 p-1.5 text-white shadow-[0_8px_18px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+                                    >
+                                        <Images class="size-7" />
+                                    </div>
+
+                                    <div
+                                        v-if="
+                                            showPreviewWatermark &&
+                                            (stack.preview.kind === 'photo' ||
+                                                stack.preview.kind === 'video')
+                                        "
+                                        class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20"
+                                    >
+                                        <span class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                                            Preview only
+                                        </span>
+                                    </div>
+                                </button>
+                            </article>
+                        </div>
+
+                        <div
+                            v-if="!hasMoreAssets"
+                            class="px-2 sm:px-0"
+                        >
+                            <Empty class="border-0 bg-transparent py-0 shadow-none">
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon" class="bg-slate-100 text-slate-500">
+                                        <Images class="size-5" />
+                                    </EmptyMedia>
+                                    <EmptyTitle class="text-slate-900">
+                                        You reached the end
+                                    </EmptyTitle>
+                                    <EmptyDescription class="text-slate-500">
+                                        That&apos;s everything shared in this album so far.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="assetItems.length > 0 && hasMoreAssets"
+                        ref="loadMoreSentinelRef"
+                        class="px-2 py-6"
+                    >
+                        <div class="flex items-center justify-center gap-2 text-sm text-slate-500">
+                            <UploadCloud
+                                class="size-4"
+                                :class="isLoadingMoreAssets ? 'animate-bounce' : ''"
+                            />
+                            <span>
+                                {{ isLoadingMoreAssets ? 'Loading more posts...' : 'Scroll for more' }}
+                            </span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+
+        <footer
+            v-if="onboardingDone"
+            class="safe-bottom safe-x fixed inset-x-0 bottom-0 z-20 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/80"
+        >
+            <Separator class="bg-slate-200" />
+            <div class="px-3 py-2 text-center text-xs text-slate-500">
+                © {{ new Date().getFullYear() }} Kululu. All rights reserved.
+            </div>
+        </footer>
+
+        <Sheet v-model:open="isPreEventInfoOpen">
+            <SheetContent
+                side="bottom"
+                class="safe-bottom max-h-[72vh] rounded-t-[2rem] px-5 pb-8 pt-8"
+            >
+                <SheetHeader class="px-0 text-left">
+                    <SheetTitle class="flex items-center gap-2 text-xl text-slate-900">
+                        <AlertTriangle class="size-5 text-amber-600" />
+                        Pre-event test mode
+                    </SheetTitle>
+                    <SheetDescription class="text-sm leading-relaxed text-slate-600">
+                        Guests can test the album setup before the event starts, but these uploads are for setup checks only.
+                    </SheetDescription>
+                </SheetHeader>
+
+                <div class="mt-5 space-y-3">
+                    <Item
+                        variant="muted"
+                        class="rounded-[1.5rem] border-slate-200 bg-slate-50"
+                    >
+                        <ItemMedia
+                            variant="icon"
+                            :class="statusCard.classes"
+                        >
+                            <component :is="statusCard.icon" class="size-4" />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle class="text-slate-900">
+                                {{ statusCard.title }}
+                            </ItemTitle>
+                            <ItemDescription class="line-clamp-none text-slate-600">
+                                {{ statusCard.description }}
+                            </ItemDescription>
+                        </ItemContent>
+                    </Item>
+
+                    <Item
+                        variant="outline"
+                        class="rounded-[1.5rem] border-slate-200 bg-white"
+                    >
+                        <ItemContent class="gap-2">
+                            <div class="flex items-center justify-between gap-3 text-sm">
+                                <ItemTitle class="text-slate-900">
+                                    Remaining test uploads
+                                </ItemTitle>
+                                <span class="font-semibold text-slate-900">
+                                    {{ props.preEventTestUploadsRemaining }} / {{ props.preEventTestUploadLimit }}
+                                </span>
+                            </div>
+                            <ItemDescription class="line-clamp-none text-slate-600">
+                                Full uploads open automatically when the event upload window starts. Until then, use this mode only to verify QR flow, upload limits, and gallery display.
+                            </ItemDescription>
+                        </ItemContent>
+                    </Item>
+
+                    <Item
+                        variant="outline"
+                        class="rounded-[1.5rem] border-slate-200 bg-white"
+                    >
+                        <ItemContent class="gap-4">
+                            <div>
+                                <div class="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+                                    <span>Storage</span>
+                                    <span class="font-medium text-slate-900">
+                                        {{ formatBytes(limits.storageUsedBytes) }} / {{ formatBytes(limits.storageLimitBytes) }}
+                                    </span>
+                                </div>
+                                <div class="h-2 rounded-full bg-slate-200">
+                                    <div
+                                        class="h-full rounded-full bg-slate-900 transition-all"
+                                        :style="{ width: `${usageStoragePercent}%` }"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+                                    <span>Uploads</span>
+                                    <span class="font-medium text-slate-900">
+                                        {{ limits.uploadCount }} / {{ limits.uploadLimit }}
+                                    </span>
+                                </div>
+                                <div class="h-2 rounded-full bg-slate-200">
+                                    <div
+                                        class="h-full rounded-full bg-amber-500 transition-all"
+                                        :style="{ width: `${usageUploadsPercent}%` }"
+                                    />
+                                </div>
+                            </div>
+                        </ItemContent>
+                    </Item>
+                </div>
+            </SheetContent>
+        </Sheet>
+
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isComposerOpen"
+                class="fixed inset-0 z-[70]"
+            >
+                <div
+                    class="absolute inset-0 bg-slate-950/40"
+                    @click="closeComposer"
+                />
+                <div
+                    class="safe-bottom absolute inset-x-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0 shadow-[0_-24px_80px_rgba(15,23,42,0.24)]"
+                >
+                <div
+                    v-if="uploadForm.processing"
+                    class="absolute inset-0 z-20 flex items-center justify-center bg-[#fcfaf6]/88 backdrop-blur-sm"
+                >
+                    <div class="flex flex-col items-center gap-4 px-8 text-center">
+                        <div class="inline-flex size-16 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
+                            <LoaderCircle class="size-8 animate-spin text-slate-900" />
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-base font-semibold text-slate-900">
+                                Uploading your photos
+                            </p>
+                            <p class="text-sm text-slate-600">
+                                Optimizing and sending files. This can take a moment.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-b border-slate-200 px-5 pb-5 pt-3 text-left">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 text-xl font-semibold text-slate-900">
+                        <component
+                            :is="
+                                activeView === 'video_testimonial'
+                                    ? Film
+                                    : activeView === 'text_wish'
+                                      ? MessageSquareText
+                                      : Camera
+                            "
+                            class="size-5"
+                        />
+                        <span>
+                            {{
+                                activeView === 'text_wish'
+                                    ? 'Write a text wish'
+                                    : uploadTitle
+                            }}
+                        </span>
+                        </div>
+                        <button
+                            type="button"
+                            class="inline-flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                            aria-label="Close composer"
+                            @click="closeComposer"
+                        >
+                            <X class="size-4" />
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                        {{
+                            activeView === 'text_wish'
+                                ? 'Leave a short message for the couple.'
+                                : uploadDescription
+                        }}
+                    </p>
+                </div>
+
+                <div class="px-5 pb-8">
+
+                <div
+                    v-if="activeView === 'upload_media' || activeView === 'video_testimonial'"
+                    class="mt-6 flex min-h-0 flex-col"
+                >
+                    <p class="text-xs text-slate-600">
+                        Photo max: {{ formatBytes(limits.photoMaxSizeBytes) }}. Video max: {{ formatBytes(limits.videoMaxSizeBytes) }}.
+                    </p>
+
+                    <div class="mt-4 space-y-3">
+                        <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                            <button
+                                v-for="emoji in uploadMessageEmojiOptions"
+                                :key="`upload-message-emoji-${emoji}`"
+                                type="button"
+                                class="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-base transition hover:border-slate-300 hover:bg-slate-100"
+                                :disabled="!canUpload || uploadForm.processing"
+                                @click="appendUploadMessageEmoji(emoji)"
+                            >
+                                {{ emoji }}
+                            </button>
+                        </div>
+                        <InputGroup class="h-12 rounded-full border-slate-200 bg-white">
+                            <InputGroupInput
+                                id="upload-message"
+                                v-model="uploadForm.message"
+                                maxlength="500"
+                                placeholder="Add a message to this post..."
+                                :disabled="!canUpload || uploadForm.processing"
+                                class="h-12 rounded-full px-4 text-sm"
+                            />
+                            <InputGroupAddon
+                                align="inline-end"
+                                class="pr-3"
+                            >
+                                <InputGroupText class="text-xs text-slate-400">
+                                    {{ uploadForm.message?.trim().length ?? 0 }}/500
+                                </InputGroupText>
+                            </InputGroupAddon>
+                        </InputGroup>
+                        <p
+                            v-if="uploadForm.errors.message"
+                            class="text-xs text-rose-700"
+                        >
+                            {{ uploadForm.errors.message }}
+                        </p>
+                    </div>
+
+                    <input
+                        ref="fileInputRef"
+                        type="file"
+                        multiple
+                        :accept="uploadAccept"
+                        :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                        class="sr-only"
+                        data-test="guest-upload-input"
+                        @change="onFileSelectionChange"
+                    />
+
+                    <button
+                        type="button"
+                        class="mt-4 flex w-full items-center gap-4 rounded-[1.6rem] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                        data-test="guest-upload-picker"
+                        @click="openUploadFilePicker"
+                    >
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                                <UploadCloud class="size-5" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-slate-900">
+                                    {{
+                                        uploadForm.files.length > 0
+                                            ? 'Change selected files'
+                                            : activeView === 'video_testimonial'
+                                              ? 'Choose your video'
+                                              : 'Choose photos or videos'
+                                    }}
+                                </p>
+                                <p class="truncate text-xs text-slate-500">
+                                    {{
+                                        uploadForm.files.length > 0
+                                            ? `${uploadForm.files.length} file${uploadForm.files.length === 1 ? '' : 's'} selected`
+                                            : activeView === 'video_testimonial'
+                                              ? 'Pick one short clip from your phone'
+                                              : 'Select multiple files from your device'
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+
+                    <div
+                        v-if="uploadForm.files.length > 0"
+                        class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-xs font-medium text-slate-800">
+                                Selected files ({{ uploadForm.files.length }})
+                            </p>
+                            <button
+                                type="button"
+                                class="text-xs font-medium text-slate-500 transition hover:text-slate-900"
+                                :disabled="uploadForm.processing || isValidatingVideos"
+                                @click="openUploadFilePicker"
+                            >
+                                Change
+                            </button>
+                        </div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <div
+                                v-for="preview in uploadPreviewItems.slice(0, 6)"
+                                :key="preview.key"
+                                class="relative size-18 overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                            >
+                                <img
+                                    v-if="preview.kind === 'photo'"
+                                    :src="preview.objectUrl"
+                                    :alt="preview.name"
+                                    class="h-full w-full object-cover"
+                                />
+                                <video
+                                    v-else
+                                    :src="preview.objectUrl"
+                                    class="h-full w-full object-cover"
+                                    autoplay
+                                    loop
+                                    muted
+                                    playsinline
+                                    preload="auto"
+                                />
+                                <div
+                                    v-if="preview.kind === 'video'"
+                                    class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-2 py-1"
+                                >
+                                    <Film class="size-3.5 text-white" />
+                                </div>
+                            </div>
+                            <div
+                                v-if="uploadPreviewItems.length > 6"
+                                class="flex size-18 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-500"
+                            >
+                                +{{ uploadPreviewItems.length - 6 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="clientValidationErrors.length > 0"
+                        class="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900"
+                    >
+                        <p class="font-medium">Some files were skipped:</p>
+                        <ul class="mt-1 list-inside list-disc space-y-1">
+                            <li
+                                v-for="error in clientValidationErrors"
+                                :key="error"
+                            >
+                                {{ error }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p
+                        v-if="uploadForm.errors.files"
+                        class="mt-3 text-xs text-rose-700"
+                    >
+                        {{ uploadForm.errors.files }}
+                    </p>
+
+                    <div class="mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur">
+                        <button
+                            type="button"
+                            class="inline-flex h-12 w-full items-center justify-center rounded-2xl px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                            :style="heroAccentStyle"
+                            :disabled="!canUpload || uploadForm.files.length === 0 || uploadForm.processing || isValidatingVideos"
+                            data-test="guest-upload-submit"
+                            @click="uploadFiles"
+                        >
+                            <UploadCloud class="mr-2 size-4" />
+                            {{ uploadForm.processing ? 'Uploading...' : uploadButtonLabel }}
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    v-else-if="activeView === 'text_wish' && allowTextPosts"
+                    class="mt-6 space-y-5"
+                >
+                    <div
+                        class="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-100 shadow-sm"
+                        :style="
+                            selectedTextPostTheme
+                                ? {
+                                      ...textPostSurfaceStyle({
+                                          textThemeImageUrl: selectedTextPostTheme.imageUrl,
+                                          textThemeBackgroundColor: selectedTextPostTheme.backgroundColor,
+                                      }),
+                                }
+                                : undefined
+                        "
+                        @click="focusTextComposer"
+                    >
+                        <div
+                            class="absolute inset-0"
+                            :class="
+                                selectedTextPostTheme?.textColor === '#111827'
+                                    ? 'bg-white/4'
+                                    : 'bg-black/12'
+                            "
+                        />
+                        <div class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center">
+                            <div
+                                ref="textComposerRef"
+                                :contenteditable="canUploadText && !textForm.processing"
+                                spellcheck="true"
+                                :aria-disabled="!canUploadText || textForm.processing"
+                                class="max-h-full w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent text-center text-2xl font-semibold leading-tight outline-none sm:text-3xl"
+                                :class="
+                                    !canUploadText || textForm.processing
+                                        ? 'cursor-not-allowed opacity-70'
+                                        : ''
+                                "
+                                :style="
+                                    selectedTextPostTheme
+                                        ? {
+                                              ...textPostContentStyle({
+                                                  textThemeTextColor: selectedTextPostTheme.textColor,
+                                              }),
+                                              textShadow:
+                                                  selectedTextPostTheme.textColor === '#111827'
+                                                      ? '0 1px 14px rgba(255,255,255,0.55)'
+                                                      : '0 1px 14px rgba(15,23,42,0.35)',
+                                          }
+                                        : undefined
+                                "
+                                @focus="isTextComposerFocused = true"
+                                @blur="isTextComposerFocused = false"
+                                @input="onTextComposerInput"
+                            />
+                            <p
+                                v-if="textForm.text.trim().length === 0 && isTextComposerFocused"
+                                class="pointer-events-none absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-2xl font-semibold leading-tight opacity-70 sm:text-3xl"
+                                :style="
+                                    selectedTextPostTheme
+                                        ? {
+                                              ...textPostContentStyle({
+                                                  textThemeTextColor: selectedTextPostTheme.textColor,
+                                              }),
+                                          }
+                                        : undefined
+                                "
+                            >
+                                Write your message...
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
+                        <span>Choose a background theme</span>
+                        <span>{{ textForm.text.trim().length }}/500</span>
+                    </div>
+
+                    <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                        <button
+                            v-for="theme in props.textPostThemes"
+                            :key="theme.id"
+                            type="button"
+                            class="relative shrink-0 overflow-hidden rounded-[1.35rem] border-2 shadow-sm transition"
+                            :class="
+                                textForm.text_post_theme_id === theme.id
+                                    ? 'border-slate-900'
+                                    : 'border-transparent'
+                            "
+                            @click="textForm.text_post_theme_id = theme.id"
+                        >
+                            <img
+                                :src="theme.imageUrl"
+                                :alt="theme.name"
+                                class="size-20 object-cover"
+                            />
+                            <div
+                                v-if="textForm.text_post_theme_id === theme.id"
+                                class="absolute inset-0 flex items-start justify-end bg-black/10 p-2"
+                            >
+                                <span class="inline-flex size-6 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+                                    <CheckCircle2 class="size-4" />
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+                    <p
+                        v-if="textForm.errors.text || textForm.errors.text_post_theme_id"
+                        class="mt-3 text-xs text-rose-700"
+                    >
+                        {{ textForm.errors.text || textForm.errors.text_post_theme_id }}
+                    </p>
+                    <button
+                        type="button"
+                        class="mt-5 inline-flex h-11 w-full items-center justify-center rounded-2xl px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                        :style="heroAccentStyle"
+                        :disabled="!canUploadText || textForm.processing || textForm.text.trim().length === 0"
+                        @click="submitTextPost"
+                    >
+                        {{ textForm.processing ? 'Posting...' : 'Post message' }}
+                    </button>
+                </div>
+
+                </div>
+                </div>
+            </div>
+        </transition>
+
+        <Sheet v-model:open="menuOpen">
+            <SheetContent
+                side="right"
+                class="safe-right safe-bottom flex h-full w-[85%] max-w-sm flex-col border-l border-slate-200 bg-white px-0 sm:max-w-sm"
+            >
+                <SheetHeader class="border-b border-slate-200 px-5 py-5 text-left">
+                    <SheetTitle class="text-xl text-slate-900">
+                        Guest menu
+                    </SheetTitle>
+                    <SheetDescription class="text-sm text-slate-600">
+                        Signed in as
+                        <span class="font-semibold text-slate-900">{{ guestName.trim() }}</span>
+                    </SheetDescription>
+                </SheetHeader>
+
+                <div class="flex-1 overflow-y-auto px-4 py-4">
+                    <div class="grid gap-2">
+                        <button
+                            v-for="option in intentOptions"
+                            :key="`sheet-menu-${option.value}`"
+                            type="button"
+                            class="flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-[15px] font-medium transition"
+                            :class="
+                                (option.value === 'browse_gallery' &&
+                                    activeView === 'browse_gallery' &&
+                                    !isComposerOpen) ||
+                                (option.value !== 'browse_gallery' &&
+                                    isComposerOpen &&
+                                    activeView === option.value)
+                                    ? 'border-slate-900 bg-slate-900 text-white'
+                                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                            "
+                            :disabled="!option.enabled"
+                            @click="setMenuActiveView(option.value)"
+                        >
+                            <component :is="option.icon" class="size-4 shrink-0" />
+                            <span>{{ option.label }}</span>
+                        </button>
+
+                        <a
+                            :href="links.wall"
+                            class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] font-medium text-slate-800 transition hover:bg-slate-50"
+                        >
+                            <Images class="size-4 shrink-0" />
+                            <span>Open Photo Wall</span>
+                        </a>
+
+                        <button
+                            v-if="isPreEventTestMode"
+                            type="button"
+                            class="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-[15px] font-medium text-amber-900 transition hover:bg-amber-100"
+                            @click="
+                                menuOpen = false;
+                                isPreEventInfoOpen = true;
+                            "
+                        >
+                            <AlertTriangle class="size-4 shrink-0 text-amber-600" />
+                            <span>Pre-event test mode</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 px-4 py-4">
+                    <button
+                        type="button"
+                        class="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-[15px] font-semibold text-slate-800 transition hover:bg-slate-50"
+                        @click="resetGuestOnboarding"
+                    >
+                        Reset guest onboarding
+                    </button>
+                </div>
+            </SheetContent>
+        </Sheet>
+
+        <Drawer
+            direction="bottom"
+            :open="isAssetCommentsOpen"
+            @update:open="(open) => { if (!open) closeAssetComments(); }"
+        >
+            <DrawerContent
+                class="safe-bottom max-h-[84vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
+            >
+                <DrawerHeader class="border-b border-slate-200 px-5 pb-5 pt-3 text-center">
+                    <DrawerTitle class="text-center text-lg text-slate-900">
+                        Comments
+                    </DrawerTitle>
+                </DrawerHeader>
+
+                <div
+                    v-if="selectedCommentsAsset"
+                    class="flex max-h-[calc(84vh-5rem)] min-h-0 flex-col"
+                >
+                    <div
+                        v-if="isAssetCommentsLoading(selectedCommentsAsset.id)"
+                        class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5"
+                    >
+                        <div
+                            v-for="skeletonIndex in 3"
+                            :key="`comment-skeleton-${skeletonIndex}`"
+                            class="animate-pulse py-3"
+                        >
+                            <div class="h-4 w-24 rounded bg-slate-200" />
+                            <div class="mt-3 h-3 w-full rounded bg-slate-200" />
+                            <div class="mt-2 h-3 w-4/5 rounded bg-slate-200" />
+                        </div>
+                    </div>
+
+                    <div
+                        v-else-if="selectedComments.length === 0"
+                        class="flex min-h-0 flex-1 items-center justify-center px-5 py-10"
+                    >
+                        <div class="text-center">
+                            <p class="text-sm font-medium text-slate-900">No comments yet</p>
+                            <p class="mt-1 text-sm text-slate-500">Start the conversation.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        v-else
+                        class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5"
+                    >
+                        <article
+                            v-for="comment in selectedComments"
+                            :key="`comment-${comment.id}`"
+                            class="py-1"
+                        >
+                            <div class="flex items-start gap-3">
+                                <Avatar class="size-10 border border-slate-200">
+                                    <AvatarImage
+                                        v-if="comment.guestAvatarUrl"
+                                        :src="comment.guestAvatarUrl"
+                                        :alt="comment.guestName"
+                                    />
+                                    <AvatarFallback
+                                        :class="avatarFallbackClass(comment.guestName)"
+                                    >
+                                        {{ guestInitials(comment.guestName) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div class="relative min-w-0 flex-1 pr-14">
+                                    <div class="min-w-0 flex items-center gap-2">
+                                        <p class="truncate text-sm font-semibold text-slate-900">
+                                            {{ comment.guestName }}
+                                        </p>
+                                        <p class="shrink-0 text-xs text-slate-500">
+                                            {{ formatRelativeTime(comment.createdAt) }}
+                                        </p>
+                                    </div>
+                                    <p class="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                                        {{ comment.body }}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        class="absolute right-0 top-0 inline-flex items-center gap-1 px-1 py-1 text-xs font-medium text-slate-500 transition hover:text-rose-600 disabled:opacity-50"
+                                        :class="comment.liked ? 'text-rose-600' : ''"
+                                        :disabled="isCommentLikePending(comment.id)"
+                                        @click="toggleCommentLike(comment)"
+                                    >
+                                        <span>{{ formatLikeCount(comment.likeCount) }}</span>
+                                        <Heart
+                                            class="size-5"
+                                            :class="comment.liked ? 'fill-rose-500 text-rose-500' : ''"
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <DrawerFooter class="mt-auto gap-3 border-t border-slate-200 bg-white/95 px-5 pb-6 pt-4">
+                        <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                            <button
+                                v-for="emoji in commentEmojiOptions"
+                                :key="`comment-emoji-${emoji}`"
+                                type="button"
+                                class="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-lg transition hover:border-slate-300 hover:bg-slate-100"
+                                @click="appendCommentEmoji(emoji)"
+                            >
+                                {{ emoji }}
+                            </button>
+                        </div>
+                        <div class="space-y-2">
+                            <InputGroup class="h-12 rounded-full border-slate-200 bg-white">
+                                <InputGroupInput
+                                    v-model="commentDraft"
+                                    maxlength="500"
+                                    placeholder="Write a comment..."
+                                    :disabled="isAssetCommentPending(selectedCommentsAsset.id)"
+                                    class="h-12 rounded-full px-4 text-sm"
+                                    @keydown.enter.prevent="commentDraft.trim().length > 0 ? submitAssetComment() : undefined"
+                                />
+                                <InputGroupAddon
+                                    v-if="commentDraft.trim().length > 0"
+                                    align="inline-end"
+                                    class="pr-2"
+                                >
+                                    <InputGroupButton
+                                        size="sm"
+                                        class="h-8 rounded-full bg-[#1d9bf0] px-3 text-white hover:bg-[#1a8cd8]"
+                                        :disabled="isAssetCommentPending(selectedCommentsAsset.id)"
+                                        @click="submitAssetComment"
+                                    >
+                                        <ArrowUp class="size-4" />
+                                    </InputGroupButton>
+                                </InputGroupAddon>
+                            </InputGroup>
+                            <p
+                                v-if="commentError"
+                                class="text-xs text-rose-700"
+                            >
+                                {{ commentError }}
+                            </p>
+                        </div>
+                    </DrawerFooter>
+                </div>
+            </DrawerContent>
+        </Drawer>
+
+        <transition
+            enter-active-class="transition duration-200"
+            leave-active-class="transition duration-150"
+            enter-from-class="opacity-0 translate-y-3 scale-95"
+            enter-to-class="opacity-100 translate-y-0 scale-100"
+            leave-from-class="opacity-100 translate-y-0 scale-100"
+            leave-to-class="opacity-0 translate-y-3 scale-95"
+        >
+            <button
+                v-if="showScrollTopButton"
+                type="button"
+                class="safe-bottom safe-right fixed bottom-20 right-4 z-30 inline-flex h-11 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900/76 text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-slate-900/84"
+                aria-label="Scroll to top"
+                @click="scrollAlbumToTop"
+            >
+                <ArrowUp class="size-5" />
+            </button>
+        </transition>
+
+        <transition
+            enter-active-class="transition duration-200"
+            leave-active-class="transition duration-150"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="selectedAsset"
+                class="fixed inset-0 z-50 bg-black text-white"
+            >
+                <header class="absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-black/90 px-3 py-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex min-w-0 items-center gap-2">
+                            <button
+                                type="button"
+                                class="inline-flex size-10 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
+                                aria-label="Close viewer"
+                                @click="closeAssetViewer"
+                            >
+                                <X class="size-5" />
+                            </button>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-white">
+                                    {{ selectedAsset.guestName || 'Guest' }}
+                                </p>
+                                <p class="truncate text-xs text-white/75">
+                                    {{ formatDateTime(selectedAsset.createdAt) }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            v-if="selectedAssetCanDelete"
+                            type="button"
+                            class="inline-flex size-10 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white disabled:opacity-50"
+                            :disabled="deleteAssetForm.processing"
+                            aria-label="Delete upload"
+                            @click="deleteSelectedAsset"
+                        >
+                            <Trash2 class="size-5" />
+                        </button>
+                    </div>
+                </header>
+
+                <div
+                    class="flex h-screen w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-24 pt-16"
+                    @touchstart.passive="onViewerTouchStart"
+                    @touchmove.passive="onViewerTouchMove"
+                    @touchend.passive="onViewerTouchEnd"
+                    @touchcancel.passive="onViewerTouchCancel"
+                >
+                    <img
+                        v-if="selectedAsset.kind === 'photo' && selectedAsset.previewUrl"
+                        :src="selectedAsset.previewUrl"
+                        alt="Selected event photo"
+                        class="block max-h-full max-w-full object-contain"
+                    />
+                    <video
+                        v-else-if="selectedAsset.kind === 'video' && selectedAsset.previewUrl"
+                        :src="selectedAsset.previewUrl"
+                        :poster="selectedAsset.thumbnailUrl ?? undefined"
+                        class="block max-h-full max-w-full object-contain"
+                        controls
+                        autoplay
+                        playsinline
+                    />
+                    <div
+                        v-else-if="
+                            selectedAsset.kind === 'video' &&
+                            selectedAsset.videoProcessing
+                        "
+                        class="flex aspect-video w-full max-w-[min(92vw,1100px)] flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/20 bg-white/10 px-8 text-center text-white backdrop-blur"
+                    >
+                        <LoaderCircle class="size-10 animate-spin text-white/80" />
+                        <div class="space-y-1">
+                            <p class="text-base font-semibold">
+                                Processing video
+                            </p>
+                            <p class="text-sm text-white/75">
+                                This upload is still being prepared.
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        v-else-if="selectedAsset.kind === 'text'"
+                        class="flex aspect-square w-full max-w-[min(90vw,80vh)] items-center justify-center rounded-[2rem] p-8 shadow-2xl"
+                        :style="textPostSurfaceStyle(selectedAsset)"
+                    >
+                        <p
+                            class="max-w-[78%] whitespace-pre-wrap text-center text-xl font-semibold leading-relaxed sm:text-2xl"
+                            :style="textPostContentStyle(selectedAsset)"
+                        >
+                            {{ selectedAsset.text ?? 'Text post' }}
+                        </p>
+                    </div>
+
+                    <button
+                        v-if="hasMultipleInSelectedStack"
+                        type="button"
+                        class="absolute left-2 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white"
+                        aria-label="Previous photo in stack"
+                        @click="showPreviousInStack"
+                    >
+                        <ChevronLeft class="size-5" />
+                    </button>
+                    <button
+                        v-if="hasMultipleInSelectedStack"
+                        type="button"
+                        class="absolute right-2 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white"
+                        aria-label="Next photo in stack"
+                        @click="showNextInStack"
+                    >
+                        <ChevronRight class="size-5" />
+                    </button>
+                </div>
+                <div
+                    v-if="
+                        showPreviewWatermark &&
+                        (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
+                    "
+                    class="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"
+                >
+                    <span class="rounded-full border border-white/35 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                        Preview only - payment required
+                    </span>
+                </div>
+
+                <footer class="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/90 px-3 py-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition"
+                            :class="
+                                selectedAssetLiked
+                                    ? 'bg-rose-500/15 text-rose-300'
+                                    : 'text-white/80 hover:bg-white/10'
+                            "
+                            :disabled="selectedAsset === null || isAssetLikePending(selectedAsset)"
+                            :aria-pressed="selectedAssetLiked"
+                            @click="toggleSelectedAssetLike"
+                        >
+                            <Heart
+                                class="size-3.5 transition-transform duration-200"
+                                :class="
+                                    [
+                                        selectedAssetLiked
+                                            ? 'fill-rose-500 text-rose-500'
+                                            : '',
+                                        selectedAsset && isAssetLikeAnimating(selectedAsset)
+                                            ? 'scale-125'
+                                            : '',
+                                        selectedAsset && isAssetLikePending(selectedAsset)
+                                            ? 'opacity-60'
+                                            : '',
+                                    ]
+                                "
+                            />
+                            {{
+                                selectedAsset && isAssetLikePending(selectedAsset)
+                                    ? 'Saving...'
+                                    : selectedAsset
+                                    ? `${formatLikeCount(selectedAsset.likeCount)} likes`
+                                    : '0 likes'
+                            }}
+                        </button>
+
+                        <div class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
+                                aria-label="Copy album link"
+                                @click="shareSelectedAsset"
+                            >
+                                <Copy class="size-3.5" />
+                                Share
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
+                                aria-label="Open post comments"
+                                @click="openAssetComments(activeStackKey ?? '')"
+                            >
+                                <MessageCircle class="size-3.5" />
+                                Comments
+                                <span
+                                    v-if="selectedAsset.commentCount > 0"
+                                    class="font-semibold"
+                                >
+                                    {{ formatLikeCount(selectedAsset.commentCount) }}
+                                </span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button
+                                v-if="selectedAssetCanDelete"
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
+                                aria-label="Delete upload"
+                                @click="deleteSelectedAsset"
+                            >
+                                <Trash2 class="size-3.5" />
+                                Delete
+                            </button>
+                            <a
+                                v-if="selectedAssetCanDownload"
+                                :href="selectedAsset.downloadUrl"
+                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
+                            >
+                                <Download class="size-3.5" />
+                                Download
+                            </a>
+                            <button
+                                v-if="showCaptions"
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
+                                aria-label="Open upload info"
+                                @click="openAssetInfo(activeStackKey ?? '', activeStackSlideIndex)"
+                            >
+                                <Info class="size-3.5" />
+                                Info
+                            </button>
+                        </div>
+                    </div>
+
+                    <p
+                        v-if="selectedStack?.preview.kind !== 'text' && selectedStack?.preview.message"
+                        class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80"
+                    >
+                        {{ selectedStack.preview.message }}
+                    </p>
+
+                    <div
+                        v-if="hasMultipleInSelectedStack"
+                        class="mt-2 flex items-center justify-center gap-1.5"
+                    >
+                        <span
+                            v-for="(asset, index) in selectedStackAssets"
+                            :key="`stack-dot-${asset.id}`"
+                            class="size-1.5 rounded-full"
+                            :class="
+                                index === activeStackSlideIndex
+                                    ? 'bg-white'
+                                    : 'bg-white/30'
+                            "
+                        />
+                    </div>
+                </footer>
+            </div>
+        </transition>
+
+        <Drawer
+            v-if="showCaptions"
+            direction="bottom"
+            :open="isAssetInfoOpen"
+            @update:open="(open) => { if (!open) closeAssetInfo(); }"
+        >
+            <DrawerContent
+                class="safe-bottom max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
+            >
+                <DrawerHeader class="border-b border-slate-200 px-5 pb-5 pt-3 text-center">
+                    <DrawerTitle class="text-center text-lg text-slate-900">
+                        Upload info
+                    </DrawerTitle>
+                </DrawerHeader>
+
+                <div
+                    v-if="selectedInfoAsset"
+                    class="min-h-0 flex-1 overflow-y-auto px-5 py-5"
+                >
+                    <div class="flex items-start gap-3 border-b border-slate-200 pb-4">
+                        <Avatar class="size-11 border border-slate-200">
+                            <AvatarImage
+                                v-if="selectedInfoAsset.guestAvatarUrl"
+                                :src="selectedInfoAsset.guestAvatarUrl ?? ''"
+                                :alt="selectedInfoAsset.guestName || 'Guest avatar'"
+                            />
+                            <AvatarFallback
+                                :class="avatarFallbackClass(selectedInfoAsset.guestName)"
+                            >
+                                {{ guestInitials(selectedInfoAsset.guestName) }}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-slate-900">
+                                {{ selectedInfoAsset.guestName || 'Guest' }}
+                            </p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{ formatDateTime(selectedInfoAsset.createdAt) }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-400">
+                                {{ formatRelativeTime(selectedInfoAsset.createdAt) }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-slate-200">
+                        <div class="flex items-start justify-between gap-4 py-4">
+                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Type
+                            </span>
+                            <span class="text-right text-sm font-medium capitalize text-slate-900">
+                                {{ selectedInfoAsset.kind }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-4 py-4">
+                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Status
+                            </span>
+                            <span class="text-right text-sm font-medium capitalize text-slate-900">
+                                {{ selectedInfoAsset.moderationStatus }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-4 py-4">
+                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Size
+                            </span>
+                            <span class="text-right text-sm font-medium text-slate-900">
+                                {{ formatBytes(selectedInfoAsset.sizeBytes) }}
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="selectedInfoAsset.mimeType"
+                            class="flex items-start justify-between gap-4 py-4"
+                        >
+                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Format
+                            </span>
+                            <span class="max-w-[60%] break-all text-right text-sm font-medium text-slate-900">
+                                {{ selectedInfoAsset.mimeType }}
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="selectedInfoAsset.message?.trim()"
+                            class="py-4"
+                        >
+                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Message
+                            </p>
+                            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-900">
+                                {{ selectedInfoAsset.message }}
+                            </p>
+                        </div>
+
+                        <div
+                            v-if="selectedInfoAsset.kind === 'text' && selectedInfoAsset.text?.trim()"
+                            class="py-4"
+                        >
+                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                Text post
+                            </p>
+                            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-900">
+                                {{ selectedInfoAsset.text }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </DrawerContent>
+        </Drawer>
+
+    </main>
+</template>
+
+<style scoped>
+:deep(button),
+:deep(a) {
+    -webkit-tap-highlight-color: transparent;
+}
+
+:deep(button:focus),
+:deep(button:focus-visible),
+:deep(a:focus),
+:deep(a:focus-visible),
+:deep([role='button']:focus),
+:deep([role='button']:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.welcome-bg-animate-slow {
+    animation: welcome-bg-breathe 62s ease-in-out infinite;
+    transform-origin: center center;
+    will-change: transform, opacity;
+}
+
+@keyframes welcome-bg-breathe {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    30% {
+        transform: scale(1.06);
+        opacity: 0.84;
+    }
+    55% {
+        transform: scale(1.09);
+        opacity: 0.78;
+    }
+    80% {
+        transform: scale(1.03);
+        opacity: 0.92;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>

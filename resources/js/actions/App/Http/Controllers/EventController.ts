@@ -1,0 +1,2566 @@
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+export const show = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: show.url(args, options),
+    method: 'get',
+})
+
+show.definition = {
+    methods: ["get","head"],
+    url: '/events/{event}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+show.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return show.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+show.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: show.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+show.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: show.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+const showForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+showForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::show
+* @see app/Http/Controllers/EventController.php:58
+* @route '/events/{event}'
+*/
+showForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+show.form = showForm
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+export const media = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: media.url(args, options),
+    method: 'get',
+})
+
+media.definition = {
+    methods: ["get","head"],
+    url: '/events/{event}/media',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+media.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return media.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+media.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: media.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+media.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: media.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+const mediaForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: media.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+mediaForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: media.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::media
+* @see app/Http/Controllers/EventController.php:69
+* @route '/events/{event}/media'
+*/
+mediaForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: media.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+media.form = mediaForm
+
+/**
+* @see \App\Http\Controllers\EventController::startMediaExport
+* @see app/Http/Controllers/EventController.php:91
+* @route '/events/{event}/exports/media'
+*/
+export const startMediaExport = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: startMediaExport.url(args, options),
+    method: 'post',
+})
+
+startMediaExport.definition = {
+    methods: ["post"],
+    url: '/events/{event}/exports/media',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::startMediaExport
+* @see app/Http/Controllers/EventController.php:91
+* @route '/events/{event}/exports/media'
+*/
+startMediaExport.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return startMediaExport.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::startMediaExport
+* @see app/Http/Controllers/EventController.php:91
+* @route '/events/{event}/exports/media'
+*/
+startMediaExport.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: startMediaExport.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::startMediaExport
+* @see app/Http/Controllers/EventController.php:91
+* @route '/events/{event}/exports/media'
+*/
+const startMediaExportForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: startMediaExport.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::startMediaExport
+* @see app/Http/Controllers/EventController.php:91
+* @route '/events/{event}/exports/media'
+*/
+startMediaExportForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: startMediaExport.url(args, options),
+    method: 'post',
+})
+
+startMediaExport.form = startMediaExportForm
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+export const downloadMediaExport = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: downloadMediaExport.url(args, options),
+    method: 'get',
+})
+
+downloadMediaExport.definition = {
+    methods: ["get","head"],
+    url: '/events/{event}/exports/media/download',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+downloadMediaExport.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return downloadMediaExport.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+downloadMediaExport.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: downloadMediaExport.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+downloadMediaExport.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: downloadMediaExport.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+const downloadMediaExportForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadMediaExport.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+downloadMediaExportForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadMediaExport.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadMediaExport
+* @see app/Http/Controllers/EventController.php:127
+* @route '/events/{event}/exports/media/download'
+*/
+downloadMediaExportForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadMediaExport.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+downloadMediaExport.form = downloadMediaExportForm
+
+/**
+* @see \App\Http\Controllers\EventController::bulkDestroyAssets
+* @see app/Http/Controllers/EventController.php:167
+* @route '/events/{event}/assets/bulk-delete'
+*/
+export const bulkDestroyAssets = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: bulkDestroyAssets.url(args, options),
+    method: 'post',
+})
+
+bulkDestroyAssets.definition = {
+    methods: ["post"],
+    url: '/events/{event}/assets/bulk-delete',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::bulkDestroyAssets
+* @see app/Http/Controllers/EventController.php:167
+* @route '/events/{event}/assets/bulk-delete'
+*/
+bulkDestroyAssets.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return bulkDestroyAssets.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::bulkDestroyAssets
+* @see app/Http/Controllers/EventController.php:167
+* @route '/events/{event}/assets/bulk-delete'
+*/
+bulkDestroyAssets.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: bulkDestroyAssets.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::bulkDestroyAssets
+* @see app/Http/Controllers/EventController.php:167
+* @route '/events/{event}/assets/bulk-delete'
+*/
+const bulkDestroyAssetsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: bulkDestroyAssets.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::bulkDestroyAssets
+* @see app/Http/Controllers/EventController.php:167
+* @route '/events/{event}/assets/bulk-delete'
+*/
+bulkDestroyAssetsForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: bulkDestroyAssets.url(args, options),
+    method: 'post',
+})
+
+bulkDestroyAssets.form = bulkDestroyAssetsForm
+
+/**
+* @see \App\Http\Controllers\EventController::bulkUpdateAssetModeration
+* @see app/Http/Controllers/EventController.php:190
+* @route '/events/{event}/assets/bulk-moderation'
+*/
+export const bulkUpdateAssetModeration = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: bulkUpdateAssetModeration.url(args, options),
+    method: 'post',
+})
+
+bulkUpdateAssetModeration.definition = {
+    methods: ["post"],
+    url: '/events/{event}/assets/bulk-moderation',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::bulkUpdateAssetModeration
+* @see app/Http/Controllers/EventController.php:190
+* @route '/events/{event}/assets/bulk-moderation'
+*/
+bulkUpdateAssetModeration.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return bulkUpdateAssetModeration.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::bulkUpdateAssetModeration
+* @see app/Http/Controllers/EventController.php:190
+* @route '/events/{event}/assets/bulk-moderation'
+*/
+bulkUpdateAssetModeration.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: bulkUpdateAssetModeration.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::bulkUpdateAssetModeration
+* @see app/Http/Controllers/EventController.php:190
+* @route '/events/{event}/assets/bulk-moderation'
+*/
+const bulkUpdateAssetModerationForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: bulkUpdateAssetModeration.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::bulkUpdateAssetModeration
+* @see app/Http/Controllers/EventController.php:190
+* @route '/events/{event}/assets/bulk-moderation'
+*/
+bulkUpdateAssetModerationForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: bulkUpdateAssetModeration.url(args, options),
+    method: 'post',
+})
+
+bulkUpdateAssetModeration.form = bulkUpdateAssetModerationForm
+
+/**
+* @see \App\Http\Controllers\EventController::destroyAsset
+* @see app/Http/Controllers/EventController.php:157
+* @route '/events/{event}/assets/{asset}'
+*/
+export const destroyAsset = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroyAsset.url(args, options),
+    method: 'delete',
+})
+
+destroyAsset.definition = {
+    methods: ["delete"],
+    url: '/events/{event}/assets/{asset}',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\EventController::destroyAsset
+* @see app/Http/Controllers/EventController.php:157
+* @route '/events/{event}/assets/{asset}'
+*/
+destroyAsset.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return destroyAsset.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::destroyAsset
+* @see app/Http/Controllers/EventController.php:157
+* @route '/events/{event}/assets/{asset}'
+*/
+destroyAsset.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroyAsset.url(args, options),
+    method: 'delete',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::destroyAsset
+* @see app/Http/Controllers/EventController.php:157
+* @route '/events/{event}/assets/{asset}'
+*/
+const destroyAssetForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: destroyAsset.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'DELETE',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::destroyAsset
+* @see app/Http/Controllers/EventController.php:157
+* @route '/events/{event}/assets/{asset}'
+*/
+destroyAssetForm.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: destroyAsset.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'DELETE',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+destroyAsset.form = destroyAssetForm
+
+/**
+* @see \App\Http\Controllers\EventController::updateAssetModeration
+* @see app/Http/Controllers/EventController.php:218
+* @route '/events/{event}/assets/{asset}/moderation'
+*/
+export const updateAssetModeration = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateAssetModeration.url(args, options),
+    method: 'patch',
+})
+
+updateAssetModeration.definition = {
+    methods: ["patch"],
+    url: '/events/{event}/assets/{asset}/moderation',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\EventController::updateAssetModeration
+* @see app/Http/Controllers/EventController.php:218
+* @route '/events/{event}/assets/{asset}/moderation'
+*/
+updateAssetModeration.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return updateAssetModeration.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::updateAssetModeration
+* @see app/Http/Controllers/EventController.php:218
+* @route '/events/{event}/assets/{asset}/moderation'
+*/
+updateAssetModeration.patch = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateAssetModeration.url(args, options),
+    method: 'patch',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateAssetModeration
+* @see app/Http/Controllers/EventController.php:218
+* @route '/events/{event}/assets/{asset}/moderation'
+*/
+const updateAssetModerationForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateAssetModeration.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateAssetModeration
+* @see app/Http/Controllers/EventController.php:218
+* @route '/events/{event}/assets/{asset}/moderation'
+*/
+updateAssetModerationForm.patch = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateAssetModeration.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+updateAssetModeration.form = updateAssetModerationForm
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+export const settings = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: settings.url(args, options),
+    method: 'get',
+})
+
+settings.definition = {
+    methods: ["get","head"],
+    url: '/events/{event}/settings',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+settings.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return settings.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+settings.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: settings.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+settings.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: settings.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+const settingsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: settings.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+settingsForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: settings.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::settings
+* @see app/Http/Controllers/EventController.php:237
+* @route '/events/{event}/settings'
+*/
+settingsForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: settings.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+settings.form = settingsForm
+
+/**
+* @see \App\Http\Controllers\EventController::updateSettings
+* @see app/Http/Controllers/EventController.php:248
+* @route '/events/{event}/settings'
+*/
+export const updateSettings = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateSettings.url(args, options),
+    method: 'patch',
+})
+
+updateSettings.definition = {
+    methods: ["patch"],
+    url: '/events/{event}/settings',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\EventController::updateSettings
+* @see app/Http/Controllers/EventController.php:248
+* @route '/events/{event}/settings'
+*/
+updateSettings.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return updateSettings.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::updateSettings
+* @see app/Http/Controllers/EventController.php:248
+* @route '/events/{event}/settings'
+*/
+updateSettings.patch = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateSettings.url(args, options),
+    method: 'patch',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateSettings
+* @see app/Http/Controllers/EventController.php:248
+* @route '/events/{event}/settings'
+*/
+const updateSettingsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateSettings.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateSettings
+* @see app/Http/Controllers/EventController.php:248
+* @route '/events/{event}/settings'
+*/
+updateSettingsForm.patch = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateSettings.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+updateSettings.form = updateSettingsForm
+
+/**
+* @see \App\Http\Controllers\EventController::updateBilling
+* @see app/Http/Controllers/EventController.php:553
+* @route '/events/{event}/billing'
+*/
+export const updateBilling = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateBilling.url(args, options),
+    method: 'patch',
+})
+
+updateBilling.definition = {
+    methods: ["patch"],
+    url: '/events/{event}/billing',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\EventController::updateBilling
+* @see app/Http/Controllers/EventController.php:553
+* @route '/events/{event}/billing'
+*/
+updateBilling.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return updateBilling.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::updateBilling
+* @see app/Http/Controllers/EventController.php:553
+* @route '/events/{event}/billing'
+*/
+updateBilling.patch = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updateBilling.url(args, options),
+    method: 'patch',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateBilling
+* @see app/Http/Controllers/EventController.php:553
+* @route '/events/{event}/billing'
+*/
+const updateBillingForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateBilling.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::updateBilling
+* @see app/Http/Controllers/EventController.php:553
+* @route '/events/{event}/billing'
+*/
+updateBillingForm.patch = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: updateBilling.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+updateBilling.form = updateBillingForm
+
+/**
+* @see \App\Http\Controllers\EventController::createBillingCheckout
+* @see app/Http/Controllers/EventController.php:586
+* @route '/events/{event}/billing/checkout'
+*/
+export const createBillingCheckout = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: createBillingCheckout.url(args, options),
+    method: 'post',
+})
+
+createBillingCheckout.definition = {
+    methods: ["post"],
+    url: '/events/{event}/billing/checkout',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::createBillingCheckout
+* @see app/Http/Controllers/EventController.php:586
+* @route '/events/{event}/billing/checkout'
+*/
+createBillingCheckout.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return createBillingCheckout.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::createBillingCheckout
+* @see app/Http/Controllers/EventController.php:586
+* @route '/events/{event}/billing/checkout'
+*/
+createBillingCheckout.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: createBillingCheckout.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::createBillingCheckout
+* @see app/Http/Controllers/EventController.php:586
+* @route '/events/{event}/billing/checkout'
+*/
+const createBillingCheckoutForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: createBillingCheckout.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::createBillingCheckout
+* @see app/Http/Controllers/EventController.php:586
+* @route '/events/{event}/billing/checkout'
+*/
+createBillingCheckoutForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: createBillingCheckout.url(args, options),
+    method: 'post',
+})
+
+createBillingCheckout.form = createBillingCheckoutForm
+
+/**
+* @see \App\Http\Controllers\EventController::storeCollaborator
+* @see app/Http/Controllers/EventController.php:655
+* @route '/events/{event}/collaborators'
+*/
+export const storeCollaborator = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: storeCollaborator.url(args, options),
+    method: 'post',
+})
+
+storeCollaborator.definition = {
+    methods: ["post"],
+    url: '/events/{event}/collaborators',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::storeCollaborator
+* @see app/Http/Controllers/EventController.php:655
+* @route '/events/{event}/collaborators'
+*/
+storeCollaborator.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return storeCollaborator.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::storeCollaborator
+* @see app/Http/Controllers/EventController.php:655
+* @route '/events/{event}/collaborators'
+*/
+storeCollaborator.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: storeCollaborator.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::storeCollaborator
+* @see app/Http/Controllers/EventController.php:655
+* @route '/events/{event}/collaborators'
+*/
+const storeCollaboratorForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: storeCollaborator.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::storeCollaborator
+* @see app/Http/Controllers/EventController.php:655
+* @route '/events/{event}/collaborators'
+*/
+storeCollaboratorForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: storeCollaborator.url(args, options),
+    method: 'post',
+})
+
+storeCollaborator.form = storeCollaboratorForm
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+export const acceptCollaboratorInvite = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: acceptCollaboratorInvite.url(args, options),
+    method: 'get',
+})
+
+acceptCollaboratorInvite.definition = {
+    methods: ["get","head"],
+    url: '/collaborator-invites/{collaborator}/accept',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+acceptCollaboratorInvite.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { collaborator: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { collaborator: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            collaborator: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        collaborator: typeof args.collaborator === 'object'
+        ? args.collaborator.id
+        : args.collaborator,
+    }
+
+    return acceptCollaboratorInvite.definition.url
+            .replace('{collaborator}', parsedArgs.collaborator.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+acceptCollaboratorInvite.get = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: acceptCollaboratorInvite.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+acceptCollaboratorInvite.head = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: acceptCollaboratorInvite.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+const acceptCollaboratorInviteForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: acceptCollaboratorInvite.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+acceptCollaboratorInviteForm.get = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: acceptCollaboratorInvite.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::acceptCollaboratorInvite
+* @see app/Http/Controllers/EventController.php:727
+* @route '/collaborator-invites/{collaborator}/accept'
+*/
+acceptCollaboratorInviteForm.head = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: acceptCollaboratorInvite.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+acceptCollaboratorInvite.form = acceptCollaboratorInviteForm
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteRegistration
+* @see app/Http/Controllers/EventController.php:759
+* @route '/collaborator-invites/{collaborator}/complete-register'
+*/
+export const completeCollaboratorInviteRegistration = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: completeCollaboratorInviteRegistration.url(args, options),
+    method: 'post',
+})
+
+completeCollaboratorInviteRegistration.definition = {
+    methods: ["post"],
+    url: '/collaborator-invites/{collaborator}/complete-register',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteRegistration
+* @see app/Http/Controllers/EventController.php:759
+* @route '/collaborator-invites/{collaborator}/complete-register'
+*/
+completeCollaboratorInviteRegistration.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { collaborator: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { collaborator: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            collaborator: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        collaborator: typeof args.collaborator === 'object'
+        ? args.collaborator.id
+        : args.collaborator,
+    }
+
+    return completeCollaboratorInviteRegistration.definition.url
+            .replace('{collaborator}', parsedArgs.collaborator.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteRegistration
+* @see app/Http/Controllers/EventController.php:759
+* @route '/collaborator-invites/{collaborator}/complete-register'
+*/
+completeCollaboratorInviteRegistration.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: completeCollaboratorInviteRegistration.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteRegistration
+* @see app/Http/Controllers/EventController.php:759
+* @route '/collaborator-invites/{collaborator}/complete-register'
+*/
+const completeCollaboratorInviteRegistrationForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: completeCollaboratorInviteRegistration.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteRegistration
+* @see app/Http/Controllers/EventController.php:759
+* @route '/collaborator-invites/{collaborator}/complete-register'
+*/
+completeCollaboratorInviteRegistrationForm.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: completeCollaboratorInviteRegistration.url(args, options),
+    method: 'post',
+})
+
+completeCollaboratorInviteRegistration.form = completeCollaboratorInviteRegistrationForm
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteLogin
+* @see app/Http/Controllers/EventController.php:797
+* @route '/collaborator-invites/{collaborator}/complete-login'
+*/
+export const completeCollaboratorInviteLogin = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: completeCollaboratorInviteLogin.url(args, options),
+    method: 'post',
+})
+
+completeCollaboratorInviteLogin.definition = {
+    methods: ["post"],
+    url: '/collaborator-invites/{collaborator}/complete-login',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteLogin
+* @see app/Http/Controllers/EventController.php:797
+* @route '/collaborator-invites/{collaborator}/complete-login'
+*/
+completeCollaboratorInviteLogin.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { collaborator: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { collaborator: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            collaborator: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        collaborator: typeof args.collaborator === 'object'
+        ? args.collaborator.id
+        : args.collaborator,
+    }
+
+    return completeCollaboratorInviteLogin.definition.url
+            .replace('{collaborator}', parsedArgs.collaborator.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteLogin
+* @see app/Http/Controllers/EventController.php:797
+* @route '/collaborator-invites/{collaborator}/complete-login'
+*/
+completeCollaboratorInviteLogin.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: completeCollaboratorInviteLogin.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteLogin
+* @see app/Http/Controllers/EventController.php:797
+* @route '/collaborator-invites/{collaborator}/complete-login'
+*/
+const completeCollaboratorInviteLoginForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: completeCollaboratorInviteLogin.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::completeCollaboratorInviteLogin
+* @see app/Http/Controllers/EventController.php:797
+* @route '/collaborator-invites/{collaborator}/complete-login'
+*/
+completeCollaboratorInviteLoginForm.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: completeCollaboratorInviteLogin.url(args, options),
+    method: 'post',
+})
+
+completeCollaboratorInviteLogin.form = completeCollaboratorInviteLoginForm
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+export const album = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: album.url(args, options),
+    method: 'get',
+})
+
+album.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+album.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return album.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+album.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: album.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+album.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: album.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+const albumForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: album.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+albumForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: album.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::album
+* @see app/Http/Controllers/EventController.php:829
+* @route '/a/{shareToken}'
+*/
+albumForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: album.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+album.form = albumForm
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+export const albumAssets = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: albumAssets.url(args, options),
+    method: 'get',
+})
+
+albumAssets.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/assets',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+albumAssets.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return albumAssets.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+albumAssets.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: albumAssets.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+albumAssets.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: albumAssets.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+const albumAssetsForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: albumAssets.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+albumAssetsForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: albumAssets.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::albumAssets
+* @see app/Http/Controllers/EventController.php:937
+* @route '/a/{shareToken}/assets'
+*/
+albumAssetsForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: albumAssets.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+albumAssets.form = albumAssetsForm
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+export const guestProfile = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: guestProfile.url(args, options),
+    method: 'get',
+})
+
+guestProfile.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/guest-profile',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+guestProfile.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return guestProfile.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+guestProfile.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: guestProfile.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+guestProfile.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: guestProfile.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+const guestProfileForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guestProfile.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+guestProfileForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guestProfile.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guestProfile
+* @see app/Http/Controllers/EventController.php:966
+* @route '/a/{shareToken}/guest-profile'
+*/
+guestProfileForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guestProfile.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+guestProfile.form = guestProfileForm
+
+/**
+* @see \App\Http\Controllers\EventController::upsertGuestProfile
+* @see app/Http/Controllers/EventController.php:998
+* @route '/a/{shareToken}/guest-profile'
+*/
+export const upsertGuestProfile = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: upsertGuestProfile.url(args, options),
+    method: 'post',
+})
+
+upsertGuestProfile.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/guest-profile',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::upsertGuestProfile
+* @see app/Http/Controllers/EventController.php:998
+* @route '/a/{shareToken}/guest-profile'
+*/
+upsertGuestProfile.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return upsertGuestProfile.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::upsertGuestProfile
+* @see app/Http/Controllers/EventController.php:998
+* @route '/a/{shareToken}/guest-profile'
+*/
+upsertGuestProfile.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: upsertGuestProfile.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::upsertGuestProfile
+* @see app/Http/Controllers/EventController.php:998
+* @route '/a/{shareToken}/guest-profile'
+*/
+const upsertGuestProfileForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: upsertGuestProfile.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::upsertGuestProfile
+* @see app/Http/Controllers/EventController.php:998
+* @route '/a/{shareToken}/guest-profile'
+*/
+upsertGuestProfileForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: upsertGuestProfile.url(args, options),
+    method: 'post',
+})
+
+upsertGuestProfile.form = upsertGuestProfileForm
+
+/**
+* @see \App\Http\Controllers\EventController::upload
+* @see app/Http/Controllers/EventController.php:1038
+* @route '/a/{shareToken}/uploads'
+*/
+export const upload = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: upload.url(args, options),
+    method: 'post',
+})
+
+upload.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/uploads',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::upload
+* @see app/Http/Controllers/EventController.php:1038
+* @route '/a/{shareToken}/uploads'
+*/
+upload.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return upload.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::upload
+* @see app/Http/Controllers/EventController.php:1038
+* @route '/a/{shareToken}/uploads'
+*/
+upload.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: upload.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::upload
+* @see app/Http/Controllers/EventController.php:1038
+* @route '/a/{shareToken}/uploads'
+*/
+const uploadForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: upload.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::upload
+* @see app/Http/Controllers/EventController.php:1038
+* @route '/a/{shareToken}/uploads'
+*/
+uploadForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: upload.url(args, options),
+    method: 'post',
+})
+
+upload.form = uploadForm
+
+/**
+* @see \App\Http\Controllers\EventController::postText
+* @see app/Http/Controllers/EventController.php:1231
+* @route '/a/{shareToken}/text-posts'
+*/
+export const postText = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: postText.url(args, options),
+    method: 'post',
+})
+
+postText.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/text-posts',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::postText
+* @see app/Http/Controllers/EventController.php:1231
+* @route '/a/{shareToken}/text-posts'
+*/
+postText.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return postText.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::postText
+* @see app/Http/Controllers/EventController.php:1231
+* @route '/a/{shareToken}/text-posts'
+*/
+postText.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: postText.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::postText
+* @see app/Http/Controllers/EventController.php:1231
+* @route '/a/{shareToken}/text-posts'
+*/
+const postTextForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: postText.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::postText
+* @see app/Http/Controllers/EventController.php:1231
+* @route '/a/{shareToken}/text-posts'
+*/
+postTextForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: postText.url(args, options),
+    method: 'post',
+})
+
+postText.form = postTextForm
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetLike
+* @see app/Http/Controllers/EventController.php:1382
+* @route '/a/{shareToken}/assets/{asset}/likes/toggle'
+*/
+export const toggleAssetLike = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: toggleAssetLike.url(args, options),
+    method: 'post',
+})
+
+toggleAssetLike.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/assets/{asset}/likes/toggle',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetLike
+* @see app/Http/Controllers/EventController.php:1382
+* @route '/a/{shareToken}/assets/{asset}/likes/toggle'
+*/
+toggleAssetLike.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return toggleAssetLike.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetLike
+* @see app/Http/Controllers/EventController.php:1382
+* @route '/a/{shareToken}/assets/{asset}/likes/toggle'
+*/
+toggleAssetLike.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: toggleAssetLike.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetLike
+* @see app/Http/Controllers/EventController.php:1382
+* @route '/a/{shareToken}/assets/{asset}/likes/toggle'
+*/
+const toggleAssetLikeForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: toggleAssetLike.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetLike
+* @see app/Http/Controllers/EventController.php:1382
+* @route '/a/{shareToken}/assets/{asset}/likes/toggle'
+*/
+toggleAssetLikeForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: toggleAssetLike.url(args, options),
+    method: 'post',
+})
+
+toggleAssetLike.form = toggleAssetLikeForm
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+export const assetComments = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: assetComments.url(args, options),
+    method: 'get',
+})
+
+assetComments.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/assets/{asset}/comments',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+assetComments.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return assetComments.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+assetComments.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: assetComments.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+assetComments.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: assetComments.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+const assetCommentsForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: assetComments.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+assetCommentsForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: assetComments.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::assetComments
+* @see app/Http/Controllers/EventController.php:1439
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+assetCommentsForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: assetComments.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+assetComments.form = assetCommentsForm
+
+/**
+* @see \App\Http\Controllers\EventController::storeAssetComment
+* @see app/Http/Controllers/EventController.php:1473
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+export const storeAssetComment = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: storeAssetComment.url(args, options),
+    method: 'post',
+})
+
+storeAssetComment.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/assets/{asset}/comments',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::storeAssetComment
+* @see app/Http/Controllers/EventController.php:1473
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+storeAssetComment.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return storeAssetComment.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::storeAssetComment
+* @see app/Http/Controllers/EventController.php:1473
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+storeAssetComment.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: storeAssetComment.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::storeAssetComment
+* @see app/Http/Controllers/EventController.php:1473
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+const storeAssetCommentForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: storeAssetComment.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::storeAssetComment
+* @see app/Http/Controllers/EventController.php:1473
+* @route '/a/{shareToken}/assets/{asset}/comments'
+*/
+storeAssetCommentForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: storeAssetComment.url(args, options),
+    method: 'post',
+})
+
+storeAssetComment.form = storeAssetCommentForm
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetCommentLike
+* @see app/Http/Controllers/EventController.php:1524
+* @route '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle'
+*/
+export const toggleAssetCommentLike = (args: { shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } } | [shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: toggleAssetCommentLike.url(args, options),
+    method: 'post',
+})
+
+toggleAssetCommentLike.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetCommentLike
+* @see app/Http/Controllers/EventController.php:1524
+* @route '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle'
+*/
+toggleAssetCommentLike.url = (args: { shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } } | [shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+            comment: args[2],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+        comment: typeof args.comment === 'object'
+        ? args.comment.id
+        : args.comment,
+    }
+
+    return toggleAssetCommentLike.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace('{comment}', parsedArgs.comment.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetCommentLike
+* @see app/Http/Controllers/EventController.php:1524
+* @route '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle'
+*/
+toggleAssetCommentLike.post = (args: { shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } } | [shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: toggleAssetCommentLike.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetCommentLike
+* @see app/Http/Controllers/EventController.php:1524
+* @route '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle'
+*/
+const toggleAssetCommentLikeForm = (args: { shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } } | [shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: toggleAssetCommentLike.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::toggleAssetCommentLike
+* @see app/Http/Controllers/EventController.php:1524
+* @route '/a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle'
+*/
+toggleAssetCommentLikeForm.post = (args: { shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } } | [shareToken: string | number, asset: number | { id: number }, comment: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: toggleAssetCommentLike.url(args, options),
+    method: 'post',
+})
+
+toggleAssetCommentLike.form = toggleAssetCommentLikeForm
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+export const downloadPublicAsset = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: downloadPublicAsset.url(args, options),
+    method: 'get',
+})
+
+downloadPublicAsset.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/assets/{asset}/download',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+downloadPublicAsset.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return downloadPublicAsset.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+downloadPublicAsset.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: downloadPublicAsset.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+downloadPublicAsset.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: downloadPublicAsset.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+const downloadPublicAssetForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadPublicAsset.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+downloadPublicAssetForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadPublicAsset.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::downloadPublicAsset
+* @see app/Http/Controllers/EventController.php:1586
+* @route '/a/{shareToken}/assets/{asset}/download'
+*/
+downloadPublicAssetForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: downloadPublicAsset.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+downloadPublicAsset.form = downloadPublicAssetForm
+
+/**
+* @see \App\Http\Controllers\EventController::deletePublicAsset
+* @see app/Http/Controllers/EventController.php:1604
+* @route '/a/{shareToken}/assets/{asset}/delete'
+*/
+export const deletePublicAsset = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: deletePublicAsset.url(args, options),
+    method: 'post',
+})
+
+deletePublicAsset.definition = {
+    methods: ["post"],
+    url: '/a/{shareToken}/assets/{asset}/delete',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\EventController::deletePublicAsset
+* @see app/Http/Controllers/EventController.php:1604
+* @route '/a/{shareToken}/assets/{asset}/delete'
+*/
+deletePublicAsset.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return deletePublicAsset.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::deletePublicAsset
+* @see app/Http/Controllers/EventController.php:1604
+* @route '/a/{shareToken}/assets/{asset}/delete'
+*/
+deletePublicAsset.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: deletePublicAsset.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::deletePublicAsset
+* @see app/Http/Controllers/EventController.php:1604
+* @route '/a/{shareToken}/assets/{asset}/delete'
+*/
+const deletePublicAssetForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: deletePublicAsset.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::deletePublicAsset
+* @see app/Http/Controllers/EventController.php:1604
+* @route '/a/{shareToken}/assets/{asset}/delete'
+*/
+deletePublicAssetForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: deletePublicAsset.url(args, options),
+    method: 'post',
+})
+
+deletePublicAsset.form = deletePublicAssetForm
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+export const wall = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: wall.url(args, options),
+    method: 'get',
+})
+
+wall.definition = {
+    methods: ["get","head"],
+    url: '/wall/{shareToken}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+wall.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { shareToken: args }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+    }
+
+    return wall.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+wall.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: wall.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+wall.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: wall.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+const wallForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wall.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+wallForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wall.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::wall
+* @see app/Http/Controllers/EventController.php:1626
+* @route '/wall/{shareToken}'
+*/
+wallForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: wall.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+wall.form = wallForm
+
+const EventController = { show, media, startMediaExport, downloadMediaExport, bulkDestroyAssets, bulkUpdateAssetModeration, destroyAsset, updateAssetModeration, settings, updateSettings, updateBilling, createBillingCheckout, storeCollaborator, acceptCollaboratorInvite, completeCollaboratorInviteRegistration, completeCollaboratorInviteLogin, album, albumAssets, guestProfile, upsertGuestProfile, upload, postText, toggleAssetLike, assetComments, storeAssetComment, toggleAssetCommentLike, downloadPublicAsset, deletePublicAsset, wall }
+
+export default EventController

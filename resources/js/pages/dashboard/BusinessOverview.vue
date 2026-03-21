@@ -1,0 +1,1188 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import {
+    ArrowRight,
+    Camera,
+    CheckSquare,
+    CreditCard,
+    Download,
+    FolderKanban,
+    Search,
+    Settings,
+    Square,
+    X,
+} from 'lucide-vue-next';
+import { Checkbox } from '@/components/ui/checkbox';
+import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Button } from '@/components/ui/button';
+import {
+    badgeClass,
+    formatBytes,
+    formatDateOnly,
+    formatDateTime,
+} from '@/lib/dashboard';
+import type {
+    BreadcrumbItem,
+    BusinessDashboardFilters,
+    BusinessAttentionEvent,
+    BusinessOverview,
+    DashboardEvent,
+    DashboardLinks,
+    PaginationMeta,
+    QuickAction,
+    Summary,
+} from '@/types';
+
+const props = defineProps<{
+    summary: Summary;
+    businessOverview: BusinessOverview;
+    businessAttentionEvents: BusinessAttentionEvent[];
+    businessAttentionSummary: {
+        visibleCount: number;
+        totalCount: number;
+    };
+    filters: BusinessDashboardFilters;
+    quickActions: QuickAction[];
+    dashboardLinks: DashboardLinks;
+    businessActionLinks: {
+        startExports: string;
+        billingQueueDownload: string;
+    };
+    ownedEvents: DashboardEvent[];
+    ownedEventsPagination: PaginationMeta;
+}>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: props.dashboardLinks.overview,
+    },
+    {
+        title: 'Business',
+        href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
+    },
+];
+
+const businessHealthCards = computed(() => [
+    {
+        label: 'Total events',
+        value: props.filters.ownedEventTotalCount,
+        detail: 'Everything in your owned-event portfolio.',
+        icon: FolderKanban,
+    },
+    {
+        label: 'Live now',
+        value: props.businessOverview.liveEventCount,
+        detail: 'Events currently open for guest uploads.',
+        icon: ArrowRight,
+    },
+    {
+        label: 'Need setup',
+        value: props.summary.pendingSetupCount,
+        detail: 'Events still going through onboarding.',
+        icon: Settings,
+    },
+    {
+        label: 'Billing attention',
+        value:
+            props.businessOverview.overdueEventCount > 0
+                ? `${props.businessOverview.overdueEventCount} overdue`
+                : `${props.businessOverview.unpaidEventCount} unpaid`,
+        detail: 'Events that still need billing follow-up.',
+        icon: CreditCard,
+    },
+]);
+
+const primaryActions = computed(() => props.quickActions.slice(0, 4));
+
+const actionButtonClass = (tone: QuickAction['tone']): string => {
+    if (tone === 'dark') {
+        return 'bg-[#171411] text-white hover:bg-[#2b2621]';
+    }
+
+    return 'border border-black/10 bg-white text-[#171411] hover:bg-[#faf7f1]';
+};
+
+const shortcutLinks = computed(() => [
+    {
+        label: 'Needs attention',
+        href: buildBusinessUrl({
+            search: '',
+            status: 'attention',
+            page: null,
+        }),
+        count: props.filters.attentionTotalCount,
+    },
+    {
+        label: 'Overdue billing',
+        href: buildBusinessUrl({
+            search: '',
+            status: 'overdue',
+            page: null,
+        }),
+        count: props.businessOverview.overdueEventCount,
+    },
+    {
+        label: 'Ready exports',
+        href: buildBusinessUrl({
+            search: '',
+            status: 'export_ready',
+            page: null,
+        }),
+        count: props.businessOverview.readyExportCount,
+    },
+]);
+
+const page = usePage();
+
+const parseSelectedEventIdsFromUrl = (url: string): number[] => {
+    const query = url.split('?')[1] ?? '';
+    const params = new URLSearchParams(query);
+
+    return Array.from(
+        new Set(
+            Array.from(params.entries())
+                .filter(
+                    ([key]) =>
+                        key === 'event_ids[]' || key.startsWith('event_ids['),
+                )
+                .map(([, value]) => value)
+                .map((value) => Number.parseInt(value, 10))
+                .filter((value) => Number.isInteger(value) && value > 0),
+        ),
+    );
+};
+
+const parseAllFilteredSelectionFromUrl = (url: string): boolean => {
+    const query = url.split('?')[1] ?? '';
+    const params = new URLSearchParams(query);
+
+    return params.get('selection_scope') === 'all_filtered';
+};
+
+const search = ref(props.filters.search);
+const selectedEventIds = ref<number[]>(parseSelectedEventIdsFromUrl(page.url));
+const allFilteredSelected = ref(
+    props.filters.selectionScope === 'all_filtered',
+);
+
+const businessBaseUrl = computed(
+    () => props.dashboardLinks.business ?? props.dashboardLinks.overview,
+);
+
+const buildBusinessUrl = (overrides?: {
+    search?: string;
+    status?: BusinessDashboardFilters['status'];
+    page?: number | null;
+}): string => {
+    const params = new URLSearchParams();
+    const nextSearch = (overrides?.search ?? props.filters.search).trim();
+    const nextStatus = overrides?.status ?? props.filters.status;
+    const nextPage = overrides?.page ?? null;
+
+    if (nextSearch !== '') {
+        params.set('search', nextSearch);
+    }
+
+    if (nextStatus !== 'all') {
+        params.set('status', nextStatus);
+    }
+
+    if (nextPage !== null && nextPage > 1) {
+        params.set('page', String(nextPage));
+    }
+
+    const query = params.toString();
+
+    return query === ''
+        ? businessBaseUrl.value
+        : `${businessBaseUrl.value}?${query}`;
+};
+
+const buildBusinessActionUrl = (baseUrl: string): string => {
+    const params = new URLSearchParams();
+
+    if (props.filters.search.trim() !== '') {
+        params.set('search', props.filters.search.trim());
+    }
+
+    if (props.filters.status !== 'all') {
+        params.set('status', props.filters.status);
+    }
+
+    if (allFilteredSelected.value) {
+        params.set('selection_scope', 'all_filtered');
+    } else {
+        selectedEventIds.value.forEach((id) => {
+            params.append('event_ids[]', String(id));
+        });
+    }
+
+    const query = params.toString();
+
+    return query === '' ? baseUrl : `${baseUrl}?${query}`;
+};
+
+const syncSelectionInBrowserUrl = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const url = new URL(window.location.href);
+
+    url.searchParams.delete('search');
+    url.searchParams.delete('status');
+    url.searchParams.delete('page');
+    url.searchParams.delete('selection_scope');
+    Array.from(url.searchParams.keys()).forEach((key) => {
+        if (key === 'event_ids[]' || key.startsWith('event_ids[')) {
+            url.searchParams.delete(key);
+        }
+    });
+
+    if (props.filters.search.trim() !== '') {
+        url.searchParams.set('search', props.filters.search.trim());
+    }
+
+    if (props.filters.status !== 'all') {
+        url.searchParams.set('status', props.filters.status);
+    }
+
+    if (props.ownedEventsPagination.currentPage > 1) {
+        url.searchParams.set(
+            'page',
+            String(props.ownedEventsPagination.currentPage),
+        );
+    }
+
+    if (allFilteredSelected.value) {
+        url.searchParams.set('selection_scope', 'all_filtered');
+    } else {
+        selectedEventIds.value.forEach((id) => {
+            url.searchParams.append('event_ids[]', String(id));
+        });
+    }
+
+    window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+};
+
+const applyFilters = (): void => {
+    selectedEventIds.value = [];
+    allFilteredSelected.value = false;
+
+    router.get(
+        businessBaseUrl.value,
+        {
+            search:
+                search.value.trim() !== '' ? search.value.trim() : undefined,
+            status:
+                props.filters.status !== 'all'
+                    ? props.filters.status
+                    : undefined,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        },
+    );
+};
+
+const resetFilters = (): void => {
+    search.value = '';
+    selectedEventIds.value = [];
+    allFilteredSelected.value = false;
+
+    router.get(
+        businessBaseUrl.value,
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        },
+    );
+};
+
+const startBulkExports = (): void => {
+    router.post(
+        props.businessActionLinks.startExports,
+        {
+            search:
+                props.filters.search.trim() !== ''
+                    ? props.filters.search.trim()
+                    : undefined,
+            status:
+                props.filters.status !== 'all'
+                    ? props.filters.status
+                    : undefined,
+            event_ids:
+                !allFilteredSelected.value && selectedEventIds.value.length > 0
+                    ? selectedEventIds.value
+                    : undefined,
+            selection_scope: allFilteredSelected.value
+                ? 'all_filtered'
+                : undefined,
+        },
+        {
+            preserveScroll: true,
+        },
+    );
+};
+
+const visibleEventIds = computed(() =>
+    props.ownedEvents.map((event) => event.id),
+);
+
+const allVisibleSelected = computed(
+    () =>
+        visibleEventIds.value.length > 0 &&
+        visibleEventIds.value.every((id) =>
+            selectedEventIds.value.includes(id),
+        ),
+);
+
+const selectionLabel = computed(() => {
+    if (allFilteredSelected.value) {
+        return `All ${props.filters.ownedEventCount} filtered workspaces selected`;
+    }
+
+    if (selectedEventIds.value.length === 0) {
+        return `All ${props.filters.ownedEventCount} filtered workspaces (default)`;
+    }
+
+    return `${selectedEventIds.value.length} selected across pages`;
+});
+
+const toggleEventSelection = (eventId: number): void => {
+    if (allFilteredSelected.value) {
+        return;
+    }
+
+    if (selectedEventIds.value.includes(eventId)) {
+        selectedEventIds.value = selectedEventIds.value.filter(
+            (id) => id !== eventId,
+        );
+
+        return;
+    }
+
+    selectedEventIds.value = [...selectedEventIds.value, eventId];
+};
+
+const toggleVisibleSelection = (): void => {
+    if (allFilteredSelected.value) {
+        return;
+    }
+
+    if (allVisibleSelected.value) {
+        selectedEventIds.value = selectedEventIds.value.filter(
+            (id) => !visibleEventIds.value.includes(id),
+        );
+
+        return;
+    }
+
+    const nextIds = new Set(selectedEventIds.value);
+    visibleEventIds.value.forEach((id) => nextIds.add(id));
+    selectedEventIds.value = Array.from(nextIds);
+};
+
+const selectAllFiltered = (): void => {
+    selectedEventIds.value = [];
+    allFilteredSelected.value = true;
+};
+
+const clearSelection = (): void => {
+    selectedEventIds.value = [];
+    allFilteredSelected.value = false;
+};
+
+watch(
+    () => page.url,
+    () => {
+        selectedEventIds.value = parseSelectedEventIdsFromUrl(page.url);
+        allFilteredSelected.value = parseAllFilteredSelectionFromUrl(page.url);
+    },
+    { immediate: true },
+);
+
+watch([selectedEventIds, allFilteredSelected], () => {
+    syncSelectionInBrowserUrl();
+});
+</script>
+
+<template>
+    <Head title="Business Dashboard" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div
+            class="min-h-full bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.14),_transparent_32%),radial-gradient(circle_at_85%_10%,_rgba(251,191,36,0.14),_transparent_22%)]"
+        >
+            <div class="mx-auto flex max-w-7xl flex-col gap-6 p-4 md:p-6">
+                <section
+                    class="overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm"
+                >
+                    <div
+                        class="border-b border-black/5 bg-[linear-gradient(135deg,#171411_0%,#2d251f_46%,#5f533f_100%)] px-6 py-8 text-white md:px-8"
+                    >
+                        <div
+                            class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
+                        >
+                            <div class="max-w-3xl space-y-3">
+                                <div
+                                    class="inline-flex w-fit items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold tracking-[0.24em] text-white/80 uppercase"
+                                >
+                                    Business workspace
+                                </div>
+                                <div class="space-y-2">
+                                    <h1
+                                        class="text-3xl font-semibold tracking-tight md:text-4xl"
+                                    >
+                                        Manage multiple events from one place
+                                    </h1>
+                                    <p
+                                        class="max-w-2xl text-sm leading-6 text-white/72 md:text-base"
+                                    >
+                                        Create new events, resume setup, review
+                                        billing, and jump between all owned
+                                        event workspaces.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex max-w-xl flex-wrap gap-3">
+                                <Button
+                                    v-for="action in primaryActions"
+                                    :key="action.label"
+                                    as-child
+                                    :variant="
+                                        action.tone === 'dark'
+                                            ? 'default'
+                                            : 'outline'
+                                    "
+                                    :class="actionButtonClass(action.tone)"
+                                >
+                                    <Link :href="action.url">
+                                        {{ action.label }}
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4 xl:p-6"
+                    >
+                        <DashboardMetricCard
+                            v-for="card in businessHealthCards"
+                            :key="card.label"
+                            :label="card.label"
+                            :value="card.value"
+                            :detail="card.detail"
+                            :icon="card.icon"
+                        />
+                    </div>
+                </section>
+
+                <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                    <section
+                        class="rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
+                    >
+                        <div
+                            class="flex flex-col gap-3 border-b border-black/5 pb-5 md:flex-row md:items-end md:justify-between"
+                        >
+                            <div class="space-y-1">
+                                <p class="text-sm font-medium text-zinc-500">
+                                    Quick routes
+                                </p>
+                                <h2
+                                    class="text-2xl font-semibold text-[#171411]"
+                                >
+                                    Do the main business work fast
+                                </h2>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-5 rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-5"
+                        >
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <Button
+                                    as-child
+                                    class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                >
+                                    <Link :href="dashboardLinks.ownedEvents">
+                                        Open all events
+                                    </Link>
+                                </Button>
+                                <Button as-child variant="outline">
+                                    <Link :href="dashboardLinks.overview">
+                                        Account dashboard
+                                    </Link>
+                                </Button>
+                                <Button
+                                    v-for="shortcut in shortcutLinks"
+                                    :key="shortcut.label"
+                                    as-child
+                                    variant="outline"
+                                >
+                                    <Link :href="shortcut.href">
+                                        {{ shortcut.label }}
+                                        <span class="ml-2 text-zinc-500">
+                                            {{ shortcut.count }}
+                                        </span>
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-6 flex flex-wrap gap-2 text-sm text-zinc-600"
+                        >
+                            <span
+                                class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                            >
+                                {{
+                                    formatBytes(
+                                        businessOverview.totalUsedStorageBytes,
+                                    )
+                                }}
+                                used
+                            </span>
+                            <span
+                                class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                            >
+                                {{
+                                    formatBytes(
+                                        businessOverview.totalAllocatedStorageBytes,
+                                    )
+                                }}
+                                available
+                            </span>
+                            <span
+                                class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                            >
+                                {{
+                                    formatBytes(
+                                        businessOverview.totalFreeStorageBytes,
+                                    )
+                                }}
+                                free
+                            </span>
+                        </div>
+                    </section>
+
+                    <section
+                        class="rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="space-y-1">
+                                <p class="text-sm font-medium text-zinc-500">
+                                    Needs attention
+                                </p>
+                                <h2
+                                    class="text-2xl font-semibold text-[#171411]"
+                                >
+                                    Events that need action now
+                                </h2>
+                            </div>
+                            <span
+                                class="inline-flex rounded-full bg-[#fbfaf7] px-3 py-1 text-xs font-semibold text-zinc-600"
+                            >
+                                {{ businessAttentionSummary.visibleCount }}
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="businessAttentionEvents.length === 0"
+                            class="py-12 text-center"
+                        >
+                            <div class="mx-auto max-w-sm space-y-2">
+                                <h3
+                                    class="text-lg font-semibold text-[#171411]"
+                                >
+                                    Nothing urgent right now
+                                </h3>
+                                <p class="text-sm leading-6 text-zinc-600">
+                                    Your current events are onboarded and there
+                                    are no billing or export blockers in this
+                                    filtered view.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div v-else class="mt-5 grid gap-3">
+                            <article
+                                v-for="event in businessAttentionEvents"
+                                :key="event.id"
+                                class="rounded-[1.35rem] border border-black/6 bg-[#fcfbf8] p-4"
+                            >
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex flex-col gap-3">
+                                        <div
+                                            class="flex flex-wrap items-center gap-2"
+                                        >
+                                            <span
+                                                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                                :class="
+                                                    badgeClass(event.statusTone)
+                                                "
+                                            >
+                                                {{ event.statusLabel }}
+                                            </span>
+                                            <span
+                                                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                                :class="
+                                                    badgeClass(
+                                                        event.billingTone,
+                                                    )
+                                                "
+                                            >
+                                                {{ event.billingLabel }}
+                                            </span>
+                                            <span
+                                                class="inline-flex rounded-full bg-[#171411] px-3 py-1 text-xs font-semibold text-white"
+                                            >
+                                                {{ event.attentionLabel }}
+                                            </span>
+                                        </div>
+
+                                        <div class="space-y-1">
+                                            <h3
+                                                class="text-lg font-semibold text-[#171411]"
+                                            >
+                                                {{ event.name }}
+                                            </h3>
+                                            <p class="text-sm text-zinc-600">
+                                                {{ event.plan }}
+                                            </p>
+                                        </div>
+
+                                        <p
+                                            class="text-sm leading-6 text-zinc-600"
+                                        >
+                                            {{ event.attentionDetail }}
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-wrap gap-2 text-sm text-zinc-600"
+                                    >
+                                        <span
+                                            class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                        >
+                                            {{
+                                                event.paymentDueAt
+                                                    ? `Due ${formatDateOnly(event.paymentDueAt)}`
+                                                    : 'No due date set'
+                                            }}
+                                        </span>
+                                        <span
+                                            class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                        >
+                                            {{ event.assetCount }} uploads
+                                        </span>
+                                        <span
+                                            class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                        >
+                                            {{
+                                                formatBytes(
+                                                    event.storageUsedBytes,
+                                                )
+                                            }}
+                                            of
+                                            {{
+                                                formatBytes(
+                                                    event.storageLimitBytes,
+                                                )
+                                            }}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button as-child variant="outline">
+                                            <Link :href="event.links.dashboard">
+                                                Open workspace
+                                            </Link>
+                                        </Button>
+                                        <Button as-child variant="outline">
+                                            <Link :href="event.links.media">
+                                                <Camera class="size-4" />
+                                                Media
+                                            </Link>
+                                        </Button>
+                                        <Button as-child variant="outline">
+                                            <Link :href="event.links.settings">
+                                                <Settings class="size-4" />
+                                                Settings
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            v-if="
+                                                event.billingTone !== 'emerald'
+                                            "
+                                            as-child
+                                            variant="outline"
+                                        >
+                                            <Link :href="event.links.billing">
+                                                <CreditCard class="size-4" />
+                                                Billing
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+                </div>
+
+                <section
+                    class="rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
+                >
+                    <div
+                        class="flex flex-col gap-3 border-b border-black/5 pb-5 md:flex-row md:items-end md:justify-between"
+                    >
+                        <div class="space-y-1">
+                            <h2 class="text-2xl font-semibold text-[#171411]">
+                                Event portfolio
+                            </h2>
+                            <p class="text-sm leading-6 text-zinc-600">
+                                Every owned event, with fast routes into its
+                                workspace, media, billing, and settings.
+                            </p>
+                        </div>
+                        <Button as-child variant="outline">
+                            <Link :href="dashboardLinks.ownedEvents">
+                                View all
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <div
+                        class="mt-5 grid gap-4 rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-4 md:p-5"
+                    >
+                        <div
+                            class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+                        >
+                            <div class="space-y-2">
+                                <p class="text-sm font-medium text-zinc-500">
+                                    Portfolio controls
+                                </p>
+                                <h3
+                                    class="text-xl font-semibold text-[#171411]"
+                                >
+                                    Filter the business portfolio
+                                </h3>
+                                <p class="text-sm leading-6 text-zinc-600">
+                                    Showing {{ filters.ownedEventCount }} of
+                                    {{ filters.ownedEventTotalCount }}
+                                    workspaces and
+                                    {{ filters.attentionCount }} of
+                                    {{ filters.attentionTotalCount }}
+                                    follow-ups.
+                                </p>
+                            </div>
+
+                            <form
+                                class="flex w-full flex-col gap-3 md:max-w-xl md:flex-row"
+                                @submit.prevent="applyFilters"
+                            >
+                                <div class="relative flex-1">
+                                    <Search
+                                        class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-zinc-400"
+                                    />
+                                    <Input
+                                        v-model="search"
+                                        type="search"
+                                        placeholder="Search by event, plan, billing, or status"
+                                        class="h-11 rounded-full border-black/10 bg-white pr-4 pl-10"
+                                    />
+                                </div>
+                                <div class="flex gap-2">
+                                    <Button
+                                        type="submit"
+                                        class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    >
+                                        Apply
+                                    </Button>
+                                    <Button
+                                        v-if="filters.hasActiveFilters"
+                                        type="button"
+                                        variant="outline"
+                                        @click="resetFilters"
+                                    >
+                                        <X class="size-4" />
+                                        Clear
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Link
+                                v-for="option in filters.statusOptions"
+                                :key="option.value"
+                                :href="
+                                    buildBusinessUrl({
+                                        status: option.value,
+                                        page: null,
+                                    })
+                                "
+                                class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition"
+                                :class="
+                                    option.value === filters.status
+                                        ? 'border-[#171411] bg-[#171411] text-white'
+                                        : 'border-black/10 bg-white text-zinc-700 hover:border-black/20 hover:bg-[#faf7f1]'
+                                "
+                            >
+                                <span>{{ option.label }}</span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs"
+                                    :class="
+                                        option.value === filters.status
+                                            ? 'bg-white/12 text-white'
+                                            : 'bg-[#fbfaf7] text-zinc-500'
+                                    "
+                                >
+                                    {{ option.count }}
+                                </span>
+                            </Link>
+                        </div>
+
+                        <div
+                            class="flex flex-col gap-3 border-t border-black/6 pt-4 md:flex-row md:items-center md:justify-between"
+                        >
+                            <div class="space-y-1">
+                                <p class="text-sm leading-6 text-zinc-600">
+                                    Batch actions currently target:
+                                    <span class="font-semibold text-[#171411]">
+                                        {{ selectionLabel }}
+                                    </span>
+                                </p>
+                                <p
+                                    v-if="allFilteredSelected"
+                                    class="text-xs leading-5 text-zinc-500"
+                                >
+                                    Clear selection to switch back to page or
+                                    manual multi-page selection.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button
+                                    v-if="
+                                        filters.ownedEventCount > 0 &&
+                                        !allFilteredSelected
+                                    "
+                                    type="button"
+                                    variant="outline"
+                                    @click="selectAllFiltered"
+                                >
+                                    <CheckSquare class="size-4" />
+                                    Select all filtered
+                                </Button>
+                                <Button
+                                    v-if="
+                                        visibleEventIds.length > 0 &&
+                                        !allFilteredSelected
+                                    "
+                                    type="button"
+                                    variant="outline"
+                                    @click="toggleVisibleSelection"
+                                >
+                                    <component
+                                        :is="
+                                            allVisibleSelected
+                                                ? CheckSquare
+                                                : Square
+                                        "
+                                        class="size-4"
+                                    />
+                                    {{
+                                        allVisibleSelected
+                                            ? 'Clear page'
+                                            : 'Select page'
+                                    }}
+                                </Button>
+                                <Button
+                                    v-if="
+                                        allFilteredSelected ||
+                                        selectedEventIds.length > 0
+                                    "
+                                    type="button"
+                                    variant="outline"
+                                    @click="clearSelection"
+                                >
+                                    <X class="size-4" />
+                                    Clear selection
+                                </Button>
+                                <Button
+                                    v-if="filters.ownedEventCount > 0"
+                                    type="button"
+                                    class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    @click="startBulkExports"
+                                >
+                                    <Download class="size-4" />
+                                    Start exports for filtered
+                                </Button>
+                                <Button
+                                    v-if="filters.ownedEventCount > 0"
+                                    as-child
+                                    variant="outline"
+                                >
+                                    <a
+                                        :href="
+                                            buildBusinessActionUrl(
+                                                businessActionLinks.billingQueueDownload,
+                                            )
+                                        "
+                                    >
+                                        <CreditCard class="size-4" />
+                                        Download billing queue CSV
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="ownedEvents.length === 0"
+                        class="py-12 text-center"
+                    >
+                        <div class="mx-auto max-w-md space-y-2">
+                            <h3 class="text-xl font-semibold text-[#171411]">
+                                {{
+                                    filters.hasActiveFilters
+                                        ? 'No workspaces match the current filters'
+                                        : 'No owned events yet'
+                                }}
+                            </h3>
+                            <p class="text-sm leading-6 text-zinc-600">
+                                {{
+                                    filters.hasActiveFilters
+                                        ? 'Try a broader search or switch back to all workspaces.'
+                                        : 'Once you create your first event, it will appear here with operational shortcuts.'
+                                }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div v-else class="mt-6 grid gap-4 lg:grid-cols-2">
+                        <article
+                            v-for="event in ownedEvents"
+                            :key="event.id"
+                            class="rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-5"
+                        >
+                            <div class="flex flex-col gap-4">
+                                <div class="space-y-3">
+                                    <div
+                                        class="flex items-start justify-between gap-3"
+                                    >
+                                        <div
+                                            class="flex flex-wrap items-center gap-2"
+                                        >
+                                            <span
+                                                class="inline-flex rounded-full border border-black/8 bg-white px-3 py-1 text-xs font-semibold text-zinc-600"
+                                            >
+                                                Workspace
+                                            </span>
+                                            <span
+                                                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                                :class="
+                                                    badgeClass(event.statusTone)
+                                                "
+                                            >
+                                                {{ event.statusLabel }}
+                                            </span>
+                                            <span
+                                                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                                :class="
+                                                    badgeClass(
+                                                        event.billingTone,
+                                                    )
+                                                "
+                                            >
+                                                {{ event.billingLabel }}
+                                            </span>
+                                            <span
+                                                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                                :class="
+                                                    badgeClass(
+                                                        event.mediaExportTone,
+                                                    )
+                                                "
+                                            >
+                                                {{ event.mediaExportLabel }}
+                                            </span>
+                                        </div>
+
+                                        <label
+                                            class="inline-flex items-center gap-3 rounded-full border border-black/8 bg-white px-3 py-2 text-sm font-medium text-[#171411]"
+                                            :class="
+                                                allFilteredSelected
+                                                    ? 'opacity-70'
+                                                    : ''
+                                            "
+                                        >
+                                            <Checkbox
+                                                :checked="
+                                                    allFilteredSelected ||
+                                                    selectedEventIds.includes(
+                                                        event.id,
+                                                    )
+                                                "
+                                                :disabled="allFilteredSelected"
+                                                @update:checked="
+                                                    toggleEventSelection(
+                                                        event.id,
+                                                    )
+                                                "
+                                            />
+                                            Select
+                                        </label>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <h3
+                                            class="text-xl font-semibold text-[#171411]"
+                                        >
+                                            {{ event.name }}
+                                        </h3>
+                                        <p class="text-sm text-zinc-600">
+                                            {{ event.plan }} ·
+                                            {{
+                                                formatDateOnly(event.eventDate)
+                                            }}
+                                            · {{ event.timezone }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex flex-wrap gap-2 text-sm text-zinc-600"
+                                >
+                                    <span
+                                        class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                    >
+                                        {{ event.guestCount }} guests
+                                    </span>
+                                    <span
+                                        class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                    >
+                                        {{ event.assetCount }} uploads
+                                    </span>
+                                    <span
+                                        class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                    >
+                                        {{ event.processingCount }} pending
+                                        review
+                                    </span>
+                                    <span
+                                        class="rounded-full border border-black/8 bg-white px-3 py-1.5"
+                                    >
+                                        {{ formatDateTime(event.lastUploadAt) }}
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <Button as-child>
+                                        <Link :href="event.primaryAction.url">
+                                            {{ event.primaryAction.label }}
+                                        </Link>
+                                    </Button>
+                                    <Button as-child variant="outline">
+                                        <Link :href="event.links.media">
+                                            <Camera class="size-4" />
+                                            Media
+                                        </Link>
+                                    </Button>
+                                    <Button as-child variant="outline">
+                                        <Link :href="event.links.settings">
+                                            <Settings class="size-4" />
+                                            Settings
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        v-if="!event.isPaid"
+                                        as-child
+                                        variant="outline"
+                                    >
+                                        <Link :href="event.links.billing">
+                                            <CreditCard class="size-4" />
+                                            Billing
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        v-if="
+                                            event.canManage &&
+                                            event.mediaExportStatus === 'ready'
+                                        "
+                                        as-child
+                                        variant="outline"
+                                    >
+                                        <Link
+                                            :href="
+                                                event.links.mediaExportDownload
+                                            "
+                                        >
+                                            <Download class="size-4" />
+                                            Export
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div
+                        v-if="ownedEventsPagination.lastPage > 1"
+                        class="mt-6 flex flex-col gap-3 border-t border-black/5 pt-5 md:flex-row md:items-center md:justify-between"
+                    >
+                        <p class="text-sm text-zinc-600">
+                            Showing {{ ownedEventsPagination.from ?? 0 }} to
+                            {{ ownedEventsPagination.to ?? 0 }} of
+                            {{ ownedEventsPagination.total }} workspaces
+                        </p>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Button
+                                v-if="ownedEventsPagination.prevPageUrl"
+                                as-child
+                                variant="outline"
+                            >
+                                <Link :href="ownedEventsPagination.prevPageUrl">
+                                    Previous
+                                </Link>
+                            </Button>
+                            <Button v-else variant="outline" disabled>
+                                Previous
+                            </Button>
+
+                            <span class="text-sm font-medium text-zinc-600">
+                                Page {{ ownedEventsPagination.currentPage }} of
+                                {{ ownedEventsPagination.lastPage }}
+                            </span>
+
+                            <Button
+                                v-if="ownedEventsPagination.nextPageUrl"
+                                as-child
+                                variant="outline"
+                            >
+                                <Link :href="ownedEventsPagination.nextPageUrl">
+                                    Next
+                                </Link>
+                            </Button>
+                            <Button v-else variant="outline" disabled>
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </AppLayout>
+</template>
