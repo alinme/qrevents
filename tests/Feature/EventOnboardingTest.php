@@ -60,6 +60,9 @@ it('creates an event from onboarding and calculates event windows', function () 
     $response = $this->post(route('onboarding.store'), [
         'type' => 'wedding',
         'name' => 'Dan and Rachel Wedding',
+        'wedding_partner_one_first_name' => 'Dan',
+        'wedding_partner_two_first_name' => 'Rachel',
+        'wedding_family_name' => 'Ionescu',
         'venue_address' => '12 Garden Lane, Bucharest, Romania',
         'attendee_estimate' => 140,
         'event_dates' => [
@@ -122,6 +125,13 @@ it('creates an event from onboarding and calculates event windows', function () 
                 'start_time' => '18:30',
             ],
         ])
+        ->and($event->branding)->toMatchArray([
+            'event_naming' => [
+                'partner_one_first_name' => 'Dan',
+                'partner_two_first_name' => 'Rachel',
+                'family_name' => 'Ionescu',
+            ],
+        ])
         ->and($event->storage_limit_bytes)->toBe(10737418240)
         ->and($event->upload_limit)->toBe(300)
         ->and($event->video_max_duration_seconds)->toBe(30)
@@ -142,6 +152,9 @@ it('promotes multi-event owners to business after creating another event', funct
     $this->post(route('onboarding.store'), [
         'type' => 'wedding',
         'name' => 'Second Event',
+        'wedding_partner_one_first_name' => 'Alex',
+        'wedding_partner_two_first_name' => 'Bianca',
+        'wedding_family_name' => 'Popa',
         'venue_address' => '12 Garden Lane, Bucharest, Romania',
         'attendee_estimate' => 140,
         'event_dates' => [
@@ -165,6 +178,9 @@ it('blocks event dates too far in the future', function () {
     $response = $this->from(route('onboarding.create'))->post(route('onboarding.store'), [
         'type' => 'wedding',
         'name' => 'Future Event',
+        'wedding_partner_one_first_name' => 'Dan',
+        'wedding_partner_two_first_name' => 'Rachel',
+        'wedding_family_name' => 'Ionescu',
         'venue_address' => 'Future Hall, Bucharest',
         'attendee_estimate' => 80,
         'event_dates' => [

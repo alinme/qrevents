@@ -23,7 +23,7 @@ import {
     Video,
     X,
 } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import {
     AlertDialog,
@@ -190,6 +190,13 @@ const previewTouchStartY = ref<number | null>(null);
 const previewTouchCurrentX = ref<number | null>(null);
 const previewTouchCurrentY = ref<number | null>(null);
 const loadedMediaKeys = ref<Record<string, boolean>>({});
+const isRefreshingLiveMedia = ref(false);
+const hasLiveUpdatingAssets = computed(() =>
+    assetItems.value.some(
+        (asset) => asset.videoProcessing || asset.moderationStatus === 'processing',
+    ),
+);
+let liveMediaPollId: number | null = null;
 
 watch(
     () => props.mediaAssets,
@@ -870,6 +877,82 @@ const resetMediaFilters = (): void => {
     moderationFilter.value = 'all';
     searchQuery.value = '';
 };
+
+const hasVisibleDocument = (): boolean =>
+    typeof document === 'undefined' || document.visibilityState === 'visible';
+
+const reloadLiveMedia = (): void => {
+    if (
+        typeof window === 'undefined' ||
+        isRefreshingLiveMedia.value ||
+        !hasVisibleDocument()
+    ) {
+        return;
+    }
+
+    isRefreshingLiveMedia.value = true;
+
+    router.reload({
+        only: ['mediaAssets', 'mediaAttendees'],
+        onFinish: () => {
+            isRefreshingLiveMedia.value = false;
+        },
+    });
+};
+
+const syncLiveMediaPoll = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (liveMediaPollId !== null) {
+        window.clearInterval(liveMediaPollId);
+        liveMediaPollId = null;
+    }
+
+    if (!hasLiveUpdatingAssets.value) {
+        return;
+    }
+
+    liveMediaPollId = window.setInterval(() => {
+        reloadLiveMedia();
+    }, 5000);
+};
+
+const handleDocumentVisibilityChange = (): void => {
+    if (!hasVisibleDocument()) {
+        return;
+    }
+
+    if (hasLiveUpdatingAssets.value) {
+        reloadLiveMedia();
+    }
+
+    syncLiveMediaPoll();
+};
+
+watch(hasLiveUpdatingAssets, () => {
+    syncLiveMediaPoll();
+}, { immediate: true });
+
+onMounted(() => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.addEventListener('visibilitychange', handleDocumentVisibilityChange);
+});
+
+onUnmounted(() => {
+    if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleDocumentVisibilityChange);
+    }
+
+    if (typeof window !== 'undefined' && liveMediaPollId !== null) {
+        window.clearInterval(liveMediaPollId);
+        liveMediaPollId = null;
+    }
+});
 
 const statCards = computed(() => [
     {

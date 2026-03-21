@@ -61,6 +61,8 @@ const props = defineProps<{
 
 const step = ref<OnboardingStep>(1);
 const wizardPanelRef = ref<HTMLElement | null>(null);
+const formActionsRef = ref<HTMLElement | null>(null);
+const lastSuggestedWeddingTitle = ref('');
 
 const stepItems = [
     {
@@ -93,6 +95,9 @@ const createEventDate = (label = ''): EventDateInput => ({
 const form = useForm({
     type: props.eventTypes[0]?.value ?? 'wedding',
     name: '',
+    wedding_partner_one_first_name: '',
+    wedding_partner_two_first_name: '',
+    wedding_family_name: '',
     venue_address: '',
     attendee_estimate: '',
     event_dates: [createEventDate('Main day')],
@@ -112,6 +117,8 @@ const reviewEventDates = computed(() =>
     form.event_dates.filter((eventDate) => eventDate.date.trim() !== ''),
 );
 
+const isWeddingType = computed(() => form.type === 'wedding');
+
 const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
 
 const progressWidth = computed(() => `${((step.value - 1) / (stepItems.length - 1)) * 100}%`);
@@ -122,7 +129,14 @@ const canMoveToNext = computed(() => {
     }
 
     if (step.value === 2) {
-        return form.name.trim().length >= 3
+        const hasWeddingNamingFields = !isWeddingType.value || (
+            form.wedding_partner_one_first_name.trim().length >= 2
+            && form.wedding_partner_two_first_name.trim().length >= 2
+            && form.wedding_family_name.trim().length >= 2
+        );
+
+        return hasWeddingNamingFields
+            && form.name.trim().length >= 3
             && form.venue_address.trim().length >= 6
             && Number(form.attendee_estimate) > 0;
     }
@@ -146,13 +160,118 @@ const scrollToWizardPanel = (): void => {
     }, 40);
 };
 
+const scrollToFormActions = (): void => {
+    if (typeof window === 'undefined' || formActionsRef.value === null) {
+        return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.setTimeout(() => {
+        formActionsRef.value?.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'center',
+        });
+    }, 40);
+};
+
+const titleCaseWords = (value: string): string =>
+    value
+        .trim()
+        .split(/\s+/)
+        .filter((part) => part.length > 0)
+        .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+        .join(' ');
+
+const weddingTitleSuggestions = computed(() => {
+    if (!isWeddingType.value) {
+        return [] as string[];
+    }
+
+    const partnerOneFirstName = titleCaseWords(form.wedding_partner_one_first_name);
+    const partnerTwoFirstName = titleCaseWords(form.wedding_partner_two_first_name);
+    const familyName = titleCaseWords(form.wedding_family_name);
+
+    if (partnerOneFirstName === '' || partnerTwoFirstName === '' || familyName === '') {
+        return [] as string[];
+    }
+
+    return Array.from(new Set([
+        `${partnerOneFirstName} & ${partnerTwoFirstName} ${familyName} Wedding`,
+        `${partnerOneFirstName} & ${partnerTwoFirstName} ${familyName} Wedding Weekend`,
+        `${partnerOneFirstName} & ${partnerTwoFirstName} Wedding Day`,
+        `${partnerOneFirstName} and ${partnerTwoFirstName} Wedding Celebration`,
+        `${partnerOneFirstName} + ${partnerTwoFirstName} | Wedding Weekend`,
+        `The ${familyName} Wedding`,
+        `The ${familyName} Wedding Weekend`,
+        `${familyName} Family Wedding Celebration`,
+        `Celebrating ${partnerOneFirstName} & ${partnerTwoFirstName}`,
+        `${partnerOneFirstName} & ${partnerTwoFirstName} Say Yes`,
+        `${partnerOneFirstName} & ${partnerTwoFirstName} Forever Starts Here`,
+        `${partnerOneFirstName} and ${partnerTwoFirstName} | ${familyName} Celebration`,
+    ]));
+});
+
+const weddingTitlePlaceholder = computed(() =>
+    weddingTitleSuggestions.value[0] ?? 'Dan and Rachel Wedding Weekend',
+);
+
+const applyWeddingTitleSuggestion = (value: string): void => {
+    form.name = value;
+    lastSuggestedWeddingTitle.value = value;
+};
+
+const syncSuggestedWeddingTitle = (): void => {
+    if (!isWeddingType.value || weddingTitleSuggestions.value.length === 0) {
+        return;
+    }
+
+    const nextSuggestedTitle = weddingTitleSuggestions.value[0] ?? '';
+    const currentTitle = form.name.trim();
+
+    if (
+        currentTitle === ''
+        || currentTitle === lastSuggestedWeddingTitle.value
+        || weddingTitleSuggestions.value.includes(currentTitle)
+    ) {
+        form.name = nextSuggestedTitle;
+        lastSuggestedWeddingTitle.value = nextSuggestedTitle;
+    }
+};
+
 watch(
     () => form.type,
-    () => {
+    (nextType, previousType) => {
         const allowedSubEventKeys = new Set(availableSubEvents.value.map((subEvent) => subEvent.key));
         form.sub_events = form.sub_events.filter((subEvent) => allowedSubEventKeys.has(subEvent.key));
+
+        if (step.value === 1 && nextType !== previousType) {
+            void nextTick(() => {
+                scrollToFormActions();
+            });
+        }
     },
 );
+
+watch(
+    () => [
+        form.type,
+        form.wedding_partner_one_first_name,
+        form.wedding_partner_two_first_name,
+        form.wedding_family_name,
+    ],
+    () => {
+        syncSuggestedWeddingTitle();
+    },
+);
+
+const handleEventTypeCardClick = (): void => {
+    if (step.value !== 1) {
+        return;
+    }
+
+    scrollToFormActions();
+};
 
 const goToNext = (): void => {
     if (!canMoveToNext.value || step.value === 3) {
@@ -419,6 +538,7 @@ const submit = (): void => {
                             <ChoiceCardRadioGroup
                                 v-model="form.type"
                                 :options="props.eventTypes"
+                                @option-click="handleEventTypeCardClick"
                             />
 
                             <InputError :message="form.errors.type" />
@@ -427,6 +547,98 @@ const submit = (): void => {
                         <section v-if="step === 2" class="space-y-8">
                             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
                                 <div class="space-y-5">
+                                    <div
+                                        v-if="isWeddingType"
+                                        class="rounded-[26px] border border-promo-line bg-promo-surface/45 p-5"
+                                    >
+                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                            <Sparkles class="size-3.5" />
+                                            Wedding naming
+                                        </div>
+
+                                        <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
+                                            We can build the wedding title for you
+                                        </h3>
+                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                            Add the couple&apos;s first names and the family name. We&apos;ll suggest polished event titles you can use right away.
+                                        </p>
+
+                                        <div class="mt-5 grid gap-4 md:grid-cols-2">
+                                            <div class="grid gap-2">
+                                                <Label for="wedding_partner_one_first_name" class="text-sm font-semibold text-promo-ink">
+                                                    Groom / partner one
+                                                </Label>
+                                                <Input
+                                                    id="wedding_partner_one_first_name"
+                                                    v-model="form.wedding_partner_one_first_name"
+                                                    name="wedding_partner_one_first_name"
+                                                    placeholder="Andrei"
+                                                    class="h-12 rounded-[20px] border-promo-line bg-white"
+                                                />
+                                                <InputError :message="form.errors.wedding_partner_one_first_name" />
+                                            </div>
+
+                                            <div class="grid gap-2">
+                                                <Label for="wedding_partner_two_first_name" class="text-sm font-semibold text-promo-ink">
+                                                    Bride / partner two
+                                                </Label>
+                                                <Input
+                                                    id="wedding_partner_two_first_name"
+                                                    v-model="form.wedding_partner_two_first_name"
+                                                    name="wedding_partner_two_first_name"
+                                                    placeholder="Maria"
+                                                    class="h-12 rounded-[20px] border-promo-line bg-white"
+                                                />
+                                                <InputError :message="form.errors.wedding_partner_two_first_name" />
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4 grid gap-2">
+                                            <Label for="wedding_family_name" class="text-sm font-semibold text-promo-ink">
+                                                Family name
+                                            </Label>
+                                            <Input
+                                                id="wedding_family_name"
+                                                v-model="form.wedding_family_name"
+                                                name="wedding_family_name"
+                                                placeholder="Popescu"
+                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            />
+                                            <InputError :message="form.errors.wedding_family_name" />
+                                        </div>
+
+                                        <div
+                                            v-if="weddingTitleSuggestions.length > 0"
+                                            class="mt-5 space-y-3"
+                                        >
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="text-sm font-semibold text-promo-ink">
+                                                    Suggested titles
+                                                </p>
+                                                <p class="text-xs text-promo-muted">
+                                                    Tap one to use it
+                                                </p>
+                                            </div>
+
+                                            <div class="grid gap-3 sm:grid-cols-2">
+                                                <button
+                                                    v-for="suggestion in weddingTitleSuggestions"
+                                                    :key="suggestion"
+                                                    type="button"
+                                                    class="rounded-[18px] border px-4 py-3 text-left text-sm font-medium transition-colors duration-200"
+                                                    :class="
+                                                        form.name.trim() === suggestion
+                                                            ? 'border-promo-primary bg-white text-promo-ink shadow-[0_12px_24px_rgba(232,79,154,0.10)]'
+                                                            : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white'
+                                                    "
+                                                    @click="applyWeddingTitleSuggestion(suggestion)"
+                                                >
+                                                    {{ suggestion }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="grid gap-2">
                                         <Label for="name" class="text-sm font-semibold text-promo-ink">
                                             Event name
@@ -435,9 +647,15 @@ const submit = (): void => {
                                             id="name"
                                             v-model="form.name"
                                             name="name"
-                                            placeholder="Dan and Rachel Wedding Weekend"
+                                            :placeholder="weddingTitlePlaceholder"
                                             class="h-12 rounded-[20px] border-promo-line bg-promo-surface/40"
                                         />
+                                        <p
+                                            v-if="isWeddingType"
+                                            class="text-xs leading-5 text-promo-muted"
+                                        >
+                                            You can keep one of the suggested titles or write your own.
+                                        </p>
                                         <InputError :message="form.errors.name" />
                                     </div>
 
@@ -744,7 +962,10 @@ const submit = (): void => {
                             </div>
                         </section>
 
-                        <div class="flex flex-col gap-4 rounded-[24px] border border-promo-line bg-promo-surface/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div
+                            ref="formActionsRef"
+                            class="flex flex-col gap-4 rounded-[24px] border border-promo-line bg-promo-surface/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+                        >
                             <div class="grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4">
                                 <div class="inline-flex items-center gap-2">
                                     <MapPin class="size-4 text-promo-primary" />

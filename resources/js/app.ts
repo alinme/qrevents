@@ -39,3 +39,9 @@ createInertiaApp({
 
 // Force the app into the single supported light theme on page load.
 initializeTheme();
+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    });
+}

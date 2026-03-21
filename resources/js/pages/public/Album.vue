@@ -819,10 +819,50 @@ const albumAvatarFallback = computed(() =>
 const albumLogoUrl = computed(
     () => props.welcomeScreen.logoUrl ?? props.appearance.logoUrl ?? null,
 );
+const albumPrimaryColor = computed(
+    () => props.appearance.primaryColor || '#0f172a',
+);
+const albumAccentColor = computed(
+    () => props.appearance.accentColor || props.appearance.primaryColor || '#c2410c',
+);
 const heroAccentStyle = computed(() => {
     return {
-        backgroundColor: props.appearance.primaryColor || '#0f172a',
+        backgroundImage: `linear-gradient(135deg, ${albumPrimaryColor.value} 0%, ${albumAccentColor.value} 100%)`,
+        boxShadow: `0 18px 40px color-mix(in srgb, ${albumPrimaryColor.value} 28%, transparent)`,
     };
+});
+const albumGradientStyle = computed(() => ({
+    backgroundImage: `linear-gradient(135deg, ${albumPrimaryColor.value} 0%, ${albumAccentColor.value} 56%, #fff7ed 100%)`,
+}));
+const albumTintStyle = computed(() => ({
+    borderColor: `${albumPrimaryColor.value}33`,
+    backgroundColor: `${albumPrimaryColor.value}18`,
+    color: '#ffffff',
+}));
+const uploadProcessingTitle = computed(() => {
+    if (activeView.value === 'video_testimonial') {
+        return 'Uploading your video';
+    }
+
+    const hasPhotos = uploadForm.files.some((file) => file.type.startsWith('image/'));
+    const hasVideos = uploadForm.files.some((file) => file.type.startsWith('video/'));
+
+    if (hasPhotos && hasVideos) {
+        return 'Uploading your photos and video';
+    }
+
+    if (hasVideos) {
+        return 'Uploading your video';
+    }
+
+    return 'Uploading your photos';
+});
+const uploadProcessingDescription = computed(() => {
+    if (activeView.value === 'video_testimonial') {
+        return 'Uploading and preparing your clip. This can take a moment.';
+    };
+
+    return 'Optimizing and sending your files. This can take a moment.';
 });
 const albumBodyStyle = computed((): Record<string, string> => {
     const style: Record<string, string> = {};
@@ -2131,11 +2171,7 @@ const syncBodyScrollLock = (): void => {
 
     const shouldLock =
         activeStackKey.value !== null ||
-        isComposerOpen.value ||
-        isAssetCommentsOpen.value ||
-        isAssetInfoOpen.value ||
-        menuOpen.value ||
-        isPreEventInfoOpen.value;
+        isComposerOpen.value;
 
     if (shouldLock) {
         lockBodyScroll();
@@ -2837,6 +2873,7 @@ const uploadFiles = (): void => {
                 fileInputRef.value.value = '';
             }
             isComposerOpen.value = false;
+            refreshAlbum('manual');
         },
     });
 };
@@ -2880,6 +2917,7 @@ const submitTextPost = (): void => {
         onSuccess: () => {
             textForm.reset('text');
             textForm.clearErrors();
+            refreshAlbum('manual');
         },
     });
 };
@@ -3261,7 +3299,8 @@ const onAlbumTouchCancel = (): void => {
                 />
                 <div
                     v-else-if="customWelcomeEnabled"
-                    class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"
+                    class="absolute inset-0"
+                    :style="albumGradientStyle"
                     :class="
                         customWelcomeEnabled && welcomeScreen.animated
                             ? 'welcome-bg-animate-slow'
@@ -3274,7 +3313,8 @@ const onAlbumTouchCancel = (): void => {
                 />
                 <div
                     v-else
-                    class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"
+                    class="absolute inset-0"
+                    :style="albumGradientStyle"
                 />
                 <div
                     class="relative w-full max-w-sm rounded-[1.75rem] border border-white/25 bg-white/10 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-5"
@@ -3467,6 +3507,7 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-rose-100 text-rose-700'
                                             : 'bg-white/20 text-white'
                                     "
+                                    :style="selectedIntent !== option.value ? albumTintStyle : undefined"
                                 >
                                     <component :is="option.icon" class="size-4" />
                                 </div>
@@ -3785,7 +3826,8 @@ const onAlbumTouchCancel = (): void => {
                     />
                     <div
                         v-else
-                        class="absolute inset-0 bg-gradient-to-br from-amber-200 via-orange-100 to-white"
+                        class="absolute inset-0"
+                        :style="albumGradientStyle"
                     />
                     <div
                         class="absolute inset-0"
@@ -4677,10 +4719,10 @@ const onAlbumTouchCancel = (): void => {
                         </div>
                         <div class="space-y-1">
                             <p class="text-base font-semibold text-slate-900">
-                                Uploading your photos
+                                {{ uploadProcessingTitle }}
                             </p>
                             <p class="text-sm text-slate-600">
-                                Optimizing and sending files. This can take a moment.
+                                {{ uploadProcessingDescription }}
                             </p>
                         </div>
                     </div>

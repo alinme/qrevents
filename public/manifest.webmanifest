@@ -1,0 +1,23 @@
+{
+    "name": "QR Events",
+    "short_name": "QR Events",
+    "description": "Collect guest photos, videos, and messages in a shared event album.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#fff7ed",
+    "theme_color": "#0f172a",
+    "icons": [
+        {
+            "src": "/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}

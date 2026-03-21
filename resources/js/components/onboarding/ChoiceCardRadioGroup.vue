@@ -18,6 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     'update:modelValue': [value: string];
+    'option-click': [value: string];
 }>();
 
 const selectedValue = computed({
@@ -41,6 +42,7 @@ const isSelected = (value: string): boolean => selectedValue.value === value;
             v-for="option in options"
             :key="option.value"
             class="group block cursor-pointer"
+            @click="emit('option-click', option.value)"
         >
             <RadioGroupItem
                 :value="option.value"
