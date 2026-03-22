@@ -18,6 +18,8 @@ import {
     Mail,
     MessageSquareText,
     Phone,
+    ThumbsDown,
+    ThumbsUp,
     Trash2,
     UserRound,
     Video,
@@ -112,11 +114,13 @@ type MediaAsset = {
     textThemeImageUrl: string | null;
     textThemeBackgroundColor: string | null;
     textThemeTextColor: string | null;
+    wallVisibility: 'approved' | 'rejected' | 'pending';
     createdAt: string | null;
     reviewedAt: string | null;
     commentCount: number;
     deleteUrl: string;
     moderationUpdateUrl: string;
+    wallVisibilityUpdateUrl: string;
 };
 
 type MediaAttendee = {
@@ -176,6 +180,7 @@ const deleteAssetId = ref<number | null>(null);
 const bulkDeleteOpen = ref(false);
 const deletingAssetId = ref<number | null>(null);
 const moderationAssetId = ref<number | null>(null);
+const wallVisibilityAssetId = ref<number | null>(null);
 const selectedAssetIds = ref<number[]>([]);
 const kindFilter = ref<KindFilter>('all');
 const moderationFilter = ref<ModerationFilter>('all');
@@ -191,6 +196,9 @@ const previewTouchCurrentX = ref<number | null>(null);
 const previewTouchCurrentY = ref<number | null>(null);
 const loadedMediaKeys = ref<Record<string, boolean>>({});
 const isRefreshingLiveMedia = ref(false);
+const latestKnownAssetId = ref(
+    Math.max(0, ...assetItems.value.map((asset) => asset.id)),
+);
 const hasLiveUpdatingAssets = computed(() =>
     assetItems.value.some(
         (asset) => asset.videoProcessing || asset.moderationStatus === 'processing',
@@ -201,6 +209,19 @@ let liveMediaPollId: number | null = null;
 watch(
     () => props.mediaAssets,
     (nextAssets) => {
+        const nextLatestAssetId = Math.max(0, ...nextAssets.map((asset) => asset.id));
+        if (nextLatestAssetId > latestKnownAssetId.value) {
+            const newAssetCount = nextAssets.filter(
+                (asset) => asset.id > latestKnownAssetId.value,
+            ).length;
+            toast.success(
+                newAssetCount === 1
+                    ? 'A new upload just arrived.'
+                    : `${newAssetCount} new uploads just arrived.`,
+            );
+        }
+
+        latestKnownAssetId.value = Math.max(latestKnownAssetId.value, nextLatestAssetId);
         assetItems.value = [...nextAssets];
         attendeePage.value = 1;
     },
@@ -242,6 +263,28 @@ const moderationPipelineLabel = (pipeline: MediaAsset['moderationPipeline']): st
             return 'Moderation off';
         default:
             return 'Unknown';
+    }
+};
+
+const wallVisibilityLabel = (visibility: MediaAsset['wallVisibility']): string => {
+    switch (visibility) {
+        case 'approved':
+            return 'On wall';
+        case 'rejected':
+            return 'Hidden from wall';
+        default:
+            return 'Wall pending';
+    }
+};
+
+const wallVisibilityToneClass = (visibility: MediaAsset['wallVisibility']): string => {
+    switch (visibility) {
+        case 'approved':
+            return 'bg-emerald-100/92 text-emerald-700';
+        case 'rejected':
+            return 'bg-rose-100/92 text-rose-700';
+        default:
+            return 'bg-amber-100/92 text-amber-700';
     }
 };
 
@@ -849,6 +892,43 @@ const updateModeration = (
     );
 };
 
+const updateWallVisibility = (
+    asset: MediaAsset,
+    wallVisibility: MediaAsset['wallVisibility'],
+): void => {
+    if (wallVisibilityAssetId.value !== null) {
+        return;
+    }
+
+    wallVisibilityAssetId.value = asset.id;
+
+    router.patch(
+        asset.wallVisibilityUpdateUrl,
+        {
+            wall_visibility: wallVisibility,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                assetItems.value = assetItems.value.map((item) =>
+                    item.id === asset.id
+                        ? { ...item, wallVisibility }
+                        : item,
+                );
+
+                toast.success(
+                    wallVisibility === 'approved'
+                        ? 'Added to the photo wall.'
+                        : 'Removed from the photo wall.',
+                );
+            },
+            onFinish: () => {
+                wallVisibilityAssetId.value = null;
+            },
+        },
+    );
+};
+
 const toggleAssetSelection = (assetId: number): void => {
     if (selectedAssetIds.value.includes(assetId)) {
         selectedAssetIds.value = selectedAssetIds.value.filter((id) => id !== assetId);
@@ -910,13 +990,9 @@ const syncLiveMediaPoll = (): void => {
         liveMediaPollId = null;
     }
 
-    if (!hasLiveUpdatingAssets.value) {
-        return;
-    }
-
     liveMediaPollId = window.setInterval(() => {
         reloadLiveMedia();
-    }, 5000);
+    }, hasLiveUpdatingAssets.value ? 5000 : 8000);
 };
 
 const handleDocumentVisibilityChange = (): void => {
@@ -924,10 +1000,7 @@ const handleDocumentVisibilityChange = (): void => {
         return;
     }
 
-    if (hasLiveUpdatingAssets.value) {
-        reloadLiveMedia();
-    }
-
+    reloadLiveMedia();
     syncLiveMediaPoll();
 };
 
@@ -1227,7 +1300,7 @@ const statCards = computed(() => [
                             />
                             <button
                                 type="button"
-                                class="absolute inset-0 block h-full w-full overflow-hidden text-left"
+                                class="absolute inset-0 z-0 block h-full w-full overflow-hidden text-left"
                                 @click="openAssetDetails(asset, 'main')"
                             >
                             <img
@@ -1327,6 +1400,37 @@ const statCards = computed(() => [
                             </div>
                             </button>
 
+                            <div
+                                v-if="canManageMedia"
+                                class="pointer-events-none absolute inset-x-0 top-14 bottom-16 z-10 opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                            >
+                                <button
+                                    type="button"
+                                    class="pointer-events-auto absolute inset-y-0 left-0 flex w-1/2 items-center justify-center bg-gradient-to-r from-rose-500/68 via-rose-500/42 to-transparent text-white transition hover:from-rose-500/78 disabled:pointer-events-none disabled:opacity-55"
+                                    :disabled="wallVisibilityAssetId === asset.id"
+                                    :aria-label="`Hide ${asset.guestName} upload from photo wall`"
+                                    @click.stop="updateWallVisibility(asset, 'rejected')"
+                                >
+                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur">
+                                        <ThumbsDown class="size-4" />
+                                        No wall
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="pointer-events-auto absolute inset-y-0 right-0 flex w-1/2 items-center justify-center bg-gradient-to-l from-emerald-500/72 via-emerald-500/42 to-transparent text-white transition hover:from-emerald-500/82 disabled:pointer-events-none disabled:opacity-55"
+                                    :disabled="wallVisibilityAssetId === asset.id"
+                                    :aria-label="`Show ${asset.guestName} upload on photo wall`"
+                                    @click.stop="updateWallVisibility(asset, 'approved')"
+                                >
+                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur">
+                                        <ThumbsUp class="size-4" />
+                                        Show wall
+                                    </span>
+                                </button>
+                            </div>
+
                             <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3">
                                 <div class="min-w-0 flex items-center gap-2">
                                     <Avatar class="size-9 border border-white/20 shadow-sm">
@@ -1339,6 +1443,12 @@ const statCards = computed(() => [
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-white">
                                             {{ asset.guestName }}
+                                        </p>
+                                        <p
+                                            class="mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                                            :class="wallVisibilityToneClass(asset.wallVisibility)"
+                                        >
+                                            {{ wallVisibilityLabel(asset.wallVisibility) }}
                                         </p>
                                     </div>
                                 </div>
@@ -1812,6 +1922,32 @@ const statCards = computed(() => [
                                     type="button"
                                     class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
                                     :disabled="
+                                        wallVisibilityAssetId === activeAsset.id ||
+                                        activeAsset.wallVisibility === 'approved'
+                                    "
+                                    title="Show on photo wall"
+                                    @click="updateWallVisibility(activeAsset, 'approved')"
+                                >
+                                    <ThumbsUp class="size-4" />
+                                </button>
+                                <button
+                                    v-if="canManageMedia"
+                                    type="button"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
+                                    :disabled="
+                                        wallVisibilityAssetId === activeAsset.id ||
+                                        activeAsset.wallVisibility === 'rejected'
+                                    "
+                                    title="Hide from photo wall"
+                                    @click="updateWallVisibility(activeAsset, 'rejected')"
+                                >
+                                    <ThumbsDown class="size-4" />
+                                </button>
+                                <button
+                                    v-if="canManageMedia"
+                                    type="button"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
+                                    :disabled="
                                         moderationAssetId === activeAsset.id ||
                                         activeAsset.moderationStatus === 'approved'
                                     "
@@ -2087,6 +2223,30 @@ const statCards = computed(() => [
                                 <Eye class="size-4" />
                             </Button>
                             <template v-if="canManageMedia">
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    :disabled="
+                                        wallVisibilityAssetId === assetInfoAsset.id ||
+                                        assetInfoAsset.wallVisibility === 'approved'
+                                    "
+                                    title="Show on photo wall"
+                                    @click="updateWallVisibility(assetInfoAsset, 'approved')"
+                                >
+                                    <ThumbsUp class="size-4" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    :disabled="
+                                        wallVisibilityAssetId === assetInfoAsset.id ||
+                                        assetInfoAsset.wallVisibility === 'rejected'
+                                    "
+                                    title="Hide from photo wall"
+                                    @click="updateWallVisibility(assetInfoAsset, 'rejected')"
+                                >
+                                    <ThumbsDown class="size-4" />
+                                </Button>
                                 <Button
                                     size="icon"
                                     variant="outline"

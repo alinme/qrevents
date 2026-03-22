@@ -1,5 +1,6 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 import moderation from './moderation'
+import wallVisibility from './wall-visibility'
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
 * @see app/Http/Controllers/EventController.php:173
@@ -252,6 +253,7 @@ const assets = {
     bulkModeration: Object.assign(bulkModeration, bulkModeration),
     destroy: Object.assign(destroy, destroy),
     moderation: Object.assign(moderation, moderation),
+    wallVisibility: Object.assign(wallVisibility, wallVisibility),
 }
 
 export default assets

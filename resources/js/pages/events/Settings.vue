@@ -1006,10 +1006,18 @@ const removeCurrentLogo = (): void => {
 };
 
 const openWelcomeScreenBackgroundPicker = (): void => {
+    if (!canEditAdvancedAppearance.value) {
+        return;
+    }
+
     welcomeScreenBackgroundFileInputRef.value?.click();
 };
 
 const onWelcomeScreenBackgroundFileChange = (event: Event): void => {
+    if (!canEditAdvancedAppearance.value) {
+        return;
+    }
+
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0] ?? null;
     form.welcome_screen_background_file = file;
@@ -1021,6 +1029,10 @@ const onWelcomeScreenBackgroundFileChange = (event: Event): void => {
 };
 
 const removeWelcomeScreenBackgroundImage = (): void => {
+    if (!canEditAdvancedAppearance.value) {
+        return;
+    }
+
     form.welcome_screen_background_file = null;
     form.remove_welcome_screen_background = true;
     lastWelcomeScreenBackgroundFileName.value = '';
@@ -2976,6 +2988,15 @@ function resolveSupportedTimezones(): string[] {
                                                     Set a background for the
                                                     welcome screen.
                                                 </p>
+                                                <p
+                                                    v-if="
+                                                        !canEditAdvancedAppearance
+                                                    "
+                                                    class="text-xs font-medium text-amber-700"
+                                                >
+                                                    Welcome screen backgrounds
+                                                    are available on Pro.
+                                                </p>
                                                 <div
                                                     class="grid gap-3 sm:grid-cols-[1fr_auto]"
                                                 >
@@ -2994,6 +3015,9 @@ function resolveSupportedTimezones(): string[] {
                                                                 variant="outline"
                                                                 size="sm"
                                                                 class="h-8"
+                                                                :disabled="
+                                                                    !canEditAdvancedAppearance
+                                                                "
                                                                 @click="
                                                                     openWelcomeScreenBackgroundPicker
                                                                 "
@@ -3009,6 +3033,9 @@ function resolveSupportedTimezones(): string[] {
                                                         type="button"
                                                         variant="outline"
                                                         class="h-11"
+                                                        :disabled="
+                                                            !canEditAdvancedAppearance
+                                                        "
                                                         @click="
                                                             removeWelcomeScreenBackgroundImage
                                                         "

@@ -13,7 +13,7 @@ import {
     Users,
     Video,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -119,6 +119,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const modalOpen = ref(props.showDashboardModal);
 const exportSubmitting = ref(false);
+const latestKnownUploadId = ref(props.dashboardRecentUploads[0]?.id ?? 0);
+const isRefreshingWorkspace = ref(false);
+let workspacePollId: number | null = null;
 
 const formatDateTime = (value: string | null, fallback = 'Unknown'): string => {
     if (!value) {
@@ -330,6 +333,121 @@ const handleMediaExport = (): void => {
         },
     );
 };
+
+const hasVisibleDocument = (): boolean =>
+    typeof document === 'undefined' || document.visibilityState === 'visible';
+
+const refreshWorkspace = (): void => {
+    if (
+        typeof window === 'undefined' ||
+        isRefreshingWorkspace.value ||
+        !hasVisibleDocument()
+    ) {
+        return;
+    }
+
+    isRefreshingWorkspace.value = true;
+
+    router.reload({
+        only: ['currentEvent', 'dashboardStats', 'dashboardRecentUploads'],
+        onFinish: () => {
+            isRefreshingWorkspace.value = false;
+        },
+    });
+};
+
+const syncWorkspacePoll = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (workspacePollId !== null) {
+        window.clearInterval(workspacePollId);
+        workspacePollId = null;
+    }
+
+    workspacePollId = window.setInterval(() => {
+        refreshWorkspace();
+    }, mediaExportBusy.value ? 5000 : 8000);
+};
+
+const handleDocumentVisibilityChange = (): void => {
+    if (!hasVisibleDocument()) {
+        return;
+    }
+
+    refreshWorkspace();
+    syncWorkspacePoll();
+};
+
+watch(
+    () => props.dashboardRecentUploads,
+    (nextUploads) => {
+        const nextLatestUploadId = nextUploads[0]?.id ?? 0;
+        if (nextLatestUploadId > latestKnownUploadId.value) {
+            const newUploadCount = nextUploads.filter(
+                (upload) => upload.id > latestKnownUploadId.value,
+            ).length;
+            toast.success(
+                newUploadCount === 1
+                    ? 'A new guest upload just arrived.'
+                    : `${newUploadCount} new guest uploads just arrived.`,
+            );
+        }
+
+        latestKnownUploadId.value = Math.max(latestKnownUploadId.value, nextLatestUploadId);
+    },
+);
+
+watch(
+    () => props.currentEvent.mediaExport.status,
+    (nextStatus, previousStatus) => {
+        if (nextStatus === previousStatus) {
+            return;
+        }
+
+        if (
+            previousStatus &&
+            ['pending', 'processing'].includes(previousStatus) &&
+            nextStatus === 'ready'
+        ) {
+            toast.success('Album export is ready to download.');
+        }
+
+        if (
+            previousStatus &&
+            ['pending', 'processing'].includes(previousStatus) &&
+            nextStatus === 'failed'
+        ) {
+            toast.error('Album export failed. Please try again.');
+        }
+    },
+);
+
+watch(mediaExportBusy, () => {
+    syncWorkspacePoll();
+});
+
+onMounted(() => {
+    syncWorkspacePoll();
+
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.addEventListener('visibilitychange', handleDocumentVisibilityChange);
+});
+
+onUnmounted(() => {
+    if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleDocumentVisibilityChange);
+    }
+
+    if (typeof window !== 'undefined' && workspacePollId !== null) {
+        window.clearInterval(workspacePollId);
+        workspacePollId = null;
+    }
+});
 </script>
 
 <template>
@@ -390,6 +508,7 @@ const handleMediaExport = (): void => {
                             </Button>
                             <Button as-child size="sm" variant="outline">
                                 <Link :href="eventLinks.media">
+                                    <ImageIcon class="mr-2 size-4" />
                                     Media
                                 </Link>
                             </Button>

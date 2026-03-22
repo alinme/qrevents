@@ -8,6 +8,7 @@ use App\Models\EventAssetComment;
 use App\Models\EventAssetLike;
 use App\Models\EventGuest;
 use App\Models\TextPostTheme;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,54 @@ beforeEach(function () {
     Config::set('events.upload_disk', 'public');
     Config::set('events.pre_event_test_upload_limit', 10);
     Storage::fake('public');
+});
+
+it('keeps new uploads off the photo wall until the owner approves them', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'upload_window_starts_at' => now()->subHour(),
+        'upload_window_ends_at' => now()->addHour(),
+        'moderation_enabled' => false,
+        'auto_moderation_enabled' => false,
+    ]);
+
+    $this->post(route('events.album.upload', $event->share_token), [
+        'files' => [
+            UploadedFile::fake()->image('photo.jpg')->size(300),
+        ],
+        'guest_name' => 'Elena',
+        'guest_intent' => 'upload_media',
+    ])->assertRedirect();
+
+    /** @var EventAsset $asset */
+    $asset = $event->assets()->latest('id')->firstOrFail();
+
+    expect($asset->moderation_status)->toBe('approved')
+        ->and($asset->metadata['wall_visibility'] ?? null)->toBe('pending');
+
+    $this->get(route('events.wall', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Wall')
+            ->where('assets', []),
+        );
+
+    $this->actingAs($owner)
+        ->patch(route('events.assets.wall-visibility.update', [$event, $asset]), [
+            'wall_visibility' => 'approved',
+        ])
+        ->assertRedirect();
+
+    $asset->refresh();
+
+    expect($asset->metadata['wall_visibility'] ?? null)->toBe('approved');
+
+    $this->get(route('events.wall', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Wall')
+            ->where('assets.0.id', $asset->id),
+        );
 });
 
 it('uploads photos and videos when the upload window is open', function () {

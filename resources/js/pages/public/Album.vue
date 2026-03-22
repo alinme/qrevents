@@ -953,26 +953,6 @@ const welcomeFontClass = computed(() => {
     }
 });
 
-const welcomeConfigFingerprint = computed(() =>
-    JSON.stringify({
-        enabled: customWelcomeEnabled.value,
-        title: welcomeTitle.value,
-        subtitle: welcomeSubtitle.value,
-        buttonText: welcomeButtonText.value,
-        font: props.welcomeScreen.font,
-        animated: props.welcomeScreen.animated,
-        logoUrl: albumLogoUrl.value,
-        backgroundUrl: props.welcomeScreen.backgroundUrl,
-        fields: welcomeGuestFields.value.map((field) => ({
-            id: field.id,
-            type: field.type,
-            label: field.label,
-            help_text: field.help_text,
-            required: field.required,
-            enabled: field.enabled,
-        })),
-    }),
-);
 const galleryGridClass = computed(() =>
     galleryView.value === 'grid2' ? 'grid-cols-2' : 'grid-cols-3',
 );
@@ -1711,7 +1691,6 @@ const persistGuestProfile = (): void => {
         JSON.stringify({
             fields: guestFieldValues.value,
             intent: activeView.value,
-            welcomeFingerprint: welcomeConfigFingerprint.value,
             guestToken: guestToken.value,
         }),
     );
@@ -1731,20 +1710,8 @@ const hydrateGuestProfile = (): void => {
         const parsed = JSON.parse(raw) as {
             fields?: unknown;
             intent?: unknown;
-            welcomeFingerprint?: unknown;
             guestToken?: unknown;
         };
-        const storedWelcomeFingerprint =
-            typeof parsed.welcomeFingerprint === 'string'
-                ? parsed.welcomeFingerprint
-                : null;
-        if (
-            storedWelcomeFingerprint === null ||
-            storedWelcomeFingerprint !== welcomeConfigFingerprint.value
-        ) {
-            window.localStorage.removeItem(guestStorageKey.value);
-            return;
-        }
         if (
             parsed.fields === null ||
             typeof parsed.fields !== 'object' ||
@@ -1807,7 +1774,7 @@ onMounted(() => {
     syncLoadMoreObserver();
     albumUpdatePollId = window.setInterval(() => {
         void checkForAlbumUpdates();
-    }, 30000);
+    }, 12000);
     syncProcessingVideoPoll();
 });
 
@@ -2937,6 +2904,8 @@ const submitTextPost = (): void => {
         onSuccess: () => {
             textForm.reset('text');
             textForm.clearErrors();
+            openComposerForView('browse_gallery');
+            persistGuestProfile();
             refreshAlbum('manual');
         },
     });

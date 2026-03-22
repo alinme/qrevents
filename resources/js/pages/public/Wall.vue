@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ChevronLeft, ChevronRight, Images, LoaderCircle, QrCode } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Heart, Images, LoaderCircle, QrCode } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
     Empty,
@@ -44,6 +44,16 @@ type WallAsset = {
     durationSeconds: number | null;
 };
 
+type WallHeartBurst = {
+    id: number;
+    left: string;
+    bottom: string;
+    size: string;
+    durationMs: number;
+    delayMs: number;
+    rotation: string;
+};
+
 const props = defineProps<{
     eventName: string;
     status: string;
@@ -61,9 +71,11 @@ const appName = computed(() => page.props.name ?? 'QR Events');
 const activeIndex = ref(0);
 const autoplayId = ref<number | null>(null);
 const wallAssets = ref<WallAsset[]>([...props.assets]);
+const wallHeartBursts = ref<WallHeartBurst[]>([]);
 const wallUpdatePollId = ref<number | null>(null);
 const isWallRefreshing = ref(false);
 const wallLiveStatus = ref<'live' | 'updating'>('live');
+let wallHeartSequence = 0;
 
 const displayAssets = computed<WallAsset[]>(() =>
     wallAssets.value.filter((asset) => {
@@ -208,6 +220,40 @@ const previousAsset = (): void => {
 const latestWallAssetId = (assets: WallAsset[]): number =>
     assets.reduce((max, asset) => Math.max(max, asset.id), 0);
 
+const spawnWallHeartBursts = (count: number): void => {
+    if (typeof window === 'undefined' || count <= 0) {
+        return;
+    }
+
+    const nextBursts = Array.from({ length: count }, () => {
+        wallHeartSequence += 1;
+
+        return {
+            id: wallHeartSequence,
+            left: `${12 + Math.random() * 76}%`,
+            bottom: `${6 + Math.random() * 12}%`,
+            size: `${20 + Math.random() * 26}px`,
+            durationMs: 1800 + Math.round(Math.random() * 1600),
+            delayMs: Math.round(Math.random() * 420),
+            rotation: `${-18 + Math.random() * 36}deg`,
+        } satisfies WallHeartBurst;
+    });
+
+    wallHeartBursts.value = [...wallHeartBursts.value, ...nextBursts];
+
+    const burstIds = new Set(nextBursts.map((burst) => burst.id));
+    const removalDelay = Math.max(
+        ...nextBursts.map((burst) => burst.durationMs + burst.delayMs),
+        0,
+    ) + 500;
+
+    window.setTimeout(() => {
+        wallHeartBursts.value = wallHeartBursts.value.filter(
+            (burst) => !burstIds.has(burst.id),
+        );
+    }, removalDelay);
+};
+
 const applyWallAssets = (nextAssets: WallAsset[]): void => {
     const currentAssetId = currentAsset.value?.id ?? null;
     wallAssets.value = [...nextAssets];
@@ -271,9 +317,16 @@ const refreshWallAssets = async (): Promise<void> => {
             ? payload.props.assets
             : [];
 
-        if (latestWallAssetId(nextAssets) > latestWallAssetId(wallAssets.value)) {
+        const previousLatestAssetId = latestWallAssetId(wallAssets.value);
+        const nextLatestAssetId = latestWallAssetId(nextAssets);
+
+        if (nextLatestAssetId > previousLatestAssetId) {
+            const newApprovedCount = nextAssets.filter(
+                (asset) => asset.id > previousLatestAssetId,
+            ).length;
             applyWallAssets(nextAssets);
             startAutoplay();
+            spawnWallHeartBursts(Math.min(12, Math.max(4, newApprovedCount * 3)));
         }
     } catch {
         // Silent background refresh for TVs/projectors.
@@ -312,7 +365,7 @@ onMounted(() => {
     if (typeof window !== 'undefined') {
         wallUpdatePollId.value = window.setInterval(() => {
             void refreshWallAssets();
-        }, 20000);
+        }, 8000);
     }
 });
 
@@ -408,6 +461,23 @@ watch(
             </header>
 
             <section class="relative flex flex-1 items-center justify-center">
+                <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+                    <Heart
+                        v-for="burst in wallHeartBursts"
+                        :key="burst.id"
+                        class="wall-heart-burst absolute fill-pink-400/65 text-pink-300/90 drop-shadow-[0_10px_24px_rgba(244,114,182,0.35)]"
+                        :style="{
+                            left: burst.left,
+                            bottom: burst.bottom,
+                            width: burst.size,
+                            height: burst.size,
+                            animationDuration: `${burst.durationMs}ms`,
+                            animationDelay: `${burst.delayMs}ms`,
+                            rotate: burst.rotation,
+                        }"
+                    />
+                </div>
+
                 <div
                     v-if="currentAsset"
                     class="relative w-full overflow-hidden rounded-3xl border border-white/25 bg-black/40 shadow-2xl backdrop-blur"
@@ -531,3 +601,35 @@ watch(
         </div>
     </footer>
 </template>
+
+<style scoped>
+.wall-heart-burst {
+    animation-name: wall-heart-float;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: forwards;
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.72);
+}
+
+@keyframes wall-heart-float {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 22px, 0) scale(0.72);
+    }
+
+    18% {
+        opacity: 0.9;
+        transform: translate3d(-8px, -12px, 0) scale(1);
+    }
+
+    56% {
+        opacity: 0.82;
+        transform: translate3d(12px, -92px, 0) scale(1.08);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate3d(-14px, -184px, 0) scale(0.9);
+    }
+}
+</style>

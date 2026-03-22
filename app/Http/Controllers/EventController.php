@@ -248,6 +248,20 @@ class EventController extends Controller
         return back()->with('success', 'Moderation updated.');
     }
 
+    public function updateAssetWallVisibility(Request $request, Event $event, EventAsset $asset): RedirectResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+        abort_unless($asset->event_id === $event->id, 404);
+
+        $validated = $request->validate([
+            'wall_visibility' => ['required', 'string', Rule::in(['approved', 'rejected', 'pending'])],
+        ]);
+
+        $this->syncAssetWallVisibility($asset, $validated['wall_visibility']);
+
+        return back()->with('success', 'Photo wall visibility updated.');
+    }
+
     public function settings(Request $request, Event $event): Response
     {
         $this->assertCanViewEvent($request, $event);
@@ -1232,6 +1246,7 @@ class EventController extends Controller
                         'guest_intent' => $guestIntent,
                         'upload_batch_id' => $uploadBatchId,
                         'upload_batch_index' => $index + 1,
+                        'wall_visibility' => $this->initialWallVisibility($moderation['status']),
                         ...$guestFieldAttachments,
                         ...$moderation['metadata'],
                     ], fn ($value): bool => $value !== null && $value !== ''),
@@ -1396,6 +1411,7 @@ class EventController extends Controller
                     'guest_token' => $guestToken,
                     'guest_fields' => $guestFields,
                     'guest_intent' => $guestIntent,
+                    'wall_visibility' => $this->initialWallVisibility($moderation['status']),
                     ...$guestFieldAttachments,
                     ...$moderation['metadata'],
                 ], fn ($value): bool => $value !== null && $value !== ''),
@@ -1660,7 +1676,7 @@ class EventController extends Controller
         return back()->with('success', 'Upload deleted.');
     }
 
-    public function wall(string $shareToken): Response
+    public function wall(Request $request, string $shareToken): Response
     {
         $event = Event::query()
             ->where('share_token', $shareToken)
@@ -1669,7 +1685,7 @@ class EventController extends Controller
                     ->whereIn('kind', ['photo', 'video', 'text'])
                     ->where('moderation_status', 'approved')
                     ->latest('id')
-                    ->limit(240),
+                    ->limit(480),
             ])
             ->firstOrFail();
         $branding = $this->resolvedEventBranding($event);
@@ -1700,24 +1716,29 @@ class EventController extends Controller
                 'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
                 'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
             ],
-            'assets' => $event->assets->map(function (EventAsset $asset): array {
-                $metadata = is_array($asset->metadata) ? $asset->metadata : [];
+            'assets' => $event->assets
+                ->filter(fn (EventAsset $asset): bool => $this->assetVisibleOnWall($asset))
+                ->take(240)
+                ->values()
+                ->map(function (EventAsset $asset): array {
+                    $metadata = is_array($asset->metadata) ? $asset->metadata : [];
 
-                return [
-                    'id' => $asset->id,
-                    'kind' => $asset->kind,
-                    'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
-                    'previewUrl' => $this->assetPublicPreviewUrl($asset),
-                    'videoProcessing' => $this->videoVariantsPending($asset, true),
-                    'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
-                    ...$this->textPostThemeAssetProps($metadata),
-                    'guestName' => is_string($metadata['guest_name'] ?? null) ? $metadata['guest_name'] : null,
-                    'captionTitle' => is_string($metadata['caption_title'] ?? null) ? $metadata['caption_title'] : null,
-                    'captionSubtitle' => is_string($metadata['caption_subtitle'] ?? null) ? $metadata['caption_subtitle'] : null,
-                    'createdAt' => $asset->created_at?->toIso8601String(),
-                    'durationSeconds' => $asset->duration_seconds,
-                ];
-            })->values()->all(),
+                    return [
+                        'id' => $asset->id,
+                        'kind' => $asset->kind,
+                        'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
+                        'previewUrl' => $this->assetPublicPreviewUrl($asset),
+                        'videoProcessing' => $this->videoVariantsPending($asset, true),
+                        'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
+                        ...$this->textPostThemeAssetProps($metadata),
+                        'guestName' => is_string($metadata['guest_name'] ?? null) ? $metadata['guest_name'] : null,
+                        'captionTitle' => is_string($metadata['caption_title'] ?? null) ? $metadata['caption_title'] : null,
+                        'captionSubtitle' => is_string($metadata['caption_subtitle'] ?? null) ? $metadata['caption_subtitle'] : null,
+                        'createdAt' => $asset->created_at?->toIso8601String(),
+                        'durationSeconds' => $asset->duration_seconds,
+                    ];
+                })
+                ->all(),
         ]);
     }
 
@@ -2020,11 +2041,13 @@ class EventController extends Controller
                 'message' => is_string($metadata['message'] ?? null) ? $metadata['message'] : null,
                 'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
                 ...$this->textPostThemeAssetProps($metadata),
+                'wallVisibility' => $this->assetWallVisibility($asset),
                 'createdAt' => $asset->created_at?->toIso8601String(),
                 'reviewedAt' => $asset->reviewed_at?->toIso8601String(),
                 'commentCount' => (int) ($asset->comments_count ?? 0),
                 'deleteUrl' => route('events.assets.destroy', [$event, $asset]),
                 'moderationUpdateUrl' => route('events.assets.moderation.update', [$event, $asset]),
+                'wallVisibilityUpdateUrl' => route('events.assets.wall-visibility.update', [$event, $asset]),
             ];
         })->values();
 
@@ -3562,6 +3585,43 @@ class EventController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function initialWallVisibility(string $moderationStatus): string
+    {
+        if ($moderationStatus === 'rejected') {
+            return 'rejected';
+        }
+
+        return 'pending';
+    }
+
+    private function assetWallVisibility(EventAsset $asset): string
+    {
+        $metadata = is_array($asset->metadata) ? $asset->metadata : [];
+        $visibility = $metadata['wall_visibility'] ?? null;
+
+        if (is_string($visibility) && in_array($visibility, ['approved', 'rejected', 'pending'], true)) {
+            return $visibility;
+        }
+
+        return $asset->moderation_status === 'approved' ? 'approved' : 'pending';
+    }
+
+    private function assetVisibleOnWall(EventAsset $asset): bool
+    {
+        return $asset->moderation_status === 'approved'
+            && $this->assetWallVisibility($asset) === 'approved';
+    }
+
+    private function syncAssetWallVisibility(EventAsset $asset, string $wallVisibility): void
+    {
+        $metadata = is_array($asset->metadata) ? $asset->metadata : [];
+        $metadata['wall_visibility'] = $wallVisibility;
+
+        $asset->forceFill([
+            'metadata' => $metadata,
+        ])->save();
     }
 
     /**
