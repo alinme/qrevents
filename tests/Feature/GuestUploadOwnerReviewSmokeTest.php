@@ -23,6 +23,8 @@ it('covers guest upload through owner review and export download', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Smoke Test Event',
+        'is_paid' => true,
+        'download_all_enabled' => true,
         'moderation_enabled' => true,
         'auto_moderation_enabled' => false,
         'upload_window_starts_at' => now()->subHour(),
@@ -48,8 +50,8 @@ it('covers guest upload through owner review and export download', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('events/Media')
             ->where('currentEvent.name', 'Smoke Test Event')
-            ->where('eventNavigation.0.title', 'Dashboard')
-            ->where('eventNavigation.1.title', 'Event')
+            ->where('eventNavigation.0.title', 'Events')
+            ->where('eventNavigation.1.title', 'Workspace')
             ->where('eventNavigation.2.title', 'Media')
             ->where('eventNavigation.3.title', 'Settings')
             ->where('mediaAssets.0.guestName', 'Elena')

@@ -1905,8 +1905,8 @@ class EventController extends Controller
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
             'eventNavigation' => [
-                ['title' => 'Dashboard', 'href' => route('dashboard')],
-                ['title' => 'Event', 'href' => route('events.show', $event)],
+                ['title' => 'Events', 'href' => route('dashboard')],
+                ['title' => 'Workspace', 'href' => route('events.show', $event)],
                 ['title' => 'Media', 'href' => route('events.media', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
             ],

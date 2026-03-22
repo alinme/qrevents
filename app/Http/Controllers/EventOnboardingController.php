@@ -49,6 +49,7 @@ class EventOnboardingController extends Controller
         $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
         $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
         $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
+        $venueAddress = $this->resolveVenueAddress($subEvents);
         $eventDate = $this->resolvePrimaryEventDate($validated['event_date'] ?? null, $eventDates, $subEvents);
         $windows = EventLifecycleWindows::build(
             $eventDate,
@@ -63,7 +64,7 @@ class EventOnboardingController extends Controller
             'plan_id' => $plan->id,
             'type' => $validated['type'],
             'name' => $validated['name'],
-            'venue_address' => $validated['venue_address'],
+            'venue_address' => $venueAddress,
             'event_date' => $eventDate,
             'event_dates' => $eventDates,
             'sub_events' => $subEvents,
@@ -347,7 +348,7 @@ class EventOnboardingController extends Controller
 
     /**
      * @param  array<int, array<string, mixed>>  $subEvents
-     * @return array<int, array{key: string, label: string, date: string, start_time: string}>
+     * @return array<int, array{key: string, label: string, date: string, start_time: string, address: string|null, no_address: bool}>
      */
     private function normalizeSubEvents(array $subEvents): array
     {
@@ -361,6 +362,8 @@ class EventOnboardingController extends Controller
                 $label = is_string($subEvent['label'] ?? null) ? trim((string) $subEvent['label']) : '';
                 $date = is_string($subEvent['date'] ?? null) ? trim((string) $subEvent['date']) : '';
                 $startTime = is_string($subEvent['start_time'] ?? null) ? trim((string) $subEvent['start_time']) : '';
+                $address = is_string($subEvent['address'] ?? null) ? trim((string) $subEvent['address']) : '';
+                $noAddress = filter_var($subEvent['no_address'] ?? false, FILTER_VALIDATE_BOOL);
 
                 if ($key === '' || $label === '' || $date === '' || $startTime === '') {
                     return null;
@@ -371,11 +374,27 @@ class EventOnboardingController extends Controller
                     'label' => $label,
                     'date' => $date,
                     'start_time' => $startTime,
+                    'address' => $noAddress || $address === '' ? null : $address,
+                    'no_address' => $noAddress,
                 ];
             })
             ->filter()
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<int, array{key: string, label: string, date: string, start_time: string, address: string|null, no_address: bool}>  $subEvents
+     */
+    private function resolveVenueAddress(array $subEvents): ?string
+    {
+        $firstSubEventAddress = collect($subEvents)
+            ->pluck('address')
+            ->first(fn (mixed $value): bool => is_string($value) && trim($value) !== '');
+
+        return is_string($firstSubEventAddress) && trim($firstSubEventAddress) !== ''
+            ? $firstSubEventAddress
+            : null;
     }
 
     /**
@@ -405,154 +424,120 @@ class EventOnboardingController extends Controller
                             'label' => 'Civil union',
                             'description' => 'The legal ceremony or city hall moment.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => false,
+                            'required' => false,
                         ],
                         [
                             'key' => 'church-ceremony',
                             'label' => 'Church ceremony',
                             'description' => 'The formal service before the celebration starts.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => false,
+                            'required' => false,
                         ],
                         [
                             'key' => 'reception',
                             'label' => 'Reception',
                             'description' => 'Dinner, speeches, and the main celebration.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => false,
+                            'required' => false,
                         ],
                         [
                             'key' => 'after-party',
                             'label' => 'After party',
                             'description' => 'The late-night continuation after the main reception.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => false,
+                            'required' => false,
                         ],
                     ],
                 ],
                 [
                     'value' => 'party',
                     'label' => 'Party',
-                    'description' => 'Great for private celebrations, launches, reunions, and one-night moments.',
+                    'description' => 'A single celebration flow with one main moment and one optional address.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1200&q=80',
                     'subEvents' => [
                         [
-                            'key' => 'guest-arrival',
-                            'label' => 'Guest arrival',
-                            'description' => 'Doors open, welcome drinks, and first photos.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'main-party',
-                            'label' => 'Main party',
-                            'description' => 'The peak dance-floor or social energy window.',
+                            'key' => 'party',
+                            'label' => 'Party',
+                            'description' => 'The main party, launch, reunion, or celebration window.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'special-moment',
-                            'label' => 'Special moment',
-                            'description' => 'Toast, award, reveal, or featured highlight.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                     ],
                 ],
                 [
                     'value' => 'birthday',
                     'label' => 'Birthday',
-                    'description' => 'Perfect for birthdays with guests sharing candid photos all day or night.',
+                    'description' => 'One main birthday celebration with one address when needed.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=1200&q=80',
                     'subEvents' => [
                         [
-                            'key' => 'welcome-time',
-                            'label' => 'Welcome time',
-                            'description' => 'Meet-and-greet, food, and early arrivals.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'cake-cutting',
-                            'label' => 'Cake cutting',
-                            'description' => 'The signature birthday moment everyone wants to catch.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1464347744102-11db6282f854?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'birthday-party',
-                            'label' => 'Main party',
-                            'description' => 'Games, dancing, speeches, or the late celebration.',
+                            'key' => 'birthday',
+                            'label' => 'Birthday celebration',
+                            'description' => 'Cake, speeches, dinner, or the main birthday gathering.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                     ],
                 ],
                 [
                     'value' => 'engagement',
                     'label' => 'Engagement',
-                    'description' => 'Turn your engagement celebration into a shared album guests can join instantly.',
+                    'description' => 'One engagement celebration with one optional address when the event is online or private.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1200&q=80',
                     'subEvents' => [
                         [
-                            'key' => 'proposal-moment',
-                            'label' => 'Proposal moment',
-                            'description' => 'The reveal, surprise, or headline photo moment.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'toast',
-                            'label' => 'Toast',
-                            'description' => 'Champagne, speeches, and first congratulations.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'engagement-party',
-                            'label' => 'Engagement party',
-                            'description' => 'Dinner or celebration after the announcement.',
+                            'key' => 'engagement',
+                            'label' => 'Engagement celebration',
+                            'description' => 'Proposal party, dinner, toast, or the main engagement gathering.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                     ],
                 ],
                 [
                     'value' => 'baptism',
                     'label' => 'Baptism',
-                    'description' => 'Collect memories from the service and family gathering without extra friction.',
+                    'description' => 'Start with the church moment and the family celebration after it.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1516589091380-5d8e87df6999?auto=format&fit=crop&w=1200&q=80',
                     'subEvents' => [
                         [
-                            'key' => 'service',
-                            'label' => 'Service',
+                            'key' => 'church-ceremony',
+                            'label' => 'Church ceremony',
                             'description' => 'The ceremony itself and the most meaningful moments.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                         [
-                            'key' => 'family-lunch',
-                            'label' => 'Family lunch',
+                            'key' => 'family-party',
+                            'label' => 'Family party',
                             'description' => 'The meal or reception after the ceremony.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'celebration',
-                            'label' => 'Celebration',
-                            'description' => 'A more relaxed gathering with family and friends.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                     ],
                 ],
                 [
                     'value' => 'other',
                     'label' => 'Other',
-                    'description' => 'For conferences, launches, dinners, reunions, and any event that needs shared media.',
+                    'description' => 'A simple single-moment event for anything that does not fit the presets.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
                     'subEvents' => [
                         [
-                            'key' => 'opening',
-                            'label' => 'Opening',
-                            'description' => 'Doors open, welcome, or registration start.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'main-session',
-                            'label' => 'Main session',
-                            'description' => 'The core presentation, dinner, or featured moment.',
+                            'key' => 'main-event',
+                            'label' => 'Main event',
+                            'description' => 'The core session, dinner, launch, or featured moment.',
                             'imageUrl' => 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=80',
-                        ],
-                        [
-                            'key' => 'closing',
-                            'label' => 'Closing',
-                            'description' => 'Wrap-up, after-mixer, or final celebration.',
-                            'imageUrl' => 'https://images.unsplash.com/photo-1496337589254-7e19d01cec44?auto=format&fit=crop&w=900&q=80',
+                            'defaultSelected' => true,
+                            'required' => true,
                         ],
                     ],
                 ],

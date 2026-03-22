@@ -18,6 +18,7 @@ import ChoiceCardRadioGroup from '@/components/onboarding/ChoiceCardRadioGroup.v
 import PrettyDatePicker from '@/components/onboarding/PrettyDatePicker.vue';
 import PrettyTimePicker from '@/components/onboarding/PrettyTimePicker.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -30,6 +31,8 @@ type EventSubEventOption = {
     label: string;
     description: string;
     imageUrl: string;
+    defaultSelected: boolean;
+    required: boolean;
 };
 
 type EventTypeOption = {
@@ -64,6 +67,9 @@ type SelectedSubEvent = {
     label: string;
     date: string;
     start_time: string;
+    address: string;
+    no_address: boolean;
+    required: boolean;
 };
 
 type OnboardingStep = 1 | 2 | 3;
@@ -95,7 +101,7 @@ const stepItems = [
         number: 2,
         label: 'Essentials',
         title: 'Capture the basics',
-        description: 'Name, location, and guest estimate help shape invitations, menus, and recommendations later.',
+        description: 'Name, wedding naming details, and guest estimate shape the event before you schedule the exact moments.',
     },
     {
         number: 3,
@@ -112,6 +118,27 @@ const createEventDate = (label = ''): EventDateInput => ({
     date: '',
 });
 
+const createSelectedSubEvent = (
+    subEventOption: EventSubEventOption,
+    date = '',
+): SelectedSubEvent => ({
+    key: subEventOption.key,
+    label: subEventOption.label,
+    date,
+    start_time: '',
+    address: '',
+    no_address: false,
+    required: subEventOption.required,
+});
+
+const defaultSelectedSubEventsForType = (
+    eventType: EventTypeOption | undefined,
+    date = '',
+): SelectedSubEvent[] =>
+    (eventType?.subEvents ?? [])
+        .filter((subEvent) => subEvent.defaultSelected)
+        .map((subEvent) => createSelectedSubEvent(subEvent, date));
+
 const form = useForm({
     plan_slug: props.defaultPlanSlug,
     type: props.eventTypes[0]?.value ?? 'wedding',
@@ -123,10 +150,9 @@ const form = useForm({
     wedding_partner_one_first_name: '',
     wedding_partner_two_first_name: '',
     wedding_family_name: '',
-    venue_address: '',
     attendee_estimate: '',
     event_dates: [createEventDate('Main day')],
-    sub_events: [] as SelectedSubEvent[],
+    sub_events: defaultSelectedSubEventsForType(props.eventTypes[0], '') as SelectedSubEvent[],
     timezone: props.defaultTimezone,
 });
 
@@ -149,6 +175,9 @@ const isWeddingType = computed(() => form.type === 'wedding');
 const needsAccountDetails = computed(() => props.owner === null);
 
 const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
+const addressedMomentsCount = computed(() =>
+    form.sub_events.filter((subEvent) => subEvent.no_address || subEvent.address.trim().length >= 6).length,
+);
 
 const progressWidth = computed(() => `${((step.value - 1) / (stepItems.length - 1)) * 100}%`);
 
@@ -166,12 +195,16 @@ const canMoveToNext = computed(() => {
 
         return hasWeddingNamingFields
             && form.name.trim().length >= 3
-            && form.venue_address.trim().length >= 6
             && Number(form.attendee_estimate) > 0;
     }
 
     const timelineComplete = reviewEventDates.value.length > 0
-        && form.sub_events.every((subEvent) => subEvent.date.trim() !== '' && subEvent.start_time.trim() !== '');
+        && form.sub_events.length > 0
+        && form.sub_events.every((subEvent) =>
+            subEvent.date.trim() !== ''
+            && subEvent.start_time.trim() !== ''
+            && (subEvent.no_address || subEvent.address.trim().length >= 6),
+        );
 
     if (!timelineComplete) {
         return false;
@@ -285,8 +318,25 @@ const syncSuggestedWeddingTitle = (): void => {
 watch(
     () => form.type,
     (nextType, previousType) => {
-        const allowedSubEventKeys = new Set(availableSubEvents.value.map((subEvent) => subEvent.key));
-        form.sub_events = form.sub_events.filter((subEvent) => allowedSubEventKeys.has(subEvent.key));
+        const nextTypeOption = props.eventTypes.find((eventType) => eventType.value === nextType);
+        const nextDefaultSubEvents = defaultSelectedSubEventsForType(nextTypeOption, firstKnownDate.value);
+        const existingSubEvents = new Map(
+            form.sub_events.map((subEvent) => [subEvent.key, subEvent]),
+        );
+
+        form.sub_events = nextDefaultSubEvents.map((subEvent) => {
+            const existingSubEvent = existingSubEvents.get(subEvent.key);
+
+            return existingSubEvent === undefined
+                ? subEvent
+                : {
+                    ...subEvent,
+                    date: existingSubEvent.date,
+                    start_time: existingSubEvent.start_time,
+                    address: existingSubEvent.address,
+                    no_address: existingSubEvent.no_address,
+                };
+        });
 
         if (step.value === 1 && nextType !== previousType) {
             void nextTick(() => {
@@ -374,23 +424,22 @@ const toggleSubEvent = (subEventOption: EventSubEventOption): void => {
     const existingSubEventIndex = form.sub_events.findIndex((subEvent) => subEvent.key === subEventOption.key);
 
     if (existingSubEventIndex >= 0) {
+        if (form.sub_events[existingSubEventIndex]?.required) {
+            return;
+        }
+
         form.sub_events.splice(existingSubEventIndex, 1);
 
         return;
     }
 
-    form.sub_events.push({
-        key: subEventOption.key,
-        label: subEventOption.label,
-        date: firstKnownDate.value,
-        start_time: '',
-    });
+    form.sub_events.push(createSelectedSubEvent(subEventOption, firstKnownDate.value));
 };
 
 const removeSubEvent = (key: string): void => {
     const existingSubEventIndex = form.sub_events.findIndex((subEvent) => subEvent.key === key);
 
-    if (existingSubEventIndex >= 0) {
+    if (existingSubEventIndex >= 0 && !form.sub_events[existingSubEventIndex]?.required) {
         form.sub_events.splice(existingSubEventIndex, 1);
     }
 };
@@ -414,6 +463,8 @@ const submit = (): void => {
             label: subEvent.label,
             date: subEvent.date,
             start_time: subEvent.start_time,
+            address: subEvent.no_address ? null : subEvent.address.trim(),
+            no_address: subEvent.no_address,
         }));
 
         return {
@@ -437,7 +488,6 @@ const submit = (): void => {
 
             if (
                 errors.name
-                || errors.venue_address
                 || errors.attendee_estimate
                 || errors.wedding_partner_one_first_name
                 || errors.wedding_partner_two_first_name
@@ -812,18 +862,12 @@ const submit = (): void => {
                                         <InputError :message="form.errors.name" />
                                     </div>
 
-                                    <div class="grid gap-2">
-                                        <Label for="venue_address" class="text-sm font-semibold text-promo-ink">
-                                            Event address
-                                        </Label>
-                                        <Textarea
-                                            id="venue_address"
-                                            v-model="form.venue_address"
-                                            name="venue_address"
-                                            placeholder="Venue name, street, city, and anything guests need in order to find it easily."
-                                            class="min-h-28 rounded-[22px] border-promo-line bg-promo-surface/40"
-                                        />
-                                        <InputError :message="form.errors.venue_address" />
+                                    <div class="rounded-[22px] border border-dashed border-promo-line bg-white/65 px-4 py-4 text-sm text-promo-muted">
+                                        {{
+                                            isWeddingType
+                                                ? 'Wedding addresses are collected on each selected moment in the next step.'
+                                                : 'The event address is collected on the main moment in the next step, with a no-address option for online or flexible events.'
+                                        }}
                                     </div>
                                 </div>
 
@@ -1014,7 +1058,7 @@ const submit = (): void => {
                                                             : 'bg-white/88 text-neutral-900'
                                                     "
                                                 >
-                                                    Optional sub-event
+                                                    {{ subEventOption.required ? 'Required moment' : 'Optional moment' }}
                                                 </span>
 
                                                 <span
@@ -1051,7 +1095,7 @@ const submit = (): void => {
                                             Schedule the selected moments
                                         </h3>
                                         <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            Each selected moment needs a date and a start time.
+                                            Each selected moment needs a date, start time, and address unless it does not need one.
                                         </p>
                                     </div>
 
@@ -1072,17 +1116,26 @@ const submit = (): void => {
                                                     {{ subEvent.label }}
                                                 </p>
                                                 <p class="mt-1 text-sm text-promo-muted">
-                                                    Add the date and starting hour for this part of the event.
+                                                    Add the date, starting hour, and address for this moment.
                                                 </p>
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                class="rounded-full p-2 text-promo-muted transition-colors hover:bg-white"
-                                                @click="removeSubEvent(subEvent.key)"
-                                            >
-                                                <X class="size-4" />
-                                            </button>
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    v-if="subEvent.required"
+                                                    class="rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary"
+                                                >
+                                                    Required
+                                                </span>
+                                                <button
+                                                    v-else
+                                                    type="button"
+                                                    class="rounded-full p-2 text-promo-muted transition-colors hover:bg-white"
+                                                    @click="removeSubEvent(subEvent.key)"
+                                                >
+                                                    <X class="size-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div class="mt-4 grid gap-3 md:grid-cols-2">
@@ -1109,6 +1162,39 @@ const submit = (): void => {
                                                 />
                                                 <InputError :message="fieldError(`sub_events.${index}.start_time`)" />
                                             </div>
+                                        </div>
+
+                                        <div class="mt-4 grid gap-3">
+                                            <div class="grid gap-2">
+                                                <Label :for="`sub-event-address-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                    Address
+                                                </Label>
+                                                <Textarea
+                                                    :id="`sub-event-address-${index}`"
+                                                    v-model="subEvent.address"
+                                                    :name="`sub_events.${index}.address`"
+                                                    :disabled="subEvent.no_address"
+                                                    placeholder="Venue name, street, city, or location details for this moment."
+                                                    class="min-h-24 rounded-[18px] border-promo-line bg-white"
+                                                    :class="subEvent.no_address ? 'opacity-60' : ''"
+                                                />
+                                                <InputError :message="fieldError(`sub_events.${index}.address`)" />
+                                            </div>
+
+                                            <label class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted">
+                                                <Checkbox
+                                                    :checked="subEvent.no_address"
+                                                    @update:checked="
+                                                        (checked: boolean) => {
+                                                            subEvent.no_address = checked === true;
+                                                            if (subEvent.no_address) {
+                                                                subEvent.address = '';
+                                                            }
+                                                        }
+                                                    "
+                                                />
+                                                This moment has no address
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -1236,7 +1322,7 @@ const submit = (): void => {
                             <div class="grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4">
                                 <div class="inline-flex items-center gap-2">
                                     <MapPin class="size-4 text-promo-primary" />
-                                    {{ form.venue_address.trim() !== '' ? 'Address added' : 'Address pending' }}
+                                    {{ addressedMomentsCount }} / {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} addressed
                                 </div>
                                 <div class="inline-flex items-center gap-2">
                                     <CalendarDays class="size-4 text-promo-primary" />

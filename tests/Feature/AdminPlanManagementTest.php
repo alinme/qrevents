@@ -231,6 +231,16 @@ test('new onboarding events inherit the current active default plan for their cu
                     'date' => now()->addMonth()->toDateString(),
                 ],
             ],
+            'sub_events' => [
+                [
+                    'key' => 'reception',
+                    'label' => 'Reception',
+                    'date' => now()->addMonth()->toDateString(),
+                    'start_time' => '18:30',
+                    'address' => '20 Lake View Road, Bucharest',
+                    'no_address' => false,
+                ],
+            ],
             'timezone' => 'Europe/Bucharest',
         ])
         ->assertRedirect();

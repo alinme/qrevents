@@ -52,7 +52,7 @@ test('authenticated users without events see an empty account dashboard', functi
         );
 });
 
-test('multi-event accounts are redirected to the business dashboard from the dashboard landing page', function () {
+test('multi-event accounts land on the main dashboard and keep business tools as a secondary route', function () {
     $owner = User::factory()->create();
 
     $liveEvent = Event::factory()->for($owner)->create([
@@ -86,7 +86,12 @@ test('multi-event accounts are redirected to the business dashboard from the das
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.business'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('dashboardLinks.business', route('dashboard.business'))
+            ->where('summary.ownedEventCount', 3)
+        );
 });
 
 test('owned event accounts can still open the account dashboard explicitly', function () {
@@ -244,8 +249,8 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
             ->where('summary.totalUploadCount', 2)
             ->where('summary.pendingModerationCount', 1)
             ->where('summary.readyExportCount', 1)
-            ->where('dashboardLinks.ownedEvents', route('dashboard.events'))
-            ->where('dashboardLinks.recentActivity', route('dashboard.activity'))
+            ->where('dashboardLinks.ownedEvents', route('dashboard.account').'#events')
+            ->where('dashboardLinks.recentActivity', route('dashboard.account').'#activity')
             ->where('continueSetupEvent.name', 'Rooftop Rehearsal')
             ->where('continueSetupEvent.primaryAction.url', route('onboarding.photos', $setupEvent))
             ->where(
@@ -314,18 +319,12 @@ test('dashboard shows collaborator context and media review quick access', funct
             ->where('summary.totalUploadCount', 1)
             ->where('continueSetupEvent', null)
             ->where(
-                'quickActions',
-                fn ($actions): bool => collect($actions)->contains(
-                    fn (array $action): bool => $action['label'] === 'Review uploads'
-                        && $action['url'] === route('events.media', $sharedEvent),
-                ),
-            )
-            ->where(
                 'collaboratorEvents',
                 fn ($events): bool => count($events) === 1
                     && $events[0]['name'] === 'Shared Gala'
                     && $events[0]['roleLabel'] === 'Manager'
-                    && $events[0]['canManage'] === true,
+                    && $events[0]['canManage'] === true
+                    && $events[0]['links']['media'] === route('events.media', $sharedEvent),
             )
             ->where('recentActivity.0.eventName', 'Shared Gala')
             ->where('recentActivity.0.guestName', 'Daria')
@@ -747,12 +746,7 @@ test('owned events page renders all owned event workspaces', function () {
 
     $this->actingAs($owner)
         ->get(route('dashboard.events'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('dashboard/OwnedEvents')
-            ->where('dashboardLinks.overview', route('dashboard.account'))
-            ->has('ownedEvents', 2)
-        );
+        ->assertRedirect(route('dashboard').'#events');
 });
 
 test('recent activity page links directly to the matching asset in media', function () {
@@ -772,12 +766,7 @@ test('recent activity page links directly to the matching asset in media', funct
 
     $this->actingAs($owner)
         ->get(route('dashboard.activity'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('dashboard/RecentActivity')
-            ->where('recentActivity.0.eventName', 'Activity Event')
-            ->where('recentActivity.0.activityUrl', route('events.media', ['event' => $event->id, 'asset' => $asset->id]))
-        );
+        ->assertRedirect(route('dashboard').'#activity');
 });
 
 test('media page accepts a deep-linked asset from dashboard activity', function () {

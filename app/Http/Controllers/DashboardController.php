@@ -41,10 +41,6 @@ class DashboardController extends Controller
             return to_route('admin.overview');
         }
 
-        if ($request->user()->canAccessBusinessDashboard()) {
-            return to_route('dashboard.business');
-        }
-
         return $this->account($request);
     }
 
@@ -56,13 +52,12 @@ class DashboardController extends Controller
             'summary' => $data['summary'],
             'businessOverview' => $data['businessOverview'],
             'businessAttentionEvents' => $data['businessAttentionEvents'],
-            'quickActions' => $data['quickActions'],
             'continueSetupEvent' => $data['continueSetupEvent'],
             'accountNavigation' => $data['accountNavigation'],
             'dashboardLinks' => $data['dashboardLinks'],
-            'ownedEvents' => array_slice($data['ownedEvents'], 0, 4),
+            'ownedEvents' => $data['ownedEvents'],
             'collaboratorEvents' => $data['collaboratorEvents'],
-            'recentActivity' => array_slice($data['recentActivity'], 0, 6),
+            'recentActivity' => $data['recentActivity'],
             'showDashboardModal' => $request->session()->pull('show_dashboard_modal', false),
         ]);
     }
@@ -245,28 +240,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function ownedEvents(Request $request): Response
+    public function ownedEvents(Request $request): RedirectResponse
     {
-        $data = $this->accountData($request);
-
-        return Inertia::render('dashboard/OwnedEvents', [
-            'summary' => $data['summary'],
-            'accountNavigation' => $data['accountNavigation'],
-            'dashboardLinks' => $data['dashboardLinks'],
-            'ownedEvents' => $data['ownedEvents'],
-        ]);
+        return redirect()->to(route('dashboard').'#events');
     }
 
-    public function recentActivity(Request $request): Response
+    public function recentActivity(Request $request): RedirectResponse
     {
-        $data = $this->accountData($request);
-
-        return Inertia::render('dashboard/RecentActivity', [
-            'summary' => $data['summary'],
-            'accountNavigation' => $data['accountNavigation'],
-            'dashboardLinks' => $data['dashboardLinks'],
-            'recentActivity' => $data['recentActivity'],
-        ]);
+        return redirect()->to(route('dashboard').'#activity');
     }
 
     /**
@@ -357,12 +338,6 @@ class DashboardController extends Controller
             'businessOverview' => $this->businessOverview($ownedEvents, $ownedEventCards->all()),
             'businessAttentionEvents' => $this->businessAttentionEvents($ownedEvents, $assetStats, $defaultStats),
             'quickActions' => array_values(array_filter([
-                [
-                    'label' => 'Create event',
-                    'description' => 'Start a new album, wall, and owner workspace.',
-                    'url' => route('onboarding.create'),
-                    'tone' => 'dark',
-                ],
                 $continueSetupEvent !== null ? [
                     'label' => 'Continue setup',
                     'description' => 'Finish onboarding so guests can start uploading.',
@@ -398,20 +373,8 @@ class DashboardController extends Controller
                 : null,
             'accountNavigation' => array_values(array_filter([
                 [
-                    'title' => 'Overview',
+                    'title' => 'Events',
                     'href' => $accountOverviewUrl,
-                ],
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Business',
-                    'href' => route('dashboard.business'),
-                ] : null,
-                [
-                    'title' => 'Owned Events',
-                    'href' => route('dashboard.events'),
-                ],
-                [
-                    'title' => 'Recent Activity',
-                    'href' => route('dashboard.activity'),
                 ],
                 $isSuperAdmin ? [
                     'title' => 'Admin',
@@ -421,8 +384,8 @@ class DashboardController extends Controller
             'dashboardLinks' => [
                 'overview' => $accountOverviewUrl,
                 'business' => $canAccessBusinessDashboard ? route('dashboard.business') : null,
-                'ownedEvents' => route('dashboard.events'),
-                'recentActivity' => route('dashboard.activity'),
+                'ownedEvents' => $accountOverviewUrl.'#events',
+                'recentActivity' => $accountOverviewUrl.'#activity',
             ],
             'ownedEvents' => $ownedEventCards->all(),
             'collaboratorEvents' => $collaboratorEventCards->all(),

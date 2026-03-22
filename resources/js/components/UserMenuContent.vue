@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, RotateCcw, Settings } from 'lucide-vue-next';
+import { LogOut, Settings } from 'lucide-vue-next';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/routes';
-import { create } from '@/routes/onboarding';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
@@ -19,17 +18,6 @@ type Props = {
 
 const handleLogout = () => {
     router.flushAll();
-};
-
-const handleRestartOnboarding = () => {
-    const confirmed = window.confirm(
-        'Restart onboarding and create a new event?',
-    );
-    if (!confirmed) {
-        return;
-    }
-
-    router.visit(create({ query: { restart: 1 } }).url);
 };
 
 defineProps<Props>();
@@ -48,16 +36,6 @@ defineProps<Props>();
                 <Settings class="mr-2 h-4 w-4" />
                 Settings
             </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem :as-child="true">
-            <button
-                type="button"
-                class="block w-full cursor-pointer text-left"
-                @click="handleRestartOnboarding"
-            >
-                <RotateCcw class="mr-2 h-4 w-4" />
-                Restart onboarding
-            </button>
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />

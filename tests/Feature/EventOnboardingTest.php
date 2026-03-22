@@ -86,7 +86,6 @@ it('creates an event from onboarding and calculates event windows', function () 
         'wedding_partner_one_first_name' => 'Dan',
         'wedding_partner_two_first_name' => 'Rachel',
         'wedding_family_name' => 'Ionescu',
-        'venue_address' => '12 Garden Lane, Bucharest, Romania',
         'attendee_estimate' => 140,
         'event_dates' => [
             [
@@ -104,12 +103,16 @@ it('creates an event from onboarding and calculates event windows', function () 
                 'label' => 'Civil union',
                 'date' => '2026-05-14',
                 'start_time' => '14:00',
+                'address' => '12 Garden Lane, Bucharest, Romania',
+                'no_address' => false,
             ],
             [
                 'key' => 'reception',
                 'label' => 'Reception',
                 'date' => '2026-05-15',
                 'start_time' => '18:30',
+                'address' => 'Sunset Ballroom, Bucharest, Romania',
+                'no_address' => false,
             ],
         ],
         'timezone' => 'Europe/Bucharest',
@@ -142,12 +145,16 @@ it('creates an event from onboarding and calculates event windows', function () 
                 'label' => 'Civil union',
                 'date' => '2026-05-14',
                 'start_time' => '14:00',
+                'address' => '12 Garden Lane, Bucharest, Romania',
+                'no_address' => false,
             ],
             [
                 'key' => 'reception',
                 'label' => 'Reception',
                 'date' => '2026-05-15',
                 'start_time' => '18:30',
+                'address' => 'Sunset Ballroom, Bucharest, Romania',
+                'no_address' => false,
             ],
         ])
         ->and($event->branding)->toMatchArray([
@@ -198,12 +205,21 @@ it('promotes multi-event owners to business after creating another event', funct
         'wedding_partner_one_first_name' => 'Alex',
         'wedding_partner_two_first_name' => 'Bianca',
         'wedding_family_name' => 'Popa',
-        'venue_address' => '12 Garden Lane, Bucharest, Romania',
         'attendee_estimate' => 140,
         'event_dates' => [
             [
                 'label' => 'Main day',
                 'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'reception',
+                'label' => 'Reception',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '18:00',
+                'address' => '12 Garden Lane, Bucharest, Romania',
+                'no_address' => false,
             ],
         ],
         'timezone' => 'Europe/Bucharest',
@@ -237,12 +253,21 @@ it('blocks event dates too far in the future', function () {
         'wedding_partner_one_first_name' => 'Dan',
         'wedding_partner_two_first_name' => 'Rachel',
         'wedding_family_name' => 'Ionescu',
-        'venue_address' => 'Future Hall, Bucharest',
         'attendee_estimate' => 80,
         'event_dates' => [
             [
                 'label' => 'Main day',
                 'date' => '2030-12-31',
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'reception',
+                'label' => 'Reception',
+                'date' => '2030-12-31',
+                'start_time' => '18:00',
+                'address' => 'Future Hall, Bucharest',
+                'no_address' => false,
             ],
         ],
         'timezone' => 'Europe/Bucharest',
@@ -286,12 +311,21 @@ it('creates the owner account inside onboarding for guests', function () {
         'wedding_partner_one_first_name' => 'Mara',
         'wedding_partner_two_first_name' => 'Luca',
         'wedding_family_name' => 'Popescu',
-        'venue_address' => 'Strada Lalelelor 12, Cluj-Napoca',
         'attendee_estimate' => 120,
         'event_dates' => [
             [
                 'label' => 'Main day',
                 'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'reception',
+                'label' => 'Reception',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '17:00',
+                'address' => 'Strada Lalelelor 12, Cluj-Napoca',
+                'no_address' => false,
             ],
         ],
         'timezone' => 'Europe/Bucharest',
@@ -308,6 +342,107 @@ it('creates the owner account inside onboarding for guests', function () {
         ->and($event->payment_due_at)->toBeNull()
         ->and($event->upload_window_days)->toBe(1)
         ->and($event->customization_tier)->toBe('basic');
+});
+
+it('allows a selected moment to skip the address when marked accordingly', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->post(route('onboarding.store'), [
+        'plan_slug' => 'free',
+        'type' => 'party',
+        'name' => 'Launch Party',
+        'attendee_estimate' => 90,
+        'event_dates' => [
+            [
+                'label' => 'Main day',
+                'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'main-party',
+                'label' => 'Main party',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '20:00',
+                'address' => '',
+                'no_address' => true,
+            ],
+        ],
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $event = Event::query()->firstOrFail();
+
+    $response->assertRedirect(route('onboarding.creating', $event));
+
+    expect($event->venue_address)->toBeNull()
+        ->and($event->sub_events)->toBe([
+            [
+                'key' => 'main-party',
+                'label' => 'Main party',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '20:00',
+                'address' => null,
+                'no_address' => true,
+            ],
+        ]);
+});
+
+it('requires at least two relevant moments for baptisms', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->from(route('onboarding.create'))->post(route('onboarding.store'), [
+        'plan_slug' => 'free',
+        'type' => 'baptism',
+        'name' => 'Matei Baptism',
+        'attendee_estimate' => 80,
+        'event_dates' => [
+            [
+                'label' => 'Main day',
+                'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'church-ceremony',
+                'label' => 'Church ceremony',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '11:00',
+                'address' => 'Saint George Church, Bucharest',
+                'no_address' => false,
+            ],
+        ],
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $response->assertRedirect(route('onboarding.create'));
+    $response->assertSessionHasErrors(['sub_events']);
 });
 
 it('marks onboarding complete when ready screen is opened', function () {

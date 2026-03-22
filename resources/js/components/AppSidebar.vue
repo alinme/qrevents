@@ -52,12 +52,12 @@ const adminNavigation = computed(() => page.props.adminNavigation ?? []);
 
 const footerBackItem = computed<NavItem | null>(() => {
     const eventBackItem = eventNavigation.value.find(
-        (item) => item.title === 'Dashboard',
+        (item) => item.title === 'Dashboard' || item.title === 'Events',
     );
 
     if (eventBackItem) {
         return {
-            title: 'Dashboard',
+            title: eventBackItem.title,
             href: eventBackItem.href,
             icon: ArrowLeft,
         };
@@ -82,7 +82,7 @@ const mainNavItems = computed<NavItem[]>(() => {
                 title: item.title,
                 href: item.href,
                 icon:
-                    item.title === 'Event'
+                    item.title === 'Workspace'
                         ? LayoutGrid
                         : item.title === 'Media'
                           ? Camera
