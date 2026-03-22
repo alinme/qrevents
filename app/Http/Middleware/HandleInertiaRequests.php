@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Event;
+use App\Support\FrontendLocalization;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +38,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $currentLocale = $this->resolveLocale($request);
+        app()->setLocale($currentLocale);
 
         if ($user !== null) {
             $user->syncConfiguredAccountType();
@@ -52,7 +56,34 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn (): mixed => $request->session()->get('error'),
                 'info' => fn (): mixed => $request->session()->get('info'),
             ],
+            'locale' => [
+                'current' => $currentLocale,
+                'available' => FrontendLocalization::supportedLocales(),
+            ],
+            'translations' => FrontendLocalization::translationsFor($currentLocale),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    private function resolveLocale(Request $request): string
+    {
+        $routeName = $request->route()?->getName();
+
+        if (in_array($routeName, ['events.album', 'events.wall'], true)) {
+            $shareToken = $request->route('shareToken');
+
+            if (is_string($shareToken) && $shareToken !== '') {
+                $event = Event::query()
+                    ->select(['id', 'branding'])
+                    ->where('share_token', $shareToken)
+                    ->first();
+
+                $branding = is_array($event?->branding) ? $event->branding : [];
+
+                return FrontendLocalization::resolveEventLocale($request, $branding);
+            }
+        }
+
+        return FrontendLocalization::resolveSiteLocale($request);
     }
 }

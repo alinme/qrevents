@@ -79,10 +79,10 @@ it('updates event settings and recalculates event windows', function () {
         ->and($event->name)->toBe('Updated Event Name')
         ->and($event->event_date?->toDateString())->toBe('2026-06-20')
         ->and($event->status)->toBe(Event::STATUS_SCHEDULED)
-        ->and($event->upload_window_starts_at?->toDateTimeString())->toBe('2026-06-19 00:00:00')
-        ->and($event->upload_window_ends_at?->toDateTimeString())->toBe('2026-06-23 23:59:59')
-        ->and($event->grace_ends_at?->toDateTimeString())->toBe('2026-06-27 23:59:59')
-        ->and($event->payment_due_at?->toDateTimeString())->toBe('2026-06-27 23:59:59')
+        ->and($event->upload_window_starts_at?->toDateTimeString())->toBe('2026-06-20 00:00:00')
+        ->and($event->upload_window_ends_at?->toDateTimeString())->toBe('2026-07-19 23:59:59')
+        ->and($event->grace_ends_at?->toDateTimeString())->toBe('2026-07-26 23:59:59')
+        ->and($event->payment_due_at?->toDateTimeString())->toBe('2026-06-20 00:00:00')
         ->and($event->album_public)->toBeFalse()
         ->and($event->moderation_enabled)->toBeFalse()
         ->and($event->auto_moderation_enabled)->toBeFalse()
@@ -246,6 +246,8 @@ it('restores saved settings in the settings page after refresh', function () {
             ->where('eventNavigation.3.title', 'Settings')
             ->where('eventLinks.billingUpdate', route('events.billing.update', $event))
             ->where('currentEvent.type', 'party')
+            ->where('currentEvent.planFeatures.customizationTier', 'advanced')
+            ->where('currentEvent.planFeatures.allowsModerationTools', true)
             ->where('currentEvent.branding.primaryColor', '#334455')
             ->where('currentEvent.branding.welcomeMessage', 'Welcome to our event!')
             ->where('currentEvent.settings.displayLanguage', 'en')
@@ -269,4 +271,37 @@ it('restores saved settings in the settings page after refresh', function () {
         );
 
     CarbonImmutable::setTestNow();
+});
+
+it('accepts greek as an event display language', function () {
+    $user = User::factory()->create();
+    $event = Event::factory()->for($user)->create([
+        'type' => 'wedding',
+        'name' => 'Greek Locale Event',
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->from(route('events.settings', $event))
+        ->patch(route('events.settings.update', $event), [
+            'type' => 'wedding',
+            'name' => 'Greek Locale Event',
+            'timezone' => 'Europe/Bucharest',
+            'album_public' => true,
+            'moderation_enabled' => true,
+            'auto_moderation_enabled' => true,
+            'display_language' => 'el',
+            'remove_logo' => false,
+            'branding' => [
+                'primary_color' => '#E8A5A5',
+                'accent_color' => '#8CB4E8',
+                'welcome_message' => '',
+            ],
+        ])
+        ->assertRedirect(route('events.settings', $event));
+
+    $event->refresh();
+
+    expect($event->branding['display_language'] ?? null)->toBe('el');
 });

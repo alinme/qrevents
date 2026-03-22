@@ -40,6 +40,20 @@ type EventTypeOption = {
     subEvents: EventSubEventOption[];
 };
 
+type PricingPlanOption = {
+    slug: string;
+    name: string;
+    priceLabel: string;
+    billingLabel: string;
+    uploadLimitLabel: string;
+    retentionLabel: string;
+    activeWindowLabel: string;
+    customizationTier: 'basic' | 'better' | 'advanced';
+    downloadAllEnabled: boolean;
+    moderationToolsEnabled: boolean;
+    isDefault: boolean;
+};
+
 type EventDateInput = {
     label: string;
     date: string;
@@ -56,7 +70,13 @@ type OnboardingStep = 1 | 2 | 3;
 
 const props = defineProps<{
     eventTypes: EventTypeOption[];
+    pricingPlans: PricingPlanOption[];
     defaultTimezone: string;
+    defaultPlanSlug: string;
+    owner: {
+        name: string;
+        email: string;
+    } | null;
 }>();
 
 const step = ref<OnboardingStep>(1);
@@ -68,8 +88,8 @@ const stepItems = [
     {
         number: 1,
         label: 'Format',
-        title: 'Choose the kind of event',
-        description: 'We only ask relevant planning questions for the event you are actually running.',
+        title: 'Choose the event type and plan',
+        description: 'Start with the right event format and the package that matches your upload volume, access window, and controls.',
     },
     {
         number: 2,
@@ -93,7 +113,12 @@ const createEventDate = (label = ''): EventDateInput => ({
 });
 
 const form = useForm({
+    plan_slug: props.defaultPlanSlug,
     type: props.eventTypes[0]?.value ?? 'wedding',
+    owner_name: props.owner?.name ?? '',
+    owner_email: props.owner?.email ?? '',
+    password: '',
+    password_confirmation: '',
     name: '',
     wedding_partner_one_first_name: '',
     wedding_partner_two_first_name: '',
@@ -110,6 +135,9 @@ const selectedType = computed<EventTypeOption | undefined>(() =>
 );
 
 const availableSubEvents = computed<EventSubEventOption[]>(() => selectedType.value?.subEvents ?? []);
+const selectedPlan = computed<PricingPlanOption | undefined>(() =>
+    props.pricingPlans.find((plan) => plan.slug === form.plan_slug),
+);
 
 const selectedSubEventKeys = computed(() => new Set(form.sub_events.map((subEvent) => subEvent.key)));
 
@@ -118,6 +146,7 @@ const reviewEventDates = computed(() =>
 );
 
 const isWeddingType = computed(() => form.type === 'wedding');
+const needsAccountDetails = computed(() => props.owner === null);
 
 const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
 
@@ -125,7 +154,7 @@ const progressWidth = computed(() => `${((step.value - 1) / (stepItems.length - 
 
 const canMoveToNext = computed(() => {
     if (step.value === 1) {
-        return Boolean(selectedType.value);
+        return Boolean(selectedType.value) && form.plan_slug.trim() !== '';
     }
 
     if (step.value === 2) {
@@ -141,8 +170,22 @@ const canMoveToNext = computed(() => {
             && Number(form.attendee_estimate) > 0;
     }
 
-    return reviewEventDates.value.length > 0
+    const timelineComplete = reviewEventDates.value.length > 0
         && form.sub_events.every((subEvent) => subEvent.date.trim() !== '' && subEvent.start_time.trim() !== '');
+
+    if (!timelineComplete) {
+        return false;
+    }
+
+    if (!needsAccountDetails.value) {
+        return true;
+    }
+
+    return form.owner_name.trim().length >= 2
+        && form.owner_email.trim().length >= 5
+        && form.password.length >= 8
+        && form.password_confirmation.length >= 8
+        && form.password === form.password_confirmation;
 });
 
 const scrollToWizardPanel = (): void => {
@@ -273,6 +316,14 @@ const handleEventTypeCardClick = (): void => {
     scrollToFormActions();
 };
 
+const handlePlanCardClick = (): void => {
+    if (step.value !== 1) {
+        return;
+    }
+
+    scrollToFormActions();
+};
+
 const goToNext = (): void => {
     if (!canMoveToNext.value || step.value === 3) {
         return;
@@ -375,7 +426,7 @@ const submit = (): void => {
     }).post(store.url(), {
         preserveScroll: true,
         onError: (errors) => {
-            if (errors.type) {
+            if (errors.type || errors.plan_slug) {
                 step.value = 1;
                 void nextTick(() => {
                     scrollToWizardPanel();
@@ -384,7 +435,14 @@ const submit = (): void => {
                 return;
             }
 
-            if (errors.name || errors.venue_address || errors.attendee_estimate) {
+            if (
+                errors.name
+                || errors.venue_address
+                || errors.attendee_estimate
+                || errors.wedding_partner_one_first_name
+                || errors.wedding_partner_two_first_name
+                || errors.wedding_family_name
+            ) {
                 step.value = 2;
                 void nextTick(() => {
                     scrollToWizardPanel();
@@ -534,7 +592,7 @@ const submit = (): void => {
                     </div>
 
                     <form class="space-y-8 px-6 py-6 sm:px-8 sm:py-8" @submit.prevent="submit">
-                        <section v-if="step === 1" class="space-y-5">
+                        <section v-if="step === 1" class="space-y-6">
                             <ChoiceCardRadioGroup
                                 v-model="form.type"
                                 :options="props.eventTypes"
@@ -542,6 +600,101 @@ const submit = (): void => {
                             />
 
                             <InputError :message="form.errors.type" />
+
+                            <div class="rounded-[28px] border border-promo-line bg-promo-surface/40 p-5 sm:p-6">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                                    <div>
+                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                            <Sparkles class="size-3.5" />
+                                            Choose your plan
+                                        </div>
+                                        <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                            Pick the event package that fits this celebration
+                                        </h3>
+                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                            You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        v-if="selectedPlan"
+                                        class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted"
+                                    >
+                                        {{ selectedPlan.name }} · {{ selectedPlan.priceLabel }}
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 grid gap-4 xl:grid-cols-3">
+                                    <button
+                                        v-for="plan in props.pricingPlans"
+                                        :key="plan.slug"
+                                        type="button"
+                                        class="rounded-[24px] border px-5 py-5 text-left transition duration-200"
+                                        :class="
+                                            form.plan_slug === plan.slug
+                                                ? 'border-promo-primary bg-white shadow-[0_18px_36px_rgba(232,79,154,0.12)]'
+                                                : 'border-promo-line bg-white/70 hover:bg-white'
+                                        "
+                                        @click="
+                                            form.plan_slug = plan.slug;
+                                            handlePlanCardClick();
+                                        "
+                                    >
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div>
+                                                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                                    {{ plan.name }}
+                                                </p>
+                                                <h4 class="mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                                                    {{ plan.priceLabel }}
+                                                </h4>
+                                                <p class="mt-2 text-sm text-promo-muted">
+                                                    {{ plan.billingLabel }}
+                                                </p>
+                                            </div>
+
+                                            <div
+                                                v-if="plan.isDefault"
+                                                class="rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-promo-primary"
+                                            >
+                                                Recommended
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-5 space-y-2 text-sm text-promo-muted">
+                                            <p>{{ plan.uploadLimitLabel }}</p>
+                                            <p>{{ plan.retentionLabel }}</p>
+                                            <p>{{ plan.activeWindowLabel }}</p>
+                                            <p class="capitalize">{{ plan.customizationTier }} customization</p>
+                                        </div>
+
+                                        <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
+                                            <span
+                                                class="rounded-full px-3 py-1"
+                                                :class="
+                                                    plan.downloadAllEnabled
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                "
+                                            >
+                                                {{ plan.downloadAllEnabled ? 'ZIP export' : 'No ZIP export' }}
+                                            </span>
+                                            <span
+                                                class="rounded-full px-3 py-1"
+                                                :class="
+                                                    plan.moderationToolsEnabled
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                "
+                                            >
+                                                {{ plan.moderationToolsEnabled ? 'Moderation tools' : 'No moderation tools' }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <InputError :message="form.errors.plan_slug" class="mt-4" />
+                            </div>
                         </section>
 
                         <section v-if="step === 2" class="space-y-8">
@@ -960,6 +1113,120 @@ const submit = (): void => {
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                                <div class="rounded-[28px] border border-promo-line bg-promo-surface/35 p-5 sm:p-6">
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                        <Users class="size-3.5" />
+                                        Event owner
+                                    </div>
+                                    <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                        {{ needsAccountDetails ? 'Create your owner account inside onboarding' : 'Owner account connected' }}
+                                    </h3>
+                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                        {{ needsAccountDetails ? 'No separate sign-up page. Finish the event setup here and we will create the account together with the event.' : 'This event will be created under the signed-in owner account.' }}
+                                    </p>
+
+                                    <div
+                                        v-if="needsAccountDetails"
+                                        class="mt-5 grid gap-4 md:grid-cols-2"
+                                    >
+                                        <div class="grid gap-2 md:col-span-2">
+                                            <Label for="owner_name" class="text-sm font-semibold text-promo-ink">
+                                                Your name
+                                            </Label>
+                                            <Input
+                                                id="owner_name"
+                                                v-model="form.owner_name"
+                                                name="owner_name"
+                                                placeholder="Alex Popescu"
+                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            />
+                                            <InputError :message="form.errors.owner_name" />
+                                        </div>
+
+                                        <div class="grid gap-2 md:col-span-2">
+                                            <Label for="owner_email" class="text-sm font-semibold text-promo-ink">
+                                                Email
+                                            </Label>
+                                            <Input
+                                                id="owner_email"
+                                                v-model="form.owner_email"
+                                                name="owner_email"
+                                                type="email"
+                                                placeholder="you@example.com"
+                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            />
+                                            <InputError :message="form.errors.owner_email" />
+                                        </div>
+
+                                        <div class="grid gap-2">
+                                            <Label for="password" class="text-sm font-semibold text-promo-ink">
+                                                Password
+                                            </Label>
+                                            <Input
+                                                id="password"
+                                                v-model="form.password"
+                                                name="password"
+                                                type="password"
+                                                placeholder="At least 8 characters"
+                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            />
+                                            <InputError :message="form.errors.password" />
+                                        </div>
+
+                                        <div class="grid gap-2">
+                                            <Label for="password_confirmation" class="text-sm font-semibold text-promo-ink">
+                                                Confirm password
+                                            </Label>
+                                            <Input
+                                                id="password_confirmation"
+                                                v-model="form.password_confirmation"
+                                                name="password_confirmation"
+                                                type="password"
+                                                placeholder="Repeat password"
+                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-else
+                                        class="mt-5 rounded-[22px] border border-promo-line bg-white p-4 text-sm text-promo-muted"
+                                    >
+                                        <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>
+                                        <p class="mt-1">{{ props.owner?.email }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-[28px] border border-promo-line bg-white p-5">
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                        <Sparkles class="size-3.5" />
+                                        Selected plan
+                                    </div>
+                                    <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
+                                        {{ selectedPlan?.name ?? 'Choose a plan' }}
+                                    </h3>
+                                    <p class="mt-2 text-sm text-promo-muted">
+                                        {{ selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.' }}
+                                    </p>
+
+                                    <div
+                                        v-if="selectedPlan"
+                                        class="mt-5 space-y-3 text-sm text-promo-muted"
+                                    >
+                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                            {{ selectedPlan.uploadLimitLabel }}
+                                        </div>
+                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                            {{ selectedPlan.retentionLabel }}
+                                        </div>
+                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                            {{ selectedPlan.activeWindowLabel }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </section>
 
                         <div
@@ -977,7 +1244,7 @@ const submit = (): void => {
                                 </div>
                                 <div class="inline-flex items-center gap-2">
                                     <Users class="size-4 text-promo-primary" />
-                                    {{ form.attendee_estimate || '0' }} guests
+                                    {{ form.attendee_estimate || '0' }} guests · {{ selectedPlan?.name ?? 'No plan' }}
                                 </div>
                             </div>
 

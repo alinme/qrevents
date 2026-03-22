@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import moderation from './moderation'
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
-* @see app/Http/Controllers/EventController.php:167
+* @see app/Http/Controllers/EventController.php:173
 * @route '/events/{event}/assets/bulk-delete'
 */
 export const bulkDestroy = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -17,7 +17,7 @@ bulkDestroy.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
-* @see app/Http/Controllers/EventController.php:167
+* @see app/Http/Controllers/EventController.php:173
 * @route '/events/{event}/assets/bulk-delete'
 */
 bulkDestroy.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -50,7 +50,7 @@ bulkDestroy.url = (args: { event: number | { id: number } } | [event: number | {
 
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
-* @see app/Http/Controllers/EventController.php:167
+* @see app/Http/Controllers/EventController.php:173
 * @route '/events/{event}/assets/bulk-delete'
 */
 bulkDestroy.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -60,7 +60,7 @@ bulkDestroy.post = (args: { event: number | { id: number } } | [event: number | 
 
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
-* @see app/Http/Controllers/EventController.php:167
+* @see app/Http/Controllers/EventController.php:173
 * @route '/events/{event}/assets/bulk-delete'
 */
 const bulkDestroyForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -70,7 +70,7 @@ const bulkDestroyForm = (args: { event: number | { id: number } } | [event: numb
 
 /**
 * @see \App\Http\Controllers\EventController::bulkDestroy
-* @see app/Http/Controllers/EventController.php:167
+* @see app/Http/Controllers/EventController.php:173
 * @route '/events/{event}/assets/bulk-delete'
 */
 bulkDestroyForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -82,7 +82,7 @@ bulkDestroy.form = bulkDestroyForm
 
 /**
 * @see \App\Http\Controllers\EventController::bulkModeration
-* @see app/Http/Controllers/EventController.php:190
+* @see app/Http/Controllers/EventController.php:196
 * @route '/events/{event}/assets/bulk-moderation'
 */
 export const bulkModeration = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -97,7 +97,7 @@ bulkModeration.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::bulkModeration
-* @see app/Http/Controllers/EventController.php:190
+* @see app/Http/Controllers/EventController.php:196
 * @route '/events/{event}/assets/bulk-moderation'
 */
 bulkModeration.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -130,7 +130,7 @@ bulkModeration.url = (args: { event: number | { id: number } } | [event: number 
 
 /**
 * @see \App\Http\Controllers\EventController::bulkModeration
-* @see app/Http/Controllers/EventController.php:190
+* @see app/Http/Controllers/EventController.php:196
 * @route '/events/{event}/assets/bulk-moderation'
 */
 bulkModeration.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -140,7 +140,7 @@ bulkModeration.post = (args: { event: number | { id: number } } | [event: number
 
 /**
 * @see \App\Http\Controllers\EventController::bulkModeration
-* @see app/Http/Controllers/EventController.php:190
+* @see app/Http/Controllers/EventController.php:196
 * @route '/events/{event}/assets/bulk-moderation'
 */
 const bulkModerationForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -150,7 +150,7 @@ const bulkModerationForm = (args: { event: number | { id: number } } | [event: n
 
 /**
 * @see \App\Http\Controllers\EventController::bulkModeration
-* @see app/Http/Controllers/EventController.php:190
+* @see app/Http/Controllers/EventController.php:196
 * @route '/events/{event}/assets/bulk-moderation'
 */
 bulkModerationForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -162,7 +162,7 @@ bulkModeration.form = bulkModerationForm
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:157
+* @see app/Http/Controllers/EventController.php:163
 * @route '/events/{event}/assets/{asset}'
 */
 export const destroy = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -177,7 +177,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:157
+* @see app/Http/Controllers/EventController.php:163
 * @route '/events/{event}/assets/{asset}'
 */
 destroy.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -207,7 +207,7 @@ destroy.url = (args: { event: number | { id: number }, asset: number | { id: num
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:157
+* @see app/Http/Controllers/EventController.php:163
 * @route '/events/{event}/assets/{asset}'
 */
 destroy.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -217,7 +217,7 @@ destroy.delete = (args: { event: number | { id: number }, asset: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:157
+* @see app/Http/Controllers/EventController.php:163
 * @route '/events/{event}/assets/{asset}'
 */
 const destroyForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -232,7 +232,7 @@ const destroyForm = (args: { event: number | { id: number }, asset: number | { i
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:157
+* @see app/Http/Controllers/EventController.php:163
 * @route '/events/{event}/assets/{asset}'
 */
 destroyForm.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

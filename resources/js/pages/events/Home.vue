@@ -48,6 +48,12 @@ type EventPayload = {
     id: number;
     name: string;
     plan: string;
+    planFeatures: {
+        allowsDownloadAll: boolean;
+        allowsModerationTools: boolean;
+        customizationTier: 'basic' | 'better' | 'advanced';
+        uploadWindowDays: number;
+    };
     eventDate: string | null;
     timezone: string;
     uploadWindowStartsAt: string | null;
@@ -195,10 +201,17 @@ const moderationModeLabel = computed(() => {
         : 'Manual approval only';
 });
 
+const canDownloadAll = computed(
+    () => props.currentEvent.planFeatures.allowsDownloadAll,
+);
+
 const mediaExportBusy = computed(
     () =>
-        exportSubmitting.value
-        || ['pending', 'processing'].includes(props.currentEvent.mediaExport.status),
+        canDownloadAll.value
+        && (
+            exportSubmitting.value
+            || ['pending', 'processing'].includes(props.currentEvent.mediaExport.status)
+        ),
 );
 
 const mediaExportReady = computed(
@@ -222,6 +235,10 @@ const billingActionLabel = computed(() =>
 );
 
 const mediaExportLabel = computed(() => {
+    if (!canDownloadAll.value) {
+        return 'Upgrade for ZIP export';
+    }
+
     if (mediaExportBusy.value) {
         return 'Exporting...';
     }
@@ -234,6 +251,10 @@ const mediaExportLabel = computed(() => {
 });
 
 const mediaExportHint = computed(() => {
+    if (!canDownloadAll.value) {
+        return 'Download-all ZIP exports unlock on Plus and Pro after payment.';
+    }
+
     if (mediaExportBusy.value) {
         return 'You can leave this page and come back while the export is being prepared.';
     }
@@ -285,6 +306,11 @@ const copyText = async (value: string, successMessage: string): Promise<void> =>
 };
 
 const handleMediaExport = (): void => {
+    if (!canDownloadAll.value) {
+        router.visit(`${props.eventLinks.settings}?tab=billing`);
+        return;
+    }
+
     if (mediaExportBusy.value) {
         return;
     }

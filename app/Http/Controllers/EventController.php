@@ -19,6 +19,8 @@ use App\Models\TextPostTheme;
 use App\Models\User;
 use App\Notifications\EventCollaboratorInviteNotification;
 use App\Support\EventBillingManager;
+use App\Support\EventLifecycleWindows;
+use App\Support\FrontendLocalization;
 use App\Support\StripeCheckoutGateway;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -91,6 +93,10 @@ class EventController extends Controller
     public function startMediaExport(Request $request, Event $event): RedirectResponse
     {
         $this->assertCanManageEvent($request, $event);
+
+        if (! $this->eventCanDownloadAll($event)) {
+            return back()->with('error', 'Download all is available on Plus and Pro after payment.');
+        }
 
         $hasApprovedAssets = EventAsset::query()
             ->where('event_id', $event->id)
@@ -191,6 +197,10 @@ class EventController extends Controller
     {
         $this->assertCanManageEvent($request, $event);
 
+        if (! $this->eventAllowsModerationTools($event)) {
+            return back()->with('error', 'Moderation tools are available on Pro.');
+        }
+
         $validated = $request->validate([
             'asset_ids' => ['required', 'array', 'min:1', 'max:100'],
             'asset_ids.*' => ['required', 'integer'],
@@ -219,6 +229,10 @@ class EventController extends Controller
     {
         $this->assertCanManageEvent($request, $event);
         abort_unless($asset->event_id === $event->id, 404);
+
+        if (! $this->eventAllowsModerationTools($event)) {
+            return back()->with('error', 'Moderation tools are available on Pro.');
+        }
 
         $validated = $request->validate([
             'moderation_status' => ['required', 'string', Rule::in(['approved', 'rejected', 'processing'])],
@@ -264,7 +278,7 @@ class EventController extends Controller
             'album_permission' => ['sometimes', 'string', Rule::in(['view_upload', 'view_only', 'upload_only'])],
             'allowed_media_types' => ['sometimes', 'array', 'min:1'],
             'allowed_media_types.*' => ['string', Rule::in(['photo', 'video', 'text'])],
-            'display_language' => ['sometimes', 'string', Rule::in(['automatic', 'ro', 'en'])],
+            'display_language' => ['sometimes', 'string', Rule::in(['automatic', 'ro', 'en', 'el'])],
             'hide_side_images' => ['sometimes', 'boolean'],
             'hide_qr_code' => ['sometimes', 'boolean'],
             'hide_caption' => ['sometimes', 'boolean'],
@@ -310,8 +324,10 @@ class EventController extends Controller
 
         $timezone = $validated['timezone'];
         $eventDate = $validated['event_date'] ?? null;
-        $windows = $this->buildEventWindows($eventDate, $timezone);
-        $moderationEnabled = (bool) $validated['moderation_enabled'];
+        $windows = $this->buildEventWindows($event, $eventDate, $timezone);
+        $moderationEnabled = $this->eventAllowsModerationTools($event)
+            ? (bool) $validated['moderation_enabled']
+            : false;
         $autoModerationEnabled = $moderationEnabled && (bool) $validated['auto_moderation_enabled'];
         $removeLogo = (bool) ($validated['remove_logo'] ?? false);
         /** @var UploadedFile|null $logoFile */
@@ -326,6 +342,21 @@ class EventController extends Controller
         /** @var array<string, mixed> $brandingInput */
         $brandingInput = $validated['branding'] ?? [];
         $currentBranding = is_array($event->branding) ? $event->branding : [];
+        $allowsBetterCustomization = $this->eventAllowsBetterCustomization($event);
+        $allowsAdvancedCustomization = $this->eventAllowsAdvancedCustomization($event);
+
+        if (! $allowsBetterCustomization) {
+            $removeLogo = false;
+            $logoFile = null;
+        }
+
+        if (! $allowsAdvancedCustomization) {
+            $removeAlbumBackground = false;
+            $albumBackgroundFile = null;
+            $removeWelcomeScreenBackground = false;
+            $welcomeScreenBackgroundFile = null;
+        }
+
         $allowedMediaTypesSource = $validated['allowed_media_types'] ?? ($currentBranding['allowed_media_types'] ?? ['photo', 'video']);
         if (! is_array($allowedMediaTypesSource)) {
             $allowedMediaTypesSource = ['photo', 'video'];
@@ -489,8 +520,8 @@ class EventController extends Controller
         );
 
         $branding = array_filter([
-            'primary_color' => $brandingInput['primary_color'] ?? null,
-            'accent_color' => $brandingInput['accent_color'] ?? null,
+            'primary_color' => $allowsAdvancedCustomization ? ($brandingInput['primary_color'] ?? null) : null,
+            'accent_color' => $allowsAdvancedCustomization ? ($brandingInput['accent_color'] ?? null) : null,
             'welcome_message' => $brandingInput['welcome_message'] ?? null,
             'display_language' => $validated['display_language'] ?? ($currentBranding['display_language'] ?? 'automatic'),
             'hide_side_images' => (bool) ($validated['hide_side_images'] ?? ($currentBranding['hide_side_images'] ?? false)),
@@ -507,9 +538,13 @@ class EventController extends Controller
             'welcome_screen_collect_email' => (bool) ($validated['welcome_screen_collect_email'] ?? $collectEmail),
             'welcome_screen_collect_phone' => (bool) ($validated['welcome_screen_collect_phone'] ?? $collectPhone),
             'welcome_screen_fields' => $welcomeScreenFields,
-            'album_background_enabled' => (bool) ($validated['album_background_enabled'] ?? ($currentBranding['album_background_enabled'] ?? false)),
-            'album_background_mode' => $albumBackgroundMode,
-            'album_background_color' => $validated['album_background_color'] ?? ($currentBranding['album_background_color'] ?? '#0F172A'),
+            'album_background_enabled' => $allowsAdvancedCustomization
+                ? (bool) ($validated['album_background_enabled'] ?? ($currentBranding['album_background_enabled'] ?? false))
+                : false,
+            'album_background_mode' => $allowsAdvancedCustomization ? $albumBackgroundMode : 'rotate',
+            'album_background_color' => $allowsAdvancedCustomization
+                ? ($validated['album_background_color'] ?? ($currentBranding['album_background_color'] ?? '#0F172A'))
+                : '#0F172A',
             'text_posts_backgrounds_enabled' => (bool) ($validated['text_posts_backgrounds_enabled'] ?? ($currentBranding['text_posts_backgrounds_enabled'] ?? false)),
             'text_posts_background_palette' => $textPostBackgroundPalette,
             'moderation_filters' => $moderationFilters,
@@ -517,15 +552,15 @@ class EventController extends Controller
             'allowed_media_types' => $allowedMediaTypes,
         ], fn ($value): bool => $value !== null && $value !== '');
 
-        if ($logoPath !== null && $logoDisk !== null) {
+        if ($allowsBetterCustomization && $logoPath !== null && $logoDisk !== null) {
             $branding['logo_path'] = $logoPath;
             $branding['logo_disk'] = $logoDisk;
         }
-        if ($albumBackgroundPath !== null && $albumBackgroundDisk !== null) {
+        if ($allowsAdvancedCustomization && $albumBackgroundPath !== null && $albumBackgroundDisk !== null) {
             $branding['album_background_path'] = $albumBackgroundPath;
             $branding['album_background_disk'] = $albumBackgroundDisk;
         }
-        if ($welcomeScreenBackgroundPath !== null && $welcomeScreenBackgroundDisk !== null) {
+        if ($allowsAdvancedCustomization && $welcomeScreenBackgroundPath !== null && $welcomeScreenBackgroundDisk !== null) {
             $branding['welcome_screen_background_path'] = $welcomeScreenBackgroundPath;
             $branding['welcome_screen_background_disk'] = $welcomeScreenBackgroundDisk;
         }
@@ -540,7 +575,7 @@ class EventController extends Controller
             'upload_window_ends_at' => $windows['upload_window_ends_at'],
             'grace_ends_at' => $windows['grace_ends_at'],
             'hard_lock_at' => $windows['hard_lock_at'],
-            'payment_due_at' => $windows['grace_ends_at'],
+            'payment_due_at' => $event->is_paid ? null : $windows['upload_window_starts_at'],
             'album_public' => $albumPermission !== 'upload_only',
             'moderation_enabled' => $moderationEnabled,
             'auto_moderation_enabled' => $autoModerationEnabled,
@@ -826,7 +861,7 @@ class EventController extends Controller
         return $this->activateCollaboratorInvite($user, $collaborator);
     }
 
-    public function album(string $shareToken): Response
+    public function album(Request $request, string $shareToken): Response
     {
         $event = Event::query()
             ->where('share_token', $shareToken)
@@ -841,7 +876,8 @@ class EventController extends Controller
         $canUploadToAlbum = $this->publicAlbumAllowsUploads($event) && ($isUploadOpen || $isPreEventTestMode);
         $allowedMediaTypes = $this->allowedMediaTypes($event);
         $guestLookups = $this->eventGuestLookups($event);
-        $branding = is_array($event->branding) ? $event->branding : [];
+        $branding = $this->resolvedEventBranding($event);
+        app()->setLocale(FrontendLocalization::resolveEventLocale($request, $branding));
         $captionTheme = (string) ($branding['caption_theme'] ?? 'dark');
         if (! in_array($captionTheme, ['dark', 'light'], true)) {
             $captionTheme = 'dark';
@@ -881,6 +917,7 @@ class EventController extends Controller
             'allowTextPosts' => in_array('text', $allowedMediaTypes, true),
             'allowedMediaTypes' => $allowedMediaTypes,
             'canGuestDownload' => $this->publicGuestDownloadsEnabled($event),
+            'showPoweredBy' => ! $this->eventRemovesAppBranding($event),
             'links' => [
                 'album' => $albumUrl,
                 'wall' => route('events.wall', $event->share_token),
@@ -1635,7 +1672,8 @@ class EventController extends Controller
                     ->limit(240),
             ])
             ->firstOrFail();
-        $branding = is_array($event->branding) ? $event->branding : [];
+        $branding = $this->resolvedEventBranding($event);
+        app()->setLocale(FrontendLocalization::resolveEventLocale($request, $branding));
         $captionTheme = (string) ($branding['caption_theme'] ?? 'dark');
         if (! in_array($captionTheme, ['dark', 'light'], true)) {
             $captionTheme = 'dark';
@@ -1647,6 +1685,7 @@ class EventController extends Controller
             'status' => $event->status,
             'albumUrl' => $albumUrl,
             'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
+            'showPoweredBy' => ! $this->eventRemovesAppBranding($event),
             'branding' => [
                 'primaryColor' => $branding['primary_color'] ?? null,
                 'accentColor' => $branding['accent_color'] ?? null,
@@ -1689,7 +1728,8 @@ class EventController extends Controller
     {
         $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
         $albumUrl = route('events.album', $event->share_token);
-        $branding = is_array($event->branding) ? $event->branding : [];
+        $branding = $this->resolvedEventBranding($event);
+        $planFeatures = $this->planFeaturePayload($event);
         $canManageBilling = $request->user()->canAccessAdmin();
         $canCheckoutBilling = ! $canManageBilling
             && $request->user()->id === $event->user_id
@@ -1758,6 +1798,7 @@ class EventController extends Controller
                 'status' => $event->status,
                 'plan' => $event->plan?->name ?? 'Free',
                 'planId' => $event->plan_id,
+                'planFeatures' => $planFeatures,
                 'currency' => $event->currency,
                 'isPaid' => $event->is_paid,
                 'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
@@ -1779,6 +1820,7 @@ class EventController extends Controller
                     'planId' => $event->plan_id,
                     'planName' => $event->plan?->name ?? 'Custom plan',
                     'planPriceLabel' => $this->planPriceLabel($event->plan),
+                    'planFeatures' => $planFeatures,
                     'isPaid' => $event->is_paid,
                     'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
                     'paidAt' => $event->paid_at?->toIso8601String(),
@@ -2151,6 +2193,92 @@ class EventController extends Controller
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function planFeaturePayload(Event $event): array
+    {
+        return [
+            'customizationTier' => $this->eventCustomizationTier($event),
+            'allowsBetterCustomization' => $this->eventAllowsBetterCustomization($event),
+            'allowsAdvancedCustomization' => $this->eventAllowsAdvancedCustomization($event),
+            'allowsDownloadAll' => $this->eventCanDownloadAll($event),
+            'allowsModerationTools' => $this->eventAllowsModerationTools($event),
+            'removesAppBranding' => $this->eventRemovesAppBranding($event),
+            'uploadWindowDays' => max(1, (int) $event->upload_window_days),
+        ];
+    }
+
+    private function eventCustomizationTier(Event $event): string
+    {
+        $tier = trim((string) $event->customization_tier);
+
+        return in_array($tier, ['basic', 'better', 'advanced'], true)
+            ? $tier
+            : 'basic';
+    }
+
+    private function eventAllowsBetterCustomization(Event $event): bool
+    {
+        return in_array($this->eventCustomizationTier($event), ['better', 'advanced'], true);
+    }
+
+    private function eventAllowsAdvancedCustomization(Event $event): bool
+    {
+        return $this->eventCustomizationTier($event) === 'advanced';
+    }
+
+    private function eventAllowsModerationTools(Event $event): bool
+    {
+        return (bool) $event->moderation_tools_enabled;
+    }
+
+    private function eventCanDownloadAll(Event $event): bool
+    {
+        return (bool) $event->download_all_enabled && (bool) $event->is_paid;
+    }
+
+    private function eventRemovesAppBranding(Event $event): bool
+    {
+        return (bool) $event->remove_app_branding;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolvedEventBranding(Event $event): array
+    {
+        $branding = is_array($event->branding) ? $event->branding : [];
+
+        if (! $this->eventAllowsBetterCustomization($event)) {
+            unset(
+                $branding['logo_path'],
+                $branding['logo_disk'],
+                $branding['logo_url'],
+            );
+        }
+
+        if (! $this->eventAllowsAdvancedCustomization($event)) {
+            unset(
+                $branding['primary_color'],
+                $branding['accent_color'],
+                $branding['album_background_path'],
+                $branding['album_background_disk'],
+                $branding['welcome_screen_background_path'],
+                $branding['welcome_screen_background_disk'],
+            );
+
+            $branding['album_background_enabled'] = false;
+            $branding['album_background_mode'] = 'rotate';
+        }
+
+        if (! $this->eventAllowsModerationTools($event)) {
+            unset($branding['moderation_filters']);
+        }
+
+        return $branding;
+    }
+
+    /**
      * @return array{0: string, 1: string, 2: string, 3: string}
      */
     private function billingStatusMeta(Event $event): array
@@ -2254,11 +2382,11 @@ class EventController extends Controller
 
     private function publicGuestDownloadsEnabled(Event $event): bool
     {
-        if (! $event->is_paid) {
+        if (! $this->eventCanDownloadAll($event)) {
             return false;
         }
 
-        $branding = is_array($event->branding) ? $event->branding : [];
+        $branding = $this->resolvedEventBranding($event);
 
         return ! (bool) ($branding['disable_guest_download'] ?? false);
     }
@@ -3227,46 +3355,14 @@ class EventController extends Controller
      *   status: string
      * }
      */
-    private function buildEventWindows(?string $eventDate, string $timezone): array
+    private function buildEventWindows(Event $event, ?string $eventDate, string $timezone): array
     {
-        if ($eventDate === null) {
-            return [
-                'upload_window_starts_at' => null,
-                'upload_window_ends_at' => null,
-                'grace_ends_at' => null,
-                'hard_lock_at' => null,
-                'status' => Event::STATUS_DRAFT,
-            ];
-        }
-
-        $eventDay = CarbonImmutable::parse($eventDate, $timezone)->startOfDay();
-        $uploadWindowStartsAt = $eventDay
-            ->subDays((int) config('events.upload_window_starts_days_before_event', 1))
-            ->startOfDay();
-        $uploadWindowEndsAt = $eventDay
-            ->addDays((int) config('events.upload_window_ends_days_after_event', 3))
-            ->endOfDay();
-        $graceEndsAt = $eventDay
-            ->addDays((int) config('events.grace_days', 7))
-            ->endOfDay();
-        $now = now($timezone)->toImmutable();
-
-        $status = Event::STATUS_SCHEDULED;
-        if ($now->betweenIncluded($uploadWindowStartsAt, $uploadWindowEndsAt)) {
-            $status = Event::STATUS_LIVE;
-        } elseif ($now->gt($uploadWindowEndsAt) && $now->lte($graceEndsAt)) {
-            $status = Event::STATUS_GRACE;
-        } elseif ($now->gt($graceEndsAt)) {
-            $status = Event::STATUS_LOCKED;
-        }
-
-        return [
-            'upload_window_starts_at' => $uploadWindowStartsAt,
-            'upload_window_ends_at' => $uploadWindowEndsAt,
-            'grace_ends_at' => $graceEndsAt,
-            'hard_lock_at' => $graceEndsAt,
-            'status' => $status,
-        ];
+        return EventLifecycleWindows::build(
+            $eventDate,
+            $timezone,
+            max(1, (int) $event->upload_window_days),
+            max(0, (int) ($event->plan?->grace_days ?? 0)),
+        );
     }
 
     /**

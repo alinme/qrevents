@@ -4,13 +4,21 @@ import {
     ArrowRight,
     ChevronDown,
     CircleHelp,
+    Languages,
     Instagram,
     Menu,
     Newspaper,
     QrCode,
     Star,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Sheet,
     SheetContent,
@@ -19,7 +27,9 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { dashboard, home, login, pricing, register } from '@/routes';
+import { useTranslations } from '@/composables/useTranslations';
+import { dashboard, home, login, pricing } from '@/routes';
+import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
     title: string;
@@ -29,42 +39,63 @@ defineProps<{
 
 const page = usePage();
 const authedUser = page.props.auth?.user ?? null;
+const { locale, t } = useTranslations();
 
 const homeUrl = home().url;
 
-const useCaseLinks = [
-    { label: 'Weddings', href: `${homeUrl}#use-cases` },
-    { label: 'Parties', href: `${homeUrl}#use-cases` },
-    { label: 'Corporate events', href: `${homeUrl}#use-cases` },
-    { label: 'Conferences', href: `${homeUrl}#use-cases` },
-];
+const localeOptions = [
+    { code: 'en', label: 'English', nativeLabel: 'English', flag: '🇬🇧' },
+    { code: 'ro', label: 'Romanian', nativeLabel: 'Romana', flag: '🇷🇴' },
+    { code: 'el', label: 'Greek', nativeLabel: 'Eλληνικα', flag: '🇬🇷' },
+] as const;
 
-const primaryNavItems = [
-    { label: 'Pricing', href: pricing().url },
-    { label: 'Reviews', href: `${homeUrl}#reviews` },
-    { label: 'Blog', href: `${homeUrl}#blog` },
-];
+const useCaseLinks = computed(() => [
+    { label: t('marketing.nav.weddings'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.parties'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.corporate_events'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.conferences'), href: `${homeUrl}#use-cases` },
+]);
 
-const footerProductLinks = [
-    { label: 'How it works', href: `${homeUrl}#how-it-works` },
-    { label: 'Capabilities', href: `${homeUrl}#capabilities` },
-    { label: 'Photo wall', href: `${homeUrl}#steps` },
-    { label: 'Pricing', href: pricing().url },
-];
+const primaryNavItems = computed(() => [
+    { label: t('marketing.nav.pricing'), href: pricing().url },
+    { label: t('marketing.nav.reviews'), href: `${homeUrl}#reviews` },
+    { label: t('marketing.nav.blog'), href: `${homeUrl}#blog` },
+]);
 
-const footerUseCaseLinks = [
-    { label: 'Weddings', href: `${homeUrl}#use-cases` },
-    { label: 'Birthdays', href: `${homeUrl}#use-cases` },
-    { label: 'Corporate', href: `${homeUrl}#use-cases` },
-    { label: 'Public events', href: `${homeUrl}#use-cases` },
-];
+const footerProductLinks = computed(() => [
+    { label: t('marketing.footer.how_it_works'), href: `${homeUrl}#how-it-works` },
+    { label: t('marketing.footer.capabilities'), href: `${homeUrl}#capabilities` },
+    { label: t('marketing.footer.photo_wall'), href: `${homeUrl}#steps` },
+    { label: t('marketing.nav.pricing'), href: pricing().url },
+]);
 
-const footerSupportLinks = [
-    { label: 'Wall of love', href: `${homeUrl}#reviews` },
-    { label: 'FAQ', href: `${homeUrl}#faq` },
-    { label: 'Blog', href: `${homeUrl}#blog` },
-    { label: 'Support', href: `${homeUrl}#cta` },
-];
+const footerUseCaseLinks = computed(() => [
+    { label: t('marketing.nav.weddings'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.birthdays'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.corporate'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.public_events'), href: `${homeUrl}#use-cases` },
+]);
+
+const footerSupportLinks = computed(() => [
+    { label: t('marketing.footer.wall_of_love'), href: `${homeUrl}#reviews` },
+    { label: t('marketing.footer.faq'), href: `${homeUrl}#faq` },
+    { label: t('marketing.nav.blog'), href: `${homeUrl}#blog` },
+    { label: t('marketing.footer.support'), href: `${homeUrl}#cta` },
+]);
+
+const selectedLocaleOption = computed(
+    () => localeOptions.find((option) => option.code === locale.value) ?? localeOptions[0],
+);
+
+const switchMarketingLocale = (nextLocale: string): void => {
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+        return;
+    }
+
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `site_locale=${nextLocale}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    window.location.reload();
+};
 </script>
 
 <template>
@@ -90,11 +121,11 @@ const footerSupportLinks = [
                         <QrCode class="size-5" />
                     </div>
                     <div>
-                        <div class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
-                            Kululu-style joy
+                        <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
+                            {{ t('marketing.brand.title') }}
                         </div>
                         <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                            QR Events
+                            {{ t('marketing.brand.subtitle') }}
                         </div>
                     </div>
                 </Link>
@@ -102,7 +133,7 @@ const footerSupportLinks = [
                 <nav class="hidden items-center gap-7 lg:flex">
                     <div class="group relative">
                         <button class="inline-flex items-center gap-2 text-sm font-semibold text-promo-ink/82 transition hover:text-promo-ink">
-                            Use Cases
+                            {{ t('marketing.nav.use_cases') }}
                             <ChevronDown class="size-4 transition group-hover:rotate-180" />
                         </button>
 
@@ -129,18 +160,70 @@ const footerSupportLinks = [
                 </nav>
 
                 <div class="hidden items-center gap-3 lg:flex">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-semibold text-promo-ink shadow-[0_12px_30px_rgba(120,86,255,0.08)] transition hover:bg-promo-surface"
+                            >
+                                <span class="text-base leading-none">{{ selectedLocaleOption.flag }}</span>
+                                <span class="hidden min-w-0 text-left xl:block">
+                                    {{ selectedLocaleOption.nativeLabel }}
+                                </span>
+                                <Languages class="size-4 text-promo-primary" />
+                            </button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                            align="end"
+                            class="w-64 rounded-[24px] border-promo-line bg-white p-2 shadow-[0_24px_70px_rgba(120,86,255,0.16)]"
+                        >
+                            <div class="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                                {{ t('marketing.language.label') }}
+                            </div>
+                            <DropdownMenuItem
+                                v-for="option in localeOptions"
+                                :key="option.code"
+                                class="rounded-[18px] px-3 py-3 focus:bg-promo-surface"
+                                @click="switchMarketingLocale(option.code)"
+                            >
+                                <div class="flex w-full items-center justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-lg leading-none">{{ option.flag }}</span>
+                                        <div>
+                                            <div class="text-sm font-semibold text-promo-ink">
+                                                {{ option.nativeLabel }}
+                                            </div>
+                                            <div class="text-xs text-promo-muted">
+                                                {{ option.label }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="size-2.5 rounded-full"
+                                        :class="locale === option.code ? 'bg-promo-primary' : 'bg-promo-line'"
+                                    />
+                                </div>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Link
                         v-if="!authedUser"
                         :href="login()"
                         class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-promo-ink/78 transition hover:bg-white hover:text-promo-ink"
                     >
-                        Log in
+                        {{ t('marketing.actions.log_in') }}
                     </Link>
                     <Link
-                        :href="authedUser ? dashboard() : register()"
+                        :href="
+                            authedUser
+                                ? dashboard()
+                                : onboardingCreate({ query: { plan: 'free' } })
+                        "
                         class="inline-flex items-center gap-2 rounded-full bg-promo-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(232,79,154,0.26)] transition hover:bg-promo-primary-strong"
                     >
-                        {{ authedUser ? 'Open dashboard' : 'Get started' }}
+                        {{ authedUser ? t('marketing.actions.open_dashboard') : t('marketing.actions.get_started') }}
                         <ArrowRight class="size-4" />
                     </Link>
                 </div>
@@ -153,7 +236,7 @@ const footerSupportLinks = [
                             class="rounded-full border-promo-line bg-white text-promo-ink hover:bg-promo-surface lg:hidden"
                         >
                             <Menu class="size-5" />
-                            <span class="sr-only">Open navigation</span>
+                            <span class="sr-only">{{ t('marketing.actions.open_navigation') }}</span>
                         </Button>
                     </SheetTrigger>
 
@@ -162,18 +245,54 @@ const footerSupportLinks = [
                         class="border-promo-line bg-promo-bg px-0 text-promo-ink"
                     >
                         <SheetHeader class="border-b border-promo-line px-6 pb-5 text-left">
-                            <SheetTitle class="text-2xl font-extrabold tracking-[-0.04em] text-promo-ink">
-                                Explore QR Events
+                            <SheetTitle class="text-lg font-extrabold tracking-[-0.02em] text-promo-ink">
+                                {{ t('marketing.mobile.title') }}
                             </SheetTitle>
                             <SheetDescription class="text-sm text-promo-muted">
-                                Create an event, share a QR code, and turn guest photos into a beautiful album.
+                                {{ t('marketing.mobile.description') }}
                             </SheetDescription>
                         </SheetHeader>
 
                         <div class="flex flex-col gap-6 px-6 py-6">
+                            <div class="rounded-[22px] border border-promo-line bg-white p-4 shadow-[0_14px_32px_rgba(120,86,255,0.08)]">
+                                <div class="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                                    {{ t('marketing.language.label') }}
+                                </div>
+                                <div class="grid gap-2">
+                                    <button
+                                        v-for="option in localeOptions"
+                                        :key="`mobile-locale-${option.code}`"
+                                        type="button"
+                                        class="flex items-center justify-between rounded-[18px] border px-4 py-3 text-left transition"
+                                        :class="
+                                            locale === option.code
+                                                ? 'border-promo-primary/30 bg-promo-surface'
+                                                : 'border-promo-line bg-white hover:bg-promo-surface'
+                                        "
+                                        @click="switchMarketingLocale(option.code)"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-lg leading-none">{{ option.flag }}</span>
+                                            <div>
+                                                <div class="text-sm font-semibold text-promo-ink">
+                                                    {{ option.nativeLabel }}
+                                                </div>
+                                                <div class="text-xs text-promo-muted">
+                                                    {{ option.label }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="size-2.5 rounded-full"
+                                            :class="locale === option.code ? 'bg-promo-primary' : 'bg-promo-line'"
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="grid gap-2">
                                 <div class="px-1 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                                    Use cases
+                                    {{ t('marketing.nav.use_cases') }}
                                 </div>
                                 <Link
                                     v-for="item in useCaseLinks"
@@ -202,13 +321,19 @@ const footerSupportLinks = [
                                     :href="login()"
                                     class="inline-flex items-center justify-center rounded-full border border-promo-line bg-white px-4 py-3 text-sm font-semibold text-promo-ink"
                                 >
-                                    Log in
+                                    {{ t('marketing.actions.log_in') }}
                                 </Link>
                                 <Link
-                                    :href="authedUser ? dashboard() : register()"
+                                    :href="
+                                        authedUser
+                                            ? dashboard()
+                                            : onboardingCreate({
+                                                  query: { plan: 'free' },
+                                              })
+                                    "
                                     class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-4 py-3 text-sm font-semibold text-white"
                                 >
-                                    {{ authedUser ? 'Open dashboard' : 'Get started' }}
+                                    {{ authedUser ? t('marketing.actions.open_dashboard') : t('marketing.actions.get_started') }}
                                     <ArrowRight class="size-4" />
                                 </Link>
                             </div>
@@ -231,17 +356,17 @@ const footerSupportLinks = [
                                 <QrCode class="size-5" />
                             </div>
                             <div>
-                                <div class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
-                                    QR Events
+                                <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
+                                    {{ t('marketing.brand.subtitle') }}
                                 </div>
                                 <div class="text-sm text-promo-muted">
-                                    Photo sharing that feels effortless for guests.
+                                    {{ t('marketing.footer.tagline') }}
                                 </div>
                             </div>
                         </div>
 
                         <p class="mt-5 max-w-sm text-sm leading-7 text-promo-muted">
-                            Create a digital event album, let guests join with a link or QR code, and turn every moment into something worth keeping.
+                            {{ t('marketing.footer.description') }}
                         </p>
 
                         <div class="mt-6 flex items-center gap-3">
@@ -268,7 +393,7 @@ const footerSupportLinks = [
 
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
-                            Product
+                            {{ t('marketing.footer.product') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
                             <Link
@@ -284,7 +409,7 @@ const footerSupportLinks = [
 
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
-                            Use cases
+                            {{ t('marketing.nav.use_cases') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
                             <Link
@@ -300,7 +425,7 @@ const footerSupportLinks = [
 
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
-                            Support
+                            {{ t('marketing.footer.support_title') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
                             <Link
@@ -311,17 +436,17 @@ const footerSupportLinks = [
                             >
                                 {{ item.label }}
                             </Link>
-                            <a href="#" class="block transition hover:text-promo-ink">Privacy policy</a>
-                            <a href="#" class="block transition hover:text-promo-ink">Terms</a>
+                            <a href="#" class="block transition hover:text-promo-ink">{{ t('marketing.footer.privacy') }}</a>
+                            <a href="#" class="block transition hover:text-promo-ink">{{ t('marketing.footer.terms') }}</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-4 pt-6 text-xs uppercase tracking-[0.2em] text-promo-muted sm:flex-row sm:items-center sm:justify-between">
-                    <div>Made for weddings, parties, and live events</div>
+                    <div>{{ t('marketing.footer.made_for') }}</div>
                     <div class="inline-flex items-center gap-2">
                         <Star class="size-3.5 fill-current" />
-                        Loved by hosts who want zero-friction sharing
+                        {{ t('marketing.footer.loved_by') }}
                     </div>
                 </div>
             </div>

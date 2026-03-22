@@ -18,7 +18,11 @@ it('queues an album export for the event owner', function () {
     Queue::fake();
 
     $owner = User::factory()->create();
-    $event = Event::factory()->for($owner)->create();
+    $event = Event::factory()->for($owner)->create([
+        'is_paid' => true,
+        'paid_at' => now(),
+        'download_all_enabled' => true,
+    ]);
 
     EventAsset::query()->create([
         'event_id' => $event->id,
@@ -58,7 +62,11 @@ it('downloads a ready album export for the event owner', function () {
     }
 
     $owner = User::factory()->create();
-    $event = Event::factory()->for($owner)->create();
+    $event = Event::factory()->for($owner)->create([
+        'is_paid' => true,
+        'paid_at' => now(),
+        'download_all_enabled' => true,
+    ]);
 
     Storage::disk('public')->put("events/{$event->id}/exports/photo.jpg", 'photo-binary');
     Storage::disk('public')->put("events/{$event->id}/exports/video.mp4", 'video-binary');
@@ -176,4 +184,33 @@ it('downloads a ready album export for the event owner', function () {
 
     $zip->close();
     @unlink($archivePath);
+});
+
+it('blocks exports when the plan does not include download all', function () {
+    Queue::fake();
+
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'is_paid' => true,
+        'paid_at' => now(),
+        'download_all_enabled' => false,
+    ]);
+
+    EventAsset::query()->create([
+        'event_id' => $event->id,
+        'user_id' => $owner->id,
+        'kind' => 'photo',
+        'disk' => 'public',
+        'path' => 'events/unused/export-source.jpg',
+        'mime_type' => 'image/jpeg',
+        'size_bytes' => 10,
+        'moderation_status' => 'approved',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.exports.media.start', $event))
+        ->assertRedirect()
+        ->assertSessionHas('error', 'Download all is available on Plus and Pro after payment.');
+
+    Queue::assertNothingPushed();
 });

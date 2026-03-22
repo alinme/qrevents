@@ -22,14 +22,14 @@ defineProps<{
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
                 {{ step }}
             </p>
-            <h3 class="text-2xl font-bold tracking-[-0.03em] text-promo-ink">
+            <h3 class="text-lg font-bold tracking-[-0.015em] text-promo-ink sm:text-[1.1rem]">
                 {{ title }}
             </h3>
-            <p class="text-sm leading-7 text-promo-muted">
+            <p class="text-sm leading-6 text-promo-muted">
                 {{ description }}
             </p>
 
-            <ul v-if="highlights?.length" class="grid gap-2 text-sm text-promo-ink/82">
+            <ul v-if="highlights?.length" class="grid gap-2 text-[13px] text-promo-ink/82 sm:text-sm">
                 <li
                     v-for="highlight in highlights"
                     :key="highlight"

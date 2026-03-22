@@ -532,6 +532,24 @@ it('groups album media collections by upload batch', function () {
         );
 });
 
+it('shares localized public album strings from the event display language', function () {
+    $event = Event::factory()->create([
+        'branding' => [
+            'display_language' => 'el',
+        ],
+    ]);
+
+    $this->get(route('events.album', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Album')
+            ->where('locale.current', 'el')
+            ->where('locale.available', ['en', 'ro', 'el'])
+            ->where('translations.public.album.kicker', 'Ψηφιακό άλμπουμ')
+            ->where('translations.public.wall.live_photo_wall', 'Ζωντανό photowall')
+        );
+});
+
 it('stores public guest profiles with optional avatars', function () {
     $event = Event::factory()->create();
 

@@ -40,6 +40,11 @@ type PlanRow = {
     uploadLimit: number;
     retentionDays: number;
     graceDays: number;
+    uploadWindowDays: number;
+    customizationTier: 'basic' | 'better' | 'advanced';
+    downloadAllEnabled: boolean;
+    moderationToolsEnabled: boolean;
+    removeAppBranding: boolean;
     videoMaxDurationSeconds: number;
     photoMaxSizeBytes: number;
     videoMaxSizeBytes: number;
@@ -110,9 +115,14 @@ const createForm = useForm({
     upload_limit: 300,
     retention_days: 30,
     grace_days: 7,
+    upload_window_days: 30,
+    customization_tier: 'basic' as PlanRow['customizationTier'],
     video_max_duration_seconds: 30,
     photo_max_size_mb: 25,
     video_max_size_mb: 500,
+    download_all_enabled: false,
+    moderation_tools_enabled: false,
+    remove_app_branding: false,
     is_active: true,
     is_default: false,
 });
@@ -127,9 +137,14 @@ const editForm = useForm({
     upload_limit: 300,
     retention_days: 30,
     grace_days: 7,
+    upload_window_days: 30,
+    customization_tier: 'basic' as PlanRow['customizationTier'],
     video_max_duration_seconds: 30,
     photo_max_size_mb: 25,
     video_max_size_mb: 500,
+    download_all_enabled: false,
+    moderation_tools_enabled: false,
+    remove_app_branding: false,
     is_active: true,
     is_default: false,
 });
@@ -156,9 +171,14 @@ const resetCreateForm = (): void => {
     createForm.upload_limit = 300;
     createForm.retention_days = 30;
     createForm.grace_days = 7;
+    createForm.upload_window_days = 30;
+    createForm.customization_tier = 'basic';
     createForm.video_max_duration_seconds = 30;
     createForm.photo_max_size_mb = 25;
     createForm.video_max_size_mb = 500;
+    createForm.download_all_enabled = false;
+    createForm.moderation_tools_enabled = false;
+    createForm.remove_app_branding = false;
     createForm.is_active = true;
     createForm.is_default = false;
     createForm.clearErrors();
@@ -175,9 +195,14 @@ const openEditDialog = (plan: PlanRow): void => {
     editForm.upload_limit = plan.uploadLimit;
     editForm.retention_days = plan.retentionDays;
     editForm.grace_days = plan.graceDays;
+    editForm.upload_window_days = plan.uploadWindowDays;
+    editForm.customization_tier = plan.customizationTier;
     editForm.video_max_duration_seconds = plan.videoMaxDurationSeconds;
     editForm.photo_max_size_mb = toMegabytes(plan.photoMaxSizeBytes);
     editForm.video_max_size_mb = toMegabytes(plan.videoMaxSizeBytes);
+    editForm.download_all_enabled = plan.downloadAllEnabled;
+    editForm.moderation_tools_enabled = plan.moderationToolsEnabled;
+    editForm.remove_app_branding = plan.removeAppBranding;
     editForm.is_active = plan.isActive;
     editForm.is_default = plan.isDefault;
     editForm.clearErrors();
@@ -328,6 +353,21 @@ const submitEditForm = (): void => {
                             <Input v-model="createForm.grace_days" type="number" min="0" />
                         </label>
                         <label class="space-y-2">
+                            <span class="text-sm font-medium text-[#171411]">Active window days</span>
+                            <Input v-model="createForm.upload_window_days" type="number" min="1" />
+                        </label>
+                        <label class="space-y-2">
+                            <span class="text-sm font-medium text-[#171411]">Customization tier</span>
+                            <select
+                                v-model="createForm.customization_tier"
+                                class="h-10 rounded-2xl border border-black/10 bg-[#fbfaf7] px-4 text-sm text-[#171411] outline-none transition focus:border-[#c79a5b] focus:ring-2 focus:ring-[#e8c892]"
+                            >
+                                <option value="basic">Basic</option>
+                                <option value="better">Better</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </label>
+                        <label class="space-y-2">
                             <span class="text-sm font-medium text-[#171411]">Video seconds</span>
                             <Input v-model="createForm.video_max_duration_seconds" type="number" min="1" />
                         </label>
@@ -342,6 +382,18 @@ const submitEditForm = (): void => {
                         <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
                             <input v-model="createForm.is_active" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
                             <span class="text-sm font-medium text-[#171411]">Active package</span>
+                        </label>
+                        <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
+                            <input v-model="createForm.download_all_enabled" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Download-all enabled</span>
+                        </label>
+                        <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
+                            <input v-model="createForm.moderation_tools_enabled" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Moderation tools enabled</span>
+                        </label>
+                        <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
+                            <input v-model="createForm.remove_app_branding" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Hide QR Events branding</span>
                         </label>
                         <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
                             <input v-model="createForm.is_default" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
@@ -414,12 +466,20 @@ const submitEditForm = (): void => {
                                     <p class="mt-1 text-sm font-semibold text-[#171411]">{{ plan.retentionDays }} days</p>
                                 </div>
                                 <div class="rounded-2xl border border-black/6 bg-white px-4 py-3">
+                                    <p class="text-xs uppercase tracking-[0.18em] text-zinc-400">Active window</p>
+                                    <p class="mt-1 text-sm font-semibold text-[#171411]">{{ plan.uploadWindowDays }} days</p>
+                                </div>
+                                <div class="rounded-2xl border border-black/6 bg-white px-4 py-3">
                                     <p class="text-xs uppercase tracking-[0.18em] text-zinc-400">Events using it</p>
                                     <p class="mt-1 text-sm font-semibold text-[#171411]">{{ plan.eventCount }}</p>
                                 </div>
                             </div>
 
                             <div class="mt-4 flex flex-wrap gap-4 text-xs uppercase tracking-[0.18em] text-zinc-400">
+                                <span>{{ plan.customizationTier }} customization</span>
+                                <span>{{ plan.downloadAllEnabled ? 'download-all on' : 'download-all off' }}</span>
+                                <span>{{ plan.moderationToolsEnabled ? 'moderation on' : 'moderation off' }}</span>
+                                <span>{{ plan.removeAppBranding ? 'white-label' : 'with branding' }}</span>
                                 <span>{{ plan.videoMaxDurationSeconds }} sec video</span>
                                 <span>{{ toMegabytes(plan.photoMaxSizeBytes) }} MB photo max</span>
                                 <span>{{ toMegabytes(plan.videoMaxSizeBytes) }} MB video max</span>
@@ -482,6 +542,21 @@ const submitEditForm = (): void => {
                         <Input v-model="editForm.grace_days" type="number" min="0" />
                     </label>
                     <label class="space-y-2">
+                        <span class="text-sm font-medium text-[#171411]">Active window days</span>
+                        <Input v-model="editForm.upload_window_days" type="number" min="1" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-medium text-[#171411]">Customization tier</span>
+                        <select
+                            v-model="editForm.customization_tier"
+                            class="h-10 rounded-2xl border border-black/10 bg-[#fbfaf7] px-4 text-sm text-[#171411] outline-none transition focus:border-[#c79a5b] focus:ring-2 focus:ring-[#e8c892]"
+                        >
+                            <option value="basic">Basic</option>
+                            <option value="better">Better</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </label>
+                    <label class="space-y-2">
                         <span class="text-sm font-medium text-[#171411]">Video seconds</span>
                         <Input v-model="editForm.video_max_duration_seconds" type="number" min="1" />
                     </label>
@@ -497,6 +572,18 @@ const submitEditForm = (): void => {
                         <label class="flex items-center gap-3">
                             <input v-model="editForm.is_active" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
                             <span class="text-sm font-medium text-[#171411]">Active package</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input v-model="editForm.download_all_enabled" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Download-all enabled</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input v-model="editForm.moderation_tools_enabled" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Moderation tools enabled</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input v-model="editForm.remove_app_branding" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
+                            <span class="text-sm font-medium text-[#171411]">Hide QR Events branding</span>
                         </label>
                         <label class="flex items-center gap-3">
                             <input v-model="editForm.is_default" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >

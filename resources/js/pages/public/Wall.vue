@@ -10,6 +10,7 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Separator } from '@/components/ui/separator';
+import { useTranslations } from '@/composables/useTranslations';
 
 type WallBranding = {
     primaryColor: string | null;
@@ -48,9 +49,12 @@ const props = defineProps<{
     status: string;
     albumUrl: string;
     albumQrDataUrl: string;
+    showPoweredBy: boolean;
     branding: WallBranding;
     assets: WallAsset[];
 }>();
+
+const { locale, t } = useTranslations();
 
 const activeIndex = ref(0);
 const autoplayId = ref<number | null>(null);
@@ -131,16 +135,13 @@ const surfaceStyle = computed((): Record<string, string> => {
 
 const formatDateTime = (value: string | null): string => {
     if (!value) {
-        return 'Now';
+        return t('public.wall.now');
     }
 
-    return new Intl.DateTimeFormat(
-        typeof navigator !== 'undefined' ? navigator.language : 'en-GB',
-        {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-        },
-    ).format(new Date(value));
+    return new Intl.DateTimeFormat(locale.value || 'en', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
 };
 
 const slideTitle = computed(() => {
@@ -151,7 +152,7 @@ const slideTitle = computed(() => {
     return (
         currentAsset.value.captionTitle?.trim() ||
         currentAsset.value.guestName?.trim() ||
-        'Guest upload'
+        t('public.wall.guest_upload')
     );
 });
 
@@ -331,7 +332,7 @@ watch(
 </script>
 
 <template>
-    <Head :title="`${eventName} Photo Wall`" />
+    <Head :title="t('public.wall.page_title', { eventName })" />
 
     <main
         class="relative min-h-screen overflow-hidden text-white"
@@ -346,7 +347,7 @@ watch(
                         <img
                             v-if="wallLogoUrl"
                             :src="wallLogoUrl"
-                            alt="Event logo"
+                            :alt="t('public.shared.alt.event_logo')"
                             class="h-full w-full object-cover"
                         />
                         <div
@@ -357,19 +358,19 @@ watch(
                         </div>
                     </div>
                     <div class="min-w-0">
-                        <h1 class="truncate text-lg font-semibold text-white">
+                        <h1 class="truncate text-sm font-semibold text-white lg:text-base">
                             {{ wallTitle }}
                         </h1>
                         <div class="flex flex-wrap items-center gap-2 text-xs text-white/75">
                             <p class="truncate">
-                                Live Photo Wall • {{ status }}
+                                {{ t('public.wall.live_photo_wall') }} • {{ status }}
                             </p>
                             <span class="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/90">
                                 <span
                                     class="size-1.5 rounded-full"
                                     :class="wallLiveStatus === 'updating' ? 'bg-amber-300' : 'bg-emerald-300'"
                                 />
-                                {{ wallLiveStatus === 'updating' ? 'Updating' : 'Auto-updating' }}
+                                {{ wallLiveStatus === 'updating' ? t('public.wall.updating') : t('public.wall.auto_updating') }}
                             </span>
                         </div>
                     </div>
@@ -382,22 +383,22 @@ watch(
                     <div class="flex items-center gap-3">
                         <img
                             :src="albumQrDataUrl"
-                            alt="Album QR code"
+                            :alt="t('public.shared.alt.album_qr_code')"
                             class="size-16 rounded-md bg-white p-1"
                         />
                         <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-[0.16em]">
-                                Scan To Upload
+                            <p class="text-xs font-semibold uppercase tracking-[0.14em]">
+                                {{ t('public.wall.scan_to_upload') }}
                             </p>
                             <p class="mt-1 text-xs text-white/80">
-                                Open digital album
+                                {{ t('public.wall.open_digital_album') }}
                             </p>
                             <a
                                 :href="albumUrl"
                                 class="mt-2 inline-flex items-center gap-1 text-xs font-medium text-white underline underline-offset-4"
                             >
                                 <QrCode class="size-3.5" />
-                                Album link
+                                {{ t('public.wall.album_link') }}
                             </a>
                         </div>
                     </div>
@@ -412,7 +413,7 @@ watch(
                     <img
                         v-if="currentAsset.kind === 'photo' && currentAsset.previewUrl"
                         :src="currentAsset.previewUrl"
-                        alt="Wall photo"
+                        :alt="t('public.shared.alt.wall_photo')"
                         class="h-[60vh] w-full object-contain lg:h-[72vh]"
                     />
 
@@ -437,11 +438,11 @@ watch(
                     >
                         <LoaderCircle class="size-10 animate-spin text-white/80" />
                         <div class="space-y-1">
-                            <p class="text-xl font-semibold">
-                                Processing video
+                            <p class="text-lg font-semibold">
+                                {{ t('public.shared.processing_video') }}
                             </p>
                             <p class="text-sm text-white/70">
-                                It will appear on the wall in a moment.
+                                {{ t('public.shared.processing_video_hint') }}
                             </p>
                         </div>
                     </div>
@@ -452,10 +453,10 @@ watch(
                         :style="textPostSurfaceStyle(currentAsset)"
                     >
                         <p
-                            class="max-w-3xl whitespace-pre-wrap text-3xl font-medium leading-relaxed"
+                            class="max-w-3xl whitespace-pre-wrap text-base font-medium leading-relaxed lg:text-[1.15rem]"
                             :style="textPostTextStyle(currentAsset)"
                         >
-                            {{ currentAsset.text || 'Text post' }}
+                            {{ currentAsset.text || t('public.wall.text_post') }}
                         </p>
                     </div>
 
@@ -485,11 +486,11 @@ watch(
                             >
                                 <Images />
                             </EmptyMedia>
-                            <EmptyTitle class="text-2xl font-semibold text-white">
-                                Waiting for first uploads
+                            <EmptyTitle class="text-base font-semibold text-white sm:text-lg">
+                                {{ t('public.wall.waiting_title') }}
                             </EmptyTitle>
                             <EmptyDescription class="text-white/80">
-                                As soon as guests upload photos or videos, they will appear here.
+                                {{ t('public.wall.waiting_description') }}
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
@@ -499,7 +500,7 @@ watch(
                     v-if="displayAssets.length > 1"
                     type="button"
                     class="absolute left-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/45 text-white transition hover:bg-black/60"
-                    aria-label="Previous media"
+                    :aria-label="t('public.shared.actions.previous_media')"
                     @click="previousAsset"
                 >
                     <ChevronLeft class="size-5" />
@@ -509,7 +510,7 @@ watch(
                     v-if="displayAssets.length > 1"
                     type="button"
                     class="absolute right-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/45 text-white transition hover:bg-black/60"
-                    aria-label="Next media"
+                    :aria-label="t('public.shared.actions.next_media')"
                     @click="nextAsset"
                 >
                     <ChevronRight class="size-5" />
@@ -518,10 +519,13 @@ watch(
         </div>
     </main>
 
-    <footer class="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55">
+    <footer
+        v-if="showPoweredBy"
+        class="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55"
+    >
         <Separator class="bg-white/12" />
         <div class="px-3 py-2 text-center text-xs text-white/55">
-            © {{ new Date().getFullYear() }} Kululu. All rights reserved.
+            © {{ new Date().getFullYear() }} Kululu. {{ t('public.wall.footer') }}
         </div>
     </footer>
 </template>

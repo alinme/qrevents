@@ -24,26 +24,67 @@ class MarketingController extends Controller
     {
         return Plan::query()
             ->where('is_active', true)
-            ->orderByDesc('is_default')
             ->orderBy('price_cents')
-            ->orderBy('currency')
             ->get()
             ->map(function (Plan $plan): array {
+                $translationPrefix = "marketing.pricing.catalog.{$plan->slug}";
+
                 return [
                     'id' => $plan->id,
+                    'slug' => $plan->slug,
                     'name' => $plan->name,
-                    'description' => $plan->description,
+                    'summary' => __("$translationPrefix.summary"),
+                    'description' => __("$translationPrefix.description"),
                     'currency' => $plan->currency,
                     'priceLabel' => $this->moneyLabel($plan->currency, (int) $plan->price_cents),
-                    'storageLabel' => $this->storageLabel((int) $plan->storage_limit_bytes),
-                    'uploadLabel' => number_format((int) $plan->upload_limit).' uploads',
-                    'retentionLabel' => number_format((int) $plan->retention_days).' day retention',
-                    'videoLabel' => number_format((int) $plan->video_max_duration_seconds).' sec video',
-                    'photoSizeLabel' => number_format((int) round($plan->photo_max_size_bytes / 1048576)).' MB photo max',
-                    'videoSizeLabel' => number_format((int) round($plan->video_max_size_bytes / 1048576)).' MB video max',
+                    'billingLabel' => __("$translationPrefix.billing"),
+                    'uploadLabel' => (int) $plan->upload_limit >= 1000000
+                        ? __('marketing.pricing.common.unlimited_uploads')
+                        : __('marketing.pricing.common.upload_limit', ['count' => number_format((int) $plan->upload_limit)]),
+                    'retentionLabel' => __('marketing.pricing.common.retention_days', ['count' => number_format((int) $plan->retention_days)]),
+                    'activeWindowLabel' => __('marketing.pricing.common.active_window_days', ['count' => number_format((int) $plan->upload_window_days)]),
+                    'customizationLabel' => __("$translationPrefix.customization"),
+                    'qualityLabel' => __("$translationPrefix.quality"),
+                    'isHighlighted' => $plan->slug === 'plus',
                     'isDefault' => $plan->is_default,
-                    'ctaHref' => '/weddings',
-                    'ctaLabel' => $plan->is_default ? 'Start with this plan' : 'See event flow',
+                    'featureItems' => [
+                        [
+                            'label' => __("$translationPrefix.features.uploads.label"),
+                            'help' => __("$translationPrefix.features.uploads.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.guests.label"),
+                            'help' => __("$translationPrefix.features.guests.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.retention.label"),
+                            'help' => __("$translationPrefix.features.retention.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.customization.label"),
+                            'help' => __("$translationPrefix.features.customization.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.active_window.label"),
+                            'help' => __("$translationPrefix.features.active_window.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.quality.label"),
+                            'help' => __("$translationPrefix.features.quality.help"),
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.download_all.label"),
+                            'help' => __("$translationPrefix.features.download_all.help"),
+                            'available' => (bool) $plan->download_all_enabled,
+                        ],
+                        [
+                            'label' => __("$translationPrefix.features.moderation.label"),
+                            'help' => __("$translationPrefix.features.moderation.help"),
+                            'available' => (bool) $plan->moderation_tools_enabled,
+                        ],
+                    ],
+                    'ctaHref' => route('onboarding.create', ['plan' => $plan->slug]),
+                    'ctaLabel' => __('marketing.actions.create_event'),
                 ];
             })
             ->values()
@@ -57,15 +98,5 @@ class MarketingController extends Controller
         }
 
         return sprintf('%s %.2f', strtoupper($currency), $priceCents / 100);
-    }
-
-    private function storageLabel(int $bytes): string
-    {
-        $gigabytes = $bytes / 1073741824;
-        $formattedValue = fmod($gigabytes, 1.0) === 0.0
-            ? number_format($gigabytes, 0)
-            : number_format($gigabytes, 1);
-
-        return $formattedValue.' GB storage';
     }
 }

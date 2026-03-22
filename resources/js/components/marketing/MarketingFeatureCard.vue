@@ -20,10 +20,10 @@ defineProps<{
         >
             {{ eyebrow }}
         </p>
-        <h3 class="mt-3 text-xl font-bold text-promo-ink">
+        <h3 class="mt-3 text-base font-bold text-promo-ink sm:text-lg">
             {{ title }}
         </h3>
-        <p class="mt-3 text-sm leading-7 text-promo-muted">
+        <p class="mt-3 text-sm leading-6 text-promo-muted">
             {{ description }}
         </p>
     </article>

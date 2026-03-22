@@ -22,9 +22,9 @@ class EventFactory extends Factory
     public function definition(): array
     {
         $eventDate = CarbonImmutable::instance($this->faker->dateTimeBetween('+2 days', '+12 months'));
-        $uploadWindowStartsAt = $eventDate->subDay()->startOfDay();
-        $uploadWindowEndsAt = $eventDate->addDays(3)->endOfDay();
-        $graceEndsAt = $eventDate->addDays(7)->endOfDay();
+        $uploadWindowStartsAt = $eventDate->startOfDay();
+        $uploadWindowEndsAt = $eventDate->addDays(29)->endOfDay();
+        $graceEndsAt = $eventDate->addDays(36)->endOfDay();
 
         return [
             'user_id' => User::factory(),
@@ -54,7 +54,7 @@ class EventFactory extends Factory
             'onboarding_completed_at' => now(),
             'currency' => 'EUR',
             'is_paid' => false,
-            'payment_due_at' => $graceEndsAt,
+            'payment_due_at' => $uploadWindowStartsAt,
             'upload_window_starts_at' => $uploadWindowStartsAt,
             'upload_window_ends_at' => $uploadWindowEndsAt,
             'grace_ends_at' => $graceEndsAt,
@@ -63,6 +63,11 @@ class EventFactory extends Factory
             'storage_used_bytes' => 0,
             'upload_limit' => 300,
             'upload_count' => 0,
+            'upload_window_days' => 30,
+            'customization_tier' => 'advanced',
+            'download_all_enabled' => true,
+            'moderation_tools_enabled' => true,
+            'remove_app_branding' => false,
             'video_max_duration_seconds' => 30,
             'photo_max_size_bytes' => 26214400,
             'video_max_size_bytes' => 524288000,

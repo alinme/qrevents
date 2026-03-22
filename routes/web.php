@@ -28,6 +28,15 @@ Route::inertia('/businesses', 'Businesses', [
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
+Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('onboarding.create');
+Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('onboarding/{event}/creating', [EventOnboardingController::class, 'creating'])->name('onboarding.creating');
+    Route::get('onboarding/{event}/photos', [EventOnboardingController::class, 'photos'])->name('onboarding.photos');
+    Route::get('onboarding/{event}/ready', [EventOnboardingController::class, 'ready'])->name('onboarding.ready');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/account', [DashboardController::class, 'account'])->name('dashboard.account');
@@ -46,12 +55,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('admin/plans/{plan}', [AdminController::class, 'updatePlan'])->name('admin.plans.update');
     Route::post('admin/events/{event}/cleanup-review', [AdminController::class, 'updateCleanupReview'])->name('admin.events.cleanup-review');
     Route::post('admin/events/{event}/cleanup', [AdminController::class, 'cleanupEvent'])->name('admin.events.cleanup');
-
-    Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('onboarding.create');
-    Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
-    Route::get('onboarding/{event}/creating', [EventOnboardingController::class, 'creating'])->name('onboarding.creating');
-    Route::get('onboarding/{event}/photos', [EventOnboardingController::class, 'photos'])->name('onboarding.photos');
-    Route::get('onboarding/{event}/ready', [EventOnboardingController::class, 'ready'])->name('onboarding.ready');
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('events/{event}/media', [EventController::class, 'media'])->name('events.media');

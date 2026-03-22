@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEventOnboardingRequest;
 use App\Models\Event;
 use App\Models\Plan;
+use App\Models\User;
+use App\Support\EventLifecycleWindows;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +23,11 @@ class EventOnboardingController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         if ($request->boolean('restart')) {
-            return Inertia::render('onboarding/Create', $this->onboardingCreateProps());
+            return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
+        }
+
+        if ($request->user() === null) {
+            return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
         }
 
         $latestEvent = $request->user()->events()->latest('id')->first();
@@ -32,21 +38,28 @@ class EventOnboardingController extends Controller
                 : to_route('dashboard');
         }
 
-        return Inertia::render('onboarding/Create', $this->onboardingCreateProps());
+        return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
     }
 
     public function store(StoreEventOnboardingRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $plan = $this->resolveDefaultPlan((string) config('events.defaults.currency', 'EUR'));
+        $user = $request->user() ?? $this->createOwnerAccount($validated);
+        $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null);
         $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
         $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
         $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
         $eventDate = $this->resolvePrimaryEventDate($validated['event_date'] ?? null, $eventDates, $subEvents);
-        $windows = $this->buildEventWindows($eventDate, $timezone);
+        $windows = EventLifecycleWindows::build(
+            $eventDate,
+            $timezone,
+            (int) $plan->upload_window_days,
+            (int) $plan->grace_days,
+        );
         $branding = $this->initialBranding($validated);
+        $isFreePlan = (int) $plan->price_cents === 0;
 
-        $event = $request->user()->events()->create([
+        $event = $user->events()->create([
             'plan_id' => $plan->id,
             'type' => $validated['type'],
             'name' => $validated['name'],
@@ -59,21 +72,30 @@ class EventOnboardingController extends Controller
             'status' => $windows['status'],
             'onboarding_step' => 'creating',
             'currency' => $plan->currency,
+            'is_paid' => $isFreePlan,
+            'paid_at' => $isFreePlan ? now() : null,
             'branding' => $branding !== [] ? $branding : null,
-            'payment_due_at' => $windows['grace_ends_at'],
+            'payment_due_at' => $isFreePlan ? null : $windows['upload_window_starts_at'],
             'upload_window_starts_at' => $windows['upload_window_starts_at'],
             'upload_window_ends_at' => $windows['upload_window_ends_at'],
             'grace_ends_at' => $windows['grace_ends_at'],
             'hard_lock_at' => $windows['hard_lock_at'],
             'storage_limit_bytes' => $plan->storage_limit_bytes,
             'upload_limit' => $plan->upload_limit,
+            'upload_window_days' => $plan->upload_window_days,
+            'customization_tier' => $plan->customization_tier,
+            'download_all_enabled' => $plan->download_all_enabled,
+            'moderation_tools_enabled' => $plan->moderation_tools_enabled,
+            'remove_app_branding' => $plan->remove_app_branding,
+            'moderation_enabled' => $plan->moderation_tools_enabled,
+            'auto_moderation_enabled' => $plan->moderation_tools_enabled,
             'video_max_duration_seconds' => $plan->video_max_duration_seconds,
             'photo_max_size_bytes' => $plan->photo_max_size_bytes,
             'video_max_size_bytes' => $plan->video_max_size_bytes,
             'share_token' => Str::random(32),
         ]);
 
-        $request->user()->syncConfiguredAccountType();
+        $user->syncConfiguredAccountType();
 
         return to_route('onboarding.creating', $event)->with('success', 'Event created.');
     }
@@ -175,15 +197,40 @@ class EventOnboardingController extends Controller
         };
     }
 
-    private function resolveDefaultPlan(string $currency): Plan
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function createOwnerAccount(array $validated): User
     {
-        $normalizedCurrency = Str::upper($currency);
-        $currencyName = $normalizedCurrency === 'RON' ? 'RON' : 'EUR';
-        $priceCents = $normalizedCurrency === 'RON' ? 9900 : 2000;
-        $slug = Str::lower("starter-20-{$currencyName}");
+        $user = User::query()->create([
+            'name' => trim((string) $validated['owner_name']),
+            'email' => trim((string) $validated['owner_email']),
+            'password' => (string) $validated['password'],
+            'account_type' => User::ACCOUNT_TYPE_USER,
+        ]);
+
+        Auth::login($user);
+        request()->session()->regenerate();
+
+        return $user;
+    }
+
+    private function resolveSelectedPlan(?string $slug): Plan
+    {
+        $normalizedSlug = is_string($slug) ? Str::lower(trim($slug)) : '';
+
+        if ($normalizedSlug !== '') {
+            $selectedPlan = Plan::query()
+                ->where('slug', $normalizedSlug)
+                ->where('is_active', true)
+                ->first();
+
+            if ($selectedPlan !== null) {
+                return $selectedPlan;
+            }
+        }
 
         $activeDefaultPlan = Plan::query()
-            ->where('currency', $currencyName)
             ->where('is_active', true)
             ->where('is_default', true)
             ->orderBy('price_cents')
@@ -194,7 +241,6 @@ class EventOnboardingController extends Controller
         }
 
         $fallbackActivePlan = Plan::query()
-            ->where('currency', $currencyName)
             ->where('is_active', true)
             ->orderBy('price_cents')
             ->first();
@@ -203,77 +249,32 @@ class EventOnboardingController extends Controller
             return $fallbackActivePlan;
         }
 
-        return Plan::query()->firstOrCreate(
-            [
-                'slug' => $slug,
-            ],
-            [
-                'name' => "Starter 20 {$currencyName}",
-                'description' => '30 days retention, 10GB storage, 300 uploads.',
-                'currency' => $currencyName,
-                'price_cents' => $priceCents,
-                'storage_limit_bytes' => (int) config('events.defaults.storage_limit_bytes', 10737418240),
-                'upload_limit' => (int) config('events.defaults.upload_limit', 300),
-                'retention_days' => (int) config('events.defaults.retention_days', 30),
-                'grace_days' => (int) config('events.grace_days', 7),
-                'video_max_duration_seconds' => (int) config('events.defaults.video_max_duration_seconds', 30),
-                'photo_max_size_bytes' => (int) config('events.defaults.photo_max_size_bytes', 26214400),
-                'video_max_size_bytes' => (int) config('events.defaults.video_max_size_bytes', 524288000),
-                'is_active' => true,
-                'is_default' => $currencyName === config('events.defaults.currency', 'EUR'),
-            ],
+        return tap(
+            Plan::query()->firstOrNew(['slug' => 'free']),
+            function (Plan $plan): void {
+                $plan->fill([
+                    'name' => 'Free',
+                    'description' => 'Small events with a lightweight album and simple setup.',
+                    'currency' => 'EUR',
+                    'price_cents' => 0,
+                    'storage_limit_bytes' => 3221225472,
+                    'upload_limit' => 100,
+                    'retention_days' => 7,
+                    'grace_days' => 0,
+                    'upload_window_days' => 1,
+                    'customization_tier' => 'basic',
+                    'download_all_enabled' => false,
+                    'moderation_tools_enabled' => false,
+                    'remove_app_branding' => false,
+                    'video_max_duration_seconds' => 30,
+                    'photo_max_size_bytes' => 15728640,
+                    'video_max_size_bytes' => 314572800,
+                    'is_active' => true,
+                    'is_default' => true,
+                ]);
+                $plan->save();
+            },
         );
-    }
-
-    /**
-     * @return array{
-     *   upload_window_starts_at: CarbonImmutable|null,
-     *   upload_window_ends_at: CarbonImmutable|null,
-     *   grace_ends_at: CarbonImmutable|null,
-     *   hard_lock_at: CarbonImmutable|null,
-     *   status: string
-     * }
-     */
-    private function buildEventWindows(?string $eventDate, string $timezone): array
-    {
-        if ($eventDate === null) {
-            return [
-                'upload_window_starts_at' => null,
-                'upload_window_ends_at' => null,
-                'grace_ends_at' => null,
-                'hard_lock_at' => null,
-                'status' => Event::STATUS_DRAFT,
-            ];
-        }
-
-        $eventDay = CarbonImmutable::parse($eventDate, $timezone)->startOfDay();
-        $uploadWindowStartsAt = $eventDay
-            ->subDays((int) config('events.upload_window_starts_days_before_event', 1))
-            ->startOfDay();
-        $uploadWindowEndsAt = $eventDay
-            ->addDays((int) config('events.upload_window_ends_days_after_event', 3))
-            ->endOfDay();
-        $graceEndsAt = $eventDay
-            ->addDays((int) config('events.grace_days', 7))
-            ->endOfDay();
-        $now = now($timezone)->toImmutable();
-
-        $status = Event::STATUS_SCHEDULED;
-        if ($now->betweenIncluded($uploadWindowStartsAt, $uploadWindowEndsAt)) {
-            $status = Event::STATUS_LIVE;
-        } elseif ($now->gt($uploadWindowEndsAt) && $now->lte($graceEndsAt)) {
-            $status = Event::STATUS_GRACE;
-        } elseif ($now->gt($graceEndsAt)) {
-            $status = Event::STATUS_LOCKED;
-        }
-
-        return [
-            'upload_window_starts_at' => $uploadWindowStartsAt,
-            'upload_window_ends_at' => $uploadWindowEndsAt,
-            'grace_ends_at' => $graceEndsAt,
-            'hard_lock_at' => $graceEndsAt,
-            'status' => $status,
-        ];
     }
 
     private function createQrCodeDataUrl(string $content): string
@@ -380,9 +381,18 @@ class EventOnboardingController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function onboardingCreateProps(): array
+    private function onboardingCreateProps(Request $request): array
     {
         return [
+            'defaultTimezone' => config('events.default_timezone'),
+            'defaultPlanSlug' => $this->resolveSelectedPlan($request->query('plan'))->slug,
+            'owner' => $request->user() === null
+                ? null
+                : [
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                ],
+            'pricingPlans' => $this->pricingPlansPayload(),
             'eventTypes' => [
                 [
                     'value' => 'wedding',
@@ -547,7 +557,38 @@ class EventOnboardingController extends Controller
                     ],
                 ],
             ],
-            'defaultTimezone' => config('events.default_timezone'),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function pricingPlansPayload(): array
+    {
+        return Plan::query()
+            ->where('is_active', true)
+            ->orderBy('price_cents')
+            ->get()
+            ->map(function (Plan $plan): array {
+                return [
+                    'slug' => $plan->slug,
+                    'name' => $plan->name,
+                    'priceLabel' => (int) $plan->price_cents === 0
+                        ? 'Free'
+                        : sprintf('EUR %.2f', $plan->price_cents / 100),
+                    'billingLabel' => (int) $plan->price_cents === 0 ? 'No CC required' : 'One-time fee',
+                    'uploadLimitLabel' => (int) $plan->upload_limit >= 1000000
+                        ? 'Unlimited uploads'
+                        : number_format((int) $plan->upload_limit).' uploads',
+                    'retentionLabel' => number_format((int) $plan->retention_days).' days saved',
+                    'activeWindowLabel' => number_format((int) $plan->upload_window_days).' day access',
+                    'customizationTier' => $plan->customization_tier,
+                    'downloadAllEnabled' => (bool) $plan->download_all_enabled,
+                    'moderationToolsEnabled' => (bool) $plan->moderation_tools_enabled,
+                    'isDefault' => (bool) $plan->is_default,
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Event;
+use App\Models\Plan;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -54,10 +55,32 @@ it('allows completed users to restart onboarding using restart query', function 
 it('creates an event from onboarding and calculates event windows', function () {
     CarbonImmutable::setTestNow('2026-03-10 12:00:00');
 
+    $plusPlan = Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'currency' => 'EUR',
+        'price_cents' => 4900,
+        'storage_limit_bytes' => 12884901888,
+        'upload_limit' => 500,
+        'retention_days' => 90,
+        'grace_days' => 7,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'video_max_duration_seconds' => 45,
+        'photo_max_size_bytes' => 26214400,
+        'video_max_size_bytes' => 524288000,
+        'is_active' => true,
+        'is_default' => false,
+    ]);
+
     $user = User::factory()->create();
     $this->actingAs($user);
 
     $response = $this->post(route('onboarding.store'), [
+        'plan_slug' => 'plus',
         'type' => 'wedding',
         'name' => 'Dan and Rachel Wedding',
         'wedding_partner_one_first_name' => 'Dan',
@@ -96,9 +119,11 @@ it('creates an event from onboarding and calculates event windows', function () 
 
     $response->assertRedirect(route('onboarding.creating', $event));
 
-    expect($event->upload_window_starts_at?->toDateTimeString())->toBe('2026-05-13 00:00:00')
-        ->and($event->upload_window_ends_at?->toDateTimeString())->toBe('2026-05-17 23:59:59')
-        ->and($event->grace_ends_at?->toDateTimeString())->toBe('2026-05-21 23:59:59')
+    expect($event->plan_id)->toBe($plusPlan->id)
+        ->and($event->upload_window_starts_at?->toDateTimeString())->toBe('2026-05-14 00:00:00')
+        ->and($event->upload_window_ends_at?->toDateTimeString())->toBe('2026-06-12 23:59:59')
+        ->and($event->grace_ends_at?->toDateTimeString())->toBe('2026-06-19 23:59:59')
+        ->and($event->payment_due_at?->toDateTimeString())->toBe('2026-05-14 00:00:00')
         ->and($event->venue_address)->toBe('12 Garden Lane, Bucharest, Romania')
         ->and($event->attendee_estimate)->toBe(140)
         ->and($event->event_dates)->toBe([
@@ -132,9 +157,14 @@ it('creates an event from onboarding and calculates event windows', function () 
                 'family_name' => 'Ionescu',
             ],
         ])
-        ->and($event->storage_limit_bytes)->toBe(10737418240)
-        ->and($event->upload_limit)->toBe(300)
-        ->and($event->video_max_duration_seconds)->toBe(30)
+        ->and($event->storage_limit_bytes)->toBe(12884901888)
+        ->and($event->upload_limit)->toBe(500)
+        ->and($event->upload_window_days)->toBe(30)
+        ->and($event->customization_tier)->toBe('better')
+        ->and($event->download_all_enabled)->toBeTrue()
+        ->and($event->moderation_tools_enabled)->toBeFalse()
+        ->and($event->video_max_duration_seconds)->toBe(45)
+        ->and($event->is_paid)->toBeFalse()
         ->and($event->onboarding_step)->toBe('creating')
         ->and($user->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_USER);
 
@@ -142,6 +172,18 @@ it('creates an event from onboarding and calculates event windows', function () 
 });
 
 it('promotes multi-event owners to business after creating another event', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
     $user = User::factory()->create();
     Event::factory()->for($user)->create([
         'name' => 'Existing Event',
@@ -150,6 +192,7 @@ it('promotes multi-event owners to business after creating another event', funct
     $this->actingAs($user);
 
     $this->post(route('onboarding.store'), [
+        'plan_slug' => 'free',
         'type' => 'wedding',
         'name' => 'Second Event',
         'wedding_partner_one_first_name' => 'Alex',
@@ -172,10 +215,23 @@ it('promotes multi-event owners to business after creating another event', funct
 it('blocks event dates too far in the future', function () {
     CarbonImmutable::setTestNow('2026-03-10 12:00:00');
 
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
     $user = User::factory()->create();
     $this->actingAs($user);
 
     $response = $this->from(route('onboarding.create'))->post(route('onboarding.store'), [
+        'plan_slug' => 'free',
         'type' => 'wedding',
         'name' => 'Future Event',
         'wedding_partner_one_first_name' => 'Dan',
@@ -196,6 +252,62 @@ it('blocks event dates too far in the future', function () {
     $response->assertSessionHasErrors(['event_dates.0.date']);
 
     CarbonImmutable::setTestNow();
+});
+
+it('creates the owner account inside onboarding for guests', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'storage_limit_bytes' => 3221225472,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'customization_tier' => 'basic',
+        'download_all_enabled' => false,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'video_max_duration_seconds' => 30,
+        'photo_max_size_bytes' => 15728640,
+        'video_max_size_bytes' => 314572800,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $response = $this->post(route('onboarding.store'), [
+        'plan_slug' => 'free',
+        'type' => 'wedding',
+        'name' => 'Mara and Luca Wedding',
+        'owner_name' => 'Mara Popescu',
+        'owner_email' => 'mara@example.com',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+        'wedding_partner_one_first_name' => 'Mara',
+        'wedding_partner_two_first_name' => 'Luca',
+        'wedding_family_name' => 'Popescu',
+        'venue_address' => 'Strada Lalelelor 12, Cluj-Napoca',
+        'attendee_estimate' => 120,
+        'event_dates' => [
+            [
+                'label' => 'Main day',
+                'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $event = Event::query()->firstOrFail();
+    $owner = User::query()->where('email', 'mara@example.com')->firstOrFail();
+
+    $response->assertRedirect(route('onboarding.creating', $event));
+    $this->assertAuthenticatedAs($owner);
+
+    expect($event->user_id)->toBe($owner->id)
+        ->and($event->is_paid)->toBeTrue()
+        ->and($event->payment_due_at)->toBeNull()
+        ->and($event->upload_window_days)->toBe(1)
+        ->and($event->customization_tier)->toBe('basic');
 });
 
 it('marks onboarding complete when ready screen is opened', function () {

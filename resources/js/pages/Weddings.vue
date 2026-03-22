@@ -4,12 +4,16 @@ import { ArrowRight, Camera, Heart, MessageSquareText, MonitorPlay, QrCode, Spar
 import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
 import MarketingStepCard from '@/components/marketing/MarketingStepCard.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
-import { pricing, register } from '@/routes';
+import { pricing } from '@/routes';
+import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
     canRegister: boolean;
 }>();
+
+const { t } = useTranslations();
 
 const weddingImages = [
     '/fake-media/503096688_1013285264308603_8150632900022158723_n.jpg',
@@ -21,58 +25,70 @@ const weddingImages = [
 const weddingBenefits = [
     {
         icon: Camera,
-        title: 'Candid moments from every table',
-        description: 'Capture the little scenes and reactions that rarely make it back to the couple later.',
+        title: t('marketing.weddings.benefits.1.title'),
+        description: t('marketing.weddings.benefits.1.description'),
     },
     {
         icon: MessageSquareText,
-        title: 'A digital guestbook with real warmth',
-        description: 'Pair photos with wishes, captions, and congratulations while the celebration is still happening.',
+        title: t('marketing.weddings.benefits.2.title'),
+        description: t('marketing.weddings.benefits.2.description'),
     },
     {
         icon: MonitorPlay,
-        title: 'A live wall guests love watching',
-        description: 'Turn a venue display into something joyful and interactive instead of a passive screen.',
+        title: t('marketing.weddings.benefits.3.title'),
+        description: t('marketing.weddings.benefits.3.description'),
     },
     {
         icon: Heart,
-        title: 'Simple enough for every guest',
-        description: 'One QR code, no downloads, no awkward setup, and almost no explanation required.',
+        title: t('marketing.weddings.benefits.4.title'),
+        description: t('marketing.weddings.benefits.4.description'),
     },
 ];
 
 const weddingSteps = [
     {
-        step: 'Step 01',
-        title: 'Create your wedding album',
-        description: 'Set up the album, add your title and event details, and get a wedding-ready sharing page in minutes.',
+        step: t('marketing.shared.step', { number: '01' }),
+        title: t('marketing.weddings.steps.1.title'),
+        description: t('marketing.weddings.steps.1.description'),
         image: weddingImages[0],
-        imageAlt: 'Wedding event album cover photo',
-        highlights: ['Fast setup', 'Beautiful shared album', 'Ready before the first guest arrives'],
+        imageAlt: t('marketing.weddings.steps.1.image_alt'),
+        highlights: [
+            t('marketing.weddings.steps.1.highlights.1'),
+            t('marketing.weddings.steps.1.highlights.2'),
+            t('marketing.weddings.steps.1.highlights.3'),
+        ],
     },
     {
-        step: 'Step 02',
-        title: 'Share one QR code with everyone',
-        description: 'Place it on welcome signs, table cards, menus, or programs so guests always know where to upload.',
+        step: t('marketing.shared.step', { number: '02' }),
+        title: t('marketing.weddings.steps.2.title'),
+        description: t('marketing.weddings.steps.2.description'),
         image: weddingImages[1],
-        imageAlt: 'Wedding guest joining the shared album from a phone',
-        highlights: ['Print on signs and stationery', 'No registration required', 'Works for every age group'],
+        imageAlt: t('marketing.weddings.steps.2.image_alt'),
+        highlights: [
+            t('marketing.weddings.steps.2.highlights.1'),
+            t('marketing.weddings.steps.2.highlights.2'),
+            t('marketing.weddings.steps.2.highlights.3'),
+        ],
     },
     {
-        step: 'Step 03',
-        title: 'Watch the reception come alive',
-        description: 'As photos arrive, the live wall turns the room into part of the experience and keeps uploads coming.',
+        step: t('marketing.shared.step', { number: '03' }),
+        title: t('marketing.weddings.steps.3.title'),
+        description: t('marketing.weddings.steps.3.description'),
         image: weddingImages[3],
-        imageAlt: 'Live wedding slideshow on a venue screen',
-        highlights: ['Great for receptions', 'Real-time updates', 'Fun, celebratory energy'],
+        imageAlt: t('marketing.weddings.steps.3.image_alt'),
+        highlights: [
+            t('marketing.weddings.steps.3.highlights.1'),
+            t('marketing.weddings.steps.3.highlights.2'),
+            t('marketing.weddings.steps.3.highlights.3'),
+        ],
     },
 ];
 </script>
 
 <template>
     <MarketingLayout
-        title="Weddings"
-        description="A joyful wedding photo-sharing experience with QR code access, guest uploads, and a live slideshow."
+        :title="t('marketing.weddings.meta.title')"
+        :description="t('marketing.weddings.meta.description')"
         :can-register="canRegister"
     >
         <section class="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-16">
@@ -80,23 +96,23 @@ const weddingSteps = [
                 <div class="max-w-2xl">
                     <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
                         <Sparkles class="size-3.5" />
-                        Wedding use case
+                        {{ t('marketing.weddings.hero.badge') }}
                     </p>
 
-                    <h1 class="mt-6 text-5xl font-extrabold leading-[0.96] tracking-[-0.06em] text-promo-ink sm:text-6xl">
-                        A wedding photo album guests actually want to use on the day itself
+                    <h1 class="mt-6 text-[2rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-promo-ink sm:text-[2.3rem]">
+                        {{ t('marketing.weddings.hero.title') }}
                     </h1>
 
-                    <p class="mt-6 text-lg leading-8 text-promo-muted sm:text-xl">
-                        QR Events turns your wedding into a live digital guestbook, candid photo collector, and reception-ready slideshow without making guests download anything.
+                    <p class="mt-6 text-base leading-7 text-promo-muted sm:text-lg">
+                        {{ t('marketing.weddings.hero.description') }}
                     </p>
 
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row">
                         <Link
-                            :href="register()"
+                            :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
-                            Create Your Wedding
+                            {{ t('marketing.weddings.hero.primary_cta') }}
                             <ArrowRight class="size-4" />
                         </Link>
 
@@ -104,7 +120,7 @@ const weddingSteps = [
                             :href="pricing()"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            See Pricing
+                            {{ t('marketing.weddings.hero.secondary_cta') }}
                         </Link>
                     </div>
                 </div>
@@ -113,7 +129,7 @@ const weddingSteps = [
                     <div class="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
                         <img
                             :src="weddingImages[0]"
-                            alt="Wedding guests sharing photos in a digital album"
+                            :alt="t('marketing.weddings.hero.main_image_alt')"
                             class="aspect-[4/5] w-full rounded-[26px] object-cover"
                         />
 
@@ -125,10 +141,10 @@ const weddingSteps = [
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                                            One QR, no app
+                                            {{ t('marketing.weddings.hero.qr_title') }}
                                         </p>
                                         <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            Guests scan once and start sharing immediately.
+                                            {{ t('marketing.weddings.hero.qr_description') }}
                                         </p>
                                     </div>
                                 </div>
@@ -137,22 +153,22 @@ const weddingSteps = [
                             <div class="grid grid-cols-2 gap-4">
                                 <img
                                     :src="weddingImages[1]"
-                                    alt="Wedding guest photo upload preview"
+                                    :alt="t('marketing.weddings.hero.gallery_upload_alt')"
                                     class="aspect-square rounded-[22px] object-cover"
                                 />
                                 <img
                                     :src="weddingImages[2]"
-                                    alt="Wedding memory inside the event gallery"
+                                    :alt="t('marketing.weddings.hero.gallery_memory_alt')"
                                     class="aspect-square rounded-[22px] object-cover"
                                 />
                             </div>
 
                             <div class="rounded-[24px] border border-promo-line bg-promo-warm p-5">
                                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                                    Reception-ready
+                                    {{ t('marketing.weddings.hero.reception_title') }}
                                 </p>
                                 <p class="mt-3 text-sm leading-7 text-promo-muted">
-                                    Show the live wall on a venue screen and let every upload feel instantly part of the celebration.
+                                    {{ t('marketing.weddings.hero.reception_description') }}
                                 </p>
                             </div>
                         </div>
@@ -164,9 +180,9 @@ const weddingSteps = [
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Why couples love it"
-                    title="Wedding photo sharing that feels emotional, easy, and genuinely modern"
-                    description="Built for couples who want more than a file drop and less friction than a typical app."
+                    :eyebrow="t('marketing.weddings.why.eyebrow')"
+                    :title="t('marketing.weddings.why.title')"
+                    :description="t('marketing.weddings.why.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -184,9 +200,9 @@ const weddingSteps = [
         <section class="bg-promo-surface/55">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="How it works for weddings"
-                    title="From ceremony to afterparty, every guest knows exactly what to do"
-                    description="The whole experience is built to feel obvious, lightweight, and wedding-friendly."
+                    :eyebrow="t('marketing.weddings.flow.eyebrow')"
+                    :title="t('marketing.weddings.flow.title')"
+                    :description="t('marketing.weddings.flow.description')"
                     centered
                 />
 

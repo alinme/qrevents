@@ -23,6 +23,7 @@ import {
     Star,
     Users,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import type { Component } from 'vue';
 import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
@@ -35,11 +36,15 @@ import {
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
-import { businesses, pricing, register, weddings } from '@/routes';
+import { useTranslations } from '@/composables/useTranslations';
+import { businesses, pricing, weddings } from '@/routes';
+import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
     canRegister: boolean;
 }>();
+
+const { t } = useTranslations();
 
 type FeatureItem = {
     icon: Component;
@@ -59,292 +64,305 @@ const logoRow = ['brides', 'eventbrite', 'honeybook', 'airtable', 'canva', 'mail
 
 const introSteps = [
     {
-        step: 'Step 01',
-        title: 'Sign up and create your event',
-        description:
-            'Launch a digital album in minutes with a clean host dashboard and event-ready settings.',
+        step: t('marketing.shared.step', { number: '01' }),
+        title: t('marketing.home.intro_steps.1.title'),
+        description: t('marketing.home.intro_steps.1.description'),
         image: heroGallery[0],
-        imageAlt: 'Event host creating a new event album',
-        highlights: ['Start free', 'Custom event page', 'Setup in under two minutes'],
+        imageAlt: t('marketing.home.intro_steps.1.image_alt'),
+        highlights: [
+            t('marketing.home.intro_steps.1.highlights.1'),
+            t('marketing.home.intro_steps.1.highlights.2'),
+            t('marketing.home.intro_steps.1.highlights.3'),
+        ],
     },
     {
-        step: 'Step 02',
-        title: 'Guests join with a link or QR code',
-        description:
-            'Share a single event link or print a QR code on signs, menus, invitations, and table cards.',
+        step: t('marketing.shared.step', { number: '02' }),
+        title: t('marketing.home.intro_steps.2.title'),
+        description: t('marketing.home.intro_steps.2.description'),
         image: heroGallery[1],
-        imageAlt: 'Guests joining an event photo album from a phone',
-        highlights: ['No app download', 'No registration required', 'Works in any browser'],
+        imageAlt: t('marketing.home.intro_steps.2.image_alt'),
+        highlights: [
+            t('marketing.home.intro_steps.2.highlights.1'),
+            t('marketing.home.intro_steps.2.highlights.2'),
+            t('marketing.home.intro_steps.2.highlights.3'),
+        ],
     },
     {
-        step: 'Step 03',
-        title: 'Display a live slideshow or photo wall',
-        description:
-            'Turn guest uploads into a real-time event moment with a screen-ready live wall that keeps energy high.',
+        step: t('marketing.shared.step', { number: '03' }),
+        title: t('marketing.home.intro_steps.3.title'),
+        description: t('marketing.home.intro_steps.3.description'),
         image: heroGallery[3],
-        imageAlt: 'Live event slideshow displaying guest photos on a screen',
-        highlights: ['Auto-refreshing display', 'Great for TVs and projectors', 'Keeps guests engaged'],
+        imageAlt: t('marketing.home.intro_steps.3.image_alt'),
+        highlights: [
+            t('marketing.home.intro_steps.3.highlights.1'),
+            t('marketing.home.intro_steps.3.highlights.2'),
+            t('marketing.home.intro_steps.3.highlights.3'),
+        ],
     },
     {
-        step: 'Step 04',
-        title: 'Download every captured memory',
-        description:
-            'Wrap up with a beautiful album full of candid moments, videos, captions, and one-click exports.',
+        step: t('marketing.shared.step', { number: '04' }),
+        title: t('marketing.home.intro_steps.4.title'),
+        description: t('marketing.home.intro_steps.4.description'),
         image: heroGallery[2],
-        imageAlt: 'Host reviewing and downloading a finished event album',
-        highlights: ['One-click download', 'Organized handoff', 'Every guest contribution in one place'],
+        imageAlt: t('marketing.home.intro_steps.4.image_alt'),
+        highlights: [
+            t('marketing.home.intro_steps.4.highlights.1'),
+            t('marketing.home.intro_steps.4.highlights.2'),
+            t('marketing.home.intro_steps.4.highlights.3'),
+        ],
     },
 ];
 
 const valueFeatures: FeatureItem[] = [
     {
         icon: Image,
-        title: 'Guest Photos & Videos',
-        description:
-            'Collect the moments your photographer never sees, from every table, angle, and surprise on the day.',
+        title: t('marketing.home.value.features.1.title'),
+        description: t('marketing.home.value.features.1.description'),
     },
     {
         icon: MessageSquareText,
-        title: 'Text Posts & Captions',
-        description:
-            'Let guests leave notes, stories, and congratulations alongside their photos so the album feels personal.',
+        title: t('marketing.home.value.features.2.title'),
+        description: t('marketing.home.value.features.2.description'),
     },
     {
         icon: Smartphone,
-        title: 'Extremely Easy to Use',
-        description:
-            'If someone can scan a QR code, they can contribute. No apps. No accounts. No friction.',
+        title: t('marketing.home.value.features.3.title'),
+        description: t('marketing.home.value.features.3.description'),
     },
     {
         icon: MonitorPlay,
-        title: 'Live Slideshow',
-        description:
-            'Show uploads in real time on a TV, projector, or venue display and turn the room into part of the product.',
+        title: t('marketing.home.value.features.4.title'),
+        description: t('marketing.home.value.features.4.description'),
     },
 ];
 
 const howItWorks = [
     {
         step: '01',
-        title: 'Create your event',
-        description:
-            'Set up a polished event page with your title, dates, branding, and photo wall settings in a host dashboard designed for speed.',
+        title: t('marketing.home.flow.items.1.title'),
+        description: t('marketing.home.flow.items.1.description'),
         image: heroGallery[0],
-        imageAlt: 'Dashboard screen for creating a new event',
-        highlights: ['Fast setup wizard', 'Friendly host dashboard', 'Beautiful album landing page'],
+        imageAlt: t('marketing.home.flow.items.1.image_alt'),
+        highlights: [
+            t('marketing.home.flow.items.1.highlights.1'),
+            t('marketing.home.flow.items.1.highlights.2'),
+            t('marketing.home.flow.items.1.highlights.3'),
+        ],
     },
     {
         step: '02',
-        title: 'Share it with your guests',
-        description:
-            'Drop the link into chats, email, or SMS, or print the QR code anywhere guests are already looking.',
+        title: t('marketing.home.flow.items.2.title'),
+        description: t('marketing.home.flow.items.2.description'),
         image: heroGallery[1],
-        imageAlt: 'Guests scanning a QR code to join an event album',
-        highlights: ['Share via email, SMS, or chat apps', 'Print on cards and signs', 'Unlimited guests can join'],
+        imageAlt: t('marketing.home.flow.items.2.image_alt'),
+        highlights: [
+            t('marketing.home.flow.items.2.highlights.1'),
+            t('marketing.home.flow.items.2.highlights.2'),
+            t('marketing.home.flow.items.2.highlights.3'),
+        ],
     },
     {
         step: '03',
-        title: 'Display it all on a live slideshow',
-        description:
-            'As photos arrive, your event wall stays fresh and lively, helping every upload feel instantly seen.',
+        title: t('marketing.home.flow.items.3.title'),
+        description: t('marketing.home.flow.items.3.description'),
         image: heroGallery[3],
-        imageAlt: 'Live photo wall showing event moments in real time',
-        highlights: ['Real-time updates', 'Designed for big screens', 'Great for receptions and public events'],
+        imageAlt: t('marketing.home.flow.items.3.image_alt'),
+        highlights: [
+            t('marketing.home.flow.items.3.highlights.1'),
+            t('marketing.home.flow.items.3.highlights.2'),
+            t('marketing.home.flow.items.3.highlights.3'),
+        ],
     },
     {
         step: '04',
-        title: 'Enjoy all captured moments',
-        description:
-            'After the event, everything is already organized in a beautiful digital album ready to browse, share, and export.',
+        title: t('marketing.home.flow.items.4.title'),
+        description: t('marketing.home.flow.items.4.description'),
         image: heroGallery[2],
-        imageAlt: 'Finished event album with candid guest photos',
-        highlights: ['One-click download of all photos', 'Guests can relive the album', 'Perfect for multi-day events too'],
+        imageAlt: t('marketing.home.flow.items.4.image_alt'),
+        highlights: [
+            t('marketing.home.flow.items.4.highlights.1'),
+            t('marketing.home.flow.items.4.highlights.2'),
+            t('marketing.home.flow.items.4.highlights.3'),
+        ],
     },
 ];
 
 const capabilities: FeatureItem[] = [
-    { icon: Image, title: 'Digital Album', description: 'A polished shared album guests actually enjoy using.' },
-    { icon: Download, title: 'One-click Download', description: 'Download the whole event collection without messy file chasing.' },
-    { icon: Smartphone, title: 'No Apps Required', description: 'Open the link, upload, and enjoy. That is the whole experience.' },
-    { icon: QrCode, title: 'QR Code Templates', description: 'Turn printed signs, invitations, and table cards into entry points.' },
-    { icon: MonitorPlay, title: 'Live Photo Wall', description: 'Keep a TV or projector alive with guest moments in real time.' },
-    { icon: SlidersHorizontal, title: 'Customizations', description: 'Tune the event look and flow without making setup feel technical.' },
-    { icon: MessageSquareText, title: 'Text & Captions', description: 'Capture wishes, notes, and context instead of only media files.' },
-    { icon: LockKeyhole, title: 'Private & Secured', description: 'Hosts stay in control of access, moderation, and final delivery.' },
+    { icon: Image, title: t('marketing.home.capabilities.items.1.title'), description: t('marketing.home.capabilities.items.1.description') },
+    { icon: Download, title: t('marketing.home.capabilities.items.2.title'), description: t('marketing.home.capabilities.items.2.description') },
+    { icon: Smartphone, title: t('marketing.home.capabilities.items.3.title'), description: t('marketing.home.capabilities.items.3.description') },
+    { icon: QrCode, title: t('marketing.home.capabilities.items.4.title'), description: t('marketing.home.capabilities.items.4.description') },
+    { icon: MonitorPlay, title: t('marketing.home.capabilities.items.5.title'), description: t('marketing.home.capabilities.items.5.description') },
+    { icon: SlidersHorizontal, title: t('marketing.home.capabilities.items.6.title'), description: t('marketing.home.capabilities.items.6.description') },
+    { icon: MessageSquareText, title: t('marketing.home.capabilities.items.7.title'), description: t('marketing.home.capabilities.items.7.description') },
+    { icon: LockKeyhole, title: t('marketing.home.capabilities.items.8.title'), description: t('marketing.home.capabilities.items.8.description') },
 ];
 
 const useCases = [
     {
-        label: 'Weddings',
-        title: 'A joyful digital guestbook for the whole day',
-        description: 'Collect candid moments, wishes, and videos from every guest without awkward setup.',
+        label: t('marketing.home.use_cases.items.1.label'),
+        title: t('marketing.home.use_cases.items.1.title'),
+        description: t('marketing.home.use_cases.items.1.description'),
         icon: Heart,
         href: weddings().url,
     },
     {
-        label: 'Parties & Celebrations',
-        title: 'Perfect for surprise parties, showers, and reunions',
-        description: 'Let everyone add to one shared album while the celebration is still happening.',
+        label: t('marketing.home.use_cases.items.2.label'),
+        title: t('marketing.home.use_cases.items.2.title'),
+        description: t('marketing.home.use_cases.items.2.description'),
         icon: PartyPopper,
         href: `${weddings().url}#celebrations`,
     },
     {
-        label: 'Birthdays',
-        title: 'Keep every laugh, photo, and candid clip together',
-        description: 'Make it easy for guests of every age to contribute without downloading anything.',
+        label: t('marketing.home.use_cases.items.3.label'),
+        title: t('marketing.home.use_cases.items.3.title'),
+        description: t('marketing.home.use_cases.items.3.description'),
         icon: Gift,
         href: `${pricing().url}#birthday`,
     },
     {
-        label: 'Conferences & Public Events',
-        title: 'Boost participation with a live wall on site',
-        description: 'Turn guests and attendees into contributors for activations, meetups, and public programs.',
+        label: t('marketing.home.use_cases.items.4.label'),
+        title: t('marketing.home.use_cases.items.4.title'),
+        description: t('marketing.home.use_cases.items.4.description'),
         icon: Globe2,
         href: businesses().url,
     },
     {
-        label: 'Corporate Events',
-        title: 'Easy event content for internal teams and guests',
-        description: 'Create branded albums and live displays that feel simple enough for everyone to use.',
+        label: t('marketing.home.use_cases.items.5.label'),
+        title: t('marketing.home.use_cases.items.5.title'),
+        description: t('marketing.home.use_cases.items.5.description'),
         icon: Building2,
         href: businesses().url,
     },
     {
-        label: 'Businesses / Professionals',
-        title: 'Offer polished event photo sharing as part of your service',
-        description: 'Ideal for planners, venues, agencies, and event-focused teams.',
+        label: t('marketing.home.use_cases.items.6.label'),
+        title: t('marketing.home.use_cases.items.6.title'),
+        description: t('marketing.home.use_cases.items.6.description'),
         icon: BriefcaseBusiness,
         href: businesses().url,
     },
 ];
 
 const stats = [
-    { value: '2 min', label: 'Average setup time' },
-    { value: '10k+', label: 'Albums created' },
-    { value: '1M+', label: 'Moments captured' },
-    { value: '100%', label: 'Browser-based for guests' },
+    { value: '2 min', label: t('marketing.home.social.stats.1.label') },
+    { value: '10k+', label: t('marketing.home.social.stats.2.label') },
+    { value: '1M+', label: t('marketing.home.social.stats.3.label') },
+    { value: '100%', label: t('marketing.home.social.stats.4.label') },
 ];
 
 const testimonials = [
     {
         quote:
-            'We put the QR code on every reception table and had hundreds of candid photos by the end of dinner. Guests kept saying how easy it was.',
+            t('marketing.home.reviews.testimonials.1.quote'),
         name: 'Emma',
-        detail: 'Wedding host, France',
+        detail: t('marketing.home.reviews.testimonials.1.detail'),
         image: heroGallery[0],
     },
     {
         quote:
-            'The live wall was the surprise hit. People uploaded more just to see their pictures show up on the screen a minute later.',
+            t('marketing.home.reviews.testimonials.2.quote'),
         name: 'Marcus',
-        detail: 'Birthday celebration, Germany',
+        detail: t('marketing.home.reviews.testimonials.2.detail'),
         image: heroGallery[1],
     },
     {
         quote:
-            'It felt premium without feeling technical. That is incredibly rare with event tools.',
+            t('marketing.home.reviews.testimonials.3.quote'),
         name: 'Leah',
-        detail: 'Venue manager, UK',
+        detail: t('marketing.home.reviews.testimonials.3.detail'),
         image: heroGallery[3],
     },
     {
         quote:
-            'We used it for a two-day conference and it gave us a beautiful attendee-powered recap with almost no admin overhead.',
+            t('marketing.home.reviews.testimonials.4.quote'),
         name: 'Noah',
-        detail: 'Conference organizer, Netherlands',
+        detail: t('marketing.home.reviews.testimonials.4.detail'),
         image: heroGallery[2],
     },
 ];
 
 const comparisonRows = [
     {
-        label: 'Guest experience',
-        ours: 'Open link or scan QR and upload instantly',
-        others: 'Extra steps, confusing flows, or account creation',
+        label: t('marketing.home.comparison.rows.1.label'),
+        ours: t('marketing.home.comparison.rows.1.ours'),
+        others: t('marketing.home.comparison.rows.1.others'),
     },
     {
-        label: 'Album design',
-        ours: 'Beautiful digital albums built for events',
-        others: 'Generic file buckets or dated galleries',
+        label: t('marketing.home.comparison.rows.2.label'),
+        ours: t('marketing.home.comparison.rows.2.ours'),
+        others: t('marketing.home.comparison.rows.2.others'),
     },
     {
-        label: 'Live slideshow',
-        ours: 'Included and ready for screens',
-        others: 'Often missing entirely',
+        label: t('marketing.home.comparison.rows.3.label'),
+        ours: t('marketing.home.comparison.rows.3.ours'),
+        others: t('marketing.home.comparison.rows.3.others'),
     },
     {
-        label: 'Guest capacity',
-        ours: 'Built for the whole room to join',
-        others: 'Often limited or awkward to scale',
+        label: t('marketing.home.comparison.rows.4.label'),
+        ours: t('marketing.home.comparison.rows.4.ours'),
+        others: t('marketing.home.comparison.rows.4.others'),
     },
     {
-        label: 'Customization',
-        ours: 'Flexible sharing, branding, and display options',
-        others: 'Minimal control and weak presentation',
+        label: t('marketing.home.comparison.rows.5.label'),
+        ours: t('marketing.home.comparison.rows.5.ours'),
+        others: t('marketing.home.comparison.rows.5.others'),
     },
     {
-        label: 'Getting started',
-        ours: 'Start free and launch in minutes',
-        others: 'More setup friction or upfront commitment',
+        label: t('marketing.home.comparison.rows.6.label'),
+        ours: t('marketing.home.comparison.rows.6.ours'),
+        others: t('marketing.home.comparison.rows.6.others'),
     },
 ];
 
 const faqs = [
     {
-        question: 'Do guests need to download an app?',
-        answer:
-            'No. Guests open the event link or scan the QR code and upload directly from their browser.',
+        question: t('marketing.home.faq.items.1.question'),
+        answer: t('marketing.home.faq.items.1.answer'),
     },
     {
-        question: 'Can I download all guests’ photos and videos?',
-        answer:
-            'Yes. Hosts can export the entire collection in one organized download after the event.',
+        question: t('marketing.home.faq.items.2.question'),
+        answer: t('marketing.home.faq.items.2.answer'),
     },
     {
-        question: 'Why is this better than generic sharing apps?',
-        answer:
-            'It is designed for events first: easier guest onboarding, prettier albums, QR access, and an optional live photo wall.',
+        question: t('marketing.home.faq.items.3.question'),
+        answer: t('marketing.home.faq.items.3.answer'),
     },
     {
-        question: 'Can I print the QR code on signs?',
-        answer:
-            'Absolutely. It works great on welcome signs, table cards, programs, badges, and posters.',
+        question: t('marketing.home.faq.items.4.question'),
+        answer: t('marketing.home.faq.items.4.answer'),
     },
     {
-        question: 'Can multi-day events use it?',
-        answer:
-            'Yes. It works well for weddings, retreats, festivals, conferences, and any event that stretches across multiple days.',
-    },
-    {
-        question: 'How does the live photo wall work?',
-        answer:
-            'Open the dedicated wall view on a TV or projector and incoming guest photos can appear in a clean, screen-friendly layout.',
+        question: t('marketing.home.faq.items.5.question'),
+        answer: t('marketing.home.faq.items.5.answer'),
     },
 ];
 
 const blogPosts = [
     {
-        category: 'Planning',
-        title: 'Where to place your event QR code so more guests actually upload',
-        body: 'The tiny placement choices that make photo sharing feel obvious instead of optional.',
+        category: t('marketing.home.blog.posts.1.category'),
+        title: t('marketing.home.blog.posts.1.title'),
+        body: t('marketing.home.blog.posts.1.body'),
     },
     {
-        category: 'Weddings',
-        title: 'How to turn guest photos into a digital guestbook people revisit',
-        body: 'Mix photos, wishes, captions, and a slideshow into something that feels worth keeping.',
+        category: t('marketing.home.blog.posts.2.category'),
+        title: t('marketing.home.blog.posts.2.title'),
+        body: t('marketing.home.blog.posts.2.body'),
     },
     {
-        category: 'Venues',
-        title: 'Why live photo walls create better event energy than passive displays',
-        body: 'Screens become participation magnets when guests know their upload can show up in seconds.',
+        category: t('marketing.home.blog.posts.3.category'),
+        title: t('marketing.home.blog.posts.3.title'),
+        body: t('marketing.home.blog.posts.3.body'),
     },
 ];
+
+const pageTitle = computed(() => t('marketing.home.meta.title'));
+const pageDescription = computed(() => t('marketing.home.meta.description'));
 </script>
 
 <template>
     <MarketingLayout
-        title="QR Events"
-        description="A joyful event photo-sharing platform for collecting guest uploads, live slideshows, and beautiful digital albums."
+        :title="pageTitle"
+        :description="pageDescription"
         :can-register="canRegister"
     >
         <section class="mx-auto max-w-7xl px-4 pb-18 pt-10 sm:px-6 lg:px-8 lg:pb-24 lg:pt-18">
@@ -352,23 +370,23 @@ const blogPosts = [
                 <div class="max-w-2xl">
                     <div class="inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
                         <BadgeCheck class="size-4" />
-                        #1 photo sharing app
+                        {{ t('marketing.home.hero.badge') }}
                     </div>
 
-                    <h1 class="mt-6 text-5xl font-extrabold leading-[0.95] tracking-[-0.06em] text-promo-ink sm:text-6xl lg:text-[5.2rem]">
-                        Easily collect photos from every guest at your event
+                    <h1 class="mt-6 text-[2rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-promo-ink sm:text-[2.35rem] lg:text-[2.8rem]">
+                        {{ t('marketing.home.hero.title') }}
                     </h1>
 
-                    <p class="mt-6 max-w-xl text-lg leading-8 text-promo-muted sm:text-xl">
-                        Let guests upload photos and videos into one beautiful digital album, with no app downloads, no complicated setup, and an optional live slideshow that keeps the room buzzing.
+                    <p class="mt-6 max-w-xl text-base leading-7 text-promo-muted sm:text-lg">
+                        {{ t('marketing.home.hero.description') }}
                     </p>
 
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row">
                         <Link
-                            :href="register()"
+                            :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(232,79,154,0.28)] transition hover:bg-promo-primary-strong"
                         >
-                            Create Your Event
+                            {{ t('marketing.actions.create_event') }}
                             <ArrowRight class="size-4" />
                         </Link>
 
@@ -376,7 +394,7 @@ const blogPosts = [
                             href="#how-it-works"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            Watch How It Works
+                            {{ t('marketing.home.hero.watch_demo') }}
                             <CirclePlay class="size-4" />
                         </a>
                     </div>
@@ -386,11 +404,11 @@ const blogPosts = [
                             <div class="flex items-center gap-1 text-promo-primary">
                                 <Star v-for="star in 5" :key="star" class="size-4 fill-current" />
                             </div>
-                            4.9/5 host rating
+                            {{ t('marketing.home.hero.rating') }}
                         </div>
-                        <div class="rounded-full bg-promo-surface px-4 py-2">Start free</div>
-                        <div class="rounded-full bg-promo-surface px-4 py-2">Setup in under 2 minutes</div>
-                        <div class="rounded-full bg-promo-surface px-4 py-2">Chosen by thousands of hosts</div>
+                        <div class="rounded-full bg-promo-surface px-4 py-2">{{ t('marketing.home.hero.pill_free') }}</div>
+                        <div class="rounded-full bg-promo-surface px-4 py-2">{{ t('marketing.home.hero.pill_setup') }}</div>
+                        <div class="rounded-full bg-promo-surface px-4 py-2">{{ t('marketing.home.hero.pill_hosts') }}</div>
                     </div>
                 </div>
 
@@ -400,7 +418,7 @@ const blogPosts = [
                             <div class="overflow-hidden rounded-[26px] bg-promo-surface">
                                 <img
                                     :src="heroGallery[0]"
-                                    alt="Guests sharing event photos in a digital album"
+                                    :alt="t('marketing.home.hero.gallery_main_alt')"
                                     class="aspect-[4/5] w-full object-cover"
                                 />
                             </div>
@@ -410,10 +428,10 @@ const blogPosts = [
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                                                Join with QR
+                                                {{ t('marketing.home.hero.join_qr_title') }}
                                             </p>
                                             <p class="mt-1 text-sm text-promo-muted">
-                                                Scan and upload in seconds
+                                                {{ t('marketing.home.hero.join_qr_description') }}
                                             </p>
                                         </div>
                                         <div class="grid grid-cols-4 gap-1 rounded-[16px] bg-white p-2">
@@ -430,12 +448,12 @@ const blogPosts = [
                                 <div class="grid grid-cols-2 gap-4">
                                     <img
                                         :src="heroGallery[1]"
-                                        alt="Phone screen with a shared event album"
+                                        :alt="t('marketing.home.hero.gallery_phone_alt')"
                                         class="aspect-square rounded-[24px] object-cover"
                                     />
                                     <img
                                         :src="heroGallery[2]"
-                                        alt="Happy event moment inside a digital gallery"
+                                        :alt="t('marketing.home.hero.gallery_moment_alt')"
                                         class="aspect-square rounded-[24px] object-cover"
                                     />
                                 </div>
@@ -447,10 +465,10 @@ const blogPosts = [
                                         </div>
                                         <div>
                                             <p class="text-sm font-semibold text-promo-ink">
-                                                Live slideshow ready
+                                                {{ t('marketing.home.hero.live_wall_title') }}
                                             </p>
                                             <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                                Display incoming moments on a TV or projector while guests keep uploading.
+                                                {{ t('marketing.home.hero.live_wall_description') }}
                                             </p>
                                         </div>
                                     </div>
@@ -461,10 +479,10 @@ const blogPosts = [
 
                     <div class="absolute -bottom-6 -left-4 rounded-[22px] border border-promo-line bg-white px-5 py-4 shadow-[0_18px_44px_rgba(232,79,154,0.14)]">
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                            No app downloads
+                            {{ t('marketing.home.hero.no_app_title') }}
                         </p>
                         <p class="mt-2 text-sm font-medium text-promo-ink">
-                            Just a link or QR code
+                            {{ t('marketing.home.hero.no_app_description') }}
                         </p>
                     </div>
                 </div>
@@ -474,9 +492,9 @@ const blogPosts = [
         <section class="border-y border-promo-line bg-white">
             <div class="mx-auto max-w-6xl px-4 py-8 text-center sm:px-6 lg:px-8">
                 <p class="text-xs font-semibold uppercase tracking-[0.3em] text-promo-muted">
-                    As seen on
+                    {{ t('marketing.home.logos.title') }}
                 </p>
-                <div class="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm font-semibold uppercase tracking-[0.24em] text-promo-muted/82">
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[12px] font-semibold uppercase tracking-[0.2em] text-promo-muted/82 sm:text-[13px]">
                     <span v-for="logo in logoRow" :key="logo">{{ logo }}</span>
                 </div>
             </div>
@@ -484,9 +502,9 @@ const blogPosts = [
 
         <section id="steps" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="How it starts"
-                title="Launch your album in four joyful steps"
-                description="Everything is designed to feel lightweight for guests and reassuring for hosts."
+                :eyebrow="t('marketing.home.steps.eyebrow')"
+                :title="t('marketing.home.steps.title')"
+                :description="t('marketing.home.steps.description')"
                 centered
             />
 
@@ -507,9 +525,9 @@ const blogPosts = [
         <section class="bg-promo-surface/55">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Event photo sharing made easy"
-                    title="Collect and relive event memories in one beautiful digital album"
-                    description="Built for hosts who want something polished enough to feel premium and simple enough for every guest to understand instantly."
+                    :eyebrow="t('marketing.home.value.eyebrow')"
+                    :title="t('marketing.home.value.title')"
+                    :description="t('marketing.home.value.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -525,11 +543,11 @@ const blogPosts = [
         </section>
 
         <section id="how-it-works" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <MarketingSectionHeading
-                eyebrow="How it works"
-                title="From first setup to final download, every step feels easy"
-                description="The product is designed to reduce friction for guests while still giving hosts the controls they need."
-            />
+                <MarketingSectionHeading
+                    :eyebrow="t('marketing.home.flow.eyebrow')"
+                    :title="t('marketing.home.flow.title')"
+                    :description="t('marketing.home.flow.description')"
+                />
 
             <div class="mt-16 space-y-8">
                 <article
@@ -543,10 +561,10 @@ const blogPosts = [
                                 Step {{ item.step }}
                             </span>
                         </div>
-                        <h3 class="mt-5 text-3xl font-extrabold tracking-[-0.04em] text-promo-ink">
+                        <h3 class="mt-5 text-lg font-extrabold tracking-[-0.015em] text-promo-ink sm:text-[1.3rem]">
                             {{ item.title }}
                         </h3>
-                        <p class="mt-4 text-base leading-8 text-promo-muted">
+                        <p class="mt-4 text-sm leading-7 text-promo-muted sm:text-base">
                             {{ item.description }}
                         </p>
                         <ul class="mt-6 grid gap-3 text-sm text-promo-ink/84">
@@ -582,9 +600,9 @@ const blogPosts = [
         <section id="capabilities" class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="All you need for a perfect event"
-                    title="Built to help every event feel easy, elegant, and fully shared"
-                    description="Everything from QR code entry to secure downloads is designed to feel polished and reassuring."
+                    :eyebrow="t('marketing.home.capabilities.eyebrow')"
+                    :title="t('marketing.home.capabilities.title')"
+                    :description="t('marketing.home.capabilities.description')"
                     centered
                 />
 
@@ -603,9 +621,9 @@ const blogPosts = [
         <section id="use-cases" class="bg-promo-surface/55">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Event photo sharing for any occasion"
-                    title="Made for weddings, celebrations, conferences, and every event in between"
-                    description="The same product logic works beautifully for private milestones and large public experiences alike."
+                    :eyebrow="t('marketing.home.use_cases.eyebrow')"
+                    :title="t('marketing.home.use_cases.title')"
+                    :description="t('marketing.home.use_cases.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -621,14 +639,14 @@ const blogPosts = [
                         <p class="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
                             {{ item.label }}
                         </p>
-                        <h3 class="mt-3 text-2xl font-bold tracking-[-0.03em] text-promo-ink">
+                        <h3 class="mt-3 text-base font-bold tracking-[-0.015em] text-promo-ink sm:text-lg">
                             {{ item.title }}
                         </h3>
                         <p class="mt-3 text-sm leading-7 text-promo-muted">
                             {{ item.description }}
                         </p>
                         <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
-                            Learn more
+                            {{ t('marketing.shared.learn_more') }}
                             <ArrowRight class="size-4 transition group-hover:translate-x-1" />
                         </div>
                     </Link>
@@ -640,13 +658,13 @@ const blogPosts = [
             <div class="grid gap-10 rounded-[34px] border border-promo-line bg-white p-6 shadow-[0_22px_70px_rgba(120,86,255,0.1)] lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
-                        Social proof
+                        {{ t('marketing.home.social.eyebrow') }}
                     </p>
-                    <h2 class="mt-4 text-4xl font-extrabold tracking-[-0.05em] text-promo-ink lg:text-5xl">
-                        Millions of moments shared across thousands of unforgettable events
+                    <h2 class="mt-4 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.45rem] lg:text-[1.7rem]">
+                        {{ t('marketing.home.social.title') }}
                     </h2>
-                    <p class="mt-5 max-w-lg text-base leading-8 text-promo-muted">
-                        Hosts choose QR Events because it feels joyful for guests, fast for planners, and polished enough to trust with once-in-a-lifetime memories.
+                    <p class="mt-5 max-w-lg text-sm leading-7 text-promo-muted sm:text-base">
+                        {{ t('marketing.home.social.description') }}
                     </p>
 
                     <div class="mt-8 grid gap-4 sm:grid-cols-2">
@@ -655,7 +673,7 @@ const blogPosts = [
                             :key="item.label"
                             class="rounded-[22px] border border-promo-line bg-promo-surface p-5"
                         >
-                            <div class="text-3xl font-extrabold tracking-[-0.04em] text-promo-ink">
+                            <div class="text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.35rem]">
                                 {{ item.value }}
                             </div>
                             <div class="mt-2 text-sm text-promo-muted">
@@ -666,17 +684,17 @@ const blogPosts = [
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                         <Link
-                            :href="register()"
+                            :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
-                            Create Your Event
+                            {{ t('marketing.actions.create_event') }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             :href="pricing()"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            View Pricing
+                            {{ t('marketing.shared.view_pricing') }}
                         </Link>
                     </div>
                 </div>
@@ -686,7 +704,7 @@ const blogPosts = [
                         v-for="image in heroGallery"
                         :key="`stat-${image}`"
                         :src="image"
-                        alt="Happy event photo moment"
+                        :alt="t('marketing.home.social.gallery_alt')"
                         class="aspect-[4/3] w-full rounded-[26px] object-cover"
                         loading="lazy"
                         decoding="async"
@@ -698,16 +716,16 @@ const blogPosts = [
         <section id="reviews" class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Don’t just take our word for it"
-                    title="Loved by hosts who want beautiful event sharing without friction"
-                    description="Warm, candid reviews from people who needed something elegant enough for guests and simple enough for everyone to use."
+                    :eyebrow="t('marketing.home.reviews.eyebrow')"
+                    :title="t('marketing.home.reviews.title')"
+                    :description="t('marketing.home.reviews.description')"
                 />
 
                 <div class="mt-6 inline-flex items-center gap-3 rounded-full bg-promo-surface px-4 py-2 text-sm font-semibold text-promo-ink">
                     <div class="flex items-center gap-1 text-promo-primary">
                         <Star v-for="star in 5" :key="`summary-${star}`" class="size-4 fill-current" />
                     </div>
-                    Rated 4.9 by hosts across weddings, parties, and public events
+                    {{ t('marketing.home.reviews.rating_summary') }}
                 </div>
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -726,16 +744,16 @@ const blogPosts = [
         <section id="comparison" class="bg-promo-surface/55">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Why it wins"
-                    title="A better event experience than generic photo sharing apps"
-                    description="The difference is not only what guests can upload. It is how easy, modern, and event-ready the whole experience feels."
+                    :eyebrow="t('marketing.home.comparison.eyebrow')"
+                    :title="t('marketing.home.comparison.title')"
+                    :description="t('marketing.home.comparison.description')"
                     centered
                 />
 
                 <div class="mt-14 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
                     <div class="rounded-[30px] border border-promo-primary/20 bg-white p-6 shadow-[0_18px_60px_rgba(232,79,154,0.12)]">
                         <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                            Our product
+                            {{ t('marketing.shared.our_product') }}
                         </div>
                         <div class="mt-6 space-y-4">
                             <div
@@ -760,7 +778,7 @@ const blogPosts = [
 
                     <div class="rounded-[30px] border border-promo-line bg-white p-6">
                         <div class="inline-flex items-center gap-2 rounded-full bg-promo-warm px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-ink">
-                            Other apps
+                            {{ t('marketing.shared.other_apps') }}
                         </div>
                         <div class="mt-6 space-y-4">
                             <div
@@ -788,9 +806,9 @@ const blogPosts = [
 
         <section id="blog" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="Blog"
-                title="Fresh ideas for making guest photo sharing work beautifully"
-                description="Helpful, practical guidance for hosts, planners, venues, and anyone trying to get more guests to actually contribute."
+                :eyebrow="t('marketing.home.blog.eyebrow')"
+                :title="t('marketing.home.blog.title')"
+                :description="t('marketing.home.blog.description')"
             />
 
             <div class="mt-14 grid gap-6 md:grid-cols-3">
@@ -802,14 +820,14 @@ const blogPosts = [
                     <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
                         {{ post.category }}
                     </p>
-                    <h3 class="mt-4 text-2xl font-bold tracking-[-0.03em] text-promo-ink">
+                    <h3 class="mt-4 text-base font-bold tracking-[-0.015em] text-promo-ink sm:text-lg">
                         {{ post.title }}
                     </h3>
                     <p class="mt-4 text-sm leading-7 text-promo-muted">
                         {{ post.body }}
                     </p>
                     <a href="#" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
-                        Read article
+                        {{ t('marketing.shared.read_article') }}
                         <ArrowRight class="size-4" />
                     </a>
                 </article>
@@ -819,9 +837,9 @@ const blogPosts = [
         <section id="faq" class="bg-white">
             <div class="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="FAQ"
-                    title="Everything hosts ask before launching their first event"
-                    description="Simple answers to the questions that come up most often."
+                    :eyebrow="t('marketing.home.faq.eyebrow')"
+                    :title="t('marketing.home.faq.title')"
+                    :description="t('marketing.home.faq.description')"
                     centered
                 />
 
@@ -849,28 +867,28 @@ const blogPosts = [
             <div class="overflow-hidden rounded-[36px] border border-promo-line bg-linear-to-br from-promo-surface via-white to-promo-purple p-8 shadow-[0_24px_70px_rgba(232,79,154,0.14)] lg:p-12">
                 <div class="mx-auto max-w-3xl text-center">
                     <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
-                        Start your event
+                        {{ t('marketing.home.cta.eyebrow') }}
                     </p>
-                    <h2 class="mt-4 text-4xl font-extrabold tracking-[-0.05em] text-promo-ink sm:text-5xl">
-                        Turn every guest into part of the memory
+                    <h2 class="mt-4 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.5rem]">
+                        {{ t('marketing.home.cta.title') }}
                     </h2>
-                    <p class="mt-5 text-base leading-8 text-promo-muted sm:text-lg">
-                        Launch your digital album, share one link or QR code, and let the best candid moments find their way to you automatically.
+                    <p class="mt-5 text-sm leading-7 text-promo-muted sm:text-base">
+                        {{ t('marketing.home.cta.description') }}
                     </p>
 
                     <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
                         <Link
-                            :href="register()"
+                            :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
-                            Create Your Event
+                            {{ t('marketing.actions.create_event') }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             :href="pricing()"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            View Pricing
+                            {{ t('marketing.shared.view_pricing') }}
                         </Link>
                     </div>
                 </div>

@@ -46,6 +46,8 @@ test('super admin can update event billing and switch plans', function () {
         'storage_limit_bytes' => 10737418240,
         'upload_limit' => 300,
         'retention_days' => 30,
+        'upload_window_days' => 1,
+        'customization_tier' => 'basic',
         'is_active' => true,
     ]);
     $businessPlan = Plan::factory()->create([
@@ -55,6 +57,10 @@ test('super admin can update event billing and switch plans', function () {
         'storage_limit_bytes' => 21474836480,
         'upload_limit' => 800,
         'retention_days' => 60,
+        'grace_days' => 7,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
         'video_max_duration_seconds' => 45,
         'is_active' => true,
     ]);
@@ -92,9 +98,14 @@ test('super admin can update event billing and switch plans', function () {
         ->and($event->payment_due_at?->toDateTimeString())->toBe('2026-03-28 23:59:59')
         ->and($event->paid_at?->format('Y-m-d H:i'))->toBe('2026-03-14 10:30')
         ->and($event->billing_note)->toBe('Paid via bank transfer.')
-        ->and($event->retention_ends_at?->toDateTimeString())->toBe('2026-05-22 23:59:59')
+        ->and($event->upload_window_ends_at?->toDateTimeString())->toBe('2026-04-18 23:59:59')
+        ->and($event->grace_ends_at?->toDateTimeString())->toBe('2026-04-25 23:59:59')
+        ->and($event->retention_ends_at?->toDateTimeString())->toBe('2026-06-17 23:59:59')
         ->and($event->storage_limit_bytes)->toBe(21474836480)
         ->and($event->upload_limit)->toBe(800)
+        ->and($event->upload_window_days)->toBe(30)
+        ->and($event->customization_tier)->toBe('better')
+        ->and($event->download_all_enabled)->toBeTrue()
         ->and($event->video_max_duration_seconds)->toBe(45)
         ->and($event->status)->toBe(Event::STATUS_SCHEDULED);
 

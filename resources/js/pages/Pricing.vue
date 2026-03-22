@@ -1,23 +1,42 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowRight, Check, Shield, Sparkles, Zap } from 'lucide-vue-next';
+import { ArrowRight, Check, CircleHelp, Shield, Sparkles, Zap } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
-import { register } from '@/routes';
+import { create as onboardingCreate } from '@/routes/onboarding';
+
+type PricingFeature = {
+    label: string;
+    help: string;
+    available?: boolean;
+};
 
 type PricingPlan = {
     id: number;
+    slug: string;
     name: string;
+    summary: string;
     description: string | null;
     currency: string;
     priceLabel: string;
-    storageLabel: string;
+    billingLabel: string;
     uploadLabel: string;
     retentionLabel: string;
-    videoLabel: string;
-    photoSizeLabel: string;
-    videoSizeLabel: string;
+    activeWindowLabel: string;
+    customizationLabel: string;
+    qualityLabel: string;
+    isHighlighted: boolean;
     isDefault: boolean;
+    featureItems: PricingFeature[];
     ctaHref: string;
     ctaLabel: string;
 };
@@ -27,27 +46,68 @@ const props = defineProps<{
     plans: PricingPlan[];
 }>();
 
-const compareRows = [
-    { label: 'Storage included', values: props.plans.map((plan) => plan.storageLabel) },
-    { label: 'Uploads included', values: props.plans.map((plan) => plan.uploadLabel) },
-    { label: 'Retention window', values: props.plans.map((plan) => plan.retentionLabel) },
-    { label: 'Video length', values: props.plans.map((plan) => plan.videoLabel) },
-];
+const { t } = useTranslations();
 
-const compareColumns = props.plans.map((plan, index) => ({
-    id: plan.id,
-    name: plan.name,
-    rows: compareRows.map((row) => ({
-        label: row.label,
-        value: row.values[index] ?? '',
+const pageTitle = computed(() => t('marketing.pricing.meta.title'));
+const pageDescription = computed(() => t('marketing.pricing.meta.description'));
+const featureHelpOpen = ref(false);
+const selectedFeatureHelp = ref<{ label: string; help: string } | null>(null);
+
+const compareRows = computed(() => [
+    { label: t('marketing.pricing.compare.rows.uploads'), values: props.plans.map((plan) => plan.uploadLabel) },
+    { label: t('marketing.pricing.compare.rows.retention'), values: props.plans.map((plan) => plan.retentionLabel) },
+    { label: t('marketing.pricing.compare.rows.active_window'), values: props.plans.map((plan) => plan.activeWindowLabel) },
+    { label: t('marketing.pricing.compare.rows.customization'), values: props.plans.map((plan) => plan.customizationLabel) },
+]);
+
+const compareColumns = computed(() =>
+    props.plans.map((plan, index) => ({
+        id: plan.id,
+        name: plan.name,
+        rows: compareRows.value.map((row) => ({
+            label: row.label,
+            value: row.values[index] ?? '',
+        })),
     })),
-}));
+);
+
+const commonFeatures = computed(() => [
+    {
+        title: t('marketing.pricing.common_features.live_wall.title'),
+        description: t('marketing.pricing.common_features.live_wall.description'),
+    },
+    {
+        title: t('marketing.pricing.common_features.digital_album.title'),
+        description: t('marketing.pricing.common_features.digital_album.description'),
+    },
+    {
+        title: t('marketing.pricing.common_features.no_app.title'),
+        description: t('marketing.pricing.common_features.no_app.description'),
+    },
+    {
+        title: t('marketing.pricing.common_features.customizations.title'),
+        description: t('marketing.pricing.common_features.customizations.description'),
+    },
+    {
+        title: t('marketing.pricing.common_features.captions.title'),
+        description: t('marketing.pricing.common_features.captions.description'),
+    },
+    {
+        title: t('marketing.pricing.common_features.private.title'),
+        description: t('marketing.pricing.common_features.private.description'),
+    },
+]);
+
+const openFeatureHelp = (label: string, help: string): void => {
+    selectedFeatureHelp.value = { label, help };
+    featureHelpOpen.value = true;
+};
 </script>
 
 <template>
     <MarketingLayout
-        title="Pricing"
-        description="Simple event pricing for guest albums, QR code sharing, and live slideshows."
+        :title="pageTitle"
+        :description="pageDescription"
         :can-register="canRegister"
     >
         <section class="mx-auto max-w-7xl px-4 pb-18 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-16">
@@ -55,17 +115,25 @@ const compareColumns = props.plans.map((plan, index) => ({
                 <div class="max-w-2xl">
                     <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
                         <Sparkles class="size-3.5" />
-                        Pricing
+                        {{ t('marketing.pricing.hero.badge') }}
                     </p>
-                    <h1 class="mt-6 text-5xl font-extrabold leading-[0.96] tracking-[-0.06em] text-promo-ink sm:text-6xl">
-                        Clear event pricing with beautiful albums, QR access, and live display built in
+                    <h1 class="mt-6 text-[2rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-promo-ink sm:text-[2.35rem]">
+                        {{ t('marketing.pricing.hero.title') }}
                     </h1>
                 </div>
 
                 <div class="rounded-[30px] border border-promo-line bg-white p-6 shadow-[0_18px_55px_rgba(120,86,255,0.08)]">
-                    <p class="text-base leading-8 text-promo-muted">
-                        Choose a plan that fits your event size and upload needs. Every package is designed to feel simple for hosts and effortless for guests.
+                    <p class="text-sm leading-7 text-promo-muted sm:text-base">
+                        {{ t('marketing.pricing.hero.description') }}
                     </p>
+                    <div class="mt-5 rounded-[22px] border border-promo-line bg-promo-surface/45 p-4">
+                        <p class="text-sm font-semibold text-promo-ink">
+                            {{ t('marketing.pricing.guarantee.title') }}
+                        </p>
+                        <p class="mt-2 text-sm leading-7 text-promo-muted">
+                            {{ t('marketing.pricing.guarantee.description') }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -79,45 +147,80 @@ const compareColumns = props.plans.map((plan, index) => ({
                     v-for="plan in plans"
                     :key="plan.id"
                     class="flex h-full flex-col rounded-[30px] border bg-white p-7 shadow-[0_18px_55px_rgba(232,79,154,0.08)]"
-                    :class="plan.isDefault ? 'border-promo-primary/30 bg-linear-to-br from-white to-promo-surface/80' : 'border-promo-line'"
+                    :class="plan.isHighlighted ? 'border-promo-primary/30 bg-linear-to-br from-white to-promo-surface/80' : 'border-promo-line'"
                 >
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                                {{ plan.currency }}
+                                {{ plan.name }}
                             </p>
-                            <h2 class="mt-4 text-4xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                            <h2 class="mt-4 text-2xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.7rem]">
                                 {{ plan.priceLabel }}
                             </h2>
-                            <p class="mt-3 text-sm leading-7 text-promo-muted">
-                                {{ plan.name }}
+                            <p class="mt-3 text-sm font-medium text-promo-muted">
+                                {{ plan.billingLabel }}
                             </p>
                         </div>
 
                         <div
-                            v-if="plan.isDefault"
+                            v-if="plan.isHighlighted"
                             class="rounded-full bg-promo-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white"
                         >
-                            Most loved
+                            {{ t('marketing.pricing.plan.most_loved') }}
                         </div>
                     </div>
 
                     <div class="mt-6 rounded-[22px] border border-promo-line bg-white/80 px-4 py-4 text-sm leading-7 text-promo-muted">
-                        {{ plan.description || 'A polished plan for collecting guest uploads, running a live wall, and downloading every memory afterward.' }}
+                        <p class="font-semibold text-promo-ink">{{ plan.summary }}</p>
+                        <p class="mt-2">
+                            {{ plan.description || t('marketing.pricing.plan.description_fallback') }}
+                        </p>
                     </div>
 
-                    <div class="mt-8 flex-1 space-y-4">
+                    <div class="mt-8 grid gap-3 text-sm text-promo-muted sm:grid-cols-2">
+                        <div class="rounded-[18px] bg-promo-surface/55 px-4 py-3">
+                            {{ plan.uploadLabel }}
+                        </div>
+                        <div class="rounded-[18px] bg-promo-surface/55 px-4 py-3">
+                            {{ plan.retentionLabel }}
+                        </div>
+                        <div class="rounded-[18px] bg-promo-surface/55 px-4 py-3">
+                            {{ plan.activeWindowLabel }}
+                        </div>
+                        <div class="rounded-[18px] bg-promo-surface/55 px-4 py-3">
+                            {{ plan.qualityLabel }}
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex-1 space-y-3">
                         <div
-                            v-for="feature in [plan.storageLabel, plan.uploadLabel, plan.retentionLabel, plan.videoLabel, plan.photoSizeLabel, plan.videoSizeLabel]"
-                            :key="feature"
-                            class="flex items-start gap-3"
+                            v-for="feature in plan.featureItems"
+                            :key="`${plan.id}-${feature.label}`"
+                            class="flex items-start gap-3 rounded-[18px] border border-promo-line/80 px-4 py-3"
                         >
                             <div class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-promo-surface text-promo-primary">
                                 <Check class="size-3.5" />
                             </div>
-                            <div class="text-sm leading-6 text-promo-ink">
-                                {{ feature }}
+                            <div class="min-w-0 flex-1 text-sm leading-6 text-promo-ink">
+                                {{ feature.label }}
                             </div>
+                            <button
+                                type="button"
+                                class="inline-flex shrink-0 rounded-full p-1 text-promo-muted transition hover:bg-promo-surface hover:text-promo-ink"
+                                @click="openFeatureHelp(feature.label, feature.help)"
+                            >
+                                <CircleHelp class="size-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 rounded-[22px] border border-dashed border-promo-line px-4 py-4 text-sm text-promo-muted">
+                        {{ plan.customizationLabel }}
+                        <div
+                            v-if="plan.isDefault"
+                            class="mt-2 text-xs uppercase tracking-[0.16em] text-promo-primary"
+                        >
+                            {{ t('marketing.pricing.plan.default_hint') }}
                         </div>
                     </div>
 
@@ -125,7 +228,7 @@ const compareColumns = props.plans.map((plan, index) => ({
                         :href="plan.ctaHref"
                         class="mt-8 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition"
                         :class="
-                            plan.isDefault
+                            plan.isHighlighted
                                 ? 'bg-promo-primary text-white hover:bg-promo-primary-strong'
                                 : 'border border-promo-line bg-white text-promo-ink hover:bg-promo-surface'
                         "
@@ -140,16 +243,60 @@ const compareColumns = props.plans.map((plan, index) => ({
                 v-else
                 class="rounded-[30px] border border-promo-line bg-white px-8 py-12 text-center text-promo-muted"
             >
-                Pricing is being finalized. Check back shortly for published event plans.
+                {{ t('marketing.pricing.empty') }}
+            </div>
+        </section>
+
+        <section class="bg-promo-surface/45">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+                <div class="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+                    <div class="rounded-[30px] border border-promo-line bg-white p-7 shadow-[0_18px_55px_rgba(120,86,255,0.08)]">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            {{ t('marketing.pricing.refund.eyebrow') }}
+                        </p>
+                        <h2 class="mt-4 text-[1.6rem] font-extrabold tracking-[-0.03em] text-promo-ink">
+                            {{ t('marketing.pricing.refund.title') }}
+                        </h2>
+                        <p class="mt-4 text-sm leading-7 text-promo-muted">
+                            {{ t('marketing.pricing.refund.description') }}
+                        </p>
+                        <div class="mt-5 rounded-[22px] bg-promo-surface/55 px-4 py-4 text-sm leading-7 text-promo-muted">
+                            {{ t('marketing.pricing.refund.contact') }}
+                        </div>
+                    </div>
+
+                    <div class="rounded-[30px] border border-promo-line bg-white p-7 shadow-[0_18px_55px_rgba(120,86,255,0.08)]">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            {{ t('marketing.pricing.common_features.eyebrow') }}
+                        </p>
+                        <h2 class="mt-4 text-[1.6rem] font-extrabold tracking-[-0.03em] text-promo-ink">
+                            {{ t('marketing.pricing.common_features.title') }}
+                        </h2>
+                        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                            <article
+                                v-for="feature in commonFeatures"
+                                :key="feature.title"
+                                class="rounded-[22px] bg-promo-surface/45 px-4 py-4"
+                            >
+                                <h3 class="text-sm font-semibold text-promo-ink">
+                                    {{ feature.title }}
+                                </h3>
+                                <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                    {{ feature.description }}
+                                </p>
+                            </article>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Compare plans"
-                    title="See what changes as your event grows"
-                    description="The comparison below keeps the essentials visible without making the page feel like a spreadsheet."
+                    :eyebrow="t('marketing.pricing.compare.eyebrow')"
+                    :title="t('marketing.pricing.compare.title')"
+                    :description="t('marketing.pricing.compare.description')"
                     centered
                 />
 
@@ -159,7 +306,7 @@ const compareColumns = props.plans.map((plan, index) => ({
                         :key="plan.id"
                         class="rounded-[26px] border border-promo-line bg-promo-bg p-5"
                     >
-                        <h3 class="text-2xl font-bold text-promo-ink">{{ plan.name }}</h3>
+                        <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ plan.name }}</h3>
                         <div class="mt-4 grid gap-3">
                             <div
                                 v-for="row in plan.rows"
@@ -185,7 +332,7 @@ const compareColumns = props.plans.map((plan, index) => ({
                         class="grid border-b border-promo-line bg-promo-surface px-6 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-promo-muted"
                         :style="{ gridTemplateColumns: `1.1fr repeat(${plans.length}, minmax(0, 1fr))` }"
                     >
-                        <div>Capability</div>
+                        <div>{{ t('marketing.pricing.compare.capability') }}</div>
                         <div v-for="plan in plans" :key="plan.id">{{ plan.name }}</div>
                     </div>
 
@@ -209,9 +356,9 @@ const compareColumns = props.plans.map((plan, index) => ({
                         <div class="flex size-12 items-center justify-center rounded-[18px] bg-promo-surface text-promo-primary">
                             <Sparkles class="size-5" />
                         </div>
-                        <h3 class="mt-5 text-2xl font-bold text-promo-ink">Clear package choices</h3>
+                        <h3 class="mt-5 text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.highlights.1.title') }}</h3>
                         <p class="mt-4 text-sm leading-7 text-promo-muted">
-                            Every plan is easy to understand without forcing hosts to decode vague SaaS jargon.
+                            {{ t('marketing.pricing.highlights.1.description') }}
                         </p>
                     </article>
 
@@ -219,9 +366,9 @@ const compareColumns = props.plans.map((plan, index) => ({
                         <div class="flex size-12 items-center justify-center rounded-[18px] bg-promo-surface text-promo-primary">
                             <Shield class="size-5" />
                         </div>
-                        <h3 class="mt-5 text-2xl font-bold text-promo-ink">Built for confidence</h3>
+                        <h3 class="mt-5 text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.highlights.2.title') }}</h3>
                         <p class="mt-4 text-sm leading-7 text-promo-muted">
-                            Storage, upload limits, and retention stay visible up front so there are fewer surprises later.
+                            {{ t('marketing.pricing.highlights.2.description') }}
                         </p>
                     </article>
 
@@ -229,23 +376,41 @@ const compareColumns = props.plans.map((plan, index) => ({
                         <div class="flex size-12 items-center justify-center rounded-[18px] bg-promo-surface text-promo-primary">
                             <Zap class="size-5" />
                         </div>
-                        <h3 class="mt-5 text-2xl font-bold text-promo-ink">Start light, scale later</h3>
+                        <h3 class="mt-5 text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.highlights.3.title') }}</h3>
                         <p class="mt-4 text-sm leading-7 text-promo-muted">
-                            Start with a single event and grow into bigger activations, venue programs, or recurring client work.
+                            {{ t('marketing.pricing.highlights.3.description') }}
                         </p>
                     </article>
                 </div>
 
+                <div class="mt-10 rounded-[28px] border border-promo-line bg-white px-6 py-5 text-center text-sm text-promo-muted">
+                    {{ t('marketing.pricing.footer_note') }}
+                </div>
+
                 <div class="mt-12 text-center">
+                    <p class="mb-4 text-sm text-promo-muted">
+                        {{ t('marketing.pricing.professionals.description') }}
+                    </p>
                     <Link
-                        :href="register()"
+                        :href="onboardingCreate({ query: { plan: 'free' } })"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Start Free
+                        {{ t('marketing.actions.create_event') }}
                         <ArrowRight class="size-4" />
                     </Link>
                 </div>
             </div>
         </section>
+
+        <Dialog v-model:open="featureHelpOpen">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>{{ selectedFeatureHelp?.label }}</DialogTitle>
+                    <DialogDescription>
+                        {{ selectedFeatureHelp?.help }}
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
     </MarketingLayout>
 </template>

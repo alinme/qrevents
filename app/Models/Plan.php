@@ -22,6 +22,11 @@ class Plan extends Model
         'upload_limit',
         'retention_days',
         'grace_days',
+        'upload_window_days',
+        'customization_tier',
+        'download_all_enabled',
+        'moderation_tools_enabled',
+        'remove_app_branding',
         'video_max_duration_seconds',
         'photo_max_size_bytes',
         'video_max_size_bytes',
@@ -37,6 +42,9 @@ class Plan extends Model
         return [
             'is_active' => 'boolean',
             'is_default' => 'boolean',
+            'download_all_enabled' => 'boolean',
+            'moderation_tools_enabled' => 'boolean',
+            'remove_app_branding' => 'boolean',
         ];
     }
 

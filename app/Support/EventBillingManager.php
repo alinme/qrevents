@@ -16,10 +16,16 @@ class EventBillingManager
         ?CarbonImmutable $paymentDueAt,
         ?CarbonImmutable $paidAt,
         ?string $billingNote,
-    ): Event
-    {
+    ): Event {
+        $timezone = $event->timezone ?: config('events.default_timezone', 'UTC');
+        $windows = EventLifecycleWindows::build(
+            $event->event_date?->toDateString(),
+            $timezone,
+            (int) $plan->upload_window_days,
+            (int) $plan->grace_days,
+        );
         $retentionEndsAt = $isPaid
-            ? $this->resolveRetentionEndsAt($event, $plan)
+            ? $this->resolveRetentionEndsAt($event, $plan, $windows['upload_window_ends_at'])
             : null;
 
         $event->update([
@@ -31,11 +37,26 @@ class EventBillingManager
             'billing_note' => $billingNote !== '' ? $billingNote : null,
             'retention_ends_at' => $retentionEndsAt,
             'renewal_grace_ends_at' => null,
+            'upload_window_starts_at' => $windows['upload_window_starts_at'],
+            'upload_window_ends_at' => $windows['upload_window_ends_at'],
+            'grace_ends_at' => $windows['grace_ends_at'],
+            'hard_lock_at' => $windows['hard_lock_at'],
             'storage_limit_bytes' => $plan->storage_limit_bytes,
             'upload_limit' => $plan->upload_limit,
+            'upload_window_days' => $plan->upload_window_days,
+            'customization_tier' => $plan->customization_tier,
+            'download_all_enabled' => $plan->download_all_enabled,
+            'moderation_tools_enabled' => $plan->moderation_tools_enabled,
+            'remove_app_branding' => $plan->remove_app_branding,
             'video_max_duration_seconds' => $plan->video_max_duration_seconds,
             'photo_max_size_bytes' => $plan->photo_max_size_bytes,
             'video_max_size_bytes' => $plan->video_max_size_bytes,
+            'moderation_enabled' => $plan->moderation_tools_enabled
+                ? $event->moderation_enabled
+                : false,
+            'auto_moderation_enabled' => $plan->moderation_tools_enabled
+                ? $event->auto_moderation_enabled
+                : false,
             'stripe_checkout_session_id' => $isPaid ? $event->stripe_checkout_session_id : null,
             'stripe_payment_intent_id' => $isPaid ? $event->stripe_payment_intent_id : null,
             'stripe_paid_amount_cents' => $isPaid ? $event->stripe_paid_amount_cents : null,
@@ -59,9 +80,16 @@ class EventBillingManager
         int $amountTotal,
         string $currency,
     ): Event {
+        $timezone = $event->timezone ?: config('events.default_timezone', 'UTC');
+        $windows = EventLifecycleWindows::build(
+            $event->event_date?->toDateString(),
+            $timezone,
+            (int) $plan->upload_window_days,
+            (int) $plan->grace_days,
+        );
         $paidAt = $event->paid_at?->toImmutable()
-            ?? now($event->timezone ?: config('events.default_timezone', 'UTC'))->toImmutable();
-        $retentionEndsAt = $this->resolveRetentionEndsAt($event, $plan);
+            ?? now($timezone)->toImmutable();
+        $retentionEndsAt = $this->resolveRetentionEndsAt($event, $plan, $windows['upload_window_ends_at']);
 
         $event->update([
             'plan_id' => $plan->id,
@@ -71,11 +99,26 @@ class EventBillingManager
             'paid_at' => $paidAt,
             'retention_ends_at' => $retentionEndsAt,
             'renewal_grace_ends_at' => null,
+            'upload_window_starts_at' => $windows['upload_window_starts_at'],
+            'upload_window_ends_at' => $windows['upload_window_ends_at'],
+            'grace_ends_at' => $windows['grace_ends_at'],
+            'hard_lock_at' => $windows['hard_lock_at'],
             'storage_limit_bytes' => $plan->storage_limit_bytes,
             'upload_limit' => $plan->upload_limit,
+            'upload_window_days' => $plan->upload_window_days,
+            'customization_tier' => $plan->customization_tier,
+            'download_all_enabled' => $plan->download_all_enabled,
+            'moderation_tools_enabled' => $plan->moderation_tools_enabled,
+            'remove_app_branding' => $plan->remove_app_branding,
             'video_max_duration_seconds' => $plan->video_max_duration_seconds,
             'photo_max_size_bytes' => $plan->photo_max_size_bytes,
             'video_max_size_bytes' => $plan->video_max_size_bytes,
+            'moderation_enabled' => $plan->moderation_tools_enabled
+                ? $event->moderation_enabled
+                : false,
+            'auto_moderation_enabled' => $plan->moderation_tools_enabled
+                ? $event->auto_moderation_enabled
+                : false,
             'stripe_checkout_session_id' => $checkoutSessionId,
             'stripe_payment_intent_id' => $paymentIntentId,
             'stripe_paid_amount_cents' => $amountTotal,
@@ -91,7 +134,7 @@ class EventBillingManager
         return $event->refresh();
     }
 
-    public function resolveRetentionEndsAt(Event $event, Plan $plan): ?CarbonImmutable
+    public function resolveRetentionEndsAt(Event $event, Plan $plan, ?CarbonImmutable $uploadWindowEndsAt = null): ?CarbonImmutable
     {
         $retentionDays = max(0, (int) $plan->retention_days);
 
@@ -100,7 +143,8 @@ class EventBillingManager
         }
 
         $timezone = $event->timezone ?: config('events.default_timezone', 'UTC');
-        $baseDate = $event->upload_window_ends_at?->toImmutable()
+        $baseDate = $uploadWindowEndsAt
+            ?? $event->upload_window_ends_at?->toImmutable()
             ?? ($event->event_date !== null
                 ? CarbonImmutable::parse($event->event_date->toDateString(), $timezone)->endOfDay()
                 : now($timezone)->toImmutable()->endOfDay());

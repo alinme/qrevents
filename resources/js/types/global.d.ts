@@ -23,6 +23,11 @@ declare module '@inertiajs/core' {
                 error?: string | null;
                 info?: string | null;
             };
+            locale: {
+                current: string;
+                available: string[];
+            };
+            translations: Record<string, unknown>;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

@@ -72,7 +72,7 @@ type EventSettingsPayload = {
         required: boolean;
         enabled: boolean;
     }>;
-    displayLanguage: 'automatic' | 'ro' | 'en';
+    displayLanguage: 'automatic' | 'ro' | 'en' | 'el';
     hideSideImages: boolean;
     hideQrCode: boolean;
     hideCaption: boolean;
@@ -119,11 +119,22 @@ type CollaboratorPayload = {
     status: 'active' | 'invited' | 'accepted' | 'pending';
 };
 
+type EventPlanFeatures = {
+    customizationTier: 'basic' | 'better' | 'advanced';
+    allowsBetterCustomization: boolean;
+    allowsAdvancedCustomization: boolean;
+    allowsDownloadAll: boolean;
+    allowsModerationTools: boolean;
+    removesAppBranding: boolean;
+    uploadWindowDays: number;
+};
+
 type EventPayload = {
     id: number;
     name: string;
     type: string;
     planId: number | null;
+    planFeatures: EventPlanFeatures;
     eventDate: string | null;
     timezone: string;
     paymentDueAt: string | null;
@@ -136,6 +147,7 @@ type EventPayload = {
         planId: number | null;
         planName: string;
         planPriceLabel: string;
+        planFeatures: EventPlanFeatures;
         isPaid: boolean;
         paymentDueAt: string | null;
         paidAt: string | null;
@@ -355,7 +367,7 @@ const normalizeWelcomeScreenFields = (value: unknown): WelcomeScreenField[] => {
 };
 
 const activeTab = ref<TabId>('general');
-const tabItems: Array<{ id: TabId; label: string; icon: unknown }> = [
+const allTabItems: Array<{ id: TabId; label: string; icon: unknown }> = [
     { id: 'general', label: 'General', icon: SlidersHorizontal },
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'appearance', label: 'Appearance', icon: Palette },
@@ -363,6 +375,16 @@ const tabItems: Array<{ id: TabId; label: string; icon: unknown }> = [
     { id: 'moderation', label: 'Moderation', icon: ShieldCheck },
     { id: 'collaborators', label: 'Collaborators', icon: Users },
 ];
+
+const planFeatures = computed(() => props.currentEvent.planFeatures);
+const canEditLogo = computed(() => planFeatures.value.allowsBetterCustomization);
+const canEditAdvancedAppearance = computed(() => planFeatures.value.allowsAdvancedCustomization);
+const canUseModeration = computed(() => planFeatures.value.allowsModerationTools);
+const visibleTabItems = computed(() =>
+    allTabItems.filter(
+        (tab) => tab.id !== 'moderation' || canUseModeration.value,
+    ),
+);
 
 const requestedTab = computed<TabId | null>(() => {
     const query = page.url.split('?')[1] ?? '';
@@ -386,8 +408,19 @@ if (requestedTab.value !== null) {
 }
 
 watch(requestedTab, (tab) => {
+    if (tab === 'moderation' && !canUseModeration.value) {
+        activeTab.value = 'billing';
+        return;
+    }
+
     if (tab !== null) {
         activeTab.value = tab;
+    }
+});
+
+watch(canUseModeration, (enabled) => {
+    if (!enabled && activeTab.value === 'moderation') {
+        activeTab.value = 'billing';
     }
 });
 
@@ -1386,7 +1419,7 @@ function resolveSupportedTimezones(): string[] {
                     <CardHeader class="border-b px-4 py-0">
                         <nav class="flex flex-wrap gap-2 pt-2">
                             <button
-                                v-for="tab in tabItems"
+                                v-for="tab in visibleTabItems"
                                 :key="tab.id"
                                 type="button"
                                 class="inline-flex items-center gap-2 border-b-2 px-2 py-3 text-sm font-medium transition-colors"
@@ -1647,6 +1680,38 @@ function resolveSupportedTimezones(): string[] {
                                                     .planPriceLabel
                                             }}
                                         </p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <Badge variant="secondary">
+                                                {{ props.currentEvent.billing.planFeatures.customizationTier }}
+                                                customization
+                                            </Badge>
+                                            <Badge
+                                                :variant="
+                                                    props.currentEvent.billing.planFeatures.allowsDownloadAll
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                "
+                                            >
+                                                {{
+                                                    props.currentEvent.billing.planFeatures.allowsDownloadAll
+                                                        ? 'ZIP export included'
+                                                        : 'ZIP export locked'
+                                                }}
+                                            </Badge>
+                                            <Badge
+                                                :variant="
+                                                    props.currentEvent.billing.planFeatures.allowsModerationTools
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                "
+                                            >
+                                                {{
+                                                    props.currentEvent.billing.planFeatures.allowsModerationTools
+                                                        ? 'Moderation included'
+                                                        : 'Moderation locked'
+                                                }}
+                                            </Badge>
+                                        </div>
                                     </div>
                                     <span
                                         class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
@@ -2121,6 +2186,21 @@ function resolveSupportedTimezones(): string[] {
                             v-show="activeTab === 'appearance'"
                             class="space-y-6"
                         >
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                                <p class="font-semibold text-slate-900">
+                                    Current plan: {{ props.currentEvent.billing.planName }}
+                                </p>
+                                <p class="mt-2">
+                                    {{
+                                        canEditAdvancedAppearance
+                                            ? 'Advanced branding is active for this event.'
+                                            : canEditLogo
+                                              ? 'This plan includes logo-level customization. Colors and custom backgrounds stay on Pro.'
+                                              : 'This plan keeps branding simple. Upgrade to Plus for logos or Pro for advanced appearance controls.'
+                                    }}
+                                </p>
+                            </div>
+
                             <div
                                 class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
                             >
@@ -2153,6 +2233,7 @@ function resolveSupportedTimezones(): string[] {
                                         <button
                                             type="button"
                                             class="absolute -top-2 -right-2 rounded-full border bg-background p-1 shadow"
+                                            :disabled="!canEditLogo"
                                             @click="removeCurrentLogo"
                                         >
                                             <X class="size-4" />
@@ -2169,6 +2250,7 @@ function resolveSupportedTimezones(): string[] {
                                                 variant="outline"
                                                 size="sm"
                                                 class="h-8"
+                                                :disabled="!canEditLogo"
                                                 @click="openLogoPicker"
                                             >
                                                 Browse
@@ -2178,6 +2260,12 @@ function resolveSupportedTimezones(): string[] {
                                     <InputError
                                         :message="form.errors.logo_file"
                                     />
+                                    <p
+                                        v-if="!canEditLogo"
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        Logo uploads unlock on Plus and Pro.
+                                    </p>
                                 </div>
                             </div>
 
@@ -2207,6 +2295,9 @@ function resolveSupportedTimezones(): string[] {
                                     </NativeSelectOption>
                                     <NativeSelectOption value="en">
                                         English
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="el">
+                                        Greek
                                     </NativeSelectOption>
                                 </NativeSelect>
                             </div>

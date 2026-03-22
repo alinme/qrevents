@@ -4,12 +4,16 @@ import { ArrowRight, BriefcaseBusiness, Building2, LayoutPanelTop, MonitorPlay, 
 import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
 import MarketingStepCard from '@/components/marketing/MarketingStepCard.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
-import { pricing, register } from '@/routes';
+import { pricing } from '@/routes';
+import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
     canRegister: boolean;
 }>();
+
+const { t } = useTranslations();
 
 const businessImages = [
     '/fake-media/503748303_1048043510209927_1182952490263678396_n.jpg',
@@ -21,58 +25,70 @@ const businessImages = [
 const businessFeatures = [
     {
         icon: Building2,
-        title: 'Venues',
-        description: 'Offer guests a polished photo-sharing and display experience that feels like part of the event, not an afterthought.',
+        title: t('marketing.businesses.features.1.title'),
+        description: t('marketing.businesses.features.1.description'),
     },
     {
         icon: BriefcaseBusiness,
-        title: 'Planners',
-        description: 'Reuse the same smooth event flow across multiple clients instead of rebuilding the process from scratch.',
+        title: t('marketing.businesses.features.2.title'),
+        description: t('marketing.businesses.features.2.description'),
     },
     {
         icon: Repeat2,
-        title: 'Agencies',
-        description: 'Turn QR-based capture and live walls into a repeatable, branded service for activations and campaigns.',
+        title: t('marketing.businesses.features.3.title'),
+        description: t('marketing.businesses.features.3.description'),
     },
     {
         icon: ShieldCheck,
-        title: 'Operations teams',
-        description: 'Keep storage, moderation, downloads, and event settings in one dependable dashboard.',
+        title: t('marketing.businesses.features.4.title'),
+        description: t('marketing.businesses.features.4.description'),
     },
 ];
 
 const businessSteps = [
     {
-        step: 'Step 01',
-        title: 'Launch a branded event page',
-        description: 'Create a clean, guest-facing album and QR code for each event while keeping host controls in the dashboard.',
+        step: t('marketing.shared.step', { number: '01' }),
+        title: t('marketing.businesses.steps.1.title'),
+        description: t('marketing.businesses.steps.1.description'),
         image: businessImages[0],
-        imageAlt: 'Branded event page for a live activation',
-        highlights: ['Fast event setup', 'Branded links and QR codes', 'Friendly host workflow'],
+        imageAlt: t('marketing.businesses.steps.1.image_alt'),
+        highlights: [
+            t('marketing.businesses.steps.1.highlights.1'),
+            t('marketing.businesses.steps.1.highlights.2'),
+            t('marketing.businesses.steps.1.highlights.3'),
+        ],
     },
     {
-        step: 'Step 02',
-        title: 'Drive engagement on-site',
-        description: 'Guests or attendees scan the code, upload instantly, and feel part of the event without any onboarding friction.',
+        step: t('marketing.shared.step', { number: '02' }),
+        title: t('marketing.businesses.steps.2.title'),
+        description: t('marketing.businesses.steps.2.description'),
         image: businessImages[1],
-        imageAlt: 'Guests engaging with a live event photo wall',
-        highlights: ['No app downloads', 'Great for venue signage', 'Works for activations and conferences'],
+        imageAlt: t('marketing.businesses.steps.2.image_alt'),
+        highlights: [
+            t('marketing.businesses.steps.2.highlights.1'),
+            t('marketing.businesses.steps.2.highlights.2'),
+            t('marketing.businesses.steps.2.highlights.3'),
+        ],
     },
     {
-        step: 'Step 03',
-        title: 'Deliver a polished handoff',
-        description: 'Finish with an organized album, downloads, and media collection you can hand to clients or internal teams confidently.',
+        step: t('marketing.shared.step', { number: '03' }),
+        title: t('marketing.businesses.steps.3.title'),
+        description: t('marketing.businesses.steps.3.description'),
         image: businessImages[2],
-        imageAlt: 'Event content ready for client handoff',
-        highlights: ['Organized exports', 'Great for recurring events', 'Built for operational reuse'],
+        imageAlt: t('marketing.businesses.steps.3.image_alt'),
+        highlights: [
+            t('marketing.businesses.steps.3.highlights.1'),
+            t('marketing.businesses.steps.3.highlights.2'),
+            t('marketing.businesses.steps.3.highlights.3'),
+        ],
     },
 ];
 </script>
 
 <template>
     <MarketingLayout
-        title="Businesses"
-        description="QR Events for venues, planners, agencies, and operational event teams."
+        :title="t('marketing.businesses.meta.title')"
+        :description="t('marketing.businesses.meta.description')"
         :can-register="canRegister"
     >
         <section class="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-16">
@@ -80,23 +96,23 @@ const businessSteps = [
                 <div class="max-w-2xl">
                     <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
                         <Sparkles class="size-3.5" />
-                        Business use case
+                        {{ t('marketing.businesses.hero.badge') }}
                     </p>
 
-                    <h1 class="mt-6 text-5xl font-extrabold leading-[0.96] tracking-[-0.06em] text-promo-ink sm:text-6xl">
-                        Event photo sharing for teams that do this again and again
+                    <h1 class="mt-6 text-[2rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-promo-ink sm:text-[2.3rem]">
+                        {{ t('marketing.businesses.hero.title') }}
                     </h1>
 
-                    <p class="mt-6 text-lg leading-8 text-promo-muted sm:text-xl">
-                        QR Events turns guest capture, live display, and final delivery into a repeatable service that feels modern enough for clients and easy enough for every attendee.
+                    <p class="mt-6 text-base leading-7 text-promo-muted sm:text-lg">
+                        {{ t('marketing.businesses.hero.description') }}
                     </p>
 
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row">
                         <Link
-                            :href="register()"
+                            :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
-                            Start Your First Event
+                            {{ t('marketing.businesses.hero.primary_cta') }}
                             <ArrowRight class="size-4" />
                         </Link>
 
@@ -104,7 +120,7 @@ const businessSteps = [
                             :href="pricing()"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            View Pricing
+                            {{ t('marketing.businesses.hero.secondary_cta') }}
                         </Link>
                     </div>
                 </div>
@@ -119,10 +135,10 @@ const businessSteps = [
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                                            Operational shape
+                                            {{ t('marketing.businesses.hero.operations_title') }}
                                         </p>
                                         <p class="mt-2 text-sm leading-7 text-promo-muted">
-                                            One guest-facing experience, one host dashboard, and one polished media handoff.
+                                            {{ t('marketing.businesses.hero.operations_description') }}
                                         </p>
                                     </div>
                                 </div>
@@ -134,10 +150,10 @@ const businessSteps = [
                                         <Users class="size-4" />
                                     </div>
                                     <p class="mt-4 text-sm font-semibold text-promo-ink">
-                                        Guest album
+                                        {{ t('marketing.businesses.hero.guest_album_title') }}
                                     </p>
                                     <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        Scan, upload, react.
+                                        {{ t('marketing.businesses.hero.guest_album_description') }}
                                     </p>
                                 </div>
                                 <div class="rounded-[22px] border border-promo-line bg-white p-4">
@@ -145,10 +161,10 @@ const businessSteps = [
                                         <MonitorPlay class="size-4" />
                                     </div>
                                     <p class="mt-4 text-sm font-semibold text-promo-ink">
-                                        Live wall
+                                        {{ t('marketing.businesses.hero.live_wall_title') }}
                                     </p>
                                     <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        Perfect for screens.
+                                        {{ t('marketing.businesses.hero.live_wall_description') }}
                                     </p>
                                 </div>
                             </div>
@@ -157,18 +173,18 @@ const businessSteps = [
                         <div class="grid gap-4">
                             <img
                                 :src="businessImages[0]"
-                                alt="Business event photo wall with guest uploads"
+                                :alt="t('marketing.businesses.hero.main_image_alt')"
                                 class="aspect-[5/4] w-full rounded-[26px] object-cover"
                             />
                             <div class="grid grid-cols-2 gap-4">
                                 <img
                                     :src="businessImages[1]"
-                                    alt="Guests contributing to an event album"
+                                    :alt="t('marketing.businesses.hero.gallery_upload_alt')"
                                     class="aspect-square rounded-[22px] object-cover"
                                 />
                                 <img
                                     :src="businessImages[2]"
-                                    alt="Live event moment from a professional activation"
+                                    :alt="t('marketing.businesses.hero.gallery_moment_alt')"
                                     class="aspect-square rounded-[22px] object-cover"
                                 />
                             </div>
@@ -181,9 +197,9 @@ const businessSteps = [
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Built for repeatable operations"
-                    title="A cleaner event product for venues, planners, agencies, and teams"
-                    description="Everything is designed to make professional event delivery feel simpler, more modern, and easier to repeat."
+                    :eyebrow="t('marketing.businesses.why.eyebrow')"
+                    :title="t('marketing.businesses.why.title')"
+                    :description="t('marketing.businesses.why.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -201,9 +217,9 @@ const businessSteps = [
         <section class="bg-promo-surface/55">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="How it works for business teams"
-                    title="A product your team can run confidently across multiple events"
-                    description="From setup to live engagement to delivery, the flow is built to feel operational instead of improvised."
+                    :eyebrow="t('marketing.businesses.flow.eyebrow')"
+                    :title="t('marketing.businesses.flow.title')"
+                    :description="t('marketing.businesses.flow.description')"
                     centered
                 />
 

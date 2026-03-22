@@ -4,25 +4,35 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class StoreEventOnboardingRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        $ownerNameRules = $this->user() === null
+            ? ['required', 'string', 'max:255']
+            : ['nullable', 'string', 'max:255'];
+        $ownerEmailRules = $this->user() === null
+            ? ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')]
+            : ['nullable', 'string', 'email', 'max:255'];
+        $passwordRules = $this->user() === null
+            ? ['required', 'confirmed', Password::defaults()]
+            : ['nullable', 'confirmed', Password::defaults()];
+
         return [
+            'plan_slug' => [
+                'required',
+                'string',
+                Rule::exists('plans', 'slug')->where(
+                    fn ($query) => $query->where('is_active', true),
+                ),
+            ],
             'type' => ['required', 'string', Rule::in([
                 'wedding',
                 'party',
@@ -31,6 +41,9 @@ class StoreEventOnboardingRequest extends FormRequest
                 'baptism',
                 'other',
             ])],
+            'owner_name' => $ownerNameRules,
+            'owner_email' => $ownerEmailRules,
+            'password' => $passwordRules,
             'name' => ['required', 'string', 'min:3', 'max:120'],
             'wedding_partner_one_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
             'wedding_partner_two_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
@@ -65,14 +78,18 @@ class StoreEventOnboardingRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         $months = (int) config('events.event_date_max_months', 18);
 
         return [
+            'plan_slug.required' => 'Choose a plan before creating the event.',
+            'plan_slug.exists' => 'Choose an available plan.',
+            'owner_name.required' => 'Add your name so we can create the owner account.',
+            'owner_email.required' => 'Add your email so we can create the owner account.',
+            'owner_email.email' => 'Use a valid email address for the owner account.',
+            'owner_email.unique' => 'This email is already registered. Log in and continue from onboarding.',
+            'password.required' => 'Choose a password for the owner account.',
             'wedding_partner_one_first_name.required_if' => 'Add the first partner name so we can suggest a polished wedding title.',
             'wedding_partner_two_first_name.required_if' => 'Add the second partner name so we can suggest a polished wedding title.',
             'wedding_family_name.required_if' => 'Add the family name so we can build wedding title suggestions.',

@@ -21,18 +21,23 @@ test('super admins can review create and update plans', function () {
         'email' => 'admin@example.com',
     ]);
 
-    $starterPlan = Plan::factory()->create([
-        'name' => 'Starter 20 EUR',
-        'slug' => 'starter-20-eur',
+    $freePlan = Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
         'currency' => 'EUR',
-        'price_cents' => 2000,
-        'storage_limit_bytes' => 10737418240,
-        'upload_limit' => 300,
-        'retention_days' => 30,
-        'grace_days' => 7,
+        'price_cents' => 0,
+        'storage_limit_bytes' => 3221225472,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'customization_tier' => 'basic',
+        'download_all_enabled' => false,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
         'video_max_duration_seconds' => 30,
-        'photo_max_size_bytes' => 26214400,
-        'video_max_size_bytes' => 524288000,
+        'photo_max_size_bytes' => 15728640,
+        'video_max_size_bytes' => 314572800,
         'is_active' => true,
         'is_default' => true,
     ]);
@@ -46,86 +51,109 @@ test('super admins can review create and update plans', function () {
             ->where(
                 'plans',
                 fn ($plans): bool => collect($plans)->contains(
-                    fn (array $plan): bool => $plan['name'] === 'Starter 20 EUR'
+                    fn (array $plan): bool => $plan['name'] === 'Free'
                         && $plan['isDefault'] === true
-                        && $plan['storageLimitBytes'] === 10737418240,
+                        && $plan['uploadWindowDays'] === 1
+                        && $plan['customizationTier'] === 'basic',
                 ),
             )
         );
 
     $this->actingAs($admin)
         ->post(route('admin.plans.store'), [
-            'name' => 'Business 49 EUR',
-            'slug' => 'business-49-eur',
-            'description' => 'Better storage and upload room for active studios.',
+            'name' => 'Plus',
+            'slug' => 'plus',
+            'description' => 'Better storage and guest-facing controls for growing events.',
             'currency' => 'EUR',
             'price_cents' => 4900,
-            'storage_limit_gb' => 20,
-            'upload_limit' => 800,
-            'retention_days' => 45,
-            'grace_days' => 10,
+            'storage_limit_gb' => 12,
+            'upload_limit' => 500,
+            'retention_days' => 90,
+            'grace_days' => 7,
+            'upload_window_days' => 30,
+            'customization_tier' => 'better',
             'video_max_duration_seconds' => 45,
             'photo_max_size_mb' => 25,
-            'video_max_size_mb' => 750,
+            'video_max_size_mb' => 500,
+            'download_all_enabled' => true,
+            'moderation_tools_enabled' => false,
+            'remove_app_branding' => false,
             'is_active' => true,
             'is_default' => true,
         ])
         ->assertRedirect()
-        ->assertSessionHas('success', 'Business 49 EUR package created.');
+        ->assertSessionHas('success', 'Plus package created.');
 
-    $businessPlan = Plan::query()->where('slug', 'business-49-eur')->firstOrFail();
+    $plusPlan = Plan::query()->where('slug', 'plus')->firstOrFail();
 
-    expect($businessPlan->price_cents)->toBe(4900)
-        ->and($businessPlan->storage_limit_bytes)->toBe(21474836480)
-        ->and($businessPlan->upload_limit)->toBe(800)
-        ->and($businessPlan->is_default)->toBeTrue();
+    expect($plusPlan->price_cents)->toBe(4900)
+        ->and($plusPlan->storage_limit_bytes)->toBe(12884901888)
+        ->and($plusPlan->upload_limit)->toBe(500)
+        ->and($plusPlan->upload_window_days)->toBe(30)
+        ->and($plusPlan->customization_tier)->toBe('better')
+        ->and($plusPlan->download_all_enabled)->toBeTrue()
+        ->and($plusPlan->moderation_tools_enabled)->toBeFalse()
+        ->and($plusPlan->is_default)->toBeTrue();
 
-    expect($starterPlan->fresh()->is_default)->toBeFalse();
+    expect($freePlan->fresh()->is_default)->toBeFalse();
 
     $this->actingAs($admin)
-        ->patch(route('admin.plans.update', $businessPlan), [
-            'name' => 'Business 59 EUR',
-            'slug' => 'business-59-eur',
-            'description' => 'Raised limits for premium planners.',
+        ->patch(route('admin.plans.update', $plusPlan), [
+            'name' => 'Pro',
+            'slug' => 'pro',
+            'description' => 'Raised limits with moderation and white-label branding.',
             'currency' => 'EUR',
-            'price_cents' => 5900,
-            'storage_limit_gb' => 25,
-            'upload_limit' => 1000,
-            'retention_days' => 60,
+            'price_cents' => 9900,
+            'storage_limit_gb' => 30,
+            'upload_limit' => 1000000,
+            'retention_days' => 365,
             'grace_days' => 14,
+            'upload_window_days' => 90,
+            'customization_tier' => 'advanced',
             'video_max_duration_seconds' => 60,
             'photo_max_size_mb' => 30,
             'video_max_size_mb' => 1024,
+            'download_all_enabled' => true,
+            'moderation_tools_enabled' => true,
+            'remove_app_branding' => true,
             'is_active' => true,
             'is_default' => true,
         ])
         ->assertRedirect()
-        ->assertSessionHas('success', 'Business 59 EUR package updated.');
+        ->assertSessionHas('success', 'Pro package updated.');
 
-    $businessPlan->refresh();
+    $plusPlan->refresh();
 
-    expect($businessPlan->name)->toBe('Business 59 EUR')
-        ->and($businessPlan->slug)->toBe('business-59-eur')
-        ->and($businessPlan->price_cents)->toBe(5900)
-        ->and($businessPlan->storage_limit_bytes)->toBe(26843545600)
-        ->and($businessPlan->upload_limit)->toBe(1000)
-        ->and($businessPlan->retention_days)->toBe(60)
-        ->and($businessPlan->grace_days)->toBe(14)
-        ->and($businessPlan->video_max_duration_seconds)->toBe(60)
-        ->and($businessPlan->photo_max_size_bytes)->toBe(31457280)
-        ->and($businessPlan->video_max_size_bytes)->toBe(1073741824)
-        ->and($businessPlan->is_default)->toBeTrue();
+    expect($plusPlan->name)->toBe('Pro')
+        ->and($plusPlan->slug)->toBe('pro')
+        ->and($plusPlan->price_cents)->toBe(9900)
+        ->and($plusPlan->storage_limit_bytes)->toBe(32212254720)
+        ->and($plusPlan->upload_limit)->toBe(1000000)
+        ->and($plusPlan->retention_days)->toBe(365)
+        ->and($plusPlan->grace_days)->toBe(14)
+        ->and($plusPlan->upload_window_days)->toBe(90)
+        ->and($plusPlan->customization_tier)->toBe('advanced')
+        ->and($plusPlan->download_all_enabled)->toBeTrue()
+        ->and($plusPlan->moderation_tools_enabled)->toBeTrue()
+        ->and($plusPlan->remove_app_branding)->toBeTrue()
+        ->and($plusPlan->video_max_duration_seconds)->toBe(60)
+        ->and($plusPlan->photo_max_size_bytes)->toBe(31457280)
+        ->and($plusPlan->video_max_size_bytes)->toBe(1073741824)
+        ->and($plusPlan->is_default)->toBeTrue();
 });
 
 test('pricing page renders active plans from the live catalog', function () {
     Plan::factory()->create([
-        'name' => 'Starter 20 EUR',
-        'slug' => 'starter-20-eur',
+        'name' => 'Plus',
+        'slug' => 'plus',
         'currency' => 'EUR',
-        'price_cents' => 2000,
-        'storage_limit_bytes' => 10737418240,
-        'upload_limit' => 300,
-        'retention_days' => 30,
+        'price_cents' => 4900,
+        'upload_limit' => 500,
+        'retention_days' => 90,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
         'is_default' => true,
         'is_active' => true,
     ]);
@@ -143,9 +171,10 @@ test('pricing page renders active plans from the live catalog', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Pricing')
             ->has('plans', 1)
-            ->where('plans.0.name', 'Starter 20 EUR')
-            ->where('plans.0.priceLabel', 'EUR 20.00')
-            ->where('plans.0.storageLabel', '10 GB storage')
+            ->where('plans.0.name', 'Plus')
+            ->where('plans.0.priceLabel', 'EUR 49.00')
+            ->where('plans.0.uploadLabel', 'Up to 500 uploads')
+            ->where('plans.0.activeWindowLabel', 'Active for 30 days from the event date')
             ->where('plans.0.isDefault', true)
         );
 });
@@ -154,23 +183,28 @@ test('new onboarding events inherit the current active default plan for their cu
     Plan::query()->delete();
 
     $defaultPlan = Plan::factory()->create([
-        'name' => 'Event 39 EUR',
-        'slug' => 'event-39-eur',
+        'name' => 'Plus',
+        'slug' => 'plus',
         'currency' => 'EUR',
-        'price_cents' => 3900,
-        'storage_limit_bytes' => 21474836480,
-        'upload_limit' => 600,
-        'retention_days' => 45,
-        'grace_days' => 10,
+        'price_cents' => 4900,
+        'storage_limit_bytes' => 12884901888,
+        'upload_limit' => 500,
+        'retention_days' => 90,
+        'grace_days' => 7,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
         'video_max_duration_seconds' => 45,
-        'photo_max_size_bytes' => 31457280,
-        'video_max_size_bytes' => 786432000,
+        'photo_max_size_bytes' => 26214400,
+        'video_max_size_bytes' => 524288000,
         'is_active' => true,
         'is_default' => true,
     ]);
     Plan::factory()->create([
-        'name' => 'Legacy 20 EUR',
-        'slug' => 'legacy-20-eur',
+        'name' => 'Legacy',
+        'slug' => 'legacy',
         'currency' => 'EUR',
         'price_cents' => 2000,
         'storage_limit_bytes' => 10737418240,
@@ -183,8 +217,12 @@ test('new onboarding events inherit the current active default plan for their cu
 
     $this->actingAs($user)
         ->post(route('onboarding.store'), [
+            'plan_slug' => 'plus',
             'type' => 'wedding',
             'name' => 'Package Driven Event',
+            'wedding_partner_one_first_name' => 'Alex',
+            'wedding_partner_two_first_name' => 'Bianca',
+            'wedding_family_name' => 'Popescu',
             'venue_address' => '20 Lake View Road, Bucharest',
             'attendee_estimate' => 180,
             'event_dates' => [
@@ -200,9 +238,12 @@ test('new onboarding events inherit the current active default plan for their cu
     $event = $user->events()->latest('id')->firstOrFail();
 
     expect($event->plan_id)->toBe($defaultPlan->id)
-        ->and($event->storage_limit_bytes)->toBe(21474836480)
-        ->and($event->upload_limit)->toBe(600)
+        ->and($event->storage_limit_bytes)->toBe(12884901888)
+        ->and($event->upload_limit)->toBe(500)
+        ->and($event->upload_window_days)->toBe(30)
+        ->and($event->customization_tier)->toBe('better')
+        ->and($event->download_all_enabled)->toBeTrue()
         ->and($event->video_max_duration_seconds)->toBe(45)
-        ->and($event->photo_max_size_bytes)->toBe(31457280)
-        ->and($event->video_max_size_bytes)->toBe(786432000);
+        ->and($event->photo_max_size_bytes)->toBe(26214400)
+        ->and($event->video_max_size_bytes)->toBe(524288000);
 });
