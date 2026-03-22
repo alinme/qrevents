@@ -160,7 +160,7 @@ test('owned event accounts can still open the account dashboard explicitly', fun
         );
 });
 
-test('normal owned-event users still see the generic account dashboard at the dashboard landing page', function () {
+test('normal owned-event users are sent straight into their only event workspace from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Spring Wedding',
@@ -168,13 +168,20 @@ test('normal owned-event users still see the generic account dashboard at the da
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('auth.user.accountType', User::ACCOUNT_TYPE_USER)
-            ->where('dashboardLinks.business', null)
-            ->where('ownedEvents.0.name', $event->name)
-        );
+        ->assertRedirect(route('events.show', $event));
+});
+
+test('single-event owners in onboarding are sent straight back into onboarding from the dashboard landing page', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Spring Wedding',
+        'onboarding_step' => 'photos',
+        'onboarding_completed_at' => null,
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard'))
+        ->assertRedirect(route('onboarding.photos', $event));
 });
 
 test('normal users cannot access the dedicated business dashboard', function () {
@@ -278,7 +285,7 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
         );
 });
 
-test('dashboard shows collaborator context and media review quick access', function () {
+test('single collaborator event users land directly in the shared workspace from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $collaboratorUser = User::factory()->create([
         'email' => 'collab@example.com',
@@ -311,24 +318,7 @@ test('dashboard shows collaborator context and media review quick access', funct
 
     $this->actingAs($collaboratorUser)
         ->get(route('dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('summary.ownedEventCount', 0)
-            ->where('summary.collaboratorEventCount', 1)
-            ->where('summary.totalUploadCount', 1)
-            ->where('continueSetupEvent', null)
-            ->where(
-                'collaboratorEvents',
-                fn ($events): bool => count($events) === 1
-                    && $events[0]['name'] === 'Shared Gala'
-                    && $events[0]['roleLabel'] === 'Manager'
-                    && $events[0]['canManage'] === true
-                    && $events[0]['links']['media'] === route('events.media', $sharedEvent),
-            )
-            ->where('recentActivity.0.eventName', 'Shared Gala')
-            ->where('recentActivity.0.guestName', 'Daria')
-        );
+        ->assertRedirect(route('events.show', $sharedEvent));
 });
 
 test('super admins can still open their account dashboard explicitly', function () {

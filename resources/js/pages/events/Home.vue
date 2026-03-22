@@ -90,7 +90,7 @@ type RecentUpload = {
 };
 
 type EventLinks = {
-    accountDashboard: string;
+    accountDashboard: string | null;
     dashboard: string;
     media: string;
     mediaExportStart: string;
@@ -383,7 +383,7 @@ const handleMediaExport = (): void => {
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <Button as-child size="sm" variant="outline">
+                            <Button v-if="eventLinks.accountDashboard" as-child size="sm" variant="outline">
                                 <Link :href="eventLinks.accountDashboard">
                                     Events
                                 </Link>

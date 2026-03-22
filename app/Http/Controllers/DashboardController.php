@@ -41,6 +41,15 @@ class DashboardController extends Controller
             return to_route('admin.overview');
         }
 
+        $singleAccessibleEvent = $this->singleAccessibleEvent($request);
+        if ($singleAccessibleEvent !== null) {
+            if ($singleAccessibleEvent->user_id === $request->user()->id && $singleAccessibleEvent->onboarding_completed_at === null) {
+                return redirect()->to($this->onboardingStepUrl($singleAccessibleEvent));
+            }
+
+            return to_route('events.show', $singleAccessibleEvent);
+        }
+
         return $this->account($request);
     }
 
@@ -786,6 +795,45 @@ class DashboardController extends Controller
             'photos' => route('onboarding.photos', $event),
             default => route('onboarding.create'),
         };
+    }
+
+    private function singleAccessibleEvent(Request $request): ?Event
+    {
+        if ($request->user()->canAccessBusinessDashboard()) {
+            return null;
+        }
+
+        $ownedEvents = $request->user()
+            ->events()
+            ->latest('id')
+            ->limit(2)
+            ->get();
+
+        if ($ownedEvents->count() > 1) {
+            return null;
+        }
+
+        $collaboratorEventIds = EventCollaborator::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['active', 'accepted'])
+            ->whereNotIn('event_id', $ownedEvents->pluck('id')->all())
+            ->latest('id')
+            ->limit(2)
+            ->pluck('event_id');
+
+        if ($ownedEvents->count() + $collaboratorEventIds->count() !== 1) {
+            return null;
+        }
+
+        if ($ownedEvents->count() === 1) {
+            return $ownedEvents->first();
+        }
+
+        $collaboratorEventId = $collaboratorEventIds->first();
+
+        return $collaboratorEventId !== null
+            ? Event::query()->find($collaboratorEventId)
+            : null;
     }
 
     /**

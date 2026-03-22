@@ -50,10 +50,9 @@ it('covers guest upload through owner review and export download', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('events/Media')
             ->where('currentEvent.name', 'Smoke Test Event')
-            ->where('eventNavigation.0.title', 'Events')
-            ->where('eventNavigation.1.title', 'Workspace')
-            ->where('eventNavigation.2.title', 'Media')
-            ->where('eventNavigation.3.title', 'Settings')
+            ->where('eventNavigation.0.title', 'Workspace')
+            ->where('eventNavigation.1.title', 'Media')
+            ->where('eventNavigation.2.title', 'Settings')
             ->where('mediaAssets.0.guestName', 'Elena')
             ->where('mediaAssets.0.moderationStatus', 'processing')
         );

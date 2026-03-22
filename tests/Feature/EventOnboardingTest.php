@@ -4,9 +4,8 @@ use App\Models\Event;
 use App\Models\Plan;
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use Inertia\Testing\AssertableInertia as Assert;
 
-it('shows dashboard onboarding continuation when onboarding is in progress', function () {
+it('sends single-event owners back into onboarding when onboarding is in progress', function () {
     $user = User::factory()->create();
     $event = Event::factory()->for($user)->create([
         'onboarding_step' => 'photos',
@@ -16,12 +15,7 @@ it('shows dashboard onboarding continuation when onboarding is in progress', fun
     $this->actingAs($user);
 
     $this->get(route('dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('continueSetupEvent.name', $event->name)
-            ->where('continueSetupEvent.primaryAction.url', route('onboarding.photos', $event))
-        );
+        ->assertRedirect(route('onboarding.photos', $event));
 });
 
 it('redirects completed users away from onboarding unless restart is requested', function () {

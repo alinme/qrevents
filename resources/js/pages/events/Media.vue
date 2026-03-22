@@ -83,7 +83,7 @@ type EventPayload = {
 };
 
 type EventLinks = {
-    accountDashboard: string;
+    accountDashboard: string | null;
     media: string;
 };
 
@@ -1020,7 +1020,12 @@ const statCards = computed(() => [
                         </p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <Button as-child variant="outline" class="border-white/14 bg-white/8 text-white hover:bg-white/14 hover:text-white">
+                        <Button
+                            v-if="eventLinks.accountDashboard"
+                            as-child
+                            variant="outline"
+                            class="border-white/14 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+                        >
                             <a :href="eventLinks.accountDashboard">
                                 <ExternalLink class="mr-2 size-4" />
                                 Dashboard

@@ -1728,6 +1728,7 @@ class EventController extends Controller
     {
         $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
         $albumUrl = route('events.album', $event->share_token);
+        $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
         $planFeatures = $this->planFeaturePayload($event);
         $canManageBilling = $request->user()->canAccessAdmin();
@@ -1888,7 +1889,7 @@ class EventController extends Controller
                 ],
             ],
             'eventLinks' => [
-                'accountDashboard' => route('dashboard'),
+                'accountDashboard' => $showEventOverviewLink ? route('dashboard.account') : null,
                 'dashboard' => route('events.show', $event),
                 'media' => route('events.media', $event),
                 'mediaExportStart' => route('events.exports.media.start', $event),
@@ -1904,12 +1905,12 @@ class EventController extends Controller
                 'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->share_token)),
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
-            'eventNavigation' => [
-                ['title' => 'Events', 'href' => route('dashboard')],
+            'eventNavigation' => array_values(array_filter([
+                $showEventOverviewLink ? ['title' => 'Events', 'href' => route('dashboard.account')] : null,
                 ['title' => 'Workspace', 'href' => route('events.show', $event)],
                 ['title' => 'Media', 'href' => route('events.media', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
-            ],
+            ])),
         ];
     }
 
@@ -2165,6 +2166,33 @@ class EventController extends Controller
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['active', 'accepted'])
             ->first();
+    }
+
+    private function shouldShowEventOverviewLink(Request $request): bool
+    {
+        if ($request->user()->canAccessAdmin() || $request->user()->canAccessBusinessDashboard()) {
+            return true;
+        }
+
+        $ownedEventIds = $request->user()
+            ->events()
+            ->latest('id')
+            ->limit(2)
+            ->pluck('events.id');
+
+        if ($ownedEventIds->count() > 1) {
+            return true;
+        }
+
+        $collaboratorEventIds = EventCollaborator::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['active', 'accepted'])
+            ->whereNotIn('event_id', $ownedEventIds->all())
+            ->latest('id')
+            ->limit(2)
+            ->pluck('event_id');
+
+        return $ownedEventIds->count() + $collaboratorEventIds->count() > 1;
     }
 
     private function isUploadWindowOpen(Event $event): bool
