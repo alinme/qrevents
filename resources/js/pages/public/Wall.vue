@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight, Images, LoaderCircle, QrCode } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
@@ -54,7 +54,9 @@ const props = defineProps<{
     assets: WallAsset[];
 }>();
 
+const page = usePage();
 const { locale, t } = useTranslations();
+const appName = computed(() => page.props.name ?? 'QR Events');
 
 const activeIndex = ref(0);
 const autoplayId = ref<number | null>(null);
@@ -525,7 +527,7 @@ watch(
     >
         <Separator class="bg-white/12" />
         <div class="px-3 py-2 text-center text-xs text-white/55">
-            © {{ new Date().getFullYear() }} Kululu. {{ t('public.wall.footer') }}
+            © {{ new Date().getFullYear() }} {{ appName }}. {{ t('public.wall.footer') }}
         </div>
     </footer>
 </template>

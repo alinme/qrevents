@@ -40,6 +40,7 @@ defineProps<{
 const page = usePage();
 const authedUser = page.props.auth?.user ?? null;
 const { locale, t } = useTranslations();
+const appName = computed(() => page.props.name ?? 'QR Events');
 
 const homeUrl = home().url;
 
@@ -122,7 +123,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     </div>
                     <div>
                         <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
-                            {{ t('marketing.brand.title') }}
+                            {{ t('marketing.brand.title', { appName }) }}
                         </div>
                         <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                             {{ t('marketing.brand.subtitle') }}

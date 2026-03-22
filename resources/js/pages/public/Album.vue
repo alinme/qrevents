@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     ArrowUp,
     AlertTriangle,
@@ -77,6 +77,9 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
+
+const page = usePage();
+const appName = computed(() => page.props.name ?? 'QR Events');
 
 type Limits = {
     storageLimitBytes: number;
@@ -4620,7 +4623,7 @@ const onAlbumTouchCancel = (): void => {
         >
             <Separator class="bg-slate-200" />
             <div class="px-3 py-2 text-center text-xs text-slate-500">
-                © {{ new Date().getFullYear() }} Kululu. {{ t('public.wall.footer') }}
+                © {{ new Date().getFullYear() }} {{ appName }}. {{ t('public.wall.footer') }}
             </div>
         </footer>
 

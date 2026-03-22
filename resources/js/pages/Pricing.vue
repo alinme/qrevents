@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowRight, CircleHelp, Sparkles } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
@@ -46,7 +46,9 @@ const props = defineProps<{
     plans: PricingPlan[];
 }>();
 
+const page = usePage();
 const { t } = useTranslations();
+const appName = computed(() => page.props.name ?? 'QR Events');
 
 const pageTitle = computed(() => t('marketing.pricing.meta.title'));
 const pageDescription = computed(() => t('marketing.pricing.meta.description'));
@@ -128,7 +130,7 @@ const openFeatureHelp = (label: string, help: string): void => {
             <div class="mx-auto mt-8 max-w-4xl rounded-[26px] border-2 border-promo-primary/30 bg-white px-5 py-5 text-left shadow-[0_16px_44px_rgba(232,79,154,0.08)] sm:px-6">
                 <p class="text-sm leading-7 text-promo-ink sm:text-[0.97rem]">
                     <span class="font-semibold text-promo-primary">{{ t('marketing.pricing.guarantee.title') }}</span>
-                    {{ ' ' }}{{ t('marketing.pricing.guarantee.description') }}
+                    {{ ' ' }}{{ t('marketing.pricing.guarantee.description', { appName }) }}
                     <button
                         type="button"
                         class="font-semibold text-promo-primary underline decoration-promo-primary/40 underline-offset-4 transition hover:text-promo-primary-strong"
@@ -358,7 +360,7 @@ const openFeatureHelp = (label: string, help: string): void => {
                     <DialogTitle>{{ t('marketing.pricing.refund.title') }}</DialogTitle>
                     <DialogDescription class="space-y-3 text-left">
                         <p>{{ t('marketing.pricing.refund.subtitle') }}</p>
-                        <p>{{ t('marketing.pricing.refund.description') }}</p>
+                        <p>{{ t('marketing.pricing.refund.description', { appName }) }}</p>
                         <p>{{ t('marketing.pricing.refund.contact') }}</p>
                     </DialogDescription>
                 </DialogHeader>
