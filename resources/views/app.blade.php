@@ -2,12 +2,19 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <style>
             html {
                 background-color: oklch(1 0 0);
+                -webkit-text-size-adjust: 100%;
+                text-size-adjust: 100%;
+                touch-action: manipulation;
+            }
+
+            body {
+                overscroll-behavior-y: none;
             }
         </style>
 

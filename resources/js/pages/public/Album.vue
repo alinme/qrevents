@@ -1108,7 +1108,31 @@ const syncTextComposerElement = (value: string): void => {
 };
 
 const focusTextComposer = (): void => {
-    textComposerRef.value?.focus();
+    if (
+        textComposerRef.value === null ||
+        !canUploadText.value ||
+        textForm.processing
+    ) {
+        return;
+    }
+
+    const composer = textComposerRef.value;
+    composer.focus({ preventScroll: true });
+
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const selection = window.getSelection();
+    if (selection === null) {
+        return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(composer);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
 };
 
 const onTextComposerInput = (): void => {
@@ -5058,7 +5082,8 @@ const onAlbumTouchCancel = (): void => {
                                           }
                                         : undefined
                                 "
-                                @click="focusTextComposer"
+                                @pointerdown.prevent="focusTextComposer"
+                                @click.prevent="focusTextComposer"
                             >
                                 <div
                                     class="absolute inset-0"
@@ -5902,6 +5927,7 @@ const onAlbumTouchCancel = (): void => {
 :deep(button),
 :deep(a) {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 :deep(button:focus),
@@ -5912,6 +5938,20 @@ const onAlbumTouchCancel = (): void => {
 :deep([role='button']:focus-visible) {
     outline: none !important;
     box-shadow: none !important;
+}
+
+:deep(input),
+:deep(textarea),
+:deep(select),
+[contenteditable='true'] {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+[contenteditable='true'] {
+    touch-action: manipulation;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .welcome-bg-animate-slow {
