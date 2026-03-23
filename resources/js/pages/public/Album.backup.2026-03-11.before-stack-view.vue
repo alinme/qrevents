@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import {
     AlertTriangle,
     CalendarDays,
@@ -140,6 +140,9 @@ const props = defineProps<{
     limits: Limits;
     assets: AssetItem[];
 }>();
+
+const page = usePage();
+const appName = computed(() => page.props.name ?? 'QR Events');
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const menuOpen = ref(false);
@@ -1642,7 +1645,7 @@ const submitTextPost = (): void => {
         >
             <Separator class="bg-slate-200" />
             <div class="px-3 py-2 text-center text-xs text-slate-500">
-                © {{ new Date().getFullYear() }} Kululu. All rights reserved.
+                © {{ new Date().getFullYear() }} {{ appName }}. All rights reserved.
             </div>
         </footer>
 

@@ -5,6 +5,11 @@ use App\Models\Plan;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
+it('redirects guests to registration before onboarding begins', function () {
+    $this->get(route('onboarding.create'))
+        ->assertRedirect(route('register'));
+});
+
 it('sends single-event owners back into onboarding when onboarding is in progress', function () {
     $user = User::factory()->create();
     $event = Event::factory()->for($user)->create([
@@ -273,7 +278,7 @@ it('blocks event dates too far in the future', function () {
     CarbonImmutable::setTestNow();
 });
 
-it('creates the owner account inside onboarding for guests', function () {
+it('creates an event for the signed-in owner without collecting account details inside onboarding', function () {
     Plan::factory()->create([
         'name' => 'Free',
         'slug' => 'free',
@@ -294,14 +299,15 @@ it('creates the owner account inside onboarding for guests', function () {
         'is_default' => true,
     ]);
 
+    $owner = User::factory()->create([
+        'email' => 'mara@example.com',
+    ]);
+    $this->actingAs($owner);
+
     $response = $this->post(route('onboarding.store'), [
         'plan_slug' => 'free',
         'type' => 'wedding',
         'name' => 'Mara and Luca Wedding',
-        'owner_name' => 'Mara Popescu',
-        'owner_email' => 'mara@example.com',
-        'password' => 'SecurePass123!',
-        'password_confirmation' => 'SecurePass123!',
         'wedding_partner_one_first_name' => 'Mara',
         'wedding_partner_two_first_name' => 'Luca',
         'wedding_family_name' => 'Popescu',
@@ -326,7 +332,6 @@ it('creates the owner account inside onboarding for guests', function () {
     ]);
 
     $event = Event::query()->firstOrFail();
-    $owner = User::query()->where('email', 'mara@example.com')->firstOrFail();
 
     $response->assertRedirect(route('onboarding.creating', $event));
     $this->assertAuthenticatedAs($owner);

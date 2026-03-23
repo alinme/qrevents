@@ -29,9 +29,9 @@ Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->n
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
 Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('onboarding.create');
-Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
     Route::get('onboarding/{event}/creating', [EventOnboardingController::class, 'creating'])->name('onboarding.creating');
     Route::get('onboarding/{event}/photos', [EventOnboardingController::class, 'photos'])->name('onboarding.photos');
     Route::get('onboarding/{event}/ready', [EventOnboardingController::class, 'ready'])->name('onboarding.ready');

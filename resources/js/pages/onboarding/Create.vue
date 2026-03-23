@@ -142,10 +142,6 @@ const defaultSelectedSubEventsForType = (
 const form = useForm({
     plan_slug: props.defaultPlanSlug,
     type: props.eventTypes[0]?.value ?? 'wedding',
-    owner_name: props.owner?.name ?? '',
-    owner_email: props.owner?.email ?? '',
-    password: '',
-    password_confirmation: '',
     name: '',
     wedding_partner_one_first_name: '',
     wedding_partner_two_first_name: '',
@@ -172,7 +168,6 @@ const reviewEventDates = computed(() =>
 );
 
 const isWeddingType = computed(() => form.type === 'wedding');
-const needsAccountDetails = computed(() => props.owner === null);
 
 const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
 const addressedMomentsCount = computed(() =>
@@ -210,15 +205,7 @@ const canMoveToNext = computed(() => {
         return false;
     }
 
-    if (!needsAccountDetails.value) {
-        return true;
-    }
-
-    return form.owner_name.trim().length >= 2
-        && form.owner_email.trim().length >= 5
-        && form.password.length >= 8
-        && form.password_confirmation.length >= 8
-        && form.password === form.password_confirmation;
+    return true;
 });
 
 const scrollToWizardPanel = (): void => {
@@ -1207,77 +1194,13 @@ const submit = (): void => {
                                         Event owner
                                     </div>
                                     <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
-                                        {{ needsAccountDetails ? 'Create your owner account inside onboarding' : 'Owner account connected' }}
+                                        Owner account connected
                                     </h3>
                                     <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        {{ needsAccountDetails ? 'No separate sign-up page. Finish the event setup here and we will create the account together with the event.' : 'This event will be created under the signed-in owner account.' }}
+                                        This event will be created under the signed-in owner account.
                                     </p>
 
                                     <div
-                                        v-if="needsAccountDetails"
-                                        class="mt-5 grid gap-4 md:grid-cols-2"
-                                    >
-                                        <div class="grid gap-2 md:col-span-2">
-                                            <Label for="owner_name" class="text-sm font-semibold text-promo-ink">
-                                                Your name
-                                            </Label>
-                                            <Input
-                                                id="owner_name"
-                                                v-model="form.owner_name"
-                                                name="owner_name"
-                                                placeholder="Alex Popescu"
-                                                class="h-12 rounded-[20px] border-promo-line bg-white"
-                                            />
-                                            <InputError :message="form.errors.owner_name" />
-                                        </div>
-
-                                        <div class="grid gap-2 md:col-span-2">
-                                            <Label for="owner_email" class="text-sm font-semibold text-promo-ink">
-                                                Email
-                                            </Label>
-                                            <Input
-                                                id="owner_email"
-                                                v-model="form.owner_email"
-                                                name="owner_email"
-                                                type="email"
-                                                placeholder="you@example.com"
-                                                class="h-12 rounded-[20px] border-promo-line bg-white"
-                                            />
-                                            <InputError :message="form.errors.owner_email" />
-                                        </div>
-
-                                        <div class="grid gap-2">
-                                            <Label for="password" class="text-sm font-semibold text-promo-ink">
-                                                Password
-                                            </Label>
-                                            <Input
-                                                id="password"
-                                                v-model="form.password"
-                                                name="password"
-                                                type="password"
-                                                placeholder="At least 8 characters"
-                                                class="h-12 rounded-[20px] border-promo-line bg-white"
-                                            />
-                                            <InputError :message="form.errors.password" />
-                                        </div>
-
-                                        <div class="grid gap-2">
-                                            <Label for="password_confirmation" class="text-sm font-semibold text-promo-ink">
-                                                Confirm password
-                                            </Label>
-                                            <Input
-                                                id="password_confirmation"
-                                                v-model="form.password_confirmation"
-                                                name="password_confirmation"
-                                                type="password"
-                                                placeholder="Repeat password"
-                                                class="h-12 rounded-[20px] border-promo-line bg-white"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        v-else
                                         class="mt-5 rounded-[22px] border border-promo-line bg-white p-4 text-sm text-promo-muted"
                                     >
                                         <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>

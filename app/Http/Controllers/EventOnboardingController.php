@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEventOnboardingRequest;
 use App\Models\Event;
 use App\Models\Plan;
-use App\Models\User;
 use App\Support\EventLifecycleWindows;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -13,7 +12,6 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,11 +20,11 @@ class EventOnboardingController extends Controller
 {
     public function create(Request $request): Response|RedirectResponse
     {
-        if ($request->boolean('restart')) {
-            return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
+        if ($request->user() === null) {
+            return redirect()->guest(route('register', absolute: false));
         }
 
-        if ($request->user() === null) {
+        if ($request->boolean('restart')) {
             return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
         }
 
@@ -44,7 +42,8 @@ class EventOnboardingController extends Controller
     public function store(StoreEventOnboardingRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $user = $request->user() ?? $this->createOwnerAccount($validated);
+        $user = $request->user();
+        abort_unless($user !== null, 403);
         $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null);
         $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
         $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
@@ -196,24 +195,6 @@ class EventOnboardingController extends Controller
             'completed' => to_route('dashboard'),
             default => to_route('onboarding.creating', $event),
         };
-    }
-
-    /**
-     * @param  array<string, mixed>  $validated
-     */
-    private function createOwnerAccount(array $validated): User
-    {
-        $user = User::query()->create([
-            'name' => trim((string) $validated['owner_name']),
-            'email' => trim((string) $validated['owner_email']),
-            'password' => (string) $validated['password'],
-            'account_type' => User::ACCOUNT_TYPE_USER,
-        ]);
-
-        Auth::login($user);
-        request()->session()->regenerate();
-
-        return $user;
     }
 
     private function resolveSelectedPlan(?string $slug): Plan

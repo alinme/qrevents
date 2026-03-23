@@ -7,6 +7,7 @@ use App\Jobs\GenerateEventMediaExport;
 use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\EventCollaborator;
+use App\Support\AuthOnboardingRedirector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -41,6 +42,11 @@ class DashboardController extends Controller
             return to_route('admin.overview');
         }
 
+        $onboardingRedirect = app(AuthOnboardingRedirector::class)->dashboardRedirect($request->user());
+        if ($onboardingRedirect !== null) {
+            return $onboardingRedirect;
+        }
+
         $singleAccessibleEvent = $this->singleAccessibleEvent($request);
         if ($singleAccessibleEvent !== null) {
             if ($singleAccessibleEvent->user_id === $request->user()->id && $singleAccessibleEvent->onboarding_completed_at === null) {
@@ -53,8 +59,13 @@ class DashboardController extends Controller
         return $this->account($request);
     }
 
-    public function account(Request $request): Response
+    public function account(Request $request): Response|RedirectResponse
     {
+        $onboardingRedirect = app(AuthOnboardingRedirector::class)->dashboardRedirect($request->user());
+        if ($onboardingRedirect !== null) {
+            return $onboardingRedirect;
+        }
+
         $data = $this->accountData($request);
 
         return Inertia::render('Dashboard', [

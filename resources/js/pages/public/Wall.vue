@@ -67,6 +67,7 @@ const props = defineProps<{
 const page = usePage();
 const { locale, t } = useTranslations();
 const appName = computed(() => page.props.name ?? 'QR Events');
+const inertiaVersion = computed(() => page.version ?? null);
 
 const activeIndex = ref(0);
 const autoplayId = ref<number | null>(null);
@@ -299,6 +300,9 @@ const refreshWallAssets = async (): Promise<void> => {
             headers: {
                 Accept: 'application/json',
                 'X-Inertia': 'true',
+                ...(inertiaVersion.value !== null
+                    ? { 'X-Inertia-Version': inertiaVersion.value }
+                    : {}),
                 'X-Requested-With': 'XMLHttpRequest',
             },
             credentials: 'same-origin',

@@ -118,7 +118,7 @@ test('google callback creates a new verified user and logs them in', function ()
     $this->app->instance(SocialiteFactory::class, $factory);
 
     $this->get(route('auth.google.callback'))
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('onboarding.create', absolute: false));
 
     $user = User::query()->where('email', 'new-google-user@example.com')->firstOrFail();
 
@@ -162,7 +162,7 @@ test('google callback links an existing account by email', function () {
     $this->app->instance(SocialiteFactory::class, $factory);
 
     $this->get(route('auth.google.callback'))
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('onboarding.create', absolute: false));
 
     $user->refresh();
 

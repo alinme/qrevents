@@ -29,27 +29,36 @@ test('super admins are redirected from the dashboard landing page to admin overv
     expect($admin->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_SUPER_ADMIN);
 });
 
-test('authenticated users without events see an empty account dashboard', function () {
+test('authenticated users without owned or collaborator events are redirected into onboarding', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('auth.user.accountType', User::ACCOUNT_TYPE_USER)
-            ->where('dashboardLinks.business', null)
-            ->where('summary.ownedEventCount', 0)
-            ->where('summary.collaboratorEventCount', 0)
-            ->where('summary.pendingSetupCount', 0)
-            ->where('summary.totalUploadCount', 0)
-            ->where('summary.pendingModerationCount', 0)
-            ->where('summary.readyExportCount', 0)
-            ->where('ownedEvents', [])
-            ->where('collaboratorEvents', [])
-            ->where('recentActivity', [])
-            ->where('continueSetupEvent', null)
-        );
+        ->assertRedirect(route('onboarding.create'));
+});
+
+test('collaborator-only users can still enter the dashboard flow without owner onboarding', function () {
+    $owner = User::factory()->create();
+    $collaborator = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Shared Event',
+        'onboarding_completed_at' => now(),
+    ]);
+
+    EventCollaborator::query()->create([
+        'event_id' => $event->id,
+        'email' => $collaborator->email,
+        'user_id' => $collaborator->id,
+        'role' => 'viewer',
+        'status' => 'active',
+        'invited_by_user_id' => $owner->id,
+        'invited_at' => now(),
+        'accepted_at' => now(),
+    ]);
+
+    $this->actingAs($collaborator)
+        ->get(route('dashboard'))
+        ->assertRedirect(route('events.show', $event));
 });
 
 test('multi-event accounts land on the main dashboard and keep business tools as a secondary route', function () {

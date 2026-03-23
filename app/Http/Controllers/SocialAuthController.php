@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AuthOnboardingRedirector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,8 @@ use Throwable;
 
 class SocialAuthController extends Controller
 {
+    public function __construct(private AuthOnboardingRedirector $redirector) {}
+
     public function redirect(Request $request): RedirectResponse|SymfonyResponse
     {
         if (! $this->googleIsConfigured()) {
@@ -22,7 +25,7 @@ class SocialAuthController extends Controller
         }
 
         if (Auth::check()) {
-            return to_route('dashboard');
+            return redirect()->to($this->redirector->fallbackPathFor($request->user()));
         }
 
         $redirectResponse = Socialite::driver('google')
@@ -109,7 +112,7 @@ class SocialAuthController extends Controller
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended($this->redirector->fallbackPathFor($user));
     }
 
     private function googleIsConfigured(): bool
