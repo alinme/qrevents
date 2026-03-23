@@ -206,6 +206,22 @@ const slideSubtitle = computed(() => {
     );
 });
 
+const currentAssetBackdropUrl = computed(() => {
+    if (!currentAsset.value) {
+        return null;
+    }
+
+    if (currentAsset.value.kind === 'photo') {
+        return currentAsset.value.previewUrl;
+    }
+
+    if (currentAsset.value.kind === 'video') {
+        return currentAsset.value.thumbnailUrl || currentAsset.value.previewUrl;
+    }
+
+    return currentAsset.value.textThemeImageUrl;
+});
+
 const currentReactionNotes = computed<WallReactionNote[]>(() => {
     const comments = currentAsset.value?.recentComments ?? [];
 
@@ -589,11 +605,23 @@ watch(
                     v-if="currentAsset"
                     class="relative w-full overflow-hidden rounded-3xl border border-white/25 bg-black/40 shadow-2xl backdrop-blur"
                 >
+                    <div
+                        v-if="currentAssetBackdropUrl"
+                        class="pointer-events-none absolute inset-0"
+                    >
+                        <img
+                            :src="currentAssetBackdropUrl"
+                            alt=""
+                            class="h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+                        />
+                        <div class="absolute inset-0 bg-black/35" />
+                    </div>
+
                     <img
                         v-if="currentAsset.kind === 'photo' && currentAsset.previewUrl"
                         :src="currentAsset.previewUrl"
                         :alt="t('public.shared.alt.wall_photo')"
-                        class="h-[60vh] w-full object-contain lg:h-[72vh]"
+                        class="relative z-10 h-[60vh] w-full object-contain lg:h-[72vh]"
                     />
 
                     <video
@@ -602,7 +630,7 @@ watch(
                         "
                         :src="currentAsset.previewUrl"
                         :poster="currentAsset.thumbnailUrl ?? undefined"
-                        class="h-[60vh] w-full object-contain lg:h-[72vh]"
+                        class="relative z-10 h-[60vh] w-full object-contain lg:h-[72vh]"
                         autoplay
                         loop
                         muted
@@ -613,7 +641,7 @@ watch(
                             currentAsset.kind === 'video' &&
                             currentAsset.videoProcessing
                         "
-                        class="flex h-[60vh] w-full flex-col items-center justify-center gap-4 px-8 text-center text-white/85 lg:h-[72vh]"
+                        class="relative z-10 flex h-[60vh] w-full flex-col items-center justify-center gap-4 px-8 text-center text-white/85 lg:h-[72vh]"
                     >
                         <LoaderCircle class="size-10 animate-spin text-white/80" />
                         <div class="space-y-1">
@@ -628,7 +656,7 @@ watch(
 
                     <div
                         v-else
-                        class="flex h-[60vh] w-full items-center justify-center px-8 text-center lg:h-[72vh]"
+                        class="relative z-10 flex h-[60vh] w-full items-center justify-center px-8 text-center lg:h-[72vh]"
                         :style="textPostSurfaceStyle(currentAsset)"
                     >
                         <p
