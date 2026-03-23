@@ -73,6 +73,7 @@ type SelectedSubEvent = {
 };
 
 type OnboardingStep = 1 | 2 | 3;
+type CheckedState = boolean | 'indeterminate';
 
 const props = defineProps<{
     eventTypes: EventTypeOption[];
@@ -170,8 +171,11 @@ const reviewEventDates = computed(() =>
 const isWeddingType = computed(() => form.type === 'wedding');
 
 const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
+const subEventHasAddressDecision = (subEvent: SelectedSubEvent): boolean =>
+    subEvent.no_address || subEvent.address.trim().length >= 6;
+
 const addressedMomentsCount = computed(() =>
-    form.sub_events.filter((subEvent) => subEvent.no_address || subEvent.address.trim().length >= 6).length,
+    form.sub_events.filter((subEvent) => subEventHasAddressDecision(subEvent)).length,
 );
 
 const progressWidth = computed(() => `${((step.value - 1) / (stepItems.length - 1)) * 100}%`);
@@ -198,7 +202,7 @@ const canMoveToNext = computed(() => {
         && form.sub_events.every((subEvent) =>
             subEvent.date.trim() !== ''
             && subEvent.start_time.trim() !== ''
-            && (subEvent.no_address || subEvent.address.trim().length >= 6),
+            && subEventHasAddressDecision(subEvent),
         );
 
     if (!timelineComplete) {
@@ -429,6 +433,23 @@ const removeSubEvent = (key: string): void => {
     if (existingSubEventIndex >= 0 && !form.sub_events[existingSubEventIndex]?.required) {
         form.sub_events.splice(existingSubEventIndex, 1);
     }
+};
+
+const updateSubEventNoAddress = (index: number, checked: CheckedState): void => {
+    const currentSubEvent = form.sub_events[index];
+
+    if (currentSubEvent === undefined) {
+        return;
+    }
+
+    const noAddress = checked === true;
+
+    form.sub_events[index] = {
+        ...currentSubEvent,
+        no_address: noAddress,
+        address: noAddress ? '' : currentSubEvent.address,
+    };
+    form.sub_events = [...form.sub_events];
 };
 
 const fieldError = (field: string): string | undefined => {
@@ -1171,14 +1192,7 @@ const submit = (): void => {
                                             <label class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted">
                                                 <Checkbox
                                                     :checked="subEvent.no_address"
-                                                    @update:checked="
-                                                        (checked: boolean) => {
-                                                            subEvent.no_address = checked === true;
-                                                            if (subEvent.no_address) {
-                                                                subEvent.address = '';
-                                                            }
-                                                        }
-                                                    "
+                                                    @update:checked="(checked: CheckedState) => updateSubEventNoAddress(index, checked)"
                                                 />
                                                 This moment has no address
                                             </label>
