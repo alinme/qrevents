@@ -25,6 +25,11 @@ import {
     Video,
     X,
 } from 'lucide-vue-next';
+import {
+    IconFileText,
+    IconPhoto,
+    IconVideo,
+} from '@tabler/icons-vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import {
@@ -300,11 +305,11 @@ const moderationMatchLabel = (match: MediaAsset['moderationMatches'][number]): s
 const kindIcon = (kind: MediaAsset['kind']) => {
     switch (kind) {
         case 'video':
-            return Video;
+            return IconVideo;
         case 'text':
-            return MessageSquareText;
+            return IconFileText;
         default:
-            return ImageIcon;
+            return IconPhoto;
     }
 };
 

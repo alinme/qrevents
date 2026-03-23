@@ -30,6 +30,12 @@ import {
     UploadCloud,
     X,
 } from 'lucide-vue-next';
+import {
+    IconBoxMultiple,
+    IconFileText,
+    IconPhoto,
+    IconVideo,
+} from '@tabler/icons-vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -1292,6 +1298,31 @@ const stackUploadSummary = (stack: GalleryStack): string | null => {
     return t('public.album.gallery.stack.items_uploaded', {
         count: stack.mediaCount,
     });
+};
+
+const stackMediaBadgeIcon = (stack: GalleryStack) =>
+    stack.mediaCount > 1
+        ? IconBoxMultiple
+        : stack.preview.kind === 'video'
+          ? IconVideo
+          : stack.preview.kind === 'text'
+            ? IconFileText
+            : IconPhoto;
+
+const stackMediaBadgeLabel = (stack: GalleryStack): string => {
+    if (stack.mediaCount > 1) {
+        return t('public.album.labels.multiple_items');
+    }
+
+    if (stack.preview.kind === 'video') {
+        return t('public.album.stats.videos');
+    }
+
+    if (stack.preview.kind === 'text') {
+        return t('public.album.nav.text');
+    }
+
+    return t('public.album.stats.photos');
 };
 
 const messagePreviewLimit = 180;
@@ -4298,7 +4329,7 @@ const onAlbumTouchCancel = (): void => {
                                         :style="textPostSurfaceStyle(stack.preview)"
                                     >
                                         <p
-                                            class="max-w-md whitespace-pre-wrap text-center text-base font-medium leading-relaxed"
+                                            class="max-w-md whitespace-pre-wrap text-center text-lg font-medium leading-relaxed"
                                             :style="textPostContentStyle(stack.preview)"
                                         >
                                             {{ stack.preview.text ?? t('public.album.labels.text_post') }}
@@ -4313,10 +4344,15 @@ const onAlbumTouchCancel = (): void => {
                                 </button>
 
                                 <div
-                                    v-if="stack.mediaCount > 1"
-                                    class="pointer-events-none absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-white/35 bg-black/38 p-2 text-white shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+                                    class="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/35 bg-black/42 px-3 py-2 text-white shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm"
                                 >
-                                    <Images class="size-8" />
+                                    <component
+                                        :is="stackMediaBadgeIcon(stack)"
+                                        class="size-5"
+                                    />
+                                    <span class="text-[0.65rem] font-semibold uppercase tracking-[0.14em]">
+                                        {{ stackMediaBadgeLabel(stack) }}
+                                    </span>
                                 </div>
 
                                 <div
@@ -5095,7 +5131,7 @@ const onAlbumTouchCancel = (): void => {
                                         :disabled="!canUploadText || textForm.processing"
                                         :placeholder="t('public.album.text.canvas_hint')"
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-xl font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[1.45rem]"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-[2rem] font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[2.4rem]"
                                         :class="
                                             !canUploadText || textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
@@ -5624,7 +5660,7 @@ const onAlbumTouchCancel = (): void => {
                         :style="textPostSurfaceStyle(selectedAsset)"
                     >
                         <p
-                            class="max-w-[78%] whitespace-pre-wrap text-center text-base font-semibold leading-relaxed sm:text-lg"
+                            class="max-w-[78%] whitespace-pre-wrap text-center text-2xl font-semibold leading-relaxed sm:text-3xl"
                             :style="textPostContentStyle(selectedAsset)"
                         >
                             {{ selectedAsset.text ?? t('public.album.labels.text_post') }}
@@ -5651,11 +5687,25 @@ const onAlbumTouchCancel = (): void => {
                     </button>
                 </div>
                 <div
+                    class="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4"
+                >
+                    <div class="inline-flex items-center gap-4 rounded-full border border-white/20 bg-black/58 px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                        <span class="inline-flex items-center gap-2">
+                            <Heart class="size-4 text-rose-400" />
+                            {{ formatLikeCount(selectedAsset.likeCount) }}
+                        </span>
+                        <span class="inline-flex items-center gap-2">
+                            <MessageCircle class="size-4 text-white/80" />
+                            {{ formatLikeCount(selectedAsset.commentCount) }}
+                        </span>
+                    </div>
+                </div>
+                <div
                     v-if="
                         showPreviewWatermark &&
                         (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
                     "
-                    class="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center"
+                    class="pointer-events-none absolute inset-x-0 bottom-40 z-20 flex justify-center"
                 >
                     <span class="rounded-full border border-white/35 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
                         {{ t('public.album.labels.preview_only_payment_required') }}
@@ -5663,14 +5713,14 @@ const onAlbumTouchCancel = (): void => {
                 </div>
 
                 <footer class="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/90 px-3 py-2.5">
-                    <div class="flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center justify-center gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition"
                             :class="
                                 selectedAssetLiked
                                     ? 'bg-rose-500/15 text-rose-300'
-                                    : 'text-white/80 hover:bg-white/10'
+                                    : 'hover:bg-white/10'
                             "
                             :disabled="selectedAsset === null || isAssetLikePending(selectedAsset)"
                             :aria-pressed="selectedAssetLiked"
@@ -5692,74 +5742,44 @@ const onAlbumTouchCancel = (): void => {
                                     ]
                                 "
                             />
-                            {{
-                                selectedAsset && isAssetLikePending(selectedAsset)
-                                    ? t('public.shared.saving')
-                                    : selectedAsset
-                                    ? t('public.album.asset.likes_count', {
-                                          count: formatLikeCount(selectedAsset.likeCount),
-                                      })
-                                    : t('public.album.asset.likes_count', { count: 0 })
-                            }}
+                            {{ selectedAsset && isAssetLikePending(selectedAsset) ? t('public.shared.saving') : t('public.album.actions.like') }}
                         </button>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
-                                :aria-label="t('public.album.asset.share')"
-                                @click="shareSelectedAsset"
-                            >
-                                <Copy class="size-3.5" />
-                                {{ t('public.album.asset.share') }}
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
-                                :aria-label="t('public.album.actions.open_comments')"
-                                @click="openAssetComments(activeStackKey ?? '')"
-                            >
-                                <MessageCircle class="size-3.5" />
-                                {{ t('public.album.comments.title') }}
-                                <span
-                                    v-if="selectedAsset.commentCount > 0"
-                                    class="font-semibold"
-                                >
-                                    {{ formatLikeCount(selectedAsset.commentCount) }}
-                                </span>
-                            </button>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button
-                                v-if="selectedAssetCanDelete"
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
-                                :aria-label="t('public.album.actions.delete_upload')"
-                                @click="deleteSelectedAsset"
-                            >
-                                <Trash2 class="size-3.5" />
-                                {{ t('public.album.actions.delete_upload') }}
-                            </button>
-                            <a
-                                v-if="selectedAssetCanDownload"
-                                :href="selectedAsset.downloadUrl"
-                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
-                            >
-                                <Download class="size-3.5" />
-                                {{ t('public.shared.download') }}
-                            </a>
-                            <button
-                                v-if="showCaptions"
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-1 text-xs font-medium text-white"
-                                :aria-label="t('public.album.actions.open_info')"
-                                @click="openAssetInfo(activeStackKey ?? '', activeStackSlideIndex)"
-                            >
-                                <Info class="size-3.5" />
-                                {{ t('public.shared.info') }}
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
+                            :aria-label="t('public.album.asset.share')"
+                            @click="shareSelectedAsset"
+                        >
+                            <Copy class="size-3.5" />
+                            {{ t('public.album.asset.share') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
+                            :aria-label="t('public.album.actions.open_comments')"
+                            @click="openAssetComments(activeStackKey ?? '')"
+                        >
+                            <MessageCircle class="size-3.5" />
+                            {{ t('public.album.comments.title') }}
+                        </button>
+                        <a
+                            v-if="selectedAssetCanDownload"
+                            :href="selectedAsset.downloadUrl"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
+                        >
+                            <Download class="size-3.5" />
+                            {{ t('public.shared.download') }}
+                        </a>
+                        <button
+                            v-if="showCaptions"
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
+                            :aria-label="t('public.album.actions.open_info')"
+                            @click="openAssetInfo(activeStackKey ?? '', activeStackSlideIndex)"
+                        >
+                            <Info class="size-3.5" />
+                            {{ t('public.shared.info') }}
+                        </button>
                     </div>
 
                     <p

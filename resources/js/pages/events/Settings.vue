@@ -8,9 +8,7 @@ import {
     CreditCard,
     GripVertical,
     Hash,
-    Image as ImageIcon,
     Mail,
-    MessageSquareText,
     Palette,
     Phone,
     Plus,
@@ -20,10 +18,17 @@ import {
     User,
     UserPlus,
     Users,
-    Video,
     WandSparkles,
     X,
 } from 'lucide-vue-next';
+import {
+    IconDownload,
+    IconEye,
+    IconFileText,
+    IconPhoto,
+    IconUpload,
+    IconVideo,
+} from '@tabler/icons-vue';
 import type { DateValue } from 'reka-ui';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
@@ -494,30 +499,69 @@ const billingForm = useForm({
     billing_note: props.currentEvent.billing.note ?? '',
 });
 
-const albumPermissionOptions = [
+type AlbumPermissionToggle = 'view' | 'upload' | 'download';
+
+const albumPermissionCardOptions = [
     {
-        value: 'view_upload',
-        title: 'View & Upload',
-        description: 'Guests can upload new photos and view existing ones.',
+        value: 'view' as const,
+        title: 'View',
+        description: 'Guests can open and browse the album.',
+        icon: IconEye,
     },
     {
-        value: 'view_only',
-        title: 'View Only',
-        description:
-            "Guests can view existing photos but can't upload new ones.",
+        value: 'upload' as const,
+        title: 'Upload',
+        description: 'Guests can send photos, videos, and text wishes.',
+        icon: IconUpload,
     },
     {
-        value: 'upload_only',
-        title: 'Upload Only',
-        description: "Guests can upload but can't view existing media.",
+        value: 'download' as const,
+        title: 'Download',
+        description: 'Guests can save approved media to their device.',
+        icon: IconDownload,
     },
 ] as const;
 
 const mediaTypeOptions = [
-    { value: 'photo', label: 'Photos', icon: ImageIcon },
-    { value: 'video', label: 'Videos', icon: Video },
-    { value: 'text', label: 'Text', icon: MessageSquareText },
+    { value: 'photo', label: 'Photos', icon: IconPhoto },
+    { value: 'video', label: 'Videos', icon: IconVideo },
+    { value: 'text', label: 'Text wishes', icon: IconFileText },
 ] as const;
+
+const albumPermissionSelection = computed(() => ({
+    view: ['view_upload', 'view_only'].includes(form.album_permission),
+    upload: ['view_upload', 'upload_only'].includes(form.album_permission),
+    download: !form.disable_guest_download,
+}));
+
+const toggleAlbumPermissionSelection = (
+    permission: AlbumPermissionToggle,
+): void => {
+    if (permission === 'download') {
+        form.disable_guest_download = !albumPermissionSelection.value.download;
+        return;
+    }
+
+    const nextView =
+        permission === 'view'
+            ? !albumPermissionSelection.value.view
+            : albumPermissionSelection.value.view;
+    const nextUpload =
+        permission === 'upload'
+            ? !albumPermissionSelection.value.upload
+            : albumPermissionSelection.value.upload;
+
+    if (!nextView && !nextUpload) {
+        return;
+    }
+
+    form.album_permission =
+        nextView && nextUpload
+            ? 'view_upload'
+            : nextView
+              ? 'view_only'
+              : 'upload_only';
+};
 const collaboratorRoleOptions = ['manager', 'viewer'] as const;
 
 const moderationFilterOptions = [
@@ -1744,21 +1788,30 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
                                 <div class="grid gap-3 md:grid-cols-3">
                                     <button
-                                        v-for="permission in albumPermissionOptions"
+                                        v-for="permission in albumPermissionCardOptions"
                                         :key="permission.value"
                                         type="button"
-                                        class="rounded-xl border p-4 text-left"
+                                        class="rounded-xl border p-4 text-left transition"
                                         :class="
-                                            form.album_permission ===
-                                            permission.value
-                                                ? 'border-primary bg-accent/40'
-                                                : ''
+                                            albumPermissionSelection[permission.value]
+                                                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                         "
                                         @click="
-                                            form.album_permission =
-                                                permission.value
+                                            toggleAlbumPermissionSelection(
+                                                permission.value,
+                                            )
                                         "
                                     >
+                                        <component
+                                            :is="permission.icon"
+                                            class="mb-3 size-5"
+                                            :class="
+                                                albumPermissionSelection[permission.value]
+                                                    ? 'text-primary'
+                                                    : 'text-slate-400'
+                                            "
+                                        />
                                         <p class="text-sm font-semibold">
                                             {{ permission.title }}
                                         </p>
@@ -1808,17 +1861,13 @@ function resolveSupportedTimezones(): string[] {
                                             v-for="mediaType in mediaTypeOptions"
                                             :key="mediaType.value"
                                             :value="mediaType.value"
-                                            class="h-11 flex-1 justify-center"
+                                            class="h-12 flex-1 justify-center gap-2 border-slate-200 bg-white text-slate-600 data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
                                         >
                                             <component
                                                 :is="mediaType.icon"
-                                                class="size-4"
+                                                class="size-4.5"
                                             />
-                                            {{
-                                                mediaType.value === 'text'
-                                                    ? 'Text wishes'
-                                                    : mediaType.label
-                                            }}
+                                            {{ mediaType.label }}
                                         </ToggleGroupItem>
                                     </ToggleGroup>
                                     <p class="text-xs text-muted-foreground">
@@ -2763,30 +2812,6 @@ function resolveSupportedTimezones(): string[] {
                                 :message="form.errors.auto_moderation_enabled"
                             />
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            Disable Guests Download
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Pro
-                                        </Badge>
-                                    </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        Hide the download button in the album
-                                        page.
-                                    </p>
-                                </div>
-                                <div class="flex justify-end">
-                                    <Switch
-                                        v-model="form.disable_guest_download"
-                                    />
-                                </div>
-                            </div>
                         </section>
 
                         <section
