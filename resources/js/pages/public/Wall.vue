@@ -612,9 +612,9 @@ watch(
                         <img
                             :src="currentAssetBackdropUrl"
                             alt=""
-                            class="h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+                            class="h-full w-full scale-105 object-cover opacity-80 blur-md"
                         />
-                        <div class="absolute inset-0 bg-black/35" />
+                        <div class="absolute inset-0 bg-black/18" />
                     </div>
 
                     <img

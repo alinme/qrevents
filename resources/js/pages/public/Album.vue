@@ -1068,6 +1068,7 @@ const selectedAssetLiked = computed(() =>
         ? likedAssetIds.value[selectedAsset.value.id] === true
         : false,
 );
+const showBottomNav = computed(() => onboardingDone.value);
 
 const textPostSurfaceStyle = (item: {
     textThemeImageUrl: string | null;
@@ -2065,6 +2066,41 @@ const setActiveView = (view: GuestIntent): void => {
     openComposerForView(view);
 };
 
+const openGuestSettings = (): void => {
+    menuOpen.value = true;
+};
+
+const triggerQuickUpload = (): void => {
+    selectedIntent.value = 'upload_media';
+
+    if (!onboardingDone.value) {
+        return;
+    }
+
+    openComposerForView('upload_media');
+
+    if (typeof window !== 'undefined') {
+        window.setTimeout(() => {
+            openUploadFilePicker();
+        }, 180);
+    }
+};
+
+const saveGuestSettings = async (): Promise<void> => {
+    if (!validateGuestStepOne()) {
+        return;
+    }
+
+    const saved = await upsertGuestProfile();
+    if (!saved) {
+        return;
+    }
+
+    onboardingDone.value = true;
+    persistGuestProfile();
+    menuOpen.value = false;
+};
+
 const setMenuActiveView = (view: GuestIntent): void => {
     if (!isIntentEnabled(view)) {
         return;
@@ -2158,7 +2194,11 @@ const syncBodyScrollLock = (): void => {
 
     const shouldLock =
         activeStackKey.value !== null ||
-        isComposerOpen.value;
+        isComposerOpen.value ||
+        menuOpen.value ||
+        isPreEventInfoOpen.value ||
+        isAssetCommentsOpen.value ||
+        isAssetInfoOpen.value;
 
     if (shouldLock) {
         lockBodyScroll();
@@ -3255,7 +3295,7 @@ const onAlbumTouchCancel = (): void => {
             class="relative w-full"
             :class="
                 onboardingDone
-                    ? 'pb-24'
+                    ? 'pb-32'
                     : !onboardingDone && customWelcomeEnabled
                     ? ''
                     : 'mx-auto max-w-md px-4 pb-24 pt-5 sm:max-w-lg'
@@ -4588,13 +4628,67 @@ const onAlbumTouchCancel = (): void => {
 
         <footer
             v-if="onboardingDone && showPoweredBy"
-            class="safe-bottom safe-x fixed inset-x-0 bottom-0 z-20 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/80"
+            class="safe-x mt-10 border-t border-slate-200 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/80"
         >
             <Separator class="bg-slate-200" />
             <div class="px-3 py-2 text-center text-xs text-slate-500">
                 © {{ new Date().getFullYear() }} {{ appName }}. {{ t('public.wall.footer') }}
             </div>
         </footer>
+
+        <nav
+            v-if="showBottomNav"
+            class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40 px-3 pb-3"
+            aria-label="Guest album actions"
+        >
+            <div class="mx-auto flex max-w-2xl items-end justify-between gap-2 rounded-[2rem] border border-slate-200/80 bg-white/96 px-3 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+                <button
+                    type="button"
+                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    :class="isComposerOpen && activeView === 'upload_media' ? 'bg-slate-900 text-white' : ''"
+                    @click="setActiveView('upload_media')"
+                >
+                    <Images class="size-5" />
+                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.photo') }}</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    :class="isComposerOpen && activeView === 'video_testimonial' ? 'bg-slate-900 text-white' : ''"
+                    @click="setActiveView('video_testimonial')"
+                >
+                    <Film class="size-5" />
+                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.video') }}</span>
+                </button>
+                <button
+                    type="button"
+                    class="-mt-7 inline-flex size-18 shrink-0 flex-col items-center justify-center rounded-[1.7rem] text-white shadow-[0_16px_36px_rgba(15,23,42,0.28)] transition hover:-translate-y-0.5"
+                    :style="heroAccentStyle"
+                    @click="triggerQuickUpload"
+                >
+                    <Camera class="size-7" />
+                    <span class="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]">{{ t('public.album.nav.camera') }}</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    :class="isComposerOpen && activeView === 'text_wish' ? 'bg-slate-900 text-white' : ''"
+                    @click="setActiveView('text_wish')"
+                >
+                    <MessageSquareText class="size-5" />
+                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.text') }}</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    :class="menuOpen ? 'bg-slate-900 text-white' : ''"
+                    @click="openGuestSettings"
+                >
+                    <Menu class="size-5" />
+                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.settings') }}</span>
+                </button>
+            </div>
+        </nav>
 
         <Sheet v-model:open="isPreEventInfoOpen">
             <SheetContent
@@ -4701,15 +4795,8 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="isComposerOpen"
-                class="fixed inset-0 z-[70]"
+                class="fixed inset-0 z-[70] bg-[#fcfaf6]"
             >
-                <div
-                    class="absolute inset-0 bg-slate-950/40"
-                    @click="closeComposer"
-                />
-                <div
-                    class="safe-bottom absolute inset-x-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0 shadow-[0_-24px_80px_rgba(15,23,42,0.24)]"
-                >
                 <div
                     v-if="uploadForm.processing"
                     class="absolute inset-0 z-20 flex items-center justify-center bg-[#fcfaf6]/88 backdrop-blur-sm"
@@ -4728,130 +4815,131 @@ const onAlbumTouchCancel = (): void => {
                         </div>
                     </div>
                 </div>
-                <div class="border-b border-slate-200 px-5 pb-5 pt-3 text-left">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <component
-                            :is="
-                                activeView === 'video_testimonial'
-                                    ? Film
-                                    : activeView === 'text_wish'
-                                      ? MessageSquareText
-                                      : Camera
-                            "
-                            class="size-5"
-                        />
-                        <span>
-                            {{
-                                activeView === 'text_wish'
-                                    ? t('public.album.text.title')
-                                    : uploadTitle
-                            }}
-                        </span>
-                        </div>
-                        <button
-                            type="button"
-                            class="inline-flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
-                            :aria-label="t('public.album.composer.close')"
-                            @click="closeComposer"
-                        >
-                            <X class="size-4" />
-                        </button>
-                    </div>
-                    <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                        {{
-                            activeView === 'text_wish'
-                                ? t('public.album.text.description')
-                                : uploadDescription
-                        }}
-                    </p>
-                </div>
-
-                <div class="px-5 pb-8">
-
-                <div
-                    v-if="activeView === 'upload_media' || activeView === 'video_testimonial'"
-                    class="mt-6 flex min-h-0 flex-col"
-                >
-                    <p class="text-xs text-slate-600">
-                        {{ t('public.album.labels.limits_summary', {
-                            photoMax: formatBytes(limits.photoMaxSizeBytes),
-                            videoMax: formatBytes(limits.videoMaxSizeBytes),
-                        }) }}
-                    </p>
-
-                    <div class="mt-4 space-y-3">
-                        <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                <div class="flex h-full flex-col">
+                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-3 backdrop-blur">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    <component
+                                        :is="
+                                            activeView === 'video_testimonial'
+                                                ? Film
+                                                : activeView === 'text_wish'
+                                                  ? MessageSquareText
+                                                  : Camera
+                                        "
+                                        class="size-6"
+                                    />
+                                    <span>
+                                        {{
+                                            activeView === 'text_wish'
+                                                ? t('public.album.text.title')
+                                                : uploadTitle
+                                        }}
+                                    </span>
+                                </div>
+                                <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                                    {{
+                                        activeView === 'text_wish'
+                                            ? t('public.album.text.description')
+                                            : uploadDescription
+                                    }}
+                                </p>
+                            </div>
                             <button
-                                v-for="emoji in uploadMessageEmojiOptions"
-                                :key="`upload-message-emoji-${emoji}`"
                                 type="button"
-                                class="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-base transition hover:border-slate-300 hover:bg-slate-100"
-                                :disabled="!canUpload || uploadForm.processing"
-                                @click="appendUploadMessageEmoji(emoji)"
+                                class="inline-flex size-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                                :aria-label="t('public.album.composer.close')"
+                                @click="closeComposer"
                             >
-                                {{ emoji }}
+                                <X class="size-5" />
                             </button>
                         </div>
-                        <InputGroup class="h-12 rounded-full border-slate-200 bg-white">
-                            <InputGroupInput
-                                id="upload-message"
-                                v-model="uploadForm.message"
-                                maxlength="500"
-                                :placeholder="t('public.album.upload.message_placeholder')"
-                                :disabled="!canUpload || uploadForm.processing"
-                                class="h-12 rounded-full px-4 text-sm"
-                            />
-                            <InputGroupAddon
-                                align="inline-end"
-                                class="pr-3"
-                            >
-                                <InputGroupText class="text-xs text-slate-400">
-                                    {{ uploadForm.message?.trim().length ?? 0 }}/500
-                                </InputGroupText>
-                            </InputGroupAddon>
-                        </InputGroup>
-                        <p
-                            v-if="uploadForm.errors.message"
-                            class="text-xs text-rose-700"
+                    </header>
+
+                    <div class="flex-1 overflow-y-auto px-5 pb-36 pt-5">
+                        <div
+                            v-if="activeView === 'upload_media' || activeView === 'video_testimonial'"
+                            class="space-y-5"
                         >
-                            {{ uploadForm.errors.message }}
-                        </p>
-                    </div>
+                            <p class="text-sm leading-relaxed text-slate-600">
+                                {{ t('public.album.labels.limits_summary', {
+                                    photoMax: formatBytes(limits.photoMaxSizeBytes),
+                                    videoMax: formatBytes(limits.videoMaxSizeBytes),
+                                }) }}
+                            </p>
 
-                    <input
-                        ref="fileInputRef"
-                        type="file"
-                        multiple
-                        :accept="uploadAccept"
-                        :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
-                        class="sr-only"
-                        data-test="guest-upload-input"
-                        @change="onFileSelectionChange"
-                    />
-
-                    <button
-                        type="button"
-                        class="mt-4 flex w-full items-center gap-4 rounded-[1.6rem] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
-                        data-test="guest-upload-picker"
-                        @click="openUploadFilePicker"
-                    >
-                        <div class="flex min-w-0 items-center gap-3">
-                            <div class="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                                <UploadCloud class="size-5" />
+                            <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                                <button
+                                    v-for="emoji in uploadMessageEmojiOptions"
+                                    :key="`upload-message-emoji-${emoji}`"
+                                    type="button"
+                                    class="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                                    :disabled="!canUpload || uploadForm.processing"
+                                    @click="appendUploadMessageEmoji(emoji)"
+                                >
+                                    {{ emoji }}
+                                </button>
                             </div>
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900">
+
+                            <div class="rounded-[1.8rem] border border-slate-200 bg-white p-4 shadow-sm">
+                                <label for="upload-message" class="text-sm font-semibold text-slate-900">
+                                    {{ t('public.album.upload.message_placeholder') }}
+                                </label>
+                                <textarea
+                                    id="upload-message"
+                                    v-model="uploadForm.message"
+                                    maxlength="500"
+                                    :placeholder="t('public.album.upload.message_placeholder')"
+                                    :disabled="!canUpload || uploadForm.processing"
+                                    rows="4"
+                                    class="mt-3 w-full resize-none rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                />
+                                <div class="mt-2 flex items-center justify-end text-xs font-medium text-slate-400">
+                                    {{ uploadForm.message?.trim().length ?? 0 }}/500
+                                </div>
+                                <p
+                                    v-if="uploadForm.errors.message"
+                                    class="mt-2 text-sm text-rose-700"
+                                >
+                                    {{ uploadForm.errors.message }}
+                                </p>
+                            </div>
+
+                            <input
+                                ref="fileInputRef"
+                                type="file"
+                                multiple
+                                :accept="uploadAccept"
+                                :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                                class="sr-only"
+                                data-test="guest-upload-input"
+                                @change="onFileSelectionChange"
+                            />
+
+                            <button
+                                type="button"
+                                class="flex min-h-56 w-full flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-300 bg-white px-6 py-8 text-center shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                                data-test="guest-upload-picker"
+                                @click="openUploadFilePicker"
+                            >
+                                <div
+                                    class="inline-flex size-18 items-center justify-center rounded-full text-white shadow-[0_14px_36px_rgba(15,23,42,0.2)]"
+                                    :style="heroAccentStyle"
+                                >
+                                    <UploadCloud class="size-8" />
+                                </div>
+                                <p class="mt-5 text-lg font-semibold text-slate-900">
                                     {{
                                         uploadForm.files.length > 0
-                                            ? t('public.album.labels.change_selected_files')
+                                            ? t('public.album.upload.dropzone_selected')
                                             : activeView === 'video_testimonial'
                                               ? t('public.album.labels.choose_your_video')
                                               : t('public.album.labels.choose_photos_or_videos')
                                     }}
                                 </p>
-                                <p class="truncate text-xs text-slate-500">
+                                <p class="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
                                     {{
                                         uploadForm.files.length > 0
                                             ? t('public.album.labels.files_selected_count', {
@@ -4859,306 +4947,422 @@ const onAlbumTouchCancel = (): void => {
                                               })
                                             : activeView === 'video_testimonial'
                                               ? t('public.album.labels.pick_one_short_clip')
-                                              : t('public.album.labels.select_multiple_files')
+                                              : t('public.album.upload.dropzone_hint')
                                     }}
                                 </p>
-                            </div>
-                        </div>
-                    </button>
+                            </button>
 
-                    <div
-                        v-if="uploadForm.files.length > 0"
-                        class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4"
-                    >
-                        <div class="flex items-center justify-between gap-3">
-                            <p class="text-xs font-medium text-slate-800">
-                                {{ t('public.album.labels.selected_files') }} ({{ uploadForm.files.length }})
+                            <div
+                                v-if="uploadForm.files.length > 0"
+                                class="rounded-[1.8rem] border border-slate-200 bg-white p-4 shadow-sm"
+                            >
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-sm font-semibold text-slate-900">
+                                        {{ t('public.album.labels.selected_files') }} ({{ uploadForm.files.length }})
+                                    </p>
+                                    <button
+                                        type="button"
+                                        class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                        :disabled="uploadForm.processing || isValidatingVideos"
+                                        @click="openUploadFilePicker"
+                                    >
+                                        {{ t('public.album.labels.change_selected_files') }}
+                                    </button>
+                                </div>
+                                <div class="mt-4 flex flex-wrap gap-3">
+                                    <div
+                                        v-for="preview in uploadPreviewItems.slice(0, 6)"
+                                        :key="preview.key"
+                                        class="relative size-20 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-slate-50"
+                                    >
+                                        <img
+                                            v-if="preview.kind === 'photo'"
+                                            :src="preview.objectUrl"
+                                            :alt="preview.name"
+                                            class="h-full w-full object-cover"
+                                        />
+                                        <video
+                                            v-else
+                                            :src="preview.objectUrl"
+                                            class="h-full w-full object-cover"
+                                            autoplay
+                                            loop
+                                            muted
+                                            playsinline
+                                            preload="auto"
+                                        />
+                                        <div
+                                            v-if="preview.kind === 'video'"
+                                            class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-2 py-1"
+                                        >
+                                            <Film class="size-4 text-white" />
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-if="uploadPreviewItems.length > 6"
+                                        class="flex size-20 items-center justify-center rounded-[1.35rem] border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500"
+                                    >
+                                        +{{ uploadPreviewItems.length - 6 }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="clientValidationErrors.length > 0"
+                                class="rounded-[1.6rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+                            >
+                                <p class="font-semibold">{{ t('public.album.files_skipped') }}</p>
+                                <ul class="mt-2 list-inside list-disc space-y-1">
+                                    <li
+                                        v-for="error in clientValidationErrors"
+                                        :key="error"
+                                    >
+                                        {{ error }}
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <p
+                                v-if="uploadForm.errors.files"
+                                class="text-sm text-rose-700"
+                            >
+                                {{ uploadForm.errors.files }}
+                            </p>
+
+                            <button
+                                type="button"
+                                class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                :style="heroAccentStyle"
+                                :disabled="!canUpload || uploadForm.files.length === 0 || uploadForm.processing || isValidatingVideos"
+                                data-test="guest-upload-submit"
+                                @click="uploadFiles"
+                            >
+                                <UploadCloud class="mr-2 size-5" />
+                                {{ uploadForm.processing ? t('public.album.upload.uploading') : uploadButtonLabel }}
+                            </button>
+                        </div>
+
+                        <div
+                            v-else-if="activeView === 'text_wish' && allowTextPosts"
+                            class="space-y-5"
+                        >
+                            <div
+                                class="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-[2.2rem] border border-slate-200 bg-slate-100 shadow-sm"
+                                :style="
+                                    selectedTextPostTheme
+                                        ? {
+                                              ...textPostSurfaceStyle({
+                                                  textThemeImageUrl: selectedTextPostTheme.imageUrl,
+                                                  textThemeBackgroundColor: selectedTextPostTheme.backgroundColor,
+                                              }),
+                                          }
+                                        : undefined
+                                "
+                                @click="focusTextComposer"
+                            >
+                                <div
+                                    class="absolute inset-0"
+                                    :class="
+                                        selectedTextPostTheme?.textColor === '#111827'
+                                            ? 'bg-white/6'
+                                            : 'bg-black/18'
+                                    "
+                                />
+                                <div class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center">
+                                    <div
+                                        ref="textComposerRef"
+                                        :contenteditable="canUploadText && !textForm.processing"
+                                        spellcheck="true"
+                                        :aria-disabled="!canUploadText || textForm.processing"
+                                        class="max-h-full min-h-56 w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent text-center text-xl font-semibold leading-tight outline-none sm:text-[1.45rem]"
+                                        :class="
+                                            !canUploadText || textForm.processing
+                                                ? 'cursor-not-allowed opacity-70'
+                                                : ''
+                                        "
+                                        :style="
+                                            selectedTextPostTheme
+                                                ? {
+                                                      ...textPostContentStyle({
+                                                          textThemeTextColor: selectedTextPostTheme.textColor,
+                                                      }),
+                                                      textShadow:
+                                                          selectedTextPostTheme.textColor === '#111827'
+                                                              ? '0 1px 14px rgba(255,255,255,0.55)'
+                                                              : '0 1px 14px rgba(15,23,42,0.35)',
+                                                  }
+                                                : undefined
+                                        "
+                                        @focus="isTextComposerFocused = true"
+                                        @blur="isTextComposerFocused = false"
+                                        @input="onTextComposerInput"
+                                    />
+                                    <p
+                                        v-if="textForm.text.trim().length === 0"
+                                        class="pointer-events-none absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-lg font-semibold leading-tight opacity-82 sm:text-[1.35rem]"
+                                        :style="
+                                            selectedTextPostTheme
+                                                ? {
+                                                      ...textPostContentStyle({
+                                                          textThemeTextColor: selectedTextPostTheme.textColor,
+                                                      }),
+                                                  }
+                                                : undefined
+                                        "
+                                    >
+                                        {{ t('public.album.text.canvas_hint') }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-3 text-sm text-slate-500">
+                                <span>{{ t('public.album.text.background_theme') }}</span>
+                                <span>{{ textForm.text.trim().length }}/500</span>
+                            </div>
+
+                            <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                                <button
+                                    v-for="theme in props.textPostThemes"
+                                    :key="theme.id"
+                                    type="button"
+                                    class="relative shrink-0 overflow-hidden rounded-[1.35rem] border-2 shadow-sm transition"
+                                    :class="
+                                        textForm.text_post_theme_id === theme.id
+                                            ? 'border-slate-900'
+                                            : 'border-transparent'
+                                    "
+                                    @click="textForm.text_post_theme_id = theme.id"
+                                >
+                                    <img
+                                        :src="theme.imageUrl"
+                                        :alt="theme.name"
+                                        class="size-24 object-cover"
+                                    />
+                                    <div
+                                        v-if="textForm.text_post_theme_id === theme.id"
+                                        class="absolute inset-0 flex items-start justify-end bg-black/10 p-2"
+                                    >
+                                        <span class="inline-flex size-7 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+                                            <CheckCircle2 class="size-4.5" />
+                                        </span>
+                                    </div>
+                                </button>
+                            </div>
+                            <p
+                                v-if="textForm.errors.text || textForm.errors.text_post_theme_id"
+                                class="text-sm text-rose-700"
+                            >
+                                {{ textForm.errors.text || textForm.errors.text_post_theme_id }}
                             </p>
                             <button
                                 type="button"
-                                class="text-xs font-medium text-slate-500 transition hover:text-slate-900"
-                                :disabled="uploadForm.processing || isValidatingVideos"
-                                @click="openUploadFilePicker"
+                                class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                :style="heroAccentStyle"
+                                :disabled="!canUploadText || textForm.processing || textForm.text.trim().length === 0"
+                                @click="submitTextPost"
                             >
-                                {{ t('public.shared.change') }}
+                                {{ textForm.processing ? t('public.album.text.posting') : t('public.album.text.post_button') }}
                             </button>
                         </div>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <div
-                                v-for="preview in uploadPreviewItems.slice(0, 6)"
-                                :key="preview.key"
-                                class="relative size-18 overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                            >
-                                <img
-                                    v-if="preview.kind === 'photo'"
-                                    :src="preview.objectUrl"
-                                    :alt="preview.name"
-                                    class="h-full w-full object-cover"
-                                />
-                                <video
-                                    v-else
-                                    :src="preview.objectUrl"
-                                    class="h-full w-full object-cover"
-                                    autoplay
-                                    loop
-                                    muted
-                                    playsinline
-                                    preload="auto"
-                                />
-                                <div
-                                    v-if="preview.kind === 'video'"
-                                    class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-2 py-1"
-                                >
-                                    <Film class="size-3.5 text-white" />
-                                </div>
-                            </div>
-                            <div
-                                v-if="uploadPreviewItems.length > 6"
-                                class="flex size-18 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-500"
-                            >
-                                +{{ uploadPreviewItems.length - 6 }}
-                            </div>
-                        </div>
                     </div>
-
-                    <div
-                        v-if="clientValidationErrors.length > 0"
-                        class="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900"
-                    >
-                        <p class="font-medium">{{ t('public.album.files_skipped') }}</p>
-                        <ul class="mt-1 list-inside list-disc space-y-1">
-                            <li
-                                v-for="error in clientValidationErrors"
-                                :key="error"
-                            >
-                                {{ error }}
-                            </li>
-                        </ul>
-                    </div>
-
-                    <p
-                        v-if="uploadForm.errors.files"
-                        class="mt-3 text-xs text-rose-700"
-                    >
-                        {{ uploadForm.errors.files }}
-                    </p>
-
-                    <div class="mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur">
-                        <button
-                            type="button"
-                            class="inline-flex h-12 w-full items-center justify-center rounded-2xl px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            :style="heroAccentStyle"
-                            :disabled="!canUpload || uploadForm.files.length === 0 || uploadForm.processing || isValidatingVideos"
-                            data-test="guest-upload-submit"
-                            @click="uploadFiles"
-                        >
-                            <UploadCloud class="mr-2 size-4" />
-                            {{ uploadForm.processing ? t('public.album.upload.uploading') : uploadButtonLabel }}
-                        </button>
-                    </div>
-                </div>
-
-                <div
-                    v-else-if="activeView === 'text_wish' && allowTextPosts"
-                    class="mt-6 space-y-5"
-                >
-                    <div
-                        class="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-100 shadow-sm"
-                        :style="
-                            selectedTextPostTheme
-                                ? {
-                                      ...textPostSurfaceStyle({
-                                          textThemeImageUrl: selectedTextPostTheme.imageUrl,
-                                          textThemeBackgroundColor: selectedTextPostTheme.backgroundColor,
-                                      }),
-                                }
-                                : undefined
-                        "
-                        @click="focusTextComposer"
-                    >
-                        <div
-                            class="absolute inset-0"
-                            :class="
-                                selectedTextPostTheme?.textColor === '#111827'
-                                    ? 'bg-white/4'
-                                    : 'bg-black/12'
-                            "
-                        />
-                        <div class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center">
-                            <div
-                                ref="textComposerRef"
-                                :contenteditable="canUploadText && !textForm.processing"
-                                spellcheck="true"
-                                :aria-disabled="!canUploadText || textForm.processing"
-                                class="max-h-full w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent text-center text-base font-semibold leading-tight outline-none sm:text-[1.15rem]"
-                                :class="
-                                    !canUploadText || textForm.processing
-                                        ? 'cursor-not-allowed opacity-70'
-                                        : ''
-                                "
-                                :style="
-                                    selectedTextPostTheme
-                                        ? {
-                                              ...textPostContentStyle({
-                                                  textThemeTextColor: selectedTextPostTheme.textColor,
-                                              }),
-                                              textShadow:
-                                                  selectedTextPostTheme.textColor === '#111827'
-                                                      ? '0 1px 14px rgba(255,255,255,0.55)'
-                                                      : '0 1px 14px rgba(15,23,42,0.35)',
-                                          }
-                                        : undefined
-                                "
-                                @focus="isTextComposerFocused = true"
-                                @blur="isTextComposerFocused = false"
-                                @input="onTextComposerInput"
-                            />
-                            <p
-                                v-if="textForm.text.trim().length === 0 && isTextComposerFocused"
-                                class="pointer-events-none absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-base font-semibold leading-tight opacity-70 sm:text-[1.15rem]"
-                                :style="
-                                    selectedTextPostTheme
-                                        ? {
-                                              ...textPostContentStyle({
-                                                  textThemeTextColor: selectedTextPostTheme.textColor,
-                                              }),
-                                          }
-                                        : undefined
-                                "
-                            >
-                                {{ t('public.album.text.placeholder') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
-                        <span>{{ t('public.album.text.background_theme') }}</span>
-                        <span>{{ textForm.text.trim().length }}/500</span>
-                    </div>
-
-                    <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
-                        <button
-                            v-for="theme in props.textPostThemes"
-                            :key="theme.id"
-                            type="button"
-                            class="relative shrink-0 overflow-hidden rounded-[1.35rem] border-2 shadow-sm transition"
-                            :class="
-                                textForm.text_post_theme_id === theme.id
-                                    ? 'border-slate-900'
-                                    : 'border-transparent'
-                            "
-                            @click="textForm.text_post_theme_id = theme.id"
-                        >
-                            <img
-                                :src="theme.imageUrl"
-                                :alt="theme.name"
-                                class="size-20 object-cover"
-                            />
-                            <div
-                                v-if="textForm.text_post_theme_id === theme.id"
-                                class="absolute inset-0 flex items-start justify-end bg-black/10 p-2"
-                            >
-                                <span class="inline-flex size-6 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
-                                    <CheckCircle2 class="size-4" />
-                                </span>
-                            </div>
-                        </button>
-                    </div>
-                    <p
-                        v-if="textForm.errors.text || textForm.errors.text_post_theme_id"
-                        class="mt-3 text-xs text-rose-700"
-                    >
-                        {{ textForm.errors.text || textForm.errors.text_post_theme_id }}
-                    </p>
-                    <button
-                        type="button"
-                        class="mt-5 inline-flex h-11 w-full items-center justify-center rounded-2xl px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                        :style="heroAccentStyle"
-                        :disabled="!canUploadText || textForm.processing || textForm.text.trim().length === 0"
-                        @click="submitTextPost"
-                    >
-                        {{ textForm.processing ? t('public.album.text.posting') : t('public.album.text.post_button') }}
-                    </button>
-                </div>
-
-                </div>
                 </div>
             </div>
         </transition>
 
-        <Sheet v-model:open="menuOpen">
-            <SheetContent
-                side="right"
-                class="safe-right safe-bottom flex h-full w-[85%] max-w-sm flex-col border-l border-slate-200 bg-white px-0 sm:max-w-sm"
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="menuOpen"
+                class="fixed inset-0 z-[72] bg-[#fcfaf6]"
             >
-                <SheetHeader class="border-b border-slate-200 px-5 py-5 text-left">
-                    <SheetTitle class="text-base text-slate-900">
-                        {{ t('public.album.menu.guest_menu') }}
-                    </SheetTitle>
-                    <SheetDescription class="text-sm text-slate-600">
-                        {{ t('public.album.menu.signed_in_as') }}
-                        <span class="font-semibold text-slate-900">{{ guestName.trim() }}</span>
-                    </SheetDescription>
-                </SheetHeader>
+                <div class="flex h-full flex-col">
+                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-3 backdrop-blur">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-lg font-semibold text-slate-900">
+                                    {{ t('public.album.settings.title') }}
+                                </p>
+                                <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                                    {{ t('public.album.settings.description') }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="inline-flex size-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                                :aria-label="t('public.shared.close_menu')"
+                                @click="menuOpen = false"
+                            >
+                                <X class="size-5" />
+                            </button>
+                        </div>
+                    </header>
 
-                <div class="flex-1 overflow-y-auto px-4 py-4">
-                    <div class="grid gap-2">
-                        <button
-                            v-for="option in intentOptions"
-                            :key="`sheet-menu-${option.value}`"
-                            type="button"
-                            class="flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-[15px] font-medium transition"
-                            :class="
-                                (option.value === 'browse_gallery' &&
-                                    activeView === 'browse_gallery' &&
-                                    !isComposerOpen) ||
-                                (option.value !== 'browse_gallery' &&
-                                    isComposerOpen &&
-                                    activeView === option.value)
-                                    ? 'border-slate-900 bg-slate-900 text-white'
-                                    : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
-                            "
-                            :disabled="!option.enabled"
-                            @click="setMenuActiveView(option.value)"
-                        >
-                            <component :is="option.icon" class="size-4 shrink-0" />
-                            <span>{{ option.label }}</span>
-                        </button>
+                    <div class="flex-1 overflow-y-auto px-5 pb-10 pt-5">
+                        <section class="rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+                                <div class="flex items-center gap-4">
+                                    <Avatar class="size-20 border border-slate-200">
+                                        <AvatarImage
+                                            v-if="currentGuestAvatarUrl"
+                                            :src="currentGuestAvatarUrl ?? ''"
+                                            :alt="guestName || t('public.shared.alt.guest_avatar')"
+                                        />
+                                        <AvatarFallback :class="avatarFallbackClass(guestName)">
+                                            {{ guestInitials(guestName) }}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p class="text-base font-semibold text-slate-900">
+                                            {{ t('public.album.settings.profile_title') }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ t('public.album.menu.signed_in_as') }}
+                                            <span class="font-semibold text-slate-900">{{ guestName.trim() || t('public.shared.guest') }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <input
+                                        ref="guestAvatarInputRef"
+                                        type="file"
+                                        accept="image/*"
+                                        class="sr-only"
+                                        @change="onGuestAvatarSelectionChange"
+                                    />
+                                    <button
+                                        type="button"
+                                        class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                        @click="guestAvatarInputRef?.click()"
+                                    >
+                                        {{ t('public.album.choose_avatar') }}
+                                    </button>
+                                    <button
+                                        v-if="currentGuestAvatarUrl"
+                                        type="button"
+                                        class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                        @click="clearGuestAvatarSelection"
+                                    >
+                                        {{ t('public.shared.remove') }}
+                                    </button>
+                                </div>
+                            </div>
 
-                        <a
-                            :href="links.wall"
-                            class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] font-medium text-slate-800 transition hover:bg-slate-50"
-                        >
-                            <Images class="size-4 shrink-0" />
-                            <span>{{ t('public.album.menu.open_photo_wall') }}</span>
-                        </a>
+                            <div class="mt-5 grid gap-4">
+                                <div
+                                    v-for="field in welcomeGuestFields"
+                                    :key="`settings-field-${field.id}`"
+                                    class="space-y-2"
+                                >
+                                    <label
+                                        :for="`settings-${field.id}`"
+                                        class="text-sm font-semibold text-slate-900"
+                                    >
+                                        {{ field.label }}
+                                    </label>
+                                    <input
+                                        :id="`settings-${field.id}`"
+                                        v-model="guestFieldValues[field.id]"
+                                        :type="field.type === 'phone' ? 'tel' : field.type"
+                                        :placeholder="field.help_text"
+                                        class="h-13 w-full rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                    />
+                                    <p
+                                        v-if="onboardingErrors[field.id]"
+                                        class="text-sm text-rose-700"
+                                    >
+                                        {{ onboardingErrors[field.id] }}
+                                    </p>
+                                </div>
+                            </div>
 
-                        <button
-                            v-if="isPreEventTestMode"
-                            type="button"
-                            class="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-[15px] font-medium text-amber-900 transition hover:bg-amber-100"
-                            @click="
-                                menuOpen = false;
-                                isPreEventInfoOpen = true;
-                            "
-                        >
-                            <AlertTriangle class="size-4 shrink-0 text-amber-600" />
-                            <span>{{ t('public.album.menu.pre_event_test_mode') }}</span>
-                        </button>
+                            <button
+                                type="button"
+                                class="mt-5 inline-flex h-13 w-full items-center justify-center rounded-[1.3rem] px-5 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                :style="heroAccentStyle"
+                                :disabled="guestProfileProcessing"
+                                @click="saveGuestSettings"
+                            >
+                                {{
+                                    guestProfileProcessing
+                                        ? t('public.shared.saving')
+                                        : t('public.album.settings.save_button')
+                                }}
+                            </button>
+                            <p
+                                v-if="guestProfileError"
+                                class="mt-3 text-sm text-rose-700"
+                            >
+                                {{ guestProfileError }}
+                            </p>
+                        </section>
+
+                        <section class="mt-5 rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm">
+                            <p class="text-base font-semibold text-slate-900">
+                                {{ t('public.album.settings.event_details') }}
+                            </p>
+                            <div class="mt-4 space-y-3 text-sm text-slate-600">
+                                <p
+                                    v-if="eventDate"
+                                    class="flex items-center gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3"
+                                >
+                                    <CalendarDays class="size-5 text-slate-500" />
+                                    <span>
+                                        {{ t('public.album.meta.event_date') }}
+                                        <span class="font-semibold text-slate-900">{{ formatDate(eventDate) }}</span>
+                                    </span>
+                                </p>
+                                <p
+                                    v-if="uploadWindowStartsAt || uploadWindowEndsAt"
+                                    class="flex items-center gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3"
+                                >
+                                    <Clock3 class="size-5 text-slate-500" />
+                                    <span>
+                                        {{ t('public.album.meta.upload_window') }}
+                                        <span class="font-semibold text-slate-900">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div class="mt-5 grid gap-3">
+                                <a
+                                    :href="links.wall"
+                                    class="inline-flex h-13 items-center justify-center gap-2 rounded-[1.25rem] border border-slate-200 px-5 text-base font-semibold text-slate-800 transition hover:bg-slate-50"
+                                >
+                                    <Images class="size-5" />
+                                    {{ t('public.album.menu.open_photo_wall') }}
+                                </a>
+                                <button
+                                    v-if="isPreEventTestMode"
+                                    type="button"
+                                    class="inline-flex h-13 items-center justify-center gap-2 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-5 text-base font-semibold text-amber-900 transition hover:bg-amber-100"
+                                    @click="
+                                        menuOpen = false;
+                                        isPreEventInfoOpen = true;
+                                    "
+                                >
+                                    <AlertTriangle class="size-5" />
+                                    {{ t('public.album.menu.pre_event_test_mode') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex h-13 items-center justify-center gap-2 rounded-[1.25rem] border border-rose-200 bg-rose-50 px-5 text-base font-semibold text-rose-700 transition hover:bg-rose-100"
+                                    @click="resetGuestOnboarding"
+                                >
+                                    <Trash2 class="size-5" />
+                                    {{ t('public.album.menu.reset_guest_onboarding') }}
+                                </button>
+                            </div>
+                        </section>
                     </div>
                 </div>
-
-                <div class="border-t border-slate-200 px-4 py-4">
-                    <button
-                        type="button"
-                        class="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-[15px] font-semibold text-slate-800 transition hover:bg-slate-50"
-                        @click="resetGuestOnboarding"
-                    >
-                        {{ t('public.album.menu.reset_guest_onboarding') }}
-                    </button>
-                </div>
-            </SheetContent>
-        </Sheet>
+            </div>
+        </transition>
 
         <Drawer
             direction="bottom"
@@ -5315,7 +5519,7 @@ const onAlbumTouchCancel = (): void => {
             <button
                 v-if="showScrollTopButton"
                 type="button"
-                class="safe-bottom safe-right fixed bottom-20 right-4 z-30 inline-flex h-11 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900/76 text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-slate-900/84"
+                class="safe-right fixed bottom-28 right-4 z-30 inline-flex h-11 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900/76 text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-slate-900/84"
                 :aria-label="t('public.album.actions.scroll_to_top')"
                 @click="scrollAlbumToTop"
             >
