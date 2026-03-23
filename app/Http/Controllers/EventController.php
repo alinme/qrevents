@@ -160,12 +160,18 @@ class EventController extends Controller
         );
     }
 
-    public function destroyAsset(Request $request, Event $event, EventAsset $asset): RedirectResponse
+    public function destroyAsset(Request $request, Event $event, EventAsset $asset): JsonResponse|RedirectResponse
     {
         $this->assertCanManageEvent($request, $event);
         abort_unless($asset->event_id === $event->id, 404);
 
         $this->deleteAssetFromEvent($event, $asset);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'ok',
+            ]);
+        }
 
         return back()->with('success', 'Media deleted.');
     }

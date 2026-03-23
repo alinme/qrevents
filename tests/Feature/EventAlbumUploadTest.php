@@ -735,6 +735,40 @@ it('allows public asset deletion only for the matching guest token', function ()
     Storage::disk('public')->assertMissing('events/test/delete-me.jpg');
 });
 
+it('allows owners to delete media assets with a json request', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'storage_used_bytes' => 4096,
+        'upload_count' => 1,
+    ]);
+
+    Storage::disk('public')->put('events/test/owner-delete.jpg', 'photo');
+
+    $asset = $event->assets()->create([
+        'kind' => 'photo',
+        'disk' => 'public',
+        'path' => 'events/test/owner-delete.jpg',
+        'original_filename' => 'owner-delete.jpg',
+        'mime_type' => 'image/jpeg',
+        'size_bytes' => 4096,
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Elena',
+            'guest_token' => 'poster-token',
+        ],
+    ]);
+
+    $this->actingAs($owner)
+        ->deleteJson(route('events.assets.destroy', [$event, $asset]))
+        ->assertOk()
+        ->assertJson([
+            'status' => 'ok',
+        ]);
+
+    expect(EventAsset::query()->whereKey($asset->id)->exists())->toBeFalse();
+    Storage::disk('public')->assertMissing('events/test/owner-delete.jpg');
+});
+
 it('does not allow name-only public asset deletion for legacy uploads', function () {
     $event = Event::factory()->create([
         'storage_used_bytes' => 4096,

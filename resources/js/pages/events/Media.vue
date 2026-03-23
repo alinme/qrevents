@@ -734,6 +734,11 @@ const markMediaLoaded = (key: string): void => {
 
 const isMediaLoaded = (key: string): boolean => loadedMediaKeys.value[key] === true;
 
+const csrfToken = (): string =>
+    document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content') ?? '';
+
 const copyAssetLink = async (asset: MediaAsset): Promise<void> => {
     if (!asset.previewUrl) {
         toast.error('This upload does not have a file link to copy.');
@@ -778,16 +783,30 @@ const deleteAsset = (): void => {
 
     deletingAssetId.value = asset.id;
 
-    router.delete(asset.deleteUrl, {
-        preserveScroll: true,
-        onSuccess: () => {
+    fetch(asset.deleteUrl, {
+        method: 'DELETE',
+        headers: {
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin',
+    })
+        .then(async (response) => {
+            if (!response.ok) {
+                throw new Error('Unable to delete the selected upload.');
+            }
+
             removeAssetLocally(asset.id);
             deleteAssetId.value = null;
-        },
-        onFinish: () => {
+            toast.success('Media deleted.');
+        })
+        .catch(() => {
+            toast.error('Unable to delete the selected upload right now.');
+        })
+        .finally(() => {
             deletingAssetId.value = null;
-        },
-    });
+        });
 };
 
 const bulkDeleteAssets = (): void => {

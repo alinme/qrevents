@@ -266,7 +266,7 @@ const { locale, t } = useTranslations();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const guestAvatarInputRef = ref<HTMLInputElement | null>(null);
-const textComposerRef = ref<HTMLDivElement | null>(null);
+const textComposerRef = ref<HTMLTextAreaElement | null>(null);
 const loadMoreSentinelRef = ref<HTMLElement | null>(null);
 const menuOpen = ref(false);
 const onboardingStep = ref<1 | 2>(1);
@@ -327,6 +327,7 @@ const hasPendingAlbumUpdate = ref(false);
 const pendingAlbumUpdateCount = ref(0);
 const pullRefreshStartY = ref<number | null>(null);
 const pullRefreshDistance = ref(0);
+const lastTouchEndAt = ref(0);
 const useMorphingHeader = false;
 const morphingHeaderState = ref({
     progress: 0,
@@ -1105,11 +1106,11 @@ const syncTextComposerElement = (value: string): void => {
     }
 
     const normalizedValue = value.replace(/\r/g, '');
-    if ((textComposerRef.value.innerText || '').replace(/\r/g, '') === normalizedValue) {
+    if (textComposerRef.value.value.replace(/\r/g, '') === normalizedValue) {
         return;
     }
 
-    textComposerRef.value.innerText = normalizedValue;
+    textComposerRef.value.value = normalizedValue;
 };
 
 const focusTextComposer = (): void => {
@@ -1123,29 +1124,17 @@ const focusTextComposer = (): void => {
 
     const composer = textComposerRef.value;
     composer.focus({ preventScroll: true });
-
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    const selection = window.getSelection();
-    if (selection === null) {
-        return;
-    }
-
-    const range = document.createRange();
-    range.selectNodeContents(composer);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    const caretPosition = composer.value.length;
+    composer.setSelectionRange(caretPosition, caretPosition);
 };
 
-const onTextComposerInput = (): void => {
-    if (!textComposerRef.value) {
+const onTextComposerInput = (event: Event): void => {
+    const composer = event.target as HTMLTextAreaElement | null;
+    if (!composer) {
         return;
     }
 
-    const normalizedValue = (textComposerRef.value.innerText || '')
+    const normalizedValue = composer.value
         .replace(/\r/g, '')
         .replace(/\u00A0/g, ' ');
 
@@ -1157,6 +1146,20 @@ const onTextComposerInput = (): void => {
     }
 
     textForm.text = normalizedValue;
+};
+
+const preventDoubleTapZoom = (event: TouchEvent): void => {
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    const isEditableTarget = target?.closest('input, textarea, select, [contenteditable="true"]');
+    const now = Date.now();
+    const delta = now - lastTouchEndAt.value;
+    lastTouchEndAt.value = now;
+
+    if (isEditableTarget || delta <= 0 || delta > 320) {
+        return;
+    }
+
+    event.preventDefault();
 };
 
 const formatBytes = (bytes: number): string => {
@@ -1829,6 +1832,9 @@ onMounted(() => {
     window.addEventListener('resize', scheduleMorphingHeaderUpdate, {
         passive: true,
     });
+    document.addEventListener('touchend', preventDoubleTapZoom, {
+        passive: false,
+    });
     syncLoadMoreObserver();
     albumUpdatePollId = window.setInterval(() => {
         void checkForAlbumUpdates();
@@ -1861,6 +1867,7 @@ onUnmounted(() => {
     loadMoreObserver = null;
     window.removeEventListener('scroll', scheduleMorphingHeaderUpdate);
     window.removeEventListener('resize', scheduleMorphingHeaderUpdate);
+    document.removeEventListener('touchend', preventDoubleTapZoom);
     revokeUploadPreviews();
     revokeGuestAvatarPreview();
     unlockBodyScroll();
@@ -5081,12 +5088,14 @@ const onAlbumTouchCancel = (): void => {
                                     "
                                 />
                                 <div class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center">
-                                    <div
+                                    <textarea
                                         ref="textComposerRef"
-                                        :contenteditable="canUploadText && !textForm.processing"
+                                        v-model="textForm.text"
                                         spellcheck="true"
-                                        :aria-disabled="!canUploadText || textForm.processing"
-                                        class="max-h-full min-h-56 w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent text-center text-xl font-semibold leading-tight outline-none sm:text-[1.45rem]"
+                                        :disabled="!canUploadText || textForm.processing"
+                                        :placeholder="t('public.album.text.canvas_hint')"
+                                        rows="7"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-xl font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[1.45rem]"
                                         :class="
                                             !canUploadText || textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
@@ -5109,21 +5118,6 @@ const onAlbumTouchCancel = (): void => {
                                         @blur="isTextComposerFocused = false"
                                         @input="onTextComposerInput"
                                     />
-                                    <p
-                                        v-if="textForm.text.trim().length === 0"
-                                        class="pointer-events-none absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-lg font-semibold leading-tight opacity-82 sm:text-[1.35rem]"
-                                        :style="
-                                            selectedTextPostTheme
-                                                ? {
-                                                      ...textPostContentStyle({
-                                                          textThemeTextColor: selectedTextPostTheme.textColor,
-                                                      }),
-                                                  }
-                                                : undefined
-                                        "
-                                    >
-                                        {{ t('public.album.text.canvas_hint') }}
-                                    </p>
                                 </div>
                             </div>
 
