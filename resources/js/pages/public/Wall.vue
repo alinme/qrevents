@@ -42,6 +42,17 @@ type WallAsset = {
     captionSubtitle: string | null;
     createdAt: string | null;
     durationSeconds: number | null;
+    likeCount: number;
+    commentCount: number;
+    recentComments: WallAssetComment[];
+};
+
+type WallAssetComment = {
+    id: number;
+    body: string;
+    guestName: string;
+    createdAt: string | null;
+    likeCount: number;
 };
 
 type WallHeartBurst = {
@@ -52,6 +63,19 @@ type WallHeartBurst = {
     durationMs: number;
     delayMs: number;
     rotation: string;
+};
+
+type WallReactionNote = WallAssetComment & {
+    style: Record<string, string>;
+    delayMs: number;
+};
+
+type WallReactionNoteVariant = {
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+    rotate: string;
 };
 
 const props = defineProps<{
@@ -182,6 +206,16 @@ const slideSubtitle = computed(() => {
     );
 });
 
+const currentReactionNotes = computed<WallReactionNote[]>(() => {
+    const comments = currentAsset.value?.recentComments ?? [];
+
+    return comments.slice(-4).map((comment, index) => ({
+        ...comment,
+        style: wallReactionNoteStyle(comment.id, index),
+        delayMs: index * 80,
+    }));
+});
+
 const textPostSurfaceStyle = (asset: WallAsset): Record<string, string> => {
     const style: Record<string, string> = {
         backgroundColor: asset.textThemeBackgroundColor || '#0f172a',
@@ -220,6 +254,60 @@ const previousAsset = (): void => {
 
 const latestWallAssetId = (assets: WallAsset[]): number =>
     assets.reduce((max, asset) => Math.max(max, asset.id), 0);
+
+const wallReactionNoteStyle = (commentId: number, index: number): Record<string, string> => {
+    const variants: WallReactionNoteVariant[] = [
+        { top: '5.5%', left: '3.5%', rotate: '-7deg' },
+        { top: '10%', right: '4.5%', rotate: '6deg' },
+        { bottom: '15%', left: '5.5%', rotate: '-5deg' },
+        { bottom: '20%', right: '6%', rotate: '7deg' },
+    ];
+    const variant = variants[index % variants.length] ?? variants[0];
+    const jitter = ((commentId % 7) - 3) * 0.35;
+
+    return {
+        ...(variant.top !== undefined ? { top: `calc(${variant.top} + ${jitter}%)` } : {}),
+        ...(variant.bottom !== undefined ? { bottom: `calc(${variant.bottom} + ${jitter}%)` } : {}),
+        ...(variant.left !== undefined ? { left: `calc(${variant.left} + ${jitter}%)` } : {}),
+        ...(variant.right !== undefined ? { right: `calc(${variant.right} + ${jitter}%)` } : {}),
+        transform: `rotate(${variant.rotate})`,
+    };
+};
+
+const totalPositiveLikeGain = (previousAssets: WallAsset[], nextAssets: WallAsset[]): number => {
+    const previousAssetsById = new Map(previousAssets.map((asset) => [asset.id, asset]));
+
+    return nextAssets.reduce((carry, asset) => {
+        const previousLikeCount = previousAssetsById.get(asset.id)?.likeCount ?? 0;
+
+        return carry + Math.max(0, asset.likeCount - previousLikeCount);
+    }, 0);
+};
+
+const wallAssetHasChanged = (previousAsset: WallAsset | undefined, nextAsset: WallAsset): boolean => {
+    if (previousAsset === undefined) {
+        return true;
+    }
+
+    if (
+        previousAsset.previewUrl !== nextAsset.previewUrl
+        || previousAsset.thumbnailUrl !== nextAsset.thumbnailUrl
+        || previousAsset.videoProcessing !== nextAsset.videoProcessing
+        || previousAsset.likeCount !== nextAsset.likeCount
+        || previousAsset.commentCount !== nextAsset.commentCount
+    ) {
+        return true;
+    }
+
+    const previousCommentSignature = previousAsset.recentComments
+        .map((comment) => `${comment.id}:${comment.likeCount}`)
+        .join('|');
+    const nextCommentSignature = nextAsset.recentComments
+        .map((comment) => `${comment.id}:${comment.likeCount}`)
+        .join('|');
+
+    return previousCommentSignature !== nextCommentSignature;
+};
 
 const spawnWallHeartBursts = (count: number): void => {
     if (typeof window === 'undefined' || count <= 0) {
@@ -320,17 +408,32 @@ const refreshWallAssets = async (): Promise<void> => {
         const nextAssets = Array.isArray(payload.props?.assets)
             ? payload.props.assets
             : [];
-
+        const previousAssets = [...wallAssets.value];
         const previousLatestAssetId = latestWallAssetId(wallAssets.value);
         const nextLatestAssetId = latestWallAssetId(nextAssets);
+        const newApprovedCount = nextAssets.filter(
+            (asset) => asset.id > previousLatestAssetId,
+        ).length;
+        const likeGainCount = totalPositiveLikeGain(previousAssets, nextAssets);
+        const hasWallChanged =
+            nextAssets.length !== previousAssets.length
+            || nextLatestAssetId !== previousLatestAssetId
+            || nextAssets.some((asset) =>
+                wallAssetHasChanged(
+                    previousAssets.find((candidate) => candidate.id === asset.id),
+                    asset,
+                ),
+            );
 
-        if (nextLatestAssetId > previousLatestAssetId) {
-            const newApprovedCount = nextAssets.filter(
-                (asset) => asset.id > previousLatestAssetId,
-            ).length;
+        if (hasWallChanged) {
             applyWallAssets(nextAssets);
-            startAutoplay();
-            spawnWallHeartBursts(Math.min(12, Math.max(4, newApprovedCount * 3)));
+
+            if (newApprovedCount > 0) {
+                startAutoplay();
+                spawnWallHeartBursts(Math.min(12, Math.max(4, newApprovedCount * 3)));
+            } else if (likeGainCount > 0) {
+                spawnWallHeartBursts(Math.min(10, Math.max(3, likeGainCount * 2)));
+            }
         }
     } catch {
         // Silent background refresh for TVs/projectors.
@@ -544,9 +647,48 @@ watch(
                         <p class="text-sm font-semibold">
                             {{ slideTitle }}
                         </p>
-                        <p class="text-xs opacity-85">
-                            {{ slideSubtitle }}
-                        </p>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs opacity-85">
+                            <p>
+                                {{ slideSubtitle }}
+                            </p>
+                            <span class="inline-flex items-center gap-1">
+                                <Heart class="size-3.5" />
+                                {{ currentAsset.likeCount }}
+                            </span>
+                            <span class="inline-flex items-center gap-1">
+                                <span class="text-[0.95rem] leading-none">💬</span>
+                                {{ currentAsset.commentCount }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="currentReactionNotes.length > 0"
+                        class="pointer-events-none absolute inset-0 z-10 hidden sm:block"
+                    >
+                        <article
+                            v-for="note in currentReactionNotes"
+                            :key="`wall-note-${note.id}`"
+                            class="wall-note-card absolute w-40 rounded-[1.15rem] border border-[#e8d5a6] bg-[#fff4c9]/94 p-3 text-left text-[#3f3318] shadow-[0_18px_34px_rgba(62,41,12,0.24)] backdrop-blur"
+                            :style="{
+                                ...note.style,
+                                animationDelay: `${note.delayMs}ms`,
+                            }"
+                        >
+                            <p class="line-clamp-4 whitespace-pre-wrap text-[0.8rem] font-medium leading-5">
+                                {{ note.body }}
+                            </p>
+                            <div class="mt-2 flex items-center justify-between gap-2 text-[0.68rem] uppercase tracking-[0.14em] text-[#70521f]/85">
+                                <span class="truncate">{{ note.guestName }}</span>
+                                <span
+                                    v-if="note.likeCount > 0"
+                                    class="inline-flex items-center gap-1 text-[#c44569]"
+                                >
+                                    <Heart class="size-3 fill-current" />
+                                    {{ note.likeCount }}
+                                </span>
+                            </div>
+                        </article>
                     </div>
                 </div>
 
@@ -615,6 +757,13 @@ watch(
     transform: translate3d(0, 0, 0) scale(0.72);
 }
 
+.wall-note-card {
+    animation-name: wall-note-drift;
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1);
+    animation-fill-mode: both;
+}
+
 @keyframes wall-heart-float {
     0% {
         opacity: 0;
@@ -634,6 +783,18 @@ watch(
     100% {
         opacity: 0;
         transform: translate3d(-14px, -184px, 0) scale(0.9);
+    }
+}
+
+@keyframes wall-note-drift {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0) scale(0.84);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
     }
 }
 </style>

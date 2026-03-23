@@ -288,6 +288,12 @@ const wallVisibilityToneClass = (visibility: MediaAsset['wallVisibility']): stri
     }
 };
 
+const showsWallDecisionOverlay = (asset: MediaAsset): boolean =>
+    props.canManageMedia && asset.wallVisibility === 'pending';
+
+const showsGridAssetChrome = (asset: MediaAsset): boolean =>
+    !showsWallDecisionOverlay(asset);
+
 const moderationMatchLabel = (match: MediaAsset['moderationMatches'][number]): string =>
     `${match.category}: ${match.keyword}`;
 
@@ -1359,9 +1365,15 @@ const statCards = computed(() => [
                                 Preview unavailable
                             </div>
 
-                            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+                            <div
+                                v-if="showsGridAssetChrome(asset)"
+                                class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+                            />
 
-                            <div class="absolute left-3 top-3 flex items-center gap-2">
+                            <div
+                                v-if="showsGridAssetChrome(asset)"
+                                class="absolute left-3 top-3 flex items-center gap-2"
+                            >
                                 <label
                                     v-if="canManageMedia"
                                     class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-sm backdrop-blur"
@@ -1401,37 +1413,34 @@ const statCards = computed(() => [
                             </button>
 
                             <div
-                                v-if="canManageMedia"
-                                class="pointer-events-none absolute inset-x-0 top-14 bottom-16 z-10 opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                                v-if="showsWallDecisionOverlay(asset)"
+                                class="absolute inset-0 z-20 grid grid-cols-2 overflow-hidden"
                             >
                                 <button
                                     type="button"
-                                    class="pointer-events-auto absolute inset-y-0 left-0 flex w-1/2 items-center justify-center bg-gradient-to-r from-rose-500/68 via-rose-500/42 to-transparent text-white transition hover:from-rose-500/78 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-rose-500/74 text-white transition hover:bg-rose-500/84 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Hide ${asset.guestName} upload from photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'rejected')"
                                 >
-                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur">
-                                        <ThumbsDown class="size-4" />
-                                        No wall
-                                    </span>
+                                    <ThumbsDown class="size-14 drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)] sm:size-16" />
                                 </button>
 
                                 <button
                                     type="button"
-                                    class="pointer-events-auto absolute inset-y-0 right-0 flex w-1/2 items-center justify-center bg-gradient-to-l from-emerald-500/72 via-emerald-500/42 to-transparent text-white transition hover:from-emerald-500/82 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-emerald-500/76 text-white transition hover:bg-emerald-500/86 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Show ${asset.guestName} upload on photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'approved')"
                                 >
-                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur">
-                                        <ThumbsUp class="size-4" />
-                                        Show wall
-                                    </span>
+                                    <ThumbsUp class="size-14 drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)] sm:size-16" />
                                 </button>
                             </div>
 
-                            <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3">
+                            <div
+                                v-if="showsGridAssetChrome(asset)"
+                                class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
+                            >
                                 <div class="min-w-0 flex items-center gap-2">
                                     <Avatar class="size-9 border border-white/20 shadow-sm">
                                         <AvatarFallback

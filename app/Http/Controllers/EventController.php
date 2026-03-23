@@ -1684,6 +1684,14 @@ class EventController extends Controller
                 'assets' => fn ($query) => $query
                     ->whereIn('kind', ['photo', 'video', 'text'])
                     ->where('moderation_status', 'approved')
+                    ->withCount(['likes', 'comments'])
+                    ->with([
+                        'comments' => fn ($commentQuery) => $commentQuery
+                            ->latest('id')
+                            ->limit(6)
+                            ->with('guest')
+                            ->withCount('likes'),
+                    ])
                     ->latest('id')
                     ->limit(480),
             ])
@@ -1720,24 +1728,7 @@ class EventController extends Controller
                 ->filter(fn (EventAsset $asset): bool => $this->assetVisibleOnWall($asset))
                 ->take(240)
                 ->values()
-                ->map(function (EventAsset $asset): array {
-                    $metadata = is_array($asset->metadata) ? $asset->metadata : [];
-
-                    return [
-                        'id' => $asset->id,
-                        'kind' => $asset->kind,
-                        'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
-                        'previewUrl' => $this->assetPublicPreviewUrl($asset),
-                        'videoProcessing' => $this->videoVariantsPending($asset, true),
-                        'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
-                        ...$this->textPostThemeAssetProps($metadata),
-                        'guestName' => is_string($metadata['guest_name'] ?? null) ? $metadata['guest_name'] : null,
-                        'captionTitle' => is_string($metadata['caption_title'] ?? null) ? $metadata['caption_title'] : null,
-                        'captionSubtitle' => is_string($metadata['caption_subtitle'] ?? null) ? $metadata['caption_subtitle'] : null,
-                        'createdAt' => $asset->created_at?->toIso8601String(),
-                        'durationSeconds' => $asset->duration_seconds,
-                    ];
-                })
+                ->map(fn (EventAsset $asset): array => $this->wallAssetProps($asset))
                 ->all(),
         ]);
     }
@@ -2933,6 +2924,39 @@ class EventController extends Controller
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function wallAssetProps(EventAsset $asset): array
+    {
+        $metadata = is_array($asset->metadata) ? $asset->metadata : [];
+
+        return [
+            'id' => $asset->id,
+            'kind' => $asset->kind,
+            'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
+            'previewUrl' => $this->assetPublicPreviewUrl($asset),
+            'videoProcessing' => $this->videoVariantsPending($asset, true),
+            'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
+            ...$this->textPostThemeAssetProps($metadata),
+            'guestName' => is_string($metadata['guest_name'] ?? null) ? $metadata['guest_name'] : null,
+            'captionTitle' => is_string($metadata['caption_title'] ?? null) ? $metadata['caption_title'] : null,
+            'captionSubtitle' => is_string($metadata['caption_subtitle'] ?? null) ? $metadata['caption_subtitle'] : null,
+            'createdAt' => $asset->created_at?->toIso8601String(),
+            'durationSeconds' => $asset->duration_seconds,
+            'likeCount' => (int) ($asset->likes_count ?? 0),
+            'commentCount' => (int) ($asset->comments_count ?? 0),
+            'recentComments' => $asset->relationLoaded('comments')
+                ? $asset->comments
+                    ->sortBy('id')
+                    ->take(4)
+                    ->values()
+                    ->map(fn (EventAssetComment $comment): array => $this->serializeWallAssetComment($comment))
+                    ->all()
+                : [],
+        ];
+    }
+
+    /**
      * @return array{byToken: \Illuminate\Support\Collection<string, EventGuest>, byName: \Illuminate\Support\Collection<string, EventGuest>}
      */
     private function eventGuestLookups(Event $event): array
@@ -3076,6 +3100,20 @@ class EventController extends Controller
                     ->exists()
                 : false,
             'likeToggleUrl' => route('events.album.asset-comment-like.toggle', [$event->share_token, $asset, $comment]),
+        ];
+    }
+
+    /**
+     * @return array{id: int, body: string, guestName: string, createdAt: string|null, likeCount: int}
+     */
+    private function serializeWallAssetComment(EventAssetComment $comment): array
+    {
+        return [
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'guestName' => $comment->guest?->name ?? 'Guest',
+            'createdAt' => $comment->created_at?->toIso8601String(),
+            'likeCount' => (int) ($comment->likes_count ?? 0),
         ];
     }
 

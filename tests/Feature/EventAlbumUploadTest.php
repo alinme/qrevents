@@ -70,6 +70,50 @@ it('keeps new uploads off the photo wall until the owner approves them', functio
         );
 });
 
+it('includes live reaction data for approved wall assets', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+    $guest = EventGuest::factory()->for($event)->create([
+        'name' => 'Elena',
+    ]);
+
+    /** @var EventAsset $asset */
+    $asset = EventAsset::factory()->for($event)->for($owner)->create([
+        'kind' => 'photo',
+        'disk' => 'public',
+        'path' => 'events/test/wall-photo.jpg',
+        'preview_path' => 'events/test/wall-preview.jpg',
+        'thumbnail_path' => 'events/test/wall-thumb.jpg',
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Elena',
+            'wall_visibility' => 'approved',
+        ],
+    ]);
+
+    EventAssetLike::factory()->create([
+        'event_asset_id' => $asset->id,
+        'event_guest_id' => $guest->id,
+    ]);
+
+    EventAssetComment::query()->create([
+        'event_asset_id' => $asset->id,
+        'event_guest_id' => $guest->id,
+        'body' => "Can't wait to see this on the wall.",
+    ]);
+
+    $this->get(route('events.wall', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Wall')
+            ->where('assets.0.id', $asset->id)
+            ->where('assets.0.likeCount', 1)
+            ->where('assets.0.commentCount', 1)
+            ->where('assets.0.recentComments.0.body', "Can't wait to see this on the wall.")
+            ->where('assets.0.recentComments.0.guestName', 'Elena'),
+        );
+});
+
 it('uploads photos and videos when the upload window is open', function () {
     $event = Event::factory()->create([
         'upload_window_starts_at' => now()->subHour(),
