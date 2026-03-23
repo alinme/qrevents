@@ -293,4 +293,16 @@ Vue components must have a single root element.
 - IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
 - IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
 
+=== qrevents deployment ===
+
+# Production deploy (wvdev.org)
+
+After code changes on `main`, the agent should deploy end-to-end unless the user opts out. SSH: `qrevents-vps` (see `~/.ssh/config`). App directory on server: `/home/wvdev/htdocs/wvdev.org`.
+
+1. **Local:** `git push origin main` (after tests and Pint pass).
+2. **VPS:** `ssh qrevents-vps`, `cd /home/wvdev/htdocs/wvdev.org`, `git pull origin main`, then install deps and build (`composer install`, `npm install` or `npm ci`, `npm run build`), `php artisan migrate --force`, optional `optimize:clear` + config/route/view cache per `DEPLOY_CHECKLIST.md`.
+3. **Queues:** `php artisan queue:restart` then `pm2 restart qrevents-queue`.
+
+Full command list and health checks: `DEPLOY_CHECKLIST.md`. Scheduler is already in `/etc/cron.d/wvdev` with `schedule:run` for user `wvdev`.
+
 </laravel-boost-guidelines>
