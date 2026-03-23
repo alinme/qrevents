@@ -612,11 +612,11 @@ const pageDescription = computed(() => t('marketing.home.meta.description'));
                         :key="feature.title"
                         class="group relative overflow-hidden rounded-[28px] border border-promo-primary/20 bg-white/95 px-6 py-8 text-center shadow-[0_18px_50px_rgba(232,79,154,0.08)] transition duration-300 hover:-translate-y-1 hover:border-promo-primary/35 hover:shadow-[0_24px_65px_rgba(232,79,154,0.14)]"
                     >
-                        <div class="pointer-events-none absolute inset-x-0 top-3 flex justify-center text-promo-primary/11 transition duration-300 group-hover:text-promo-primary/16">
-                            <component :is="feature.icon" class="size-28 sm:size-32" />
+                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center text-promo-primary/10 transition duration-300 group-hover:scale-105 group-hover:text-promo-primary/14">
+                            <component :is="feature.icon" class="size-32 sm:size-36" />
                         </div>
 
-                        <div class="relative z-10 flex min-h-[12rem] flex-col items-center justify-end">
+                        <div class="relative z-10 flex min-h-[12rem] flex-col items-center justify-center">
                             <h3 class="max-w-[12rem] text-base font-bold text-promo-ink sm:text-lg">
                                 {{ feature.title }}
                             </h3>
