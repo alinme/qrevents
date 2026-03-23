@@ -2656,61 +2656,6 @@ function resolveSupportedTimezones(): string[] {
                                 :message="form.errors.auto_moderation_enabled"
                             />
 
-                            <div
-                                id="guest-upload-types"
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            Guest Uploads
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Plus
-                                        </Badge>
-                                    </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        Choose which guest upload actions stay
-                                        available in the public album,
-                                        including text wishes.
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <ToggleGroup
-                                        type="multiple"
-                                        variant="outline"
-                                        :model-value="form.allowed_media_types"
-                                        class="flex w-full flex-wrap"
-                                        @update:model-value="
-                                            onAllowedMediaTypesChange
-                                        "
-                                    >
-                                        <ToggleGroupItem
-                                            v-for="mediaType in mediaTypeOptions"
-                                            :key="mediaType.value"
-                                            :value="mediaType.value"
-                                            class="h-11 flex-1 justify-center"
-                                        >
-                                            <component
-                                                :is="mediaType.icon"
-                                                class="size-4"
-                                            />
-                                            {{ mediaType.label }}
-                                        </ToggleGroupItem>
-                                    </ToggleGroup>
-                                    <p class="text-xs text-muted-foreground">
-                                        At least one media type must stay
-                                        enabled.
-                                    </p>
-                                    <InputError
-                                        :message="
-                                            form.errors.allowed_media_types
-                                        "
-                                    />
-                                </div>
-                            </div>
-
                             <div class="space-y-3">
                                 <div>
                                     <div class="flex items-center gap-2">
@@ -2757,6 +2702,65 @@ function resolveSupportedTimezones(): string[] {
                                 <InputError
                                     :message="form.errors.album_permission"
                                 />
+                            </div>
+
+                            <div
+                                id="guest-upload-types"
+                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                            >
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-sm font-semibold">
+                                            Guest Uploads
+                                        </h3>
+                                        <Badge variant="secondary">
+                                            <Sparkles />
+                                            Plus
+                                        </Badge>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground">
+                                        Choose which guest upload actions stay
+                                        available in the public album,
+                                        including text wishes.
+                                    </p>
+                                </div>
+                                <div class="space-y-2">
+                                    <ToggleGroup
+                                        type="multiple"
+                                        variant="outline"
+                                        :model-value="form.allowed_media_types"
+                                        class="flex w-full flex-wrap"
+                                        @update:model-value="
+                                            onAllowedMediaTypesChange
+                                        "
+                                    >
+                                        <ToggleGroupItem
+                                            v-for="mediaType in mediaTypeOptions"
+                                            :key="mediaType.value"
+                                            :value="mediaType.value"
+                                            class="h-11 flex-1 justify-center"
+                                        >
+                                            <component
+                                                :is="mediaType.icon"
+                                                class="size-4"
+                                            />
+                                            {{
+                                                mediaType.value === 'text'
+                                                    ? 'Text wishes'
+                                                    : mediaType.label
+                                            }}
+                                        </ToggleGroupItem>
+                                    </ToggleGroup>
+                                    <p class="text-xs text-muted-foreground">
+                                        At least one media type must stay
+                                        enabled.
+                                    </p>
+                                    <InputError
+                                        :message="
+                                            form.errors.allowed_media_types
+                                        "
+                                    />
+                                </div>
                             </div>
 
                             <div

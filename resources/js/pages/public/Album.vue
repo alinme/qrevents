@@ -890,7 +890,7 @@ const uploadProcessingDescription = computed(() => {
 
     return t('public.album.processing.uploading_files_hint');
 });
-const albumBodyStyle = computed((): Record<string, string> => {
+const heroBackgroundStyle = computed((): Record<string, string> => {
     const style: Record<string, string> = {};
 
     if (!onboardingDone.value || !props.appearance.albumBackgroundEnabled) {
@@ -913,6 +913,8 @@ const albumBodyStyle = computed((): Record<string, string> => {
 
     return style;
 });
+
+const albumBodyStyle = computed((): Record<string, string> => ({}));
 
 const welcomeTitle = computed(() => {
     if (!customWelcomeEnabled.value) {
@@ -1234,6 +1236,34 @@ const formatLikeCount = (count: number): string => {
 
     return `${Math.round(count / 1000)}k`;
 };
+
+const albumLikesCount = computed(() =>
+    assetItems.value.reduce((total, asset) => total + asset.likeCount, 0),
+);
+const albumPhotoCount = computed(
+    () => assetItems.value.filter((asset) => asset.kind === 'photo').length,
+);
+const albumVideoCount = computed(
+    () => assetItems.value.filter((asset) => asset.kind === 'video').length,
+);
+const albumHeaderStats = computed(() => [
+    {
+        value: formatLikeCount(albumLikesCount.value),
+        label: t('public.album.stats.likes'),
+    },
+    {
+        value: formatLikeCount(galleryStacks.value.length),
+        label: t('public.album.stats.posts'),
+    },
+    {
+        value: formatLikeCount(albumPhotoCount.value),
+        label: t('public.album.stats.photos'),
+    },
+    {
+        value: formatLikeCount(albumVideoCount.value),
+        label: t('public.album.stats.videos'),
+    },
+]);
 
 const stackUploadSummary = (stack: GalleryStack): string | null => {
     if (stack.mediaCount <= 1) {
@@ -3286,10 +3316,7 @@ const onAlbumTouchCancel = (): void => {
         :style="albumBodyStyle"
         :class="
             onboardingDone
-                ? props.appearance.albumBackgroundEnabled &&
-                  hasAlbumImageBackground
-                    ? 'bg-slate-950'
-                    : 'bg-white'
+                ? 'bg-white'
                 : !onboardingDone && customWelcomeEnabled && welcomeScreen.backgroundUrl
                   ? 'bg-slate-950'
                   : 'bg-gradient-to-b from-rose-50 via-white to-amber-50'
@@ -3834,7 +3861,7 @@ const onAlbumTouchCancel = (): void => {
                     class="pointer-events-none fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/92 transition-all duration-300 backdrop-blur safe-top safe-x supports-[backdrop-filter]:bg-white/80"
                     :class="isHeaderCollapsed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
                 >
-                    <div class="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 py-3">
+                    <div class="mx-auto flex w-full max-w-2xl items-center gap-3 py-3">
                         <div class="pointer-events-auto min-w-0 flex items-center gap-3">
                             <Avatar class="size-11 border border-slate-200">
                                 <AvatarImage
@@ -3847,26 +3874,17 @@ const onAlbumTouchCancel = (): void => {
                                 </AvatarFallback>
                             </Avatar>
                             <div class="min-w-0">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                    {{ t('public.album.kicker') }}
-                                </p>
                                 <p
                                     class="truncate text-base font-semibold text-slate-900"
                                     :class="welcomeFontClass"
                                 >
                                     {{ welcomeTitle }}
                                 </p>
+                                <p class="truncate text-xs text-slate-500">
+                                    {{ welcomeSubtitle }}
+                                </p>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            class="pointer-events-auto inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
-                            :aria-label="t('public.shared.open_menu')"
-                            data-test="album-header-menu-button"
-                            @click="menuOpen = true"
-                        >
-                            <Menu class="size-5" />
-                        </button>
                     </div>
                 </header>
 
@@ -3875,7 +3893,13 @@ const onAlbumTouchCancel = (): void => {
                     class="relative min-h-[52svh] overflow-hidden"
                 >
                     <img
-                        v-if="welcomeScreen.backgroundUrl"
+                        v-if="onboardingDone && hasAlbumImageBackground && props.appearance.albumBackgroundImageUrl"
+                        :src="props.appearance.albumBackgroundImageUrl"
+                        :alt="t('public.shared.alt.album_background')"
+                        class="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <img
+                        v-else-if="welcomeScreen.backgroundUrl"
                         :src="welcomeScreen.backgroundUrl"
                         :alt="t('public.shared.alt.album_background')"
                         class="absolute inset-0 h-full w-full object-cover"
@@ -3884,7 +3908,11 @@ const onAlbumTouchCancel = (): void => {
                     <div
                         v-else
                         class="absolute inset-0"
-                        :style="albumGradientStyle"
+                        :style="
+                            onboardingDone
+                                ? heroBackgroundStyle
+                                : albumGradientStyle
+                        "
                     />
                     <div
                         class="absolute inset-0"
@@ -3895,98 +3923,55 @@ const onAlbumTouchCancel = (): void => {
                         "
                     />
 
-                    <div class="relative mx-auto flex min-h-[52svh] w-full max-w-2xl items-end px-3 pb-4 pt-20">
+                    <div class="relative mx-auto flex min-h-[52svh] w-full max-w-2xl items-end px-4 pb-6 pt-20">
                         <div
                             ref="heroGlassCardRef"
-                            class="w-full rounded-[1.75rem] border border-white/18 bg-white/10 p-4 text-white shadow-[0_24px_64px_rgba(0,0,0,0.22)] backdrop-blur-xl transition-opacity duration-200"
+                            class="w-full text-white transition-opacity duration-200"
                             :style="heroGlassCardStyle"
                         >
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <Avatar class="size-16 border border-white/30">
-                                        <AvatarImage
-                                            v-if="albumLogoUrl"
-                                            :src="albumLogoUrl"
-                                            :alt="t('public.shared.alt.event_logo')"
-                                        />
-                                        <AvatarFallback class="bg-white/20 text-lg font-semibold text-white">
-                                            {{ albumAvatarFallback }}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div class="min-w-0">
-                                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
-                                            {{ t('public.album.kicker') }}
-                                        </p>
-                                        <h1
-                                            class="mt-1 text-[1.28rem] leading-[1.1] font-semibold text-white sm:text-[1.45rem]"
-                                            :class="welcomeFontClass"
-                                        >
-                                            {{ welcomeTitle }}
-                                        </h1>
-                                    </div>
+                            <div class="flex items-start gap-4">
+                                <Avatar class="size-18 border border-white/25 shadow-[0_16px_30px_rgba(15,23,42,0.24)]">
+                                    <AvatarImage
+                                        v-if="albumLogoUrl"
+                                        :src="albumLogoUrl"
+                                        :alt="t('public.shared.alt.event_logo')"
+                                    />
+                                    <AvatarFallback class="bg-white/18 text-lg font-semibold text-white">
+                                        {{ albumAvatarFallback }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div class="min-w-0 flex-1 pt-1">
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                                        {{ t('public.album.kicker') }}
+                                    </p>
+                                    <h1
+                                        class="mt-1 text-[1.32rem] leading-[1.08] font-semibold text-white sm:text-[1.48rem]"
+                                        :class="welcomeFontClass"
+                                    >
+                                        {{ welcomeTitle }}
+                                    </h1>
                                 </div>
-
-                                <button
-                                    type="button"
-                                    class="ml-auto inline-flex size-14 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
-                                    :aria-label="t('public.shared.open_menu')"
-                                    data-test="album-hero-menu-button"
-                                    @click="menuOpen = true"
-                                >
-                                    <Menu class="size-5" />
-                                </button>
                             </div>
 
-                            <p class="mt-3 text-sm leading-relaxed text-white/85">
+                            <p class="mt-4 text-sm leading-relaxed text-white/88">
                                 {{ welcomeSubtitle }}
                             </p>
+                            <p class="mt-2 max-w-xl text-sm leading-relaxed text-white/72">
+                                {{ t('public.album.profile_description') }}
+                            </p>
 
-                            <div
-                                v-if="eventDate || uploadWindowStartsAt || uploadWindowEndsAt"
-                                class="mt-3 flex flex-col gap-2 text-xs text-white/82"
-                            >
-                                <p
-                                    v-if="eventDate"
-                                    class="flex items-center gap-2"
+                            <div class="mt-5 grid grid-cols-4 gap-3 border-t border-white/14 pt-4">
+                                <div
+                                    v-for="stat in albumHeaderStats"
+                                    :key="stat.label"
+                                    class="min-w-0 text-left"
                                 >
-                                    <CalendarDays class="size-3.5 text-white/65" />
-                                    {{ t('public.album.meta.event_date') }}
-                                    <span class="font-medium text-white">{{ formatDate(eventDate) }}</span>
-                                </p>
-                                <p
-                                    v-if="uploadWindowStartsAt || uploadWindowEndsAt"
-                                    class="flex items-center gap-2"
-                                >
-                                    <Clock3 class="size-3.5 text-white/65" />
-                                    {{ t('public.album.meta.upload_window') }}
-                                    <span class="font-medium text-white">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
-                                </p>
-                            </div>
-
-                            <div
-                                v-if="showQrCode"
-                                class="mt-4 rounded-[1.5rem] border border-white/15 bg-black/20 p-3"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <img
-                                        :src="albumQrDataUrl"
-                                        :alt="t('public.shared.alt.album_qr_code')"
-                                        class="size-16 rounded-lg border border-white/20 bg-white p-1"
-                                    />
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
-                                            {{ t('public.album.menu.share_album') }}
-                                        </p>
-                                        <p class="mt-1 text-xs text-white/80">
-                                            {{ t('public.album.menu.share_album_hint') }}
-                                        </p>
-                                        <a
-                                            :href="links.wall"
-                                            class="mt-2 inline-flex text-xs font-medium text-white/95 underline underline-offset-4"
-                                        >
-                                            {{ t('public.album.menu.open_photo_wall') }}
-                                        </a>
-                                    </div>
+                                    <p class="truncate text-lg font-semibold text-white">
+                                        {{ stat.value }}
+                                    </p>
+                                    <p class="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/70">
+                                        {{ stat.label }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
