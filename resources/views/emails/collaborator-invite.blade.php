@@ -7,7 +7,7 @@
 
     <p style="margin:0 0 14px 0;font-size:14px;line-height:1.7;color:#111827;">
         <strong>{{ $inviterName }}</strong> invited you to collaborate on
-        <strong>{{ $eventName }}</strong> in {{ config('app.name', 'Kululu') }}.
+        <strong>{{ $eventName }}</strong> in {{ config('app.name', 'WV Dveloped') }}.
     </p>
 
     <p style="margin:0 0 18px 0;font-size:14px;line-height:1.7;color:#111827;">

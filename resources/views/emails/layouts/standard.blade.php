@@ -11,7 +11,7 @@
             <td align="center">
                 <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:640px;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
                     @include('emails.partials.header', [
-                        'title' => $headerTitle ?? config('app.name', 'Kululu'),
+                        'title' => $headerTitle ?? config('app.name', 'WV Developed'),
                         'subtitle' => $headerSubtitle ?? null,
                     ])
 
