@@ -92,8 +92,9 @@ type EventSettingsPayload = {
     welcomeScreenCollectEmail: boolean;
     welcomeScreenCollectPhone: boolean;
     albumBackgroundEnabled: boolean;
-    albumBackgroundMode: 'rotate' | 'solid' | 'image';
+    albumBackgroundMode: 'rotate' | 'solid' | 'preset' | 'image';
     albumBackgroundColor: string;
+    albumBackgroundPresetThemeId: number | null;
     albumBackgroundImageUrl: string | null;
     textPostsBackgroundsEnabled: boolean;
     textPostsBackgroundPalette: string[];
@@ -211,6 +212,15 @@ type BillingPlanOption = {
     limitsLabel: string;
 };
 
+type TextPostThemeOption = {
+    id: number;
+    slug: string;
+    name: string;
+    imageUrl: string;
+    backgroundColor: string | null;
+    textColor: string;
+};
+
 type PageProps = {
     auth?: {
         user?: {
@@ -225,6 +235,7 @@ const props = defineProps<{
     eventTypes: EventTypeOption[];
     eventDateMax: string;
     availableBillingPlans: BillingPlanOption[];
+    textPostThemes: TextPostThemeOption[];
 }>();
 
 const page = usePage<PageProps>();
@@ -277,6 +288,7 @@ const defaults: EventSettingsPayload = {
     albumBackgroundEnabled: false,
     albumBackgroundMode: 'rotate',
     albumBackgroundColor: '#0F172A',
+    albumBackgroundPresetThemeId: null,
     albumBackgroundImageUrl: null,
     textPostsBackgroundsEnabled: false,
     textPostsBackgroundPalette: ['#1D4ED8', '#0F766E', '#EA580C'],
@@ -455,6 +467,8 @@ const form = useForm({
     album_background_enabled: currentSettings.albumBackgroundEnabled,
     album_background_mode: currentSettings.albumBackgroundMode,
     album_background_color: currentSettings.albumBackgroundColor,
+    album_background_preset_theme_id:
+        currentSettings.albumBackgroundPresetThemeId,
     album_background_file: null as File | null,
     remove_album_background: false,
     text_posts_backgrounds_enabled: currentSettings.textPostsBackgroundsEnabled,
@@ -702,9 +716,28 @@ const welcomeScreenFileName = computed(() => {
     return 'No file selected';
 });
 
+const selectedAlbumBackgroundPreset = computed(() => {
+    if (form.album_background_preset_theme_id === null) {
+        return null;
+    }
+
+    return (
+        props.textPostThemes.find(
+            (theme) => theme.id === form.album_background_preset_theme_id,
+        ) ?? null
+    );
+});
+
 const currentAlbumBackgroundUrl = computed(() => {
     if (albumBackgroundPreviewUrl.value !== null) {
         return albumBackgroundPreviewUrl.value;
+    }
+
+    if (
+        form.album_background_mode === 'preset' &&
+        selectedAlbumBackgroundPreset.value !== null
+    ) {
+        return selectedAlbumBackgroundPreset.value.imageUrl;
     }
 
     if (form.remove_album_background) {
@@ -717,6 +750,13 @@ const currentAlbumBackgroundUrl = computed(() => {
 const albumBackgroundFileName = computed(() => {
     if (form.album_background_file instanceof File) {
         return form.album_background_file.name;
+    }
+
+    if (
+        form.album_background_mode === 'preset' &&
+        selectedAlbumBackgroundPreset.value !== null
+    ) {
+        return selectedAlbumBackgroundPreset.value.name;
     }
 
     return 'No file selected';
@@ -766,6 +806,7 @@ const autoSavePayload = computed(() => ({
     album_background_enabled: form.album_background_enabled,
     album_background_mode: form.album_background_mode,
     album_background_color: form.album_background_color,
+    album_background_preset_theme_id: form.album_background_preset_theme_id,
     text_posts_backgrounds_enabled: form.text_posts_backgrounds_enabled,
     text_posts_background_palette: [...form.text_posts_background_palette],
     moderation_filters: [...form.moderation_filters],
@@ -1202,13 +1243,33 @@ const onModerationFiltersChange = (value: unknown): void => {
 };
 
 const openAlbumBackgroundPicker = (): void => {
+    if (!canEditAdvancedAppearance.value) {
+        return;
+    }
+
     albumBackgroundFileInputRef.value?.click();
 };
 
+const selectAlbumBackgroundPreset = (themeId: number): void => {
+    form.album_background_preset_theme_id = themeId;
+    form.album_background_file = null;
+    form.remove_album_background = false;
+    form.album_background_mode = 'preset';
+    if (albumBackgroundFileInputRef.value) {
+        albumBackgroundFileInputRef.value.value = '';
+    }
+    queueAutoSave(100, true);
+};
+
 const onAlbumBackgroundFileChange = (event: Event): void => {
+    if (!canEditAdvancedAppearance.value) {
+        return;
+    }
+
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0] ?? null;
     form.album_background_file = file;
+    form.album_background_preset_theme_id = null;
     form.remove_album_background = false;
     if (file !== null) {
         form.album_background_mode = 'image';
@@ -1218,11 +1279,15 @@ const onAlbumBackgroundFileChange = (event: Event): void => {
 
 const removeAlbumBackgroundImage = (): void => {
     form.album_background_file = null;
+    form.album_background_preset_theme_id = null;
     form.remove_album_background = true;
     if (albumBackgroundFileInputRef.value) {
         albumBackgroundFileInputRef.value.value = '';
     }
-    if (form.album_background_mode === 'image') {
+    if (
+        form.album_background_mode === 'image' ||
+        form.album_background_mode === 'preset'
+    ) {
         form.album_background_mode = 'rotate';
     }
     queueAutoSave(100, true);
@@ -2399,9 +2464,9 @@ function resolveSupportedTimezones(): string[] {
                                         Album Background
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Choose a custom background for your
-                                        album, or let it rotate through uploaded
-                                        photos.
+                                        Choose a preset backdrop, a solid
+                                        color, or let the album rotate through
+                                        uploaded photos.
                                     </p>
                                 </div>
                                 <div
@@ -2415,7 +2480,7 @@ function resolveSupportedTimezones(): string[] {
                                             isAlbumBackgroundSheetOpen = true
                                         "
                                     >
-                                        Upload
+                                        Customize
                                     </Button>
 
                                     <Switch
@@ -2592,12 +2657,13 @@ function resolveSupportedTimezones(): string[] {
                             />
 
                             <div
+                                id="guest-upload-types"
                                 class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
                             >
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            Allowed Media Types
+                                            Guest Uploads
                                         </h3>
                                         <Badge variant="secondary">
                                             <Sparkles />
@@ -2605,8 +2671,9 @@ function resolveSupportedTimezones(): string[] {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        Control what type of media can be
-                                        uploaded to your event.
+                                        Choose which guest upload actions stay
+                                        available in the public album,
+                                        including text wishes.
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -3639,10 +3706,24 @@ function resolveSupportedTimezones(): string[] {
                                         <NativeSelectOption value="solid">
                                             Solid Color
                                         </NativeSelectOption>
-                                        <NativeSelectOption value="image">
+                                        <NativeSelectOption
+                                            value="preset"
+                                        >
+                                            Preset Artwork
+                                        </NativeSelectOption>
+                                        <NativeSelectOption
+                                            value="image"
+                                            :disabled="
+                                                !canEditAdvancedAppearance
+                                            "
+                                        >
                                             Custom Image
                                         </NativeSelectOption>
                                     </NativeSelect>
+                                    <p class="text-xs text-muted-foreground">
+                                        Preset artwork is available on every
+                                        plan. Custom uploads stay on Pro.
+                                    </p>
                                     <InputError
                                         :message="
                                             form.errors.album_background_mode
@@ -3697,11 +3778,74 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h4 class="text-sm font-semibold">
+                                            Preset Artwork
+                                        </h4>
+                                        <p class="text-xs text-muted-foreground">
+                                            Reuses the same backgrounds guests
+                                            already see in text wishes.
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-if="props.textPostThemes.length > 0"
+                                        class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+                                    >
+                                        <button
+                                            v-for="theme in props.textPostThemes"
+                                            :key="theme.id"
+                                            type="button"
+                                            class="group relative overflow-hidden rounded-2xl border-2 text-left transition"
+                                            :class="
+                                                form.album_background_preset_theme_id === theme.id &&
+                                                form.album_background_mode === 'preset'
+                                                    ? 'border-primary shadow-sm'
+                                                    : 'border-border'
+                                            "
+                                            @click="
+                                                selectAlbumBackgroundPreset(
+                                                    theme.id,
+                                                )
+                                            "
+                                        >
+                                            <img
+                                                :src="theme.imageUrl"
+                                                :alt="theme.name"
+                                                class="h-28 w-full object-cover"
+                                            />
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+                                            <div class="absolute inset-x-0 bottom-0 p-3">
+                                                <p class="text-sm font-semibold text-white">
+                                                    {{ theme.name }}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <p
+                                        v-else
+                                        class="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground"
+                                    >
+                                        Add text wish backgrounds first and
+                                        they will appear here automatically.
+                                    </p>
+                                    <InputError
+                                        :message="
+                                            form.errors
+                                                .album_background_preset_theme_id
+                                        "
+                                    />
+                                </div>
+
+                                <div class="space-y-2">
                                     <h4 class="text-sm font-semibold">
                                         Custom Image
                                     </h4>
                                     <div
-                                        v-if="currentAlbumBackgroundUrl"
+                                        v-if="
+                                            currentAlbumBackgroundUrl &&
+                                            form.album_background_mode ===
+                                                'image'
+                                        "
                                         class="relative overflow-hidden rounded-xl border"
                                     >
                                         <img
@@ -3714,6 +3858,9 @@ function resolveSupportedTimezones(): string[] {
                                             variant="outline"
                                             size="sm"
                                             class="absolute top-3 right-3"
+                                            :disabled="
+                                                !canEditAdvancedAppearance
+                                            "
                                             @click="removeAlbumBackgroundImage"
                                         >
                                             Remove
@@ -3732,6 +3879,9 @@ function resolveSupportedTimezones(): string[] {
                                                 variant="outline"
                                                 size="sm"
                                                 class="h-8"
+                                                :disabled="
+                                                    !canEditAdvancedAppearance
+                                                "
                                                 @click="
                                                     openAlbumBackgroundPicker
                                                 "
@@ -3745,6 +3895,13 @@ function resolveSupportedTimezones(): string[] {
                                             form.errors.album_background_file
                                         "
                                     />
+                                    <p
+                                        v-if="!canEditAdvancedAppearance"
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        Upgrade to Pro if you want to upload
+                                        your own album background image.
+                                    </p>
                                 </div>
                             </div>
                             <SheetFooter class="border-t px-6 py-4">

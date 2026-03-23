@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Event;
+use App\Models\TextPostTheme;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
@@ -270,6 +271,73 @@ it('restores saved settings in the settings page after refresh', function () {
         );
 
     CarbonImmutable::setTestNow();
+});
+
+it('lets basic-plan events use preset album backgrounds without a custom upload', function () {
+    $user = User::factory()->create();
+    $theme = TextPostTheme::query()->create([
+        'slug' => 'golden-paper',
+        'name' => 'Golden Paper',
+        'image_path' => 'text-backgrounds/golden-paper.jpg',
+        'background_color' => '#A16207',
+        'text_color' => '#FFFFFF',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    $event = Event::factory()->for($user)->create([
+        'customization_tier' => 'basic',
+        'branding' => [
+            'allowed_media_types' => ['photo', 'video'],
+            'allowed_media_types_version' => 2,
+        ],
+    ]);
+
+    $this->actingAs($user);
+
+    $this->from(route('events.settings', $event))
+        ->patch(route('events.settings.update', $event), [
+            'type' => $event->type,
+            'name' => $event->name,
+            'event_date' => $event->event_date?->toDateString(),
+            'timezone' => $event->timezone,
+            'album_public' => true,
+            'moderation_enabled' => true,
+            'auto_moderation_enabled' => true,
+            'album_background_enabled' => true,
+            'album_background_mode' => 'preset',
+            'album_background_preset_theme_id' => $theme->id,
+            'album_background_color' => '#112233',
+            'allowed_media_types' => ['photo', 'video', 'text'],
+            'remove_logo' => false,
+            'branding' => [
+                'primary_color' => '',
+                'accent_color' => '',
+                'welcome_message' => '',
+            ],
+        ])
+        ->assertRedirect(route('events.settings', $event));
+
+    $event->refresh();
+
+    expect($event->branding['album_background_enabled'] ?? null)->toBeTrue()
+        ->and($event->branding['album_background_mode'] ?? null)->toBe('preset')
+        ->and($event->branding['album_background_preset_theme_id'] ?? null)->toBe($theme->id);
+
+    $this->get(route('events.settings', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Settings')
+            ->where('currentEvent.planFeatures.customizationTier', 'basic')
+            ->where('currentEvent.settings.albumBackgroundMode', 'preset')
+            ->where('currentEvent.settings.albumBackgroundPresetThemeId', $theme->id)
+            ->where('currentEvent.settings.albumBackgroundImageUrl', asset('text-backgrounds/golden-paper.jpg'))
+            ->where(
+                'textPostThemes',
+                fn ($themes): bool => collect($themes)->contains(
+                    fn (array $entry): bool => $entry['id'] === $theme->id,
+                ),
+            ),
+        );
 });
 
 it('accepts greek as an event display language', function () {

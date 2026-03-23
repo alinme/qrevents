@@ -42,6 +42,7 @@ type EventPayload = {
     uploadWindowEndsAt: string | null;
     uploadCount: number;
     uploadLimit: number;
+    allowedMediaTypes: string[];
     storageUsedBytes: number;
     storageLimitBytes: number;
     moderationEnabled: boolean;
@@ -241,6 +242,12 @@ const mediaExportHint = computed(() => {
 
     return 'Create a ZIP of the approved album when you need a handoff.';
 });
+
+const guestUploadTypeLabels: Record<string, string> = {
+    photo: 'Photos',
+    video: 'Videos',
+    text: 'Text wishes',
+};
 
 const summaryItems = computed(() => [
     {
@@ -495,6 +502,24 @@ onUnmounted(() => {
                             <p class="mt-2 text-sm text-zinc-600">
                                 {{ currentEvent.plan }} · {{ formatDateOnly(currentEvent.eventDate) }} · {{ uploadWindowLabel }}
                             </p>
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                                    Guest uploads
+                                </span>
+                                <span
+                                    v-for="mediaType in currentEvent.allowedMediaTypes"
+                                    :key="mediaType"
+                                    class="inline-flex rounded-full border border-black/8 bg-[#fcfbf8] px-2.5 py-1 text-xs font-medium text-zinc-700"
+                                >
+                                    {{ guestUploadTypeLabels[mediaType] ?? mediaType }}
+                                </span>
+                                <Link
+                                    :href="`${eventLinks.settings}#guest-upload-types`"
+                                    class="text-xs font-medium text-zinc-600 underline-offset-4 hover:text-[#171411] hover:underline"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
                             <p class="mt-2 text-sm text-zinc-500">
                                 {{ mediaExportHint }}
                             </p>

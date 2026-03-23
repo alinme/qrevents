@@ -5,7 +5,7 @@ import assetComments from './asset-comments'
 import assetCommentLike from './asset-comment-like'
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 export const assets = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -20,7 +20,7 @@ assets.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 assets.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -47,7 +47,7 @@ assets.url = (args: { shareToken: string | number } | [shareToken: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 assets.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -57,7 +57,7 @@ assets.get = (args: { shareToken: string | number } | [shareToken: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 assets.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -67,7 +67,7 @@ assets.head = (args: { shareToken: string | number } | [shareToken: string | num
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 const assetsForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -77,7 +77,7 @@ const assetsForm = (args: { shareToken: string | number } | [shareToken: string 
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 assetsForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -87,7 +87,7 @@ assetsForm.get = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::assets
-* @see app/Http/Controllers/EventController.php:988
+* @see app/Http/Controllers/EventController.php:997
 * @route '/a/{shareToken}/assets'
 */
 assetsForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -104,7 +104,7 @@ assets.form = assetsForm
 
 /**
 * @see \App\Http\Controllers\EventController::upload
-* @see app/Http/Controllers/EventController.php:1089
+* @see app/Http/Controllers/EventController.php:1098
 * @route '/a/{shareToken}/uploads'
 */
 export const upload = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -119,7 +119,7 @@ upload.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::upload
-* @see app/Http/Controllers/EventController.php:1089
+* @see app/Http/Controllers/EventController.php:1098
 * @route '/a/{shareToken}/uploads'
 */
 upload.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -146,7 +146,7 @@ upload.url = (args: { shareToken: string | number } | [shareToken: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::upload
-* @see app/Http/Controllers/EventController.php:1089
+* @see app/Http/Controllers/EventController.php:1098
 * @route '/a/{shareToken}/uploads'
 */
 upload.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -156,7 +156,7 @@ upload.post = (args: { shareToken: string | number } | [shareToken: string | num
 
 /**
 * @see \App\Http\Controllers\EventController::upload
-* @see app/Http/Controllers/EventController.php:1089
+* @see app/Http/Controllers/EventController.php:1098
 * @route '/a/{shareToken}/uploads'
 */
 const uploadForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -166,7 +166,7 @@ const uploadForm = (args: { shareToken: string | number } | [shareToken: string 
 
 /**
 * @see \App\Http\Controllers\EventController::upload
-* @see app/Http/Controllers/EventController.php:1089
+* @see app/Http/Controllers/EventController.php:1098
 * @route '/a/{shareToken}/uploads'
 */
 uploadForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ upload.form = uploadForm
 
 /**
 * @see \App\Http\Controllers\EventController::textPost
-* @see app/Http/Controllers/EventController.php:1283
+* @see app/Http/Controllers/EventController.php:1292
 * @route '/a/{shareToken}/text-posts'
 */
 export const textPost = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -193,7 +193,7 @@ textPost.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::textPost
-* @see app/Http/Controllers/EventController.php:1283
+* @see app/Http/Controllers/EventController.php:1292
 * @route '/a/{shareToken}/text-posts'
 */
 textPost.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -220,7 +220,7 @@ textPost.url = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::textPost
-* @see app/Http/Controllers/EventController.php:1283
+* @see app/Http/Controllers/EventController.php:1292
 * @route '/a/{shareToken}/text-posts'
 */
 textPost.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -230,7 +230,7 @@ textPost.post = (args: { shareToken: string | number } | [shareToken: string | n
 
 /**
 * @see \App\Http\Controllers\EventController::textPost
-* @see app/Http/Controllers/EventController.php:1283
+* @see app/Http/Controllers/EventController.php:1292
 * @route '/a/{shareToken}/text-posts'
 */
 const textPostForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -240,7 +240,7 @@ const textPostForm = (args: { shareToken: string | number } | [shareToken: strin
 
 /**
 * @see \App\Http\Controllers\EventController::textPost
-* @see app/Http/Controllers/EventController.php:1283
+* @see app/Http/Controllers/EventController.php:1292
 * @route '/a/{shareToken}/text-posts'
 */
 textPostForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -252,7 +252,7 @@ textPost.form = textPostForm
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 export const assetDownload = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -267,7 +267,7 @@ assetDownload.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 assetDownload.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -295,7 +295,7 @@ assetDownload.url = (args: { shareToken: string | number, asset: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 assetDownload.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -305,7 +305,7 @@ assetDownload.get = (args: { shareToken: string | number, asset: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 assetDownload.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -315,7 +315,7 @@ assetDownload.head = (args: { shareToken: string | number, asset: number | { id:
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 const assetDownloadForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -325,7 +325,7 @@ const assetDownloadForm = (args: { shareToken: string | number, asset: number | 
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 assetDownloadForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -335,7 +335,7 @@ assetDownloadForm.get = (args: { shareToken: string | number, asset: number | { 
 
 /**
 * @see \App\Http\Controllers\EventController::assetDownload
-* @see app/Http/Controllers/EventController.php:1639
+* @see app/Http/Controllers/EventController.php:1648
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
 assetDownloadForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -352,7 +352,7 @@ assetDownload.form = assetDownloadForm
 
 /**
 * @see \App\Http\Controllers\EventController::assetDelete
-* @see app/Http/Controllers/EventController.php:1657
+* @see app/Http/Controllers/EventController.php:1666
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 export const assetDelete = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -367,7 +367,7 @@ assetDelete.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::assetDelete
-* @see app/Http/Controllers/EventController.php:1657
+* @see app/Http/Controllers/EventController.php:1666
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 assetDelete.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -395,7 +395,7 @@ assetDelete.url = (args: { shareToken: string | number, asset: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\EventController::assetDelete
-* @see app/Http/Controllers/EventController.php:1657
+* @see app/Http/Controllers/EventController.php:1666
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 assetDelete.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -405,7 +405,7 @@ assetDelete.post = (args: { shareToken: string | number, asset: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::assetDelete
-* @see app/Http/Controllers/EventController.php:1657
+* @see app/Http/Controllers/EventController.php:1666
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 const assetDeleteForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -415,7 +415,7 @@ const assetDeleteForm = (args: { shareToken: string | number, asset: number | { 
 
 /**
 * @see \App\Http\Controllers\EventController::assetDelete
-* @see app/Http/Controllers/EventController.php:1657
+* @see app/Http/Controllers/EventController.php:1666
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 assetDeleteForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -193,6 +193,25 @@ test('single-event owners in onboarding are sent straight back into onboarding f
         ->assertRedirect(route('onboarding.photos', $event));
 });
 
+test('event workspace exposes guest upload settings summary for owners', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Spring Wedding',
+        'branding' => [
+            'allowed_media_types' => ['photo', 'text'],
+            'allowed_media_types_version' => 2,
+        ],
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Home')
+            ->where('currentEvent.allowedMediaTypes', ['photo', 'text'])
+        );
+});
+
 test('normal users cannot access the dedicated business dashboard', function () {
     $user = User::factory()->create();
 

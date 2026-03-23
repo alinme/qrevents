@@ -270,6 +270,7 @@ class EventController extends Controller
             ...$this->eventProps($request, $event),
             'eventTypes' => $this->eventTypeOptions(),
             'eventDateMax' => now()->addMonths((int) config('events.event_date_max_months', 18))->toDateString(),
+            'textPostThemes' => $this->textPostThemesPayload(),
         ]);
     }
 
@@ -317,8 +318,9 @@ class EventController extends Controller
             'welcome_screen_background_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:6144'],
             'remove_welcome_screen_background' => ['sometimes', 'boolean'],
             'album_background_enabled' => ['sometimes', 'boolean'],
-            'album_background_mode' => ['sometimes', 'string', Rule::in(['rotate', 'solid', 'image'])],
+            'album_background_mode' => ['sometimes', 'string', Rule::in(['rotate', 'solid', 'preset', 'image'])],
             'album_background_color' => ['nullable', 'regex:/^#(?:[A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/'],
+            'album_background_preset_theme_id' => ['nullable', 'integer'],
             'album_background_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:6144'],
             'remove_album_background' => ['sometimes', 'boolean'],
             'text_posts_backgrounds_enabled' => ['sometimes', 'boolean'],
@@ -371,16 +373,16 @@ class EventController extends Controller
             $welcomeScreenBackgroundFile = null;
         }
 
-        $allowedMediaTypesSource = $validated['allowed_media_types'] ?? ($currentBranding['allowed_media_types'] ?? ['photo', 'video']);
+        $allowedMediaTypesSource = $validated['allowed_media_types'] ?? ($currentBranding['allowed_media_types'] ?? $this->defaultAllowedMediaTypes());
         if (! is_array($allowedMediaTypesSource)) {
-            $allowedMediaTypesSource = ['photo', 'video'];
+            $allowedMediaTypesSource = $this->defaultAllowedMediaTypes();
         }
         $allowedMediaTypes = array_values(array_unique(array_filter(
             $allowedMediaTypesSource,
             fn ($value): bool => in_array($value, ['photo', 'video', 'text'], true),
         )));
         if ($allowedMediaTypes === []) {
-            $allowedMediaTypes = ['photo', 'video'];
+            $allowedMediaTypes = $this->defaultAllowedMediaTypes();
         }
         $albumPermission = (string) ($validated['album_permission']
             ?? ($currentBranding['album_permission'] ?? ((bool) $validated['album_public'] ? 'view_upload' : 'upload_only')));
@@ -482,11 +484,20 @@ class EventController extends Controller
         }
 
         $albumBackgroundMode = (string) ($validated['album_background_mode'] ?? ($currentBranding['album_background_mode'] ?? 'rotate'));
-        if (! in_array($albumBackgroundMode, ['rotate', 'solid', 'image'], true)) {
+        if (! in_array($albumBackgroundMode, ['rotate', 'solid', 'preset', 'image'], true)) {
             $albumBackgroundMode = 'rotate';
         }
-        if ($albumBackgroundMode === 'image' && $albumBackgroundPath === null) {
+        $albumBackgroundPresetThemeId = $this->normalizeTextPostThemeId(
+            $validated['album_background_preset_theme_id'] ?? ($currentBranding['album_background_preset_theme_id'] ?? null),
+        );
+        if ($albumBackgroundMode === 'preset' && $albumBackgroundPresetThemeId === null) {
             $albumBackgroundMode = 'rotate';
+        }
+        if ($albumBackgroundMode === 'image' && ! $allowsAdvancedCustomization) {
+            $albumBackgroundMode = $albumBackgroundPresetThemeId !== null ? 'preset' : 'rotate';
+        }
+        if ($albumBackgroundMode === 'image' && $albumBackgroundPath === null) {
+            $albumBackgroundMode = $albumBackgroundPresetThemeId !== null ? 'preset' : 'rotate';
         }
 
         $textPostBackgroundPaletteSource = $validated['text_posts_background_palette']
@@ -552,18 +563,16 @@ class EventController extends Controller
             'welcome_screen_collect_email' => (bool) ($validated['welcome_screen_collect_email'] ?? $collectEmail),
             'welcome_screen_collect_phone' => (bool) ($validated['welcome_screen_collect_phone'] ?? $collectPhone),
             'welcome_screen_fields' => $welcomeScreenFields,
-            'album_background_enabled' => $allowsAdvancedCustomization
-                ? (bool) ($validated['album_background_enabled'] ?? ($currentBranding['album_background_enabled'] ?? false))
-                : false,
-            'album_background_mode' => $allowsAdvancedCustomization ? $albumBackgroundMode : 'rotate',
-            'album_background_color' => $allowsAdvancedCustomization
-                ? ($validated['album_background_color'] ?? ($currentBranding['album_background_color'] ?? '#0F172A'))
-                : '#0F172A',
+            'album_background_enabled' => (bool) ($validated['album_background_enabled'] ?? ($currentBranding['album_background_enabled'] ?? false)),
+            'album_background_mode' => $albumBackgroundMode,
+            'album_background_color' => $validated['album_background_color'] ?? ($currentBranding['album_background_color'] ?? '#0F172A'),
+            'album_background_preset_theme_id' => $albumBackgroundPresetThemeId,
             'text_posts_backgrounds_enabled' => (bool) ($validated['text_posts_backgrounds_enabled'] ?? ($currentBranding['text_posts_backgrounds_enabled'] ?? false)),
             'text_posts_background_palette' => $textPostBackgroundPalette,
             'moderation_filters' => $moderationFilters,
             'album_permission' => $albumPermission,
             'allowed_media_types' => $allowedMediaTypes,
+            'allowed_media_types_version' => 2,
         ], fn ($value): bool => $value !== null && $value !== '');
 
         if ($allowsBetterCustomization && $logoPath !== null && $logoDisk !== null) {
@@ -1827,6 +1836,7 @@ class EventController extends Controller
                 'uploadWindowStartsAt' => $event->upload_window_starts_at?->toIso8601String(),
                 'uploadWindowEndsAt' => $event->upload_window_ends_at?->toIso8601String(),
                 'albumPublic' => $event->album_public,
+                'allowedMediaTypes' => $this->allowedMediaTypes($event),
                 'moderationEnabled' => $event->moderation_enabled,
                 'autoModerationEnabled' => $event->auto_moderation_enabled,
                 'billing' => [
@@ -1892,6 +1902,7 @@ class EventController extends Controller
                     'albumBackgroundEnabled' => (bool) ($branding['album_background_enabled'] ?? false),
                     'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                     'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
+                    'albumBackgroundPresetThemeId' => $this->albumBackgroundPresetThemeId($branding),
                     'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
                     'textPostsBackgroundsEnabled' => (bool) ($branding['text_posts_backgrounds_enabled'] ?? false),
                     'textPostsBackgroundPalette' => $this->textPostsBackgroundPalette($branding),
@@ -2309,8 +2320,11 @@ class EventController extends Controller
                 $branding['welcome_screen_background_disk'],
             );
 
-            $branding['album_background_enabled'] = false;
-            $branding['album_background_mode'] = 'rotate';
+            if (($branding['album_background_mode'] ?? null) === 'image') {
+                $branding['album_background_mode'] = $this->albumBackgroundPresetThemeId($branding) !== null
+                    ? 'preset'
+                    : 'rotate';
+            }
         }
 
         if (! $this->eventAllowsModerationTools($event)) {
@@ -3347,9 +3361,9 @@ class EventController extends Controller
     private function allowedMediaTypes(Event $event): array
     {
         $branding = is_array($event->branding) ? $event->branding : [];
-        $allowed = $branding['allowed_media_types'] ?? ['photo', 'video'];
+        $allowed = $branding['allowed_media_types'] ?? $this->defaultAllowedMediaTypes();
         if (! is_array($allowed)) {
-            return ['photo', 'video'];
+            return $this->defaultAllowedMediaTypes();
         }
 
         $normalized = array_values(array_unique(array_filter(
@@ -3357,7 +3371,24 @@ class EventController extends Controller
             fn ($value): bool => is_string($value) && in_array($value, ['photo', 'video', 'text'], true),
         )));
 
-        return $normalized === [] ? ['photo', 'video'] : $normalized;
+        if ($normalized === []) {
+            return $this->defaultAllowedMediaTypes();
+        }
+
+        $version = (int) ($branding['allowed_media_types_version'] ?? 1);
+        if ($version < 2 && $normalized === ['photo', 'video']) {
+            return $this->defaultAllowedMediaTypes();
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function defaultAllowedMediaTypes(): array
+    {
+        return ['photo', 'video', 'text'];
     }
 
     /**
@@ -3483,6 +3514,11 @@ class EventController extends Controller
             return $this->storageUrl($disk, $path);
         }
 
+        $presetTheme = $this->textPostThemeById($this->albumBackgroundPresetThemeId($branding));
+        if ($presetTheme !== null) {
+            return asset($presetTheme->image_path);
+        }
+
         return null;
     }
 
@@ -3492,15 +3528,45 @@ class EventController extends Controller
     private function albumBackgroundMode(array $branding): string
     {
         $mode = $branding['album_background_mode'] ?? 'rotate';
-        if (! is_string($mode) || ! in_array($mode, ['rotate', 'solid', 'image'], true)) {
+        if (! is_string($mode) || ! in_array($mode, ['rotate', 'solid', 'preset', 'image'], true)) {
             return 'rotate';
         }
 
-        if ($mode === 'image' && $this->brandingAlbumBackgroundUrl($branding) === null) {
+        if (in_array($mode, ['preset', 'image'], true) && $this->brandingAlbumBackgroundUrl($branding) === null) {
             return 'rotate';
         }
 
         return $mode;
+    }
+
+    /**
+     * @param  array<string, mixed>  $branding
+     */
+    private function albumBackgroundPresetThemeId(array $branding): ?int
+    {
+        return $this->normalizeTextPostThemeId($branding['album_background_preset_theme_id'] ?? null);
+    }
+
+    private function normalizeTextPostThemeId(mixed $value): ?int
+    {
+        $themeId = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if (! is_int($themeId)) {
+            return null;
+        }
+
+        return $this->textPostThemeById($themeId)?->id;
+    }
+
+    private function textPostThemeById(?int $themeId): ?TextPostTheme
+    {
+        if ($themeId === null) {
+            return null;
+        }
+
+        return TextPostTheme::query()
+            ->active()
+            ->whereKey($themeId)
+            ->first();
     }
 
     /**

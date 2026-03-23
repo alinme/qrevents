@@ -213,7 +213,7 @@ type AppearanceConfig = {
     hideCaption: boolean;
     captionTheme: 'dark' | 'light';
     albumBackgroundEnabled: boolean;
-    albumBackgroundMode: 'rotate' | 'solid' | 'image';
+    albumBackgroundMode: 'rotate' | 'solid' | 'preset' | 'image';
     albumBackgroundColor: string;
     albumBackgroundImageUrl: string | null;
 };
@@ -601,6 +601,12 @@ const showPreviewWatermark = computed(() => !props.canGuestDownload);
 const canUploadText = computed(() => canUpload.value && props.allowTextPosts);
 const canUploadPhotos = computed(() => props.allowedMediaTypes.includes('photo'));
 const canUploadVideos = computed(() => props.allowedMediaTypes.includes('video'));
+const hasAlbumImageBackground = computed(
+    () =>
+        props.appearance.albumBackgroundEnabled
+        && ['preset', 'image'].includes(props.appearance.albumBackgroundMode)
+        && Boolean(props.appearance.albumBackgroundImageUrl),
+);
 const selectedTextPostTheme = computed<TextPostThemeOption | null>(() => {
     const selectedId = textForm.text_post_theme_id;
     if (selectedId !== null) {
@@ -898,10 +904,7 @@ const albumBodyStyle = computed((): Record<string, string> => {
         return style;
     }
 
-    if (
-        props.appearance.albumBackgroundMode === 'image' &&
-        props.appearance.albumBackgroundImageUrl
-    ) {
+    if (hasAlbumImageBackground.value && props.appearance.albumBackgroundImageUrl) {
         style.backgroundImage = `url(${props.appearance.albumBackgroundImageUrl})`;
         style.backgroundSize = 'cover';
         style.backgroundPosition = 'center';
@@ -3284,8 +3287,7 @@ const onAlbumTouchCancel = (): void => {
         :class="
             onboardingDone
                 ? props.appearance.albumBackgroundEnabled &&
-                  props.appearance.albumBackgroundMode === 'image' &&
-                  props.appearance.albumBackgroundImageUrl
+                  hasAlbumImageBackground
                     ? 'bg-slate-950'
                     : 'bg-white'
                 : !onboardingDone && customWelcomeEnabled && welcomeScreen.backgroundUrl
@@ -3887,8 +3889,7 @@ const onAlbumTouchCancel = (): void => {
                     <div
                         class="absolute inset-0"
                         :class="
-                            props.appearance.albumBackgroundEnabled &&
-                            props.appearance.albumBackgroundMode === 'image'
+                            hasAlbumImageBackground
                                 ? 'bg-gradient-to-b from-black/30 via-black/45 to-black/75'
                                 : 'bg-gradient-to-b from-black/20 via-black/35 to-black/65'
                         "
@@ -4694,6 +4695,7 @@ const onAlbumTouchCancel = (): void => {
                     <span class="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]">{{ t('public.album.nav.camera') }}</span>
                 </button>
                 <button
+                    v-if="props.allowTextPosts"
                     type="button"
                     class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
                     :class="isComposerOpen && activeView === 'text_wish' ? 'bg-slate-900 text-white' : ''"
@@ -5067,7 +5069,7 @@ const onAlbumTouchCancel = (): void => {
                         </div>
 
                         <div
-                            v-else-if="activeView === 'text_wish' && allowTextPosts"
+                            v-else-if="activeView === 'text_wish' && props.allowTextPosts"
                             class="space-y-5"
                         >
                             <div

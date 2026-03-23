@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::toggle
-* @see app/Http/Controllers/EventController.php:1435
+* @see app/Http/Controllers/EventController.php:1444
 * @route '/a/{shareToken}/assets/{asset}/likes/toggle'
 */
 export const toggle = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ toggle.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::toggle
-* @see app/Http/Controllers/EventController.php:1435
+* @see app/Http/Controllers/EventController.php:1444
 * @route '/a/{shareToken}/assets/{asset}/likes/toggle'
 */
 toggle.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ toggle.url = (args: { shareToken: string | number, asset: number | { id: number 
 
 /**
 * @see \App\Http\Controllers\EventController::toggle
-* @see app/Http/Controllers/EventController.php:1435
+* @see app/Http/Controllers/EventController.php:1444
 * @route '/a/{shareToken}/assets/{asset}/likes/toggle'
 */
 toggle.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -54,7 +54,7 @@ toggle.post = (args: { shareToken: string | number, asset: number | { id: number
 
 /**
 * @see \App\Http\Controllers\EventController::toggle
-* @see app/Http/Controllers/EventController.php:1435
+* @see app/Http/Controllers/EventController.php:1444
 * @route '/a/{shareToken}/assets/{asset}/likes/toggle'
 */
 const toggleForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -64,7 +64,7 @@ const toggleForm = (args: { shareToken: string | number, asset: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::toggle
-* @see app/Http/Controllers/EventController.php:1435
+* @see app/Http/Controllers/EventController.php:1444
 * @route '/a/{shareToken}/assets/{asset}/likes/toggle'
 */
 toggleForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

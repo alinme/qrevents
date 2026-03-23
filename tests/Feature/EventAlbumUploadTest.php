@@ -546,6 +546,22 @@ it('creates text posts when text media type is enabled', function () {
         ->and($asset?->metadata['text_color'] ?? null)->toBe($theme->text_color);
 });
 
+it('keeps text wishes enabled for legacy events that still use the old default media selection', function () {
+    $event = Event::factory()->create([
+        'branding' => [
+            'allowed_media_types' => ['photo', 'video'],
+        ],
+    ]);
+
+    $this->get(route('events.album', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Album')
+            ->where('allowTextPosts', true)
+            ->where('allowedMediaTypes', ['photo', 'video', 'text']),
+        );
+});
+
 it('groups album media collections by upload batch', function () {
     $event = Event::factory()->create();
 
@@ -1025,6 +1041,7 @@ it('rejects text posts when text media type is disabled', function () {
         'upload_window_ends_at' => now()->addHour(),
         'branding' => [
             'allowed_media_types' => ['photo', 'video'],
+            'allowed_media_types_version' => 2,
         ],
     ]);
 
