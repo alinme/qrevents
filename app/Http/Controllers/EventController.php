@@ -190,6 +190,81 @@ class EventController extends Controller
         return back()->with($created > 0 ? 'success' : 'info', $message);
     }
 
+    public function exportGuestLedger(Request $request, Event $event): StreamedResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        $filename = Str::of($event->name)
+            ->slug('-')
+            ->prepend('guest-ledger-')
+            ->append('-'.now()->format('Y-m-d').'.csv')
+            ->value();
+
+        $guestParties = $event->guestParties()
+            ->orderBy('name')
+            ->get();
+
+        return response()->streamDownload(function () use ($guestParties): void {
+            $handle = fopen('php://output', 'wb');
+
+            if (! is_resource($handle)) {
+                return;
+            }
+
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'Family / Name',
+                'Phone',
+                'Invited attendees',
+                'Confirmed attendees',
+                'Attendance status',
+                'Invitation status',
+                'Invitation delivery channel',
+                'Invitation delivered at',
+                'Invitation opens',
+                'First opened at',
+                'Last opened at',
+                'Responded at',
+                'Guest names',
+                'Meal preference',
+                'Notes',
+                'Response notes',
+                'Gift type',
+                'Gift currency',
+                'Gift amount',
+            ]);
+
+            foreach ($guestParties as $guestParty) {
+                fputcsv($handle, [
+                    $guestParty->name,
+                    $guestParty->phone,
+                    $guestParty->invited_attendees_count,
+                    $guestParty->confirmed_attendees_count,
+                    $guestParty->attendance_status,
+                    $guestParty->invitation_status,
+                    $guestParty->invitation_delivery_channel,
+                    $guestParty->invitation_delivered_at?->toDateTimeString(),
+                    $guestParty->invitation_open_count,
+                    $guestParty->invitation_first_opened_at?->toDateTimeString(),
+                    $guestParty->invitation_last_opened_at?->toDateTimeString(),
+                    $guestParty->responded_at?->toDateTimeString(),
+                    $guestParty->guest_names,
+                    $guestParty->meal_preference,
+                    $guestParty->notes,
+                    $guestParty->response_notes,
+                    $guestParty->gift_type,
+                    $guestParty->gift_currency,
+                    $guestParty->gift_amount,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     public function updateInvitationSettings(
         UpdateEventInvitationSettingsRequest $request,
         Event $event,
@@ -2245,6 +2320,7 @@ class EventController extends Controller
         return [
             'eventInvitationSettings' => $invitationSettings,
             'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
+            'guestLedgerExportUrl' => route('events.guests.export', $event),
             'guestPartyStats' => [
                 'partyCount' => $guestParties->count(),
                 'invitedAttendeesCount' => $guestParties->sum('invited_attendees_count'),

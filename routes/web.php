@@ -66,6 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('events/{event}/guests', [EventController::class, 'guests'])->name('events.guests');
     Route::post('events/{event}/guests', [EventController::class, 'storeGuestParty'])->name('events.guests.store');
     Route::post('events/{event}/guests/import', [EventController::class, 'importGuestParties'])->name('events.guests.import');
+    Route::get('events/{event}/guests/export', [EventController::class, 'exportGuestLedger'])->name('events.guests.export');
     Route::patch('events/{event}/guests/invitation-settings', [EventController::class, 'updateInvitationSettings'])->name('events.guests.invitation-settings.update');
     Route::patch('events/{event}/guests/{guestParty}', [EventController::class, 'updateGuestParty'])->name('events.guests.update');
     Route::delete('events/{event}/guests/{guestParty}', [EventController::class, 'destroyGuestParty'])->name('events.guests.destroy');

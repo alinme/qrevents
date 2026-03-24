@@ -4,6 +4,7 @@ import {
     CheckCircle2,
     Clock3,
     Copy,
+    Download,
     ExternalLink,
     Import,
     Pencil,
@@ -110,6 +111,7 @@ const props = defineProps<{
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
+    guestLedgerExportUrl: string;
     guestPartyStats: GuestPartyStats;
     guestParties: GuestParty[];
 }>();
@@ -301,6 +303,10 @@ const saveInvitationSettings = (): void => {
     });
 };
 
+const exportGuestLedger = (): void => {
+    window.location.assign(props.guestLedgerExportUrl);
+};
+
 const copyLink = async (url: string, label: string): Promise<void> => {
     try {
         await navigator.clipboard.writeText(url);
@@ -418,6 +424,10 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row">
+                    <Button variant="outline" class="h-11 rounded-full px-5" @click="exportGuestLedger">
+                        <Download class="mr-2 size-4" />
+                        Export ledger
+                    </Button>
                     <Button class="h-11 rounded-full px-5" @click="importDialogOpen = true">
                         <Import class="mr-2 size-4" />
                         Import guest list

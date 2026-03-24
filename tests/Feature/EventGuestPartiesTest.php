@@ -104,6 +104,42 @@ it('imports guest parties from messy pasted text and skips duplicates', function
         ->and($james?->invited_attendees_count)->toBe(4);
 });
 
+it('exports the guest ledger as csv for the event owner', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Benjamin & Rebecca Wedding',
+    ]);
+
+    EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'phone' => '0722123456',
+        'invited_attendees_count' => 4,
+        'confirmed_attendees_count' => 4,
+        'attendance_status' => 'accepted',
+        'guest_names' => 'Marcel, Ana, Vlad, Ioana',
+        'meal_preference' => 'halal',
+        'response_notes' => 'Arriving after church.',
+        'gift_type' => 'money',
+        'gift_currency' => 'EUR',
+        'gift_amount' => 450,
+    ]);
+
+    $response = $this->actingAs($owner)
+        ->get(route('events.guests.export', $event));
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $content = $response->streamedContent();
+
+    expect($response->headers->get('content-disposition'))->toContain('guest-ledger-benjamin-rebecca-wedding-')
+        ->and($content)->toContain('Family / Name')
+        ->and($content)->toContain('Familia Popescu')
+        ->and($content)->toContain('0722123456')
+        ->and($content)->toContain('Marcel, Ana, Vlad, Ioana')
+        ->and($content)->toContain('450.00');
+});
+
 it('forbids another user from managing guest parties', function () {
     $owner = User::factory()->create();
     $otherUser = User::factory()->create();
