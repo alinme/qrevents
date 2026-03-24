@@ -661,7 +661,7 @@ watch(
                         :style="textPostSurfaceStyle(currentAsset)"
                     >
                         <p
-                            class="max-w-4xl whitespace-pre-wrap text-[2rem] font-semibold leading-[1.22] sm:text-[2.6rem] lg:text-[3.4rem]"
+                            class="max-w-5xl whitespace-pre-wrap text-[2.6rem] font-semibold leading-[1.16] sm:text-[3.4rem] lg:text-[4.6rem]"
                             :style="textPostTextStyle(currentAsset)"
                         >
                             {{ currentAsset.text || t('public.wall.text_post') }}
