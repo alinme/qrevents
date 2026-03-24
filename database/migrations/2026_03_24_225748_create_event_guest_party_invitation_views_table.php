@@ -18,8 +18,8 @@ return new class extends Migration
             $table->timestamp('opened_at');
             $table->timestamps();
 
-            $table->index(['event_id', 'invitation_kind', 'opened_at']);
-            $table->index(['event_guest_party_id', 'opened_at']);
+            $table->index(['event_id', 'invitation_kind', 'opened_at'], 'egpiv_event_kind_opened_idx');
+            $table->index(['event_guest_party_id', 'opened_at'], 'egpiv_party_opened_idx');
         });
     }
 
