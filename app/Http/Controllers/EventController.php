@@ -41,6 +41,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -104,6 +105,16 @@ class EventController extends Controller
         $this->assertCanManageEvent($request, $event);
 
         return Inertia::render('events/Guests', [
+            ...$this->eventProps($request, $event),
+            ...$this->guestPartyProps($event),
+        ]);
+    }
+
+    public function guestReport(Request $request, Event $event): Response
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        return Inertia::render('events/GuestReport', [
             ...$this->eventProps($request, $event),
             ...$this->guestPartyProps($event),
         ]);
@@ -2254,6 +2265,7 @@ class EventController extends Controller
                 'accountDashboard' => $showEventOverviewLink ? route('dashboard.account') : null,
                 'dashboard' => route('events.show', $event),
                 'guests' => route('events.guests', $event),
+                'guestReport' => route('events.guests.report', $event),
                 'media' => route('events.media', $event),
                 'mediaExportStart' => route('events.exports.media.start', $event),
                 'mediaExportDownload' => route('events.exports.media.download', $event),
@@ -2350,27 +2362,15 @@ class EventController extends Controller
         $guestParties = $event->guestParties()
             ->orderBy('name')
             ->get();
-
-        $moneyGiftTotal = $guestParties
-            ->filter(fn (EventGuestParty $party): bool => $party->gift_type === 'money' && $party->gift_amount !== null)
-            ->reduce(fn (float $carry, EventGuestParty $party): float => $carry + (float) $party->gift_amount, 0.0);
+        $stats = $this->guestPartyStatsPayload($event, $guestParties);
+        $report = $this->guestPartyReportPayload($guestParties);
 
         return [
             'eventInvitationSettings' => $invitationSettings,
             'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
             'guestLedgerExportUrl' => route('events.guests.export', $event),
-            'guestPartyStats' => [
-                'partyCount' => $guestParties->count(),
-                'invitedAttendeesCount' => $guestParties->sum('invited_attendees_count'),
-                'confirmedAttendeesCount' => $guestParties->sum(
-                    fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0),
-                ),
-                'acceptedPartyCount' => $guestParties->where('attendance_status', 'accepted')->count(),
-                'pendingPartyCount' => $guestParties->where('attendance_status', 'pending')->count(),
-                'declinedPartyCount' => $guestParties->where('attendance_status', 'declined')->count(),
-                'moneyGiftTotal' => round($moneyGiftTotal, 2),
-                'moneyGiftCurrency' => $event->currency ?: 'EUR',
-            ],
+            'guestPartyStats' => $stats,
+            'guestReport' => $report,
             'guestParties' => $guestParties
                 ->map(fn (EventGuestParty $party): array => [
                     'id' => $party->id,
@@ -2401,6 +2401,127 @@ class EventController extends Controller
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @param  Collection<int, EventGuestParty>  $guestParties
+     * @return array{
+     *   partyCount: int,
+     *   invitedAttendeesCount: int,
+     *   confirmedAttendeesCount: int,
+     *   acceptedPartyCount: int,
+     *   pendingPartyCount: int,
+     *   declinedPartyCount: int,
+     *   moneyGiftTotal: float,
+     *   moneyGiftCurrency: string
+     * }
+     */
+    private function guestPartyStatsPayload(Event $event, Collection $guestParties): array
+    {
+        $moneyGiftTotal = $guestParties
+            ->filter(fn (EventGuestParty $party): bool => $party->gift_type === 'money' && $party->gift_amount !== null)
+            ->reduce(fn (float $carry, EventGuestParty $party): float => $carry + (float) $party->gift_amount, 0.0);
+
+        return [
+            'partyCount' => $guestParties->count(),
+            'invitedAttendeesCount' => $guestParties->sum('invited_attendees_count'),
+            'confirmedAttendeesCount' => $guestParties->sum(
+                fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0),
+            ),
+            'acceptedPartyCount' => $guestParties->where('attendance_status', 'accepted')->count(),
+            'pendingPartyCount' => $guestParties->where('attendance_status', 'pending')->count(),
+            'declinedPartyCount' => $guestParties->where('attendance_status', 'declined')->count(),
+            'moneyGiftTotal' => round($moneyGiftTotal, 2),
+            'moneyGiftCurrency' => $event->currency ?: 'EUR',
+        ];
+    }
+
+    /**
+     * @param  Collection<int, EventGuestParty>  $guestParties
+     * @return array<string, mixed>
+     */
+    private function guestPartyReportPayload(Collection $guestParties): array
+    {
+        $deliveredStatuses = ['delivered_in_person', 'sent', 'opened', 'responded'];
+        $sentStatuses = ['sent', 'opened', 'responded'];
+        $openedParties = $guestParties->filter(
+            fn (EventGuestParty $party): bool => $party->invitation_open_count > 0 || in_array($party->invitation_status, ['opened', 'responded'], true),
+        );
+        $respondedParties = $guestParties->filter(
+            fn (EventGuestParty $party): bool => $party->responded_at !== null || $party->invitation_status === 'responded',
+        );
+        $giftRecordedParties = $guestParties->filter(
+            fn (EventGuestParty $party): bool => $party->gift_type !== null,
+        );
+        $acceptedParties = $guestParties->where('attendance_status', 'accepted');
+
+        return [
+            'deliveredPartyCount' => $guestParties->whereIn('invitation_status', $deliveredStatuses)->count(),
+            'sentOnlinePartyCount' => $guestParties->filter(
+                fn (EventGuestParty $party): bool => in_array($party->invitation_status, $sentStatuses, true)
+                    || in_array($party->invitation_delivery_channel, ['whatsapp', 'facebook', 'public_link', 'other'], true),
+            )->count(),
+            'openedPartyCount' => $openedParties->count(),
+            'respondedPartyCount' => $respondedParties->count(),
+            'giftRecordedPartyCount' => $giftRecordedParties->count(),
+            'responseRate' => $guestParties->count() > 0
+                ? round(($respondedParties->count() / $guestParties->count()) * 100, 1)
+                : 0.0,
+            'attendanceFillRate' => $guestParties->sum('invited_attendees_count') > 0
+                ? round(($guestParties->sum(fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0)) / $guestParties->sum('invited_attendees_count')) * 100, 1)
+                : 0.0,
+            'averageMoneyGiftPerAcceptedParty' => $acceptedParties->count() > 0
+                ? round(
+                    $acceptedParties
+                        ->filter(fn (EventGuestParty $party): bool => $party->gift_type === 'money' && $party->gift_amount !== null)
+                        ->sum(fn (EventGuestParty $party): float => (float) $party->gift_amount) / $acceptedParties->count(),
+                    2,
+                )
+                : 0.0,
+            'moneyGiftTotals' => $this->guestMoneyGiftTotals($guestParties),
+            'recentResponses' => $respondedParties
+                ->sortByDesc(fn (EventGuestParty $party): int => $party->responded_at?->getTimestamp() ?? 0)
+                ->take(8)
+                ->values()
+                ->map(fn (EventGuestParty $party): array => [
+                    'name' => $party->name,
+                    'attendanceStatus' => $party->attendance_status,
+                    'confirmedAttendeesCount' => $party->confirmed_attendees_count,
+                    'respondedAt' => $party->responded_at?->toIso8601String(),
+                    'mealPreference' => $party->meal_preference,
+                    'responseNotes' => $party->response_notes,
+                ])
+                ->all(),
+            'recentInvitationOpens' => $openedParties
+                ->sortByDesc(fn (EventGuestParty $party): int => $party->invitation_last_opened_at?->getTimestamp() ?? 0)
+                ->take(8)
+                ->values()
+                ->map(fn (EventGuestParty $party): array => [
+                    'name' => $party->name,
+                    'invitationOpenCount' => $party->invitation_open_count,
+                    'invitationLastOpenedAt' => $party->invitation_last_opened_at?->toIso8601String(),
+                    'invitationLastOpenedIp' => $party->invitation_last_opened_ip,
+                    'invitationDeliveryChannel' => $party->invitation_delivery_channel,
+                ])
+                ->all(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, EventGuestParty>  $guestParties
+     * @return array<int, array{currency: string, amount: float}>
+     */
+    private function guestMoneyGiftTotals(Collection $guestParties): array
+    {
+        return $guestParties
+            ->filter(fn (EventGuestParty $party): bool => $party->gift_type === 'money' && $party->gift_amount !== null && $party->gift_currency !== null)
+            ->groupBy(fn (EventGuestParty $party): string => (string) $party->gift_currency)
+            ->map(fn (Collection $parties, string $currency): array => [
+                'currency' => $currency,
+                'amount' => round($parties->sum(fn (EventGuestParty $party): float => (float) $party->gift_amount), 2),
+            ])
+            ->values()
+            ->all();
     }
 
     /**

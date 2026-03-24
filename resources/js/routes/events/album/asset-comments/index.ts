@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 export const index = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 index.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ index.url = (args: { shareToken: string | number, asset: number | { id: number }
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 index.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.get = (args: { shareToken: string | number, asset: number | { id: number }
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 index.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -64,7 +64,7 @@ index.head = (args: { shareToken: string | number, asset: number | { id: number 
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 const indexForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -74,7 +74,7 @@ const indexForm = (args: { shareToken: string | number, asset: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 indexForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -84,7 +84,7 @@ indexForm.get = (args: { shareToken: string | number, asset: number | { id: numb
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:1840
+* @see app/Http/Controllers/EventController.php:1851
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 indexForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -101,7 +101,7 @@ index.form = indexForm
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:1874
+* @see app/Http/Controllers/EventController.php:1885
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 export const store = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -116,7 +116,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:1874
+* @see app/Http/Controllers/EventController.php:1885
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 store.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -144,7 +144,7 @@ store.url = (args: { shareToken: string | number, asset: number | { id: number }
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:1874
+* @see app/Http/Controllers/EventController.php:1885
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 store.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -154,7 +154,7 @@ store.post = (args: { shareToken: string | number, asset: number | { id: number 
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:1874
+* @see app/Http/Controllers/EventController.php:1885
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 const storeForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -164,7 +164,7 @@ const storeForm = (args: { shareToken: string | number, asset: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:1874
+* @see app/Http/Controllers/EventController.php:1885
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
 storeForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -27,11 +27,54 @@ it('shows the guest parties page for an event owner', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('events/Guests')
             ->where('currentEvent.id', $event->id)
+            ->where('eventLinks.guestReport', route('events.guests.report', $event))
             ->where('guestPartyStats.partyCount', 1)
             ->where('guestPartyStats.invitedAttendeesCount', 4)
             ->where('guestPartyStats.confirmedAttendeesCount', 4)
             ->where('guestPartyStats.moneyGiftTotal', 300)
             ->has('guestParties', 1)
+            ->where('guestParties.0.name', 'Familia Popescu')
+        );
+});
+
+it('shows the printable guest report for an event owner', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'currency' => 'EUR',
+    ]);
+
+    EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'phone' => '0722123456',
+        'invited_attendees_count' => 4,
+        'confirmed_attendees_count' => 4,
+        'attendance_status' => 'accepted',
+        'invitation_status' => 'responded',
+        'invitation_delivery_channel' => 'whatsapp',
+        'invitation_open_count' => 3,
+        'invitation_last_opened_at' => now()->subHour(),
+        'invitation_last_opened_ip' => '82.77.18.9',
+        'responded_at' => now()->subMinutes(30),
+        'gift_type' => 'money',
+        'gift_currency' => 'EUR',
+        'gift_amount' => 450,
+        'meal_preference' => 'halal',
+        'response_notes' => 'Will arrive after the church moment.',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('events.guests.report', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/GuestReport')
+            ->where('currentEvent.id', $event->id)
+            ->where('guestReport.respondedPartyCount', 1)
+            ->where('guestReport.openedPartyCount', 1)
+            ->where('guestReport.giftRecordedPartyCount', 1)
+            ->where('guestReport.moneyGiftTotals.0.currency', 'EUR')
+            ->where('guestReport.moneyGiftTotals.0.amount', 450)
+            ->where('guestReport.recentResponses.0.name', 'Familia Popescu')
+            ->where('guestReport.recentInvitationOpens.0.invitationLastOpenedIp', '82.77.18.9')
             ->where('guestParties.0.name', 'Familia Popescu')
         );
 });
@@ -187,5 +230,9 @@ it('forbids another user from managing guest parties', function () {
             'attendance_status' => 'pending',
             'invitation_status' => 'draft',
         ])
+        ->assertForbidden();
+
+    $this->actingAs($otherUser)
+        ->get(route('events.guests.report', $event))
         ->assertForbidden();
 });

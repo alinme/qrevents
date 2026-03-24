@@ -9,6 +9,7 @@ import {
     Import,
     Pencil,
     Phone,
+    Printer,
     ScrollText,
     SendHorizontal,
     Trash2,
@@ -55,6 +56,7 @@ type EventPayload = {
 
 type EventLinks = {
     guests: string;
+    guestReport: string;
     guestPartiesStore: string;
     guestPartiesImport: string;
     guestInvitationsBulkUpdate: string;
@@ -342,6 +344,10 @@ const exportGuestLedger = (): void => {
     window.location.assign(props.guestLedgerExportUrl);
 };
 
+const openGuestReport = (): void => {
+    window.open(props.eventLinks.guestReport, '_blank', 'noopener,noreferrer');
+};
+
 const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
     if (checked) {
         selectedGuestIds.value = Array.from(new Set([...selectedGuestIds.value, guestPartyId]));
@@ -591,6 +597,10 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row">
+                    <Button variant="outline" class="h-11 rounded-full px-5" @click="openGuestReport">
+                        <Printer class="mr-2 size-4" />
+                        Open report
+                    </Button>
                     <Button variant="outline" class="h-11 rounded-full px-5" @click="exportGuestLedger">
                         <Download class="mr-2 size-4" />
                         Export ledger

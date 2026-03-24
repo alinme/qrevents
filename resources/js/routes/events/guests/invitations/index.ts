@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::bulkUpdate
-* @see app/Http/Controllers/EventController.php:269
+* @see app/Http/Controllers/EventController.php:280
 * @route '/events/{event}/guests/invitations/bulk-update'
 */
 export const bulkUpdate = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ bulkUpdate.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::bulkUpdate
-* @see app/Http/Controllers/EventController.php:269
+* @see app/Http/Controllers/EventController.php:280
 * @route '/events/{event}/guests/invitations/bulk-update'
 */
 bulkUpdate.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ bulkUpdate.url = (args: { event: number | { id: number } } | [event: number | { 
 
 /**
 * @see \App\Http\Controllers\EventController::bulkUpdate
-* @see app/Http/Controllers/EventController.php:269
+* @see app/Http/Controllers/EventController.php:280
 * @route '/events/{event}/guests/invitations/bulk-update'
 */
 bulkUpdate.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ bulkUpdate.post = (args: { event: number | { id: number } } | [event: number | {
 
 /**
 * @see \App\Http\Controllers\EventController::bulkUpdate
-* @see app/Http/Controllers/EventController.php:269
+* @see app/Http/Controllers/EventController.php:280
 * @route '/events/{event}/guests/invitations/bulk-update'
 */
 const bulkUpdateForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -69,7 +69,7 @@ const bulkUpdateForm = (args: { event: number | { id: number } } | [event: numbe
 
 /**
 * @see \App\Http\Controllers\EventController::bulkUpdate
-* @see app/Http/Controllers/EventController.php:269
+* @see app/Http/Controllers/EventController.php:280
 * @route '/events/{event}/guests/invitations/bulk-update'
 */
 bulkUpdateForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
