@@ -5765,13 +5765,13 @@ const onAlbumTouchCancel = (): void => {
                 </header>
 
                 <div
-                    class="flex h-screen w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))]"
+                    class="box-border flex h-[100dvh] w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))]"
                     @touchstart.passive="onViewerTouchStart"
                     @touchmove.passive="onViewerTouchMove"
                     @touchend.passive="onViewerTouchEnd"
                     @touchcancel.passive="onViewerTouchCancel"
                 >
-                    <div class="flex h-full w-full items-center justify-center overflow-hidden">
+                    <div class="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
                         <img
                             v-if="selectedAsset.kind === 'photo' && selectedAsset.previewUrl"
                             :src="selectedAsset.previewUrl"
