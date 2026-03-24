@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateEventCheckoutSessionRequest;
+use App\Http\Requests\ImportEventGuestPartiesRequest;
 use App\Http\Requests\UpdateEventBillingRequest;
+use App\Http\Requests\UpsertEventGuestPartyRequest;
 use App\Jobs\GenerateEventAssetImageVariants;
 use App\Jobs\GenerateEventAssetVideoThumbnails;
 use App\Jobs\GenerateEventMediaExport;
@@ -14,11 +16,13 @@ use App\Models\EventAssetCommentLike;
 use App\Models\EventAssetLike;
 use App\Models\EventCollaborator;
 use App\Models\EventGuest;
+use App\Models\EventGuestParty;
 use App\Models\Plan;
 use App\Models\TextPostTheme;
 use App\Models\User;
 use App\Notifications\EventCollaboratorInviteNotification;
 use App\Support\EventBillingManager;
+use App\Support\EventGuestPartyImportParser;
 use App\Support\EventLifecycleWindows;
 use App\Support\FrontendLocalization;
 use App\Support\StripeCheckoutGateway;
@@ -88,6 +92,98 @@ class EventController extends Controller
                 || $request->user()->id === $event->user_id
                 || ($membership !== null && $membership->role === 'manager'),
         ]);
+    }
+
+    public function guests(Request $request, Event $event): Response
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        return Inertia::render('events/Guests', [
+            ...$this->eventProps($request, $event),
+            ...$this->guestPartyProps($event),
+        ]);
+    }
+
+    public function storeGuestParty(UpsertEventGuestPartyRequest $request, Event $event): RedirectResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        $event->guestParties()->create([
+            ...$request->payload(),
+            'invitation_token' => (string) Str::lower((string) Str::uuid()),
+        ]);
+
+        return back()->with('success', 'Guest party added.');
+    }
+
+    public function updateGuestParty(
+        UpsertEventGuestPartyRequest $request,
+        Event $event,
+        EventGuestParty $guestParty,
+    ): RedirectResponse {
+        $this->assertCanManageEvent($request, $event);
+        abort_unless($guestParty->event_id === $event->id, 404);
+
+        $guestParty->update($request->payload());
+
+        return back()->with('success', 'Guest party updated.');
+    }
+
+    public function destroyGuestParty(Request $request, Event $event, EventGuestParty $guestParty): RedirectResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+        abort_unless($guestParty->event_id === $event->id, 404);
+
+        $guestParty->delete();
+
+        return back()->with('success', 'Guest party removed.');
+    }
+
+    public function importGuestParties(
+        ImportEventGuestPartiesRequest $request,
+        Event $event,
+        EventGuestPartyImportParser $parser,
+    ): RedirectResponse {
+        $this->assertCanManageEvent($request, $event);
+
+        $rows = $parser->parse($request->importContents());
+        if ($rows === []) {
+            return back()->with('error', 'No guests could be parsed from that import.');
+        }
+
+        $existingKeys = $event->guestParties()
+            ->get(['name', 'phone'])
+            ->map(fn (EventGuestParty $party): string => $this->guestPartyDuplicateKey($party->name, $party->phone))
+            ->all();
+
+        $created = 0;
+        $skipped = 0;
+
+        foreach ($rows as $row) {
+            $duplicateKey = $this->guestPartyDuplicateKey($row['name'], $row['phone']);
+            if (in_array($duplicateKey, $existingKeys, true)) {
+                $skipped++;
+
+                continue;
+            }
+
+            $event->guestParties()->create([
+                ...$row,
+                'attendance_status' => 'pending',
+                'invitation_status' => 'draft',
+                'invitation_token' => (string) Str::lower((string) Str::uuid()),
+            ]);
+
+            $existingKeys[] = $duplicateKey;
+            $created++;
+        }
+
+        $message = "{$created} guest ".($created === 1 ? 'party' : 'parties').' imported.';
+        if ($skipped > 0) {
+            $message .= " {$skipped} duplicate ".($skipped === 1 ? 'entry was' : 'entries were').' skipped.';
+        }
+
+        return back()->with($created > 0 ? 'success' : 'info', $message);
     }
 
     public function startMediaExport(Request $request, Event $event): RedirectResponse
@@ -1920,11 +2016,14 @@ class EventController extends Controller
             'eventLinks' => [
                 'accountDashboard' => $showEventOverviewLink ? route('dashboard.account') : null,
                 'dashboard' => route('events.show', $event),
+                'guests' => route('events.guests', $event),
                 'media' => route('events.media', $event),
                 'mediaExportStart' => route('events.exports.media.start', $event),
                 'mediaExportDownload' => route('events.exports.media.download', $event),
                 'settings' => route('events.settings', $event),
                 'settingsUpdate' => route('events.settings.update', $event),
+                'guestPartiesStore' => route('events.guests.store', $event),
+                'guestPartiesImport' => route('events.guests.import', $event),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
@@ -1937,6 +2036,7 @@ class EventController extends Controller
             'eventNavigation' => array_values(array_filter([
                 $showEventOverviewLink ? ['title' => 'Events', 'href' => route('dashboard.account')] : null,
                 ['title' => 'Workspace', 'href' => route('events.show', $event)],
+                ['title' => 'Guests', 'href' => route('events.guests', $event)],
                 ['title' => 'Media', 'href' => route('events.media', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
             ])),
@@ -1996,6 +2096,60 @@ class EventController extends Controller
                         'createdAt' => $asset->created_at?->toIso8601String(),
                     ];
                 })
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function guestPartyProps(Event $event): array
+    {
+        $guestParties = $event->guestParties()
+            ->orderBy('name')
+            ->get();
+
+        $moneyGiftTotal = $guestParties
+            ->filter(fn (EventGuestParty $party): bool => $party->gift_type === 'money' && $party->gift_amount !== null)
+            ->reduce(fn (float $carry, EventGuestParty $party): float => $carry + (float) $party->gift_amount, 0.0);
+
+        return [
+            'guestPartyStats' => [
+                'partyCount' => $guestParties->count(),
+                'invitedAttendeesCount' => $guestParties->sum('invited_attendees_count'),
+                'confirmedAttendeesCount' => $guestParties->sum(
+                    fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0),
+                ),
+                'acceptedPartyCount' => $guestParties->where('attendance_status', 'accepted')->count(),
+                'pendingPartyCount' => $guestParties->where('attendance_status', 'pending')->count(),
+                'declinedPartyCount' => $guestParties->where('attendance_status', 'declined')->count(),
+                'moneyGiftTotal' => round($moneyGiftTotal, 2),
+                'moneyGiftCurrency' => $event->currency ?: 'EUR',
+            ],
+            'guestParties' => $guestParties
+                ->map(fn (EventGuestParty $party): array => [
+                    'id' => $party->id,
+                    'name' => $party->name,
+                    'phone' => $party->phone,
+                    'invitedAttendeesCount' => $party->invited_attendees_count,
+                    'confirmedAttendeesCount' => $party->confirmed_attendees_count,
+                    'attendanceStatus' => $party->attendance_status,
+                    'notes' => $party->notes,
+                    'invitationStatus' => $party->invitation_status,
+                    'invitationDeliveryChannel' => $party->invitation_delivery_channel,
+                    'invitationDeliveredAt' => $party->invitation_delivered_at?->toIso8601String(),
+                    'invitationOpenCount' => $party->invitation_open_count,
+                    'invitationFirstOpenedAt' => $party->invitation_first_opened_at?->toIso8601String(),
+                    'invitationLastOpenedAt' => $party->invitation_last_opened_at?->toIso8601String(),
+                    'invitationLastOpenedIp' => $party->invitation_last_opened_ip,
+                    'respondedAt' => $party->responded_at?->toIso8601String(),
+                    'giftType' => $party->gift_type,
+                    'giftCurrency' => $party->gift_currency,
+                    'giftAmount' => $party->gift_amount !== null ? (string) $party->gift_amount : null,
+                    'updateUrl' => route('events.guests.update', [$event, $party]),
+                    'deleteUrl' => route('events.guests.destroy', [$event, $party]),
+                ])
                 ->values()
                 ->all(),
         ];
@@ -2224,6 +2378,11 @@ class EventController extends Controller
             ->pluck('event_id');
 
         return $ownedEventIds->count() + $collaboratorEventIds->count() > 1;
+    }
+
+    private function guestPartyDuplicateKey(string $name, ?string $phone): string
+    {
+        return Str::lower(trim($name)).'|'.preg_replace('/\D+/', '', (string) $phone);
     }
 
     private function isUploadWindowOpen(Event $event): bool

@@ -63,6 +63,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('admin/events/{event}/cleanup', [AdminController::class, 'cleanupEvent'])->name('admin.events.cleanup');
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::get('events/{event}/guests', [EventController::class, 'guests'])->name('events.guests');
+    Route::post('events/{event}/guests', [EventController::class, 'storeGuestParty'])->name('events.guests.store');
+    Route::post('events/{event}/guests/import', [EventController::class, 'importGuestParties'])->name('events.guests.import');
+    Route::patch('events/{event}/guests/{guestParty}', [EventController::class, 'updateGuestParty'])->name('events.guests.update');
+    Route::delete('events/{event}/guests/{guestParty}', [EventController::class, 'destroyGuestParty'])->name('events.guests.destroy');
     Route::get('events/{event}/media', [EventController::class, 'media'])->name('events.media');
     Route::post('events/{event}/exports/media', [EventController::class, 'startMediaExport'])->name('events.exports.media.start');
     Route::get('events/{event}/exports/media/download', [EventController::class, 'downloadMediaExport'])->name('events.exports.media.download');

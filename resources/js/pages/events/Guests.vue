@@ -1,0 +1,723 @@
+<script setup lang="ts">
+import { Head, useForm } from '@inertiajs/vue3';
+import {
+    CheckCircle2,
+    Clock3,
+    Import,
+    Pencil,
+    Phone,
+    Trash2,
+    UserPlus,
+    Users,
+    Wallet,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+
+type EventPayload = {
+    id: number;
+    name: string;
+};
+
+type EventLinks = {
+    guests: string;
+    guestPartiesStore: string;
+    guestPartiesImport: string;
+};
+
+type GuestParty = {
+    id: number;
+    name: string;
+    phone: string | null;
+    invitedAttendeesCount: number;
+    confirmedAttendeesCount: number | null;
+    attendanceStatus: 'pending' | 'accepted' | 'declined';
+    notes: string | null;
+    invitationStatus: 'draft' | 'delivered_in_person' | 'sent' | 'opened' | 'responded';
+    invitationDeliveryChannel: string | null;
+    invitationDeliveredAt: string | null;
+    invitationOpenCount: number;
+    invitationFirstOpenedAt: string | null;
+    invitationLastOpenedAt: string | null;
+    invitationLastOpenedIp: string | null;
+    respondedAt: string | null;
+    giftType: 'money' | 'gift' | null;
+    giftCurrency: 'EUR' | 'GBP' | 'RON' | null;
+    giftAmount: string | null;
+    updateUrl: string;
+    deleteUrl: string;
+};
+
+type GuestPartyStats = {
+    partyCount: number;
+    invitedAttendeesCount: number;
+    confirmedAttendeesCount: number;
+    acceptedPartyCount: number;
+    pendingPartyCount: number;
+    declinedPartyCount: number;
+    moneyGiftTotal: number;
+    moneyGiftCurrency: string;
+};
+
+const props = defineProps<{
+    currentEvent: EventPayload;
+    eventLinks: EventLinks;
+    guestPartyStats: GuestPartyStats;
+    guestParties: GuestParty[];
+}>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: props.currentEvent.name,
+        href: props.eventLinks.guests,
+    },
+    {
+        title: 'Guests',
+        href: props.eventLinks.guests,
+    },
+];
+
+const guestDialogOpen = ref(false);
+const importDialogOpen = ref(false);
+const deleteDialogOpen = ref(false);
+const activeGuestParty = ref<GuestParty | null>(null);
+
+const guestForm = useForm({
+    name: '',
+    phone: '',
+    invited_attendees_count: 1,
+    confirmed_attendees_count: '',
+    attendance_status: 'pending',
+    notes: '',
+    invitation_status: 'draft',
+    invitation_delivery_channel: '',
+    gift_type: '',
+    gift_currency: 'EUR',
+    gift_amount: '',
+});
+
+const importForm = useForm<{
+    import_text: string;
+    import_file: File | null;
+}>({
+    import_text: '',
+    import_file: null,
+});
+
+const isEditing = computed(() => activeGuestParty.value !== null);
+const showGiftAmount = computed(() => guestForm.gift_type === 'money');
+const showConfirmedCount = computed(() => guestForm.attendance_status === 'accepted');
+
+const statCards = computed(() => [
+    {
+        label: 'Guest parties',
+        value: props.guestPartyStats.partyCount,
+        detail: 'Families or named invite groups',
+        icon: Users,
+    },
+    {
+        label: 'Invited seats',
+        value: props.guestPartyStats.invitedAttendeesCount,
+        detail: 'Expected people across all parties',
+        icon: UserPlus,
+    },
+    {
+        label: 'Confirmed seats',
+        value: props.guestPartyStats.confirmedAttendeesCount,
+        detail: `${props.guestPartyStats.acceptedPartyCount} parties accepted`,
+        icon: CheckCircle2,
+    },
+    {
+        label: 'Gift ledger',
+        value: formatMoney(
+            props.guestPartyStats.moneyGiftTotal,
+            props.guestPartyStats.moneyGiftCurrency,
+        ),
+        detail: `${props.guestPartyStats.pendingPartyCount} still waiting to answer`,
+        icon: Wallet,
+    },
+]);
+
+const openCreateDialog = (): void => {
+    activeGuestParty.value = null;
+    guestForm.reset();
+    guestForm.clearErrors();
+    guestForm.attendance_status = 'pending';
+    guestForm.invitation_status = 'draft';
+    guestForm.invited_attendees_count = 1;
+    guestForm.gift_currency = 'EUR';
+    guestDialogOpen.value = true;
+};
+
+const openEditDialog = (party: GuestParty): void => {
+    activeGuestParty.value = party;
+    guestForm.clearErrors();
+    guestForm.name = party.name;
+    guestForm.phone = party.phone ?? '';
+    guestForm.invited_attendees_count = party.invitedAttendeesCount;
+    guestForm.confirmed_attendees_count = party.confirmedAttendeesCount?.toString() ?? '';
+    guestForm.attendance_status = party.attendanceStatus;
+    guestForm.notes = party.notes ?? '';
+    guestForm.invitation_status = party.invitationStatus;
+    guestForm.invitation_delivery_channel = party.invitationDeliveryChannel ?? '';
+    guestForm.gift_type = party.giftType ?? '';
+    guestForm.gift_currency = party.giftCurrency ?? 'EUR';
+    guestForm.gift_amount = party.giftAmount ?? '';
+    guestDialogOpen.value = true;
+};
+
+const confirmDelete = (party: GuestParty): void => {
+    activeGuestParty.value = party;
+    deleteDialogOpen.value = true;
+};
+
+const saveGuestParty = (): void => {
+    const payload = {
+        ...guestForm.data(),
+        confirmed_attendees_count: guestForm.confirmed_attendees_count === ''
+            ? null
+            : Number(guestForm.confirmed_attendees_count),
+        invitation_delivery_channel: guestForm.invitation_delivery_channel || null,
+        gift_type: guestForm.gift_type || null,
+        gift_currency: guestForm.gift_type === 'money' ? guestForm.gift_currency : null,
+        gift_amount: guestForm.gift_type === 'money' ? guestForm.gift_amount : null,
+    };
+
+    if (activeGuestParty.value) {
+        guestForm.transform(() => payload).patch(activeGuestParty.value.updateUrl, {
+            preserveScroll: true,
+            onSuccess: () => {
+                guestDialogOpen.value = false;
+                activeGuestParty.value = null;
+            },
+        });
+
+        return;
+    }
+
+    guestForm.transform(() => payload).post(props.eventLinks.guestPartiesStore, {
+        preserveScroll: true,
+        onSuccess: () => {
+            guestDialogOpen.value = false;
+            guestForm.reset();
+        },
+    });
+};
+
+const deleteGuestParty = (): void => {
+    if (!activeGuestParty.value) {
+        return;
+    }
+
+    guestForm.delete(activeGuestParty.value.deleteUrl, {
+        preserveScroll: true,
+        onSuccess: () => {
+            deleteDialogOpen.value = false;
+            activeGuestParty.value = null;
+        },
+    });
+};
+
+const importGuestParties = (): void => {
+    importForm.post(props.eventLinks.guestPartiesImport, {
+        preserveScroll: true,
+        forceFormData: importForm.import_file !== null,
+        onSuccess: () => {
+            importDialogOpen.value = false;
+            importForm.reset();
+        },
+    });
+};
+
+const onImportFileChange = (event: Event): void => {
+    const input = event.target as HTMLInputElement;
+    importForm.import_file = input.files?.[0] ?? null;
+};
+
+const formatDateTime = (value: string | null): string => {
+    if (!value) {
+        return 'Not yet';
+    }
+
+    return new Intl.DateTimeFormat('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
+};
+
+const formatMoney = (value: number, currency: string): string => {
+    return new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 2,
+    }).format(value);
+};
+
+const attendanceBadgeClass = (status: GuestParty['attendanceStatus']): string => {
+    if (status === 'accepted') {
+        return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    }
+
+    if (status === 'declined') {
+        return 'border-rose-200 bg-rose-50 text-rose-700';
+    }
+
+    return 'border-amber-200 bg-amber-50 text-amber-700';
+};
+
+const attendanceLabel = (status: GuestParty['attendanceStatus']): string => {
+    if (status === 'accepted') {
+        return 'Accepted';
+    }
+
+    if (status === 'declined') {
+        return 'Declined';
+    }
+
+    return 'Waiting';
+};
+
+const invitationLabel = (status: GuestParty['invitationStatus']): string => {
+    return {
+        draft: 'Draft',
+        delivered_in_person: 'Delivered in person',
+        sent: 'Sent',
+        opened: 'Opened',
+        responded: 'Responded',
+    }[status];
+};
+
+const giftLabel = (party: GuestParty): string => {
+    if (party.giftType === 'money' && party.giftAmount !== null && party.giftCurrency !== null) {
+        return formatMoney(Number(party.giftAmount), party.giftCurrency);
+    }
+
+    if (party.giftType === 'gift') {
+        return 'Gift recorded';
+    }
+
+    return 'No gift yet';
+};
+</script>
+
+<template>
+    <Head title="Guests" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="space-y-6 p-4 md:p-6">
+            <section class="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm md:flex-row md:items-end md:justify-between">
+                <div class="space-y-2">
+                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
+                        Guest list and ledger
+                    </p>
+                    <h1 class="text-2xl font-semibold tracking-tight text-neutral-950">
+                        Keep every family, RSVP, and gift in one place
+                    </h1>
+                    <p class="max-w-3xl text-sm leading-6 text-neutral-600">
+                        Add families manually, paste a messy list from WhatsApp or notes, and keep a clean ledger for attendance and gifts.
+                    </p>
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <Button class="h-11 rounded-full px-5" @click="importDialogOpen = true">
+                        <Import class="mr-2 size-4" />
+                        Import guest list
+                    </Button>
+                    <Button class="h-11 rounded-full px-5" @click="openCreateDialog">
+                        <UserPlus class="mr-2 size-4" />
+                        Add guest party
+                    </Button>
+                </div>
+            </section>
+
+            <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div
+                    v-for="stat in statCards"
+                    :key="stat.label"
+                    class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-500">
+                                {{ stat.label }}
+                            </p>
+                            <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
+                                {{ stat.value }}
+                            </p>
+                        </div>
+                        <div class="rounded-2xl bg-neutral-950 p-2 text-white">
+                            <component :is="stat.icon" class="size-4" />
+                        </div>
+                    </div>
+                    <p class="mt-3 text-sm text-neutral-600">
+                        {{ stat.detail }}
+                    </p>
+                </div>
+            </section>
+
+            <section class="rounded-3xl border border-neutral-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-2 border-b border-neutral-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-neutral-950">
+                            Guest parties
+                        </h2>
+                        <p class="text-sm text-neutral-600">
+                            Family-based records with attendance, invitation status, and gift notes.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-neutral-500">
+                        <Clock3 class="size-4" />
+                        <span>{{ guestParties.length }} total records</span>
+                    </div>
+                </div>
+
+                <div v-if="guestParties.length === 0" class="px-5 py-12 text-center">
+                    <Users class="mx-auto size-10 text-neutral-300" />
+                    <h3 class="mt-4 text-lg font-semibold text-neutral-950">
+                        No guest parties yet
+                    </h3>
+                    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
+                        Start with one family manually or paste a list like <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span> and the app will sort the names and phones for you.
+                    </p>
+                    <div class="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+                        <Button class="rounded-full px-5" @click="openCreateDialog">
+                            Add first guest party
+                        </Button>
+                        <Button variant="outline" class="rounded-full px-5" @click="importDialogOpen = true">
+                            Paste or upload a list
+                        </Button>
+                    </div>
+                </div>
+
+                <div v-else class="divide-y divide-neutral-200">
+                    <div
+                        v-for="party in guestParties"
+                        :key="party.id"
+                        class="flex flex-col gap-4 px-5 py-4"
+                    >
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="space-y-2">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-lg font-semibold text-neutral-950">
+                                        {{ party.name }}
+                                    </h3>
+                                    <Badge :class="attendanceBadgeClass(party.attendanceStatus)">
+                                        {{ attendanceLabel(party.attendanceStatus) }}
+                                    </Badge>
+                                    <Badge variant="outline" class="border-neutral-200 bg-neutral-50 text-neutral-700">
+                                        {{ invitationLabel(party.invitationStatus) }}
+                                    </Badge>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-600">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <Phone class="size-4" />
+                                        {{ party.phone || 'No phone saved' }}
+                                    </span>
+                                    <span>Invited {{ party.invitedAttendeesCount }}</span>
+                                    <span v-if="party.confirmedAttendeesCount !== null">
+                                        Confirmed {{ party.confirmedAttendeesCount }}
+                                    </span>
+                                    <span>{{ giftLabel(party) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
+                                    @click="openEditDialog(party)"
+                                >
+                                    <Pencil class="mr-2 size-4" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4 text-rose-600 hover:text-rose-700"
+                                    @click="confirmDelete(party)"
+                                >
+                                    <Trash2 class="mr-2 size-4" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-3 md:grid-cols-3">
+                            <div class="rounded-2xl bg-neutral-50 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                                    Invitation tracking
+                                </p>
+                                <p class="mt-2 text-sm text-neutral-700">
+                                    {{ party.invitationOpenCount }} opens
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    First open: {{ formatDateTime(party.invitationFirstOpenedAt) }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Last open: {{ formatDateTime(party.invitationLastOpenedAt) }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Last IP: {{ party.invitationLastOpenedIp || 'Not captured yet' }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-2xl bg-neutral-50 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                                    Delivery
+                                </p>
+                                <p class="mt-2 text-sm text-neutral-700">
+                                    {{ party.invitationDeliveryChannel || 'Not set' }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Delivered: {{ formatDateTime(party.invitationDeliveredAt) }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Responded: {{ formatDateTime(party.respondedAt) }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-2xl bg-neutral-50 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                                    Notes
+                                </p>
+                                <p class="mt-2 text-sm leading-6 text-neutral-700">
+                                    {{ party.notes || 'No notes yet.' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <Dialog :open="guestDialogOpen" @update:open="guestDialogOpen = $event">
+            <DialogContent class="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ isEditing ? 'Edit guest party' : 'Add guest party' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Track the family name, attendance, invitation status, and gift notes in one record.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="grid gap-4 py-2 md:grid-cols-2">
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Family / Name
+                        </label>
+                        <Input v-model="guestForm.name" placeholder="Familia Popescu or James Webb" />
+                        <p v-if="guestForm.errors.name" class="text-sm text-rose-600">
+                            {{ guestForm.errors.name }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Phone
+                        </label>
+                        <Input v-model="guestForm.phone" placeholder="07..." />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Invited attendees
+                        </label>
+                        <Input v-model="guestForm.invited_attendees_count" type="number" min="1" max="1000" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Attendance status
+                        </label>
+                        <NativeSelect v-model="guestForm.attendance_status">
+                            <NativeSelectOption value="pending">Waiting</NativeSelectOption>
+                            <NativeSelectOption value="accepted">Accepted</NativeSelectOption>
+                            <NativeSelectOption value="declined">Declined</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+
+                    <div v-if="showConfirmedCount" class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Confirmed attendees
+                        </label>
+                        <Input v-model="guestForm.confirmed_attendees_count" type="number" min="0" max="1000" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Invitation status
+                        </label>
+                        <NativeSelect v-model="guestForm.invitation_status">
+                            <NativeSelectOption value="draft">Draft</NativeSelectOption>
+                            <NativeSelectOption value="delivered_in_person">Delivered in person</NativeSelectOption>
+                            <NativeSelectOption value="sent">Sent online</NativeSelectOption>
+                            <NativeSelectOption value="opened">Opened</NativeSelectOption>
+                            <NativeSelectOption value="responded">Responded</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Delivery channel
+                        </label>
+                        <NativeSelect v-model="guestForm.invitation_delivery_channel">
+                            <NativeSelectOption value="">Not set</NativeSelectOption>
+                            <NativeSelectOption value="in_person">In person</NativeSelectOption>
+                            <NativeSelectOption value="phone">Phone</NativeSelectOption>
+                            <NativeSelectOption value="whatsapp">WhatsApp</NativeSelectOption>
+                            <NativeSelectOption value="facebook">Facebook</NativeSelectOption>
+                            <NativeSelectOption value="public_link">Public link</NativeSelectOption>
+                            <NativeSelectOption value="other">Other</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Gift type
+                        </label>
+                        <NativeSelect v-model="guestForm.gift_type">
+                            <NativeSelectOption value="">Not set</NativeSelectOption>
+                            <NativeSelectOption value="money">Money</NativeSelectOption>
+                            <NativeSelectOption value="gift">Gift</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+
+                    <template v-if="showGiftAmount">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Currency
+                            </label>
+                            <NativeSelect v-model="guestForm.gift_currency">
+                                <NativeSelectOption value="EUR">EUR</NativeSelectOption>
+                                <NativeSelectOption value="GBP">GBP</NativeSelectOption>
+                                <NativeSelectOption value="RON">RON</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Amount
+                            </label>
+                            <Input v-model="guestForm.gift_amount" type="number" min="0" step="0.01" />
+                        </div>
+                    </template>
+
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Notes
+                        </label>
+                        <Textarea
+                            v-model="guestForm.notes"
+                            rows="4"
+                            placeholder="Example: Marcel + wife + 2 kids, close family friends, table near band."
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter class="gap-2">
+                    <Button variant="outline" class="rounded-full px-5" @click="guestDialogOpen = false">
+                        Cancel
+                    </Button>
+                    <Button class="rounded-full px-5" :disabled="guestForm.processing" @click="saveGuestParty">
+                        {{ isEditing ? 'Save changes' : 'Add guest party' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog :open="importDialogOpen" @update:open="importDialogOpen = $event">
+            <DialogContent class="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Import guest list</DialogTitle>
+                    <DialogDescription>
+                        Paste free text or upload a CSV/TXT file. The importer understands formats like
+                        <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span> and
+                        <span class="font-medium text-neutral-900">Ion Vasile, 0712...</span>.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4 py-2">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Paste text
+                        </label>
+                        <Textarea
+                            v-model="importForm.import_text"
+                            rows="8"
+                            placeholder="Familia Popescu - 0722123456&#10;Ion Vasile, 07126326123&#10;James Webb - 4 guests - 0744556677"
+                        />
+                        <p v-if="importForm.errors.import_text" class="text-sm text-rose-600">
+                            {{ importForm.errors.import_text }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Or upload CSV / TXT
+                        </label>
+                        <Input type="file" accept=".csv,.txt" @change="onImportFileChange" />
+                        <p class="text-sm text-neutral-500">
+                            Simple spreadsheet exports and copied note files both work here.
+                        </p>
+                        <p v-if="importForm.errors.import_file" class="text-sm text-rose-600">
+                            {{ importForm.errors.import_file }}
+                        </p>
+                    </div>
+                </div>
+
+                <DialogFooter class="gap-2">
+                    <Button variant="outline" class="rounded-full px-5" @click="importDialogOpen = false">
+                        Cancel
+                    </Button>
+                    <Button class="rounded-full px-5" :disabled="importForm.processing" @click="importGuestParties">
+                        Import guests
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <AlertDialog :open="deleteDialogOpen" @update:open="deleteDialogOpen = $event">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete guest party?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This removes the guest party record and its ledger details from this event.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction class="bg-rose-600 hover:bg-rose-700" @click="deleteGuestParty">
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </AppLayout>
+</template>

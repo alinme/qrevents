@@ -147,4 +147,9 @@ class Event extends Model
     {
         return $this->hasMany(EventGuest::class);
     }
+
+    public function guestParties(): HasMany
+    {
+        return $this->hasMany(EventGuestParty::class);
+    }
 }

@@ -1,0 +1,124 @@
+<?php
+
+use App\Models\Event;
+use App\Models\EventGuestParty;
+use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
+
+it('shows the guest parties page for an event owner', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'currency' => 'EUR',
+    ]);
+
+    EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'invited_attendees_count' => 4,
+        'attendance_status' => 'accepted',
+        'confirmed_attendees_count' => 4,
+        'gift_type' => 'money',
+        'gift_currency' => 'EUR',
+        'gift_amount' => 300,
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('events.guests', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Guests')
+            ->where('currentEvent.id', $event->id)
+            ->where('guestPartyStats.partyCount', 1)
+            ->where('guestPartyStats.invitedAttendeesCount', 4)
+            ->where('guestPartyStats.confirmedAttendeesCount', 4)
+            ->where('guestPartyStats.moneyGiftTotal', 300)
+            ->has('guestParties', 1)
+            ->where('guestParties.0.name', 'Familia Popescu')
+        );
+});
+
+it('allows an event owner to add a guest party with ledger details', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $this->actingAs($owner)
+        ->post(route('events.guests.store', $event), [
+            'name' => 'Familia Ionescu',
+            'phone' => '0722123456',
+            'invited_attendees_count' => 3,
+            'confirmed_attendees_count' => 3,
+            'attendance_status' => 'accepted',
+            'notes' => 'Close family friends',
+            'invitation_status' => 'delivered_in_person',
+            'invitation_delivery_channel' => 'in_person',
+            'gift_type' => 'money',
+            'gift_currency' => 'EUR',
+            'gift_amount' => '400',
+        ])
+        ->assertRedirect();
+
+    $party = $event->guestParties()->first();
+
+    expect($party)->not->toBeNull()
+        ->and($party?->name)->toBe('Familia Ionescu')
+        ->and($party?->phone)->toBe('0722123456')
+        ->and($party?->invited_attendees_count)->toBe(3)
+        ->and($party?->confirmed_attendees_count)->toBe(3)
+        ->and($party?->attendance_status)->toBe('accepted')
+        ->and($party?->invitation_status)->toBe('delivered_in_person')
+        ->and($party?->gift_type)->toBe('money')
+        ->and($party?->gift_currency)->toBe('EUR')
+        ->and((string) $party?->gift_amount)->toBe('400.00')
+        ->and($party?->invitation_token)->not->toBeNull()
+        ->and($party?->invitation_delivered_at)->not->toBeNull();
+});
+
+it('imports guest parties from messy pasted text and skips duplicates', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'phone' => '0765223445',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.guests.import', $event), [
+            'import_text' => implode("\n", [
+                'Familia Popescu - 0765223445',
+                'Ion Vasile, 07126326123',
+                'James Webb - 4 guests - 0744556677',
+            ]),
+        ])
+        ->assertRedirect();
+
+    expect($event->guestParties()->count())->toBe(3);
+
+    $ion = $event->guestParties()->where('name', 'Ion Vasile')->first();
+    $james = $event->guestParties()->where('name', 'James Webb')->first();
+
+    expect($ion)->not->toBeNull()
+        ->and($ion?->phone)->toBe('07126326123')
+        ->and($ion?->invited_attendees_count)->toBe(1)
+        ->and($james)->not->toBeNull()
+        ->and($james?->phone)->toBe('0744556677')
+        ->and($james?->invited_attendees_count)->toBe(4);
+});
+
+it('forbids another user from managing guest parties', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $this->actingAs($otherUser)
+        ->get(route('events.guests', $event))
+        ->assertForbidden();
+
+    $this->actingAs($otherUser)
+        ->post(route('events.guests.store', $event), [
+            'name' => 'Familia Popescu',
+            'invited_attendees_count' => 2,
+            'attendance_status' => 'pending',
+            'invitation_status' => 'draft',
+        ])
+        ->assertForbidden();
+});

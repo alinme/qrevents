@@ -84,6 +84,8 @@ const mainNavItems = computed<NavItem[]>(() => {
                 icon:
                     item.title === 'Workspace'
                         ? LayoutGrid
+                        : item.title === 'Guests'
+                          ? Users
                         : item.title === 'Media'
                           ? Camera
                           : item.title === 'Settings'

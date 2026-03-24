@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import guestsD791f3 from './guests'
 import exports from './exports'
 import assets from './assets'
 import settings69f00b from './settings'
@@ -7,7 +8,7 @@ import collaborators from './collaborators'
 import album3d2484 from './album'
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 export const show = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -22,7 +23,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 show.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -55,7 +56,7 @@ show.url = (args: { event: number | { id: number } } | [event: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 show.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -65,7 +66,7 @@ show.get = (args: { event: number | { id: number } } | [event: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 show.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -75,7 +76,7 @@ show.head = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 const showForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -85,7 +86,7 @@ const showForm = (args: { event: number | { id: number } } | [event: number | { 
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 showForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -95,7 +96,7 @@ showForm.get = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:60
+* @see app/Http/Controllers/EventController.php:64
 * @route '/events/{event}'
 */
 showForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -111,8 +112,113 @@ showForm.head = (args: { event: number | { id: number } } | [event: number | { i
 show.form = showForm
 
 /**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+export const guests = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: guests.url(args, options),
+    method: 'get',
+})
+
+guests.definition = {
+    methods: ["get","head"],
+    url: '/events/{event}/guests',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+guests.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { event: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { event: args.id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            event: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        event: typeof args.event === 'object'
+        ? args.event.id
+        : args.event,
+    }
+
+    return guests.definition.url
+            .replace('{event}', parsedArgs.event.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+guests.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: guests.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+guests.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: guests.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+const guestsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guests.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+guestsForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guests.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::guests
+* @see app/Http/Controllers/EventController.php:97
+* @route '/events/{event}/guests'
+*/
+guestsForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: guests.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+guests.form = guestsForm
+
+/**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 export const media = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -127,7 +233,7 @@ media.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 media.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -160,7 +266,7 @@ media.url = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 media.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -170,7 +276,7 @@ media.get = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 media.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -180,7 +286,7 @@ media.head = (args: { event: number | { id: number } } | [event: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 const mediaForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -190,7 +296,7 @@ const mediaForm = (args: { event: number | { id: number } } | [event: number | {
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 mediaForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -200,7 +306,7 @@ mediaForm.get = (args: { event: number | { id: number } } | [event: number | { i
 
 /**
 * @see \App\Http\Controllers\EventController::media
-* @see app/Http/Controllers/EventController.php:71
+* @see app/Http/Controllers/EventController.php:75
 * @route '/events/{event}/media'
 */
 mediaForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -217,7 +323,7 @@ media.form = mediaForm
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 export const settings = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -232,7 +338,7 @@ settings.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 settings.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -265,7 +371,7 @@ settings.url = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 settings.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -275,7 +381,7 @@ settings.get = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 settings.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -285,7 +391,7 @@ settings.head = (args: { event: number | { id: number } } | [event: number | { i
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 const settingsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -295,7 +401,7 @@ const settingsForm = (args: { event: number | { id: number } } | [event: number 
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 settingsForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -305,7 +411,7 @@ settingsForm.get = (args: { event: number | { id: number } } | [event: number | 
 
 /**
 * @see \App\Http\Controllers\EventController::settings
-* @see app/Http/Controllers/EventController.php:271
+* @see app/Http/Controllers/EventController.php:367
 * @route '/events/{event}/settings'
 */
 settingsForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -322,7 +428,7 @@ settings.form = settingsForm
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 export const album = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -337,7 +443,7 @@ album.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 album.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -364,7 +470,7 @@ album.url = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 album.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -374,7 +480,7 @@ album.get = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 album.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -384,7 +490,7 @@ album.head = (args: { shareToken: string | number } | [shareToken: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 const albumForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -394,7 +500,7 @@ const albumForm = (args: { shareToken: string | number } | [shareToken: string |
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 albumForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -404,7 +510,7 @@ albumForm.get = (args: { shareToken: string | number } | [shareToken: string | n
 
 /**
 * @see \App\Http\Controllers\EventController::album
-* @see app/Http/Controllers/EventController.php:893
+* @see app/Http/Controllers/EventController.php:989
 * @route '/a/{shareToken}'
 */
 albumForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -421,7 +527,7 @@ album.form = albumForm
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 export const wall = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -436,7 +542,7 @@ wall.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 wall.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -463,7 +569,7 @@ wall.url = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 wall.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -473,7 +579,7 @@ wall.get = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 wall.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -483,7 +589,7 @@ wall.head = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 const wallForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -493,7 +599,7 @@ const wallForm = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 wallForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -503,7 +609,7 @@ wallForm.get = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:1694
+* @see app/Http/Controllers/EventController.php:1790
 * @route '/wall/{shareToken}'
 */
 wallForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -520,6 +626,7 @@ wall.form = wallForm
 
 const events = {
     show: Object.assign(show, show),
+    guests: Object.assign(guests, guestsD791f3),
     media: Object.assign(media, media),
     exports: Object.assign(exports, exports),
     assets: Object.assign(assets, assets),
