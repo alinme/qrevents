@@ -282,6 +282,7 @@ const guestAvatarInputRef = ref<HTMLInputElement | null>(null);
 const textComposerRef = ref<HTMLTextAreaElement | null>(null);
 const loadMoreSentinelRef = ref<HTMLElement | null>(null);
 const menuOpen = ref(false);
+const isLanguagePickerOpen = ref(false);
 const onboardingStep = ref<1 | 2>(1);
 const onboardingDone = ref(false);
 const guestToken = ref('');
@@ -1095,6 +1096,50 @@ const availableLocales = computed(() => {
         ? nextLocales.filter((value): value is string => typeof value === 'string')
         : ['en', 'ro', 'el'];
 });
+const albumLanguageOptions = computed(() => {
+    const options = [
+        {
+            key: 'auto',
+            flag: '🌐',
+            label: t('public.album.language.auto_title'),
+            description: t('public.album.language.auto_description'),
+        },
+        {
+            key: 'en',
+            flag: '🇺🇸',
+            label: t('public.album.language.english_title'),
+            description: t('public.album.language.english_description'),
+        },
+        {
+            key: 'ro',
+            flag: '🇷🇴',
+            label: t('public.album.language.romanian_title'),
+            description: t('public.album.language.romanian_description'),
+        },
+        {
+            key: 'el',
+            flag: '🇬🇷',
+            label: t('public.album.language.greek_title'),
+            description: t('public.album.language.greek_description'),
+        },
+    ];
+
+    return options.filter(
+        (option) =>
+            option.key === 'auto' || availableLocales.value.includes(option.key),
+    );
+});
+const selectedAlbumLanguageKey = computed(() => {
+    if (typeof window !== 'undefined') {
+        const override = new URL(window.location.href).searchParams.get('lang');
+
+        if (override && availableLocales.value.includes(override)) {
+            return override;
+        }
+    }
+
+    return 'auto';
+});
 
 const textPostSurfaceStyle = (item: {
     textThemeImageUrl: string | null;
@@ -1118,6 +1163,7 @@ const textPostContentStyle = (item: {
     textThemeTextColor: string | null;
 }): Record<string, string> => ({
     color: item.textThemeTextColor || '#ffffff',
+    opacity: '0.94',
 });
 
 const syncTextComposerElement = (value: string): void => {
@@ -1323,19 +1369,22 @@ const stackMediaBadgeIcon = (stack: GalleryStack) =>
             ? IconFileText
             : IconPhoto;
 
-const cycleAlbumLocale = (): void => {
+const openLanguagePicker = (): void => {
+    menuOpen.value = false;
+    isLanguagePickerOpen.value = true;
+};
+
+const closeLanguagePicker = (): void => {
+    isLanguagePickerOpen.value = false;
+};
+
+const selectAlbumLocale = (localeKey: string): void => {
     if (typeof window === 'undefined') {
         return;
     }
 
     const url = new URL(window.location.href);
-    const currentOverride = url.searchParams.get('lang');
-    const localeOrder = ['auto', ...availableLocales.value];
-    const currentKey = currentOverride && availableLocales.value.includes(currentOverride)
-        ? currentOverride
-        : 'auto';
-    const currentIndex = localeOrder.indexOf(currentKey);
-    const nextLocale = localeOrder[(currentIndex + 1) % localeOrder.length] ?? 'auto';
+    const nextLocale = localeKey === 'auto' ? 'auto' : localeKey;
 
     if (nextLocale === 'auto') {
         url.searchParams.delete('lang');
@@ -1343,6 +1392,7 @@ const cycleAlbumLocale = (): void => {
         url.searchParams.set('lang', nextLocale);
     }
 
+    isLanguagePickerOpen.value = false;
     router.visit(url.toString(), {
         method: 'get',
         preserveScroll: true,
@@ -2139,6 +2189,7 @@ const openComposerForView = (view: GuestIntent): void => {
         return;
     }
 
+    isLanguagePickerOpen.value = false;
     activeView.value = view;
     selectedIntent.value = view;
 
@@ -2187,6 +2238,7 @@ const setActiveView = (view: GuestIntent): void => {
 };
 
 const openGuestSettings = (): void => {
+    isLanguagePickerOpen.value = false;
     menuOpen.value = true;
 };
 
@@ -2315,6 +2367,7 @@ const syncBodyScrollLock = (): void => {
     const shouldLock =
         activeStackKey.value !== null ||
         isComposerOpen.value ||
+        isLanguagePickerOpen.value ||
         menuOpen.value ||
         isPreEventInfoOpen.value ||
         isAssetCommentsOpen.value ||
@@ -2331,6 +2384,7 @@ const syncBodyScrollLock = (): void => {
 watch(
     [
         isComposerOpen,
+        isLanguagePickerOpen,
         menuOpen,
         isPreEventInfoOpen,
         isAssetCommentsOpen,
@@ -3081,6 +3135,7 @@ const canStartPullRefresh = (): boolean =>
     onboardingDone.value &&
     window.scrollY <= 0 &&
     activeStackKey.value === null &&
+    !isLanguagePickerOpen.value &&
     !menuOpen.value &&
     !isComposerOpen.value &&
     !isAssetCommentsOpen.value &&
@@ -4351,7 +4406,7 @@ const onAlbumTouchCancel = (): void => {
                                         :style="textPostSurfaceStyle(stack.preview)"
                                     >
                                         <p
-                                            class="max-w-md whitespace-pre-wrap text-center text-lg font-medium leading-relaxed"
+                                            class="max-w-md whitespace-pre-wrap text-center text-[1.45rem] font-semibold leading-[1.45] sm:text-[1.7rem]"
                                             :style="textPostContentStyle(stack.preview)"
                                         >
                                             {{ stack.preview.text ?? t('public.album.labels.text_post') }}
@@ -4619,7 +4674,7 @@ const onAlbumTouchCancel = (): void => {
                                         :style="textPostSurfaceStyle(stack.preview)"
                                     >
                                         <p
-                                            class="line-clamp-6 whitespace-pre-wrap text-center text-xs font-medium"
+                                            class="line-clamp-6 whitespace-pre-wrap text-center text-sm font-semibold leading-relaxed sm:text-base"
                                             :style="textPostContentStyle(stack.preview)"
                                         >
                                             {{ stack.preview.text ?? t('public.album.labels.text_post') }}
@@ -4718,7 +4773,8 @@ const onAlbumTouchCancel = (): void => {
                     type="button"
                     class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
                     :aria-label="t('public.album.nav.language')"
-                    @click="cycleAlbumLocale"
+                    :class="isLanguagePickerOpen ? 'bg-slate-900 text-white' : ''"
+                    @click="openLanguagePicker"
                 >
                     <IconLanguage class="size-6" />
                 </button>
@@ -4761,6 +4817,81 @@ const onAlbumTouchCancel = (): void => {
                 </button>
             </div>
         </nav>
+
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isLanguagePickerOpen"
+                class="fixed inset-0 z-[68] bg-[#fcfaf6]"
+            >
+                <div class="flex h-full flex-col">
+                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-3 backdrop-blur">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    <IconLanguage class="size-6" />
+                                    <span>{{ t('public.album.language.title') }}</span>
+                                </div>
+                                <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                                    {{ t('public.album.language.subtitle') }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="inline-flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                :aria-label="t('public.shared.close')"
+                                @click="closeLanguagePicker"
+                            >
+                                <X class="size-5" />
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="safe-bottom flex-1 overflow-y-auto px-5 py-5">
+                        <div class="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
+                            <button
+                                v-for="option in albumLanguageOptions"
+                                :key="`album-language-${option.key}`"
+                                type="button"
+                                class="flex w-full items-center gap-4 rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                                :style="
+                                    selectedAlbumLanguageKey === option.key
+                                        ? {
+                                              borderColor: albumPrimaryColor,
+                                              boxShadow: `0 18px 40px color-mix(in srgb, ${albumPrimaryColor} 16%, transparent)`,
+                                          }
+                                        : undefined
+                                "
+                                @click="selectAlbumLocale(option.key)"
+                            >
+                                <span class="text-5xl leading-none">{{ option.flag }}</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <p class="text-lg font-semibold text-slate-900">
+                                            {{ option.label }}
+                                        </p>
+                                        <CheckCircle2
+                                            v-if="selectedAlbumLanguageKey === option.key"
+                                            class="size-5 shrink-0"
+                                            :style="{ color: albumPrimaryColor }"
+                                        />
+                                    </div>
+                                    <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                                        {{ option.description }}
+                                    </p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <Sheet v-model:open="isPreEventInfoOpen">
             <SheetContent
@@ -5148,7 +5279,7 @@ const onAlbumTouchCancel = (): void => {
                                         :disabled="!canUploadText || textForm.processing"
                                         :placeholder="t('public.album.text.canvas_hint')"
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-[3rem] font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[3.6rem]"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-[3.6rem] font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[4.2rem]"
                                         :class="
                                             !canUploadText || textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
@@ -5679,7 +5810,7 @@ const onAlbumTouchCancel = (): void => {
                             :style="textPostSurfaceStyle(selectedAsset)"
                         >
                             <p
-                                class="max-w-[78%] whitespace-pre-wrap text-center text-2xl font-semibold leading-relaxed sm:text-3xl"
+                                class="max-w-[78%] whitespace-pre-wrap text-center text-[2.8rem] font-semibold leading-[1.22] sm:text-[3.4rem]"
                                 :style="textPostContentStyle(selectedAsset)"
                             >
                                 {{ selectedAsset.text ?? t('public.album.labels.text_post') }}

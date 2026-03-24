@@ -248,6 +248,7 @@ const textPostSurfaceStyle = (asset: WallAsset): Record<string, string> => {
 
 const textPostTextStyle = (asset: WallAsset): Record<string, string> => ({
     color: asset.textThemeTextColor || '#ffffff',
+    opacity: '0.94',
 });
 
 const nextAsset = (): void => {
@@ -660,7 +661,7 @@ watch(
                         :style="textPostSurfaceStyle(currentAsset)"
                     >
                         <p
-                            class="max-w-3xl whitespace-pre-wrap text-base font-medium leading-relaxed lg:text-[1.15rem]"
+                            class="max-w-4xl whitespace-pre-wrap text-[2rem] font-semibold leading-[1.22] sm:text-[2.6rem] lg:text-[3.4rem]"
                             :style="textPostTextStyle(currentAsset)"
                         >
                             {{ currentAsset.text || t('public.wall.text_post') }}
@@ -669,7 +670,7 @@ watch(
 
                     <div
                         v-if="captionVisible"
-                        class="absolute inset-x-3 bottom-3 rounded-2xl border p-3 backdrop-blur"
+                        class="absolute inset-x-3 bottom-3 z-20 rounded-2xl border p-3 backdrop-blur"
                         :class="captionPanelClasses"
                     >
                         <p class="text-sm font-semibold">
