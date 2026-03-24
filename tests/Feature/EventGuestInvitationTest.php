@@ -4,6 +4,8 @@ use App\Models\Event;
 use App\Models\EventGuestParty;
 use App\Models\EventGuestPartyInvitationView;
 use App\Models\User;
+use App\Notifications\EventGuestInvitationResponseNotification;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('allows an event owner to update invitation settings', function () {
@@ -63,7 +65,10 @@ it('shows a guest invitation page and records the open', function () {
 });
 
 it('stores an RSVP from a guest-specific invitation', function () {
+    Notification::fake();
+
     $event = Event::factory()->create();
+    $owner = $event->user;
     $guestParty = EventGuestParty::factory()->for($event)->create([
         'name' => 'Familia Ionescu',
         'invited_attendees_count' => 3,
@@ -89,9 +94,24 @@ it('stores an RSVP from a guest-specific invitation', function () {
         ->and($guestParty->response_notes)->toBe('We will arrive after the ceremony.')
         ->and($guestParty->invitation_status)->toBe('responded')
         ->and($guestParty->responded_at)->not->toBeNull();
+
+    Notification::assertSentTo($owner, EventGuestInvitationResponseNotification::class, function (
+        EventGuestInvitationResponseNotification $notification,
+        array $channels,
+    ): bool {
+        $summary = $notification->toArray(new \stdClass);
+
+        return $channels === ['mail']
+            && $summary['guestPartyName'] === 'Familia Ionescu'
+            && $summary['changeType'] === 'accepted'
+            && $summary['confirmedAttendeesCount'] === 2
+            && $summary['pendingPartyCount'] === 0;
+    });
 });
 
 it('creates or updates a guest party from the public invitation page', function () {
+    Notification::fake();
+
     $event = Event::factory()->create([
         'invitation_settings' => [
             'template' => 'classic',
@@ -123,4 +143,14 @@ it('creates or updates a guest party from the public invitation page', function 
         ->and($guestParty?->meal_preference)->toBe('halal')
         ->and($guestParty?->invitation_delivery_channel)->toBe('public_link')
         ->and($guestParty?->invitation_status)->toBe('responded');
+
+    Notification::assertSentTo($event->user, EventGuestInvitationResponseNotification::class, function (
+        EventGuestInvitationResponseNotification $notification,
+    ): bool {
+        $summary = $notification->toArray(new \stdClass);
+
+        return $summary['guestPartyName'] === 'Familia Georgescu'
+            && $summary['changeType'] === 'accepted'
+            && $summary['mealPreference'] === 'halal';
+    });
 });

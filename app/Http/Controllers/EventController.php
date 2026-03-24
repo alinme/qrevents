@@ -24,6 +24,7 @@ use App\Models\Plan;
 use App\Models\TextPostTheme;
 use App\Models\User;
 use App\Notifications\EventCollaboratorInviteNotification;
+use App\Notifications\EventGuestInvitationResponseNotification;
 use App\Support\EventBillingManager;
 use App\Support\EventGuestPartyImportParser;
 use App\Support\EventLifecycleWindows;
@@ -229,6 +230,7 @@ class EventController extends Controller
             ->with('event')
             ->where('invitation_token', $token)
             ->firstOrFail();
+        $previousAttendanceStatus = (string) $guestParty->attendance_status;
 
         $payload = $request->responsePayload();
         if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
@@ -236,6 +238,7 @@ class EventController extends Controller
         }
 
         $guestParty->forceFill($payload)->save();
+        $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
 
         return to_route('events.guests.invitation.show', [
             'token' => $token,
@@ -291,6 +294,7 @@ class EventController extends Controller
                 'invitation_delivery_channel' => $guestParty->invitation_delivery_channel ?: 'public_link',
             ])->save();
         }
+        $previousAttendanceStatus = (string) $guestParty->attendance_status;
 
         $payload = $request->responsePayload();
         if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
@@ -298,6 +302,7 @@ class EventController extends Controller
         }
 
         $guestParty->forceFill($payload)->save();
+        $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
 
         return to_route('events.guests.public-invitation.show', [
             'token' => $token,
@@ -2401,6 +2406,55 @@ class EventController extends Controller
             'invitation_last_opened_user_agent' => $request->userAgent(),
             'invitation_status' => $guestParty->invitation_status === 'responded' ? 'responded' : 'opened',
         ])->save();
+    }
+
+    private function notifyEventOwnerAboutInvitationResponse(
+        EventGuestParty $guestParty,
+        string $previousAttendanceStatus,
+    ): void {
+        $event = $guestParty->event;
+
+        if (! $event instanceof Event) {
+            return;
+        }
+
+        $event->loadMissing('user');
+        $owner = $event->user;
+
+        if (! $owner instanceof User || blank($owner->email)) {
+            return;
+        }
+
+        $changeType = match ($guestParty->attendance_status) {
+            'accepted' => $previousAttendanceStatus === 'accepted' ? 'updated' : 'accepted',
+            'declined' => $previousAttendanceStatus === 'declined' ? 'updated' : 'declined',
+            default => 'updated',
+        };
+
+        $acceptedPartyCount = (int) $event->guestParties()->where('attendance_status', 'accepted')->count();
+        $declinedPartyCount = (int) $event->guestParties()->where('attendance_status', 'declined')->count();
+        $pendingPartyCount = (int) $event->guestParties()->where('attendance_status', 'pending')->count();
+        $confirmedAttendeeTotal = (int) $event->guestParties()
+            ->where('attendance_status', 'accepted')
+            ->sum('confirmed_attendees_count');
+
+        $owner->notify(new EventGuestInvitationResponseNotification([
+            'eventName' => (string) $event->name,
+            'guestPartyName' => (string) $guestParty->name,
+            'attendanceStatus' => (string) $guestParty->attendance_status,
+            'changeType' => $changeType,
+            'confirmedAttendeesCount' => $guestParty->confirmed_attendees_count === null
+                ? null
+                : (int) $guestParty->confirmed_attendees_count,
+            'pendingPartyCount' => $pendingPartyCount,
+            'acceptedPartyCount' => $acceptedPartyCount,
+            'declinedPartyCount' => $declinedPartyCount,
+            'confirmedAttendeeTotal' => $confirmedAttendeeTotal,
+            'mealPreference' => $guestParty->meal_preference,
+            'guestNames' => $guestParty->guest_names,
+            'responseNotes' => $guestParty->response_notes,
+            'guestListUrl' => route('events.guests', $event),
+        ]));
     }
 
     /**
