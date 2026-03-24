@@ -431,6 +431,7 @@ const guestStorageKey = computed(() => `kululu-guest-profile:${props.shareToken}
 const galleryViewStorageKey = computed(
     () => `kululu-gallery-view:${props.shareToken}`,
 );
+const guestAlbumHintStorageKey = 'qrevents-last-guest-album';
 const assetNextCursor = ref<number | null>(props.assetsNextCursor);
 const hasMoreAssets = ref(props.assetsHasMore);
 const sortStackAssets = (assets: AssetItem[]): AssetItem[] => {
@@ -1863,6 +1864,25 @@ const persistGuestProfile = (): void => {
     );
 };
 
+const persistGuestAlbumHint = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.localStorage.setItem(
+        guestAlbumHintStorageKey,
+        JSON.stringify({
+            shareToken: props.shareToken,
+            albumUrl: `${window.location.origin}/a/${props.shareToken}`,
+            eventName: props.eventName,
+            guestName: guestName.value.trim() || null,
+            guestToken: guestToken.value.trim() || null,
+            logoUrl: albumLogoUrl.value,
+            savedAt: new Date().toISOString(),
+        }),
+    );
+};
+
 const hydrateGuestProfile = (): void => {
     if (typeof window === 'undefined') {
         return;
@@ -1926,6 +1946,7 @@ onMounted(() => {
     if (guestToken.value === '') {
         guestToken.value = createGuestToken();
     }
+    persistGuestAlbumHint();
     if (onboardingDone.value) {
         void syncGuestProfile();
     }
@@ -2001,6 +2022,13 @@ watch(loadMoreSentinelRef, () => {
 watch(hasProcessingVideoAssets, () => {
     syncProcessingVideoPoll();
 });
+
+watch(
+    [guestName, guestToken, onboardingDone],
+    () => {
+        persistGuestAlbumHint();
+    },
+);
 
 watch(onboardingDone, async () => {
     await nextTick();

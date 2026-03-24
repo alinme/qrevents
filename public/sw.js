@@ -1,6 +1,7 @@
 const CACHE_NAME = 'qrevents-static-v1';
 const APP_SHELL = [
     '/',
+    '/launch',
     '/manifest.webmanifest',
     '/apple-touch-icon.png',
     '/favicon.ico',

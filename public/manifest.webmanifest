@@ -2,7 +2,7 @@
     "name": "QR Events",
     "short_name": "QR Events",
     "description": "Collect guest photos, videos, and messages in a shared event album.",
-    "start_url": "/",
+    "start_url": "/launch",
     "scope": "/",
     "display": "standalone",
     "background_color": "#fff7ed",

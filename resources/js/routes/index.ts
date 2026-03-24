@@ -299,6 +299,87 @@ homeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 home.form = homeForm
 
 /**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+export const launch = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: launch.url(options),
+    method: 'get',
+})
+
+launch.definition = {
+    methods: ["get","head"],
+    url: '/launch',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+launch.url = (options?: RouteQueryOptions) => {
+    return launch.definition.url + queryParams(options)
+}
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+launch.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: launch.url(options),
+    method: 'get',
+})
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+launch.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: launch.url(options),
+    method: 'head',
+})
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+const launchForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: launch.url(options),
+    method: 'get',
+})
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+launchForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: launch.url(options),
+    method: 'get',
+})
+
+/**
+* @see \Inertia\Controller::__invoke
+* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
+* @route '/launch'
+*/
+launchForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: launch.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+launch.form = launchForm
+
+/**
 * @see \App\Http\Controllers\MarketingController::pricing
 * @see app/Http/Controllers/MarketingController.php:12
 * @route '/pricing'

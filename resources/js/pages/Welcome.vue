@@ -23,7 +23,7 @@ import {
     Star,
     Users,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import type { Component } from 'vue';
 import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
@@ -35,13 +35,22 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { businesses, pricing, weddings } from '@/routes';
 import { create as onboardingCreate } from '@/routes/onboarding';
 
-defineProps<{
+const props = defineProps<{
     canRegister: boolean;
+    pwaLaunch?: boolean;
 }>();
 
 const { t } = useTranslations();
@@ -51,6 +60,16 @@ type FeatureItem = {
     title: string;
     description: string;
     eyebrow?: string;
+};
+
+type StoredGuestAlbumHint = {
+    shareToken: string;
+    albumUrl: string;
+    eventName: string;
+    guestName: string | null;
+    guestToken: string | null;
+    logoUrl: string | null;
+    savedAt: string;
 };
 
 const heroGallery = [
@@ -357,6 +376,99 @@ const blogPosts = [
 
 const pageTitle = computed(() => t('marketing.home.meta.title'));
 const pageDescription = computed(() => t('marketing.home.meta.description'));
+const guestAlbumHintStorageKey = 'qrevents-last-guest-album';
+const resumeGuestAlbum = ref<StoredGuestAlbumHint | null>(null);
+const resumeGuestAlbumOpen = ref(false);
+
+const isStandalonePwa = (): boolean => {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    return window.matchMedia('(display-mode: standalone)').matches
+        || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+};
+
+const clearStoredGuestAlbum = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.localStorage.removeItem(guestAlbumHintStorageKey);
+    resumeGuestAlbum.value = null;
+    resumeGuestAlbumOpen.value = false;
+};
+
+const loadStoredGuestAlbum = (): StoredGuestAlbumHint | null => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const raw = window.localStorage.getItem(guestAlbumHintStorageKey);
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as Partial<StoredGuestAlbumHint>;
+        if (
+            typeof parsed.albumUrl !== 'string' ||
+            parsed.albumUrl.length === 0 ||
+            typeof parsed.eventName !== 'string' ||
+            parsed.eventName.length === 0 ||
+            typeof parsed.shareToken !== 'string' ||
+            parsed.shareToken.length === 0
+        ) {
+            clearStoredGuestAlbum();
+            return null;
+        }
+
+        if (typeof parsed.savedAt === 'string') {
+            const savedAtMs = new Date(parsed.savedAt).getTime();
+            const maxAgeMs = 1000 * 60 * 60 * 24 * 30;
+
+            if (!Number.isFinite(savedAtMs) || Date.now() - savedAtMs > maxAgeMs) {
+                clearStoredGuestAlbum();
+                return null;
+            }
+        }
+
+        return {
+            shareToken: parsed.shareToken,
+            albumUrl: parsed.albumUrl,
+            eventName: parsed.eventName,
+            guestName: typeof parsed.guestName === 'string' ? parsed.guestName : null,
+            guestToken: typeof parsed.guestToken === 'string' ? parsed.guestToken : null,
+            logoUrl: typeof parsed.logoUrl === 'string' ? parsed.logoUrl : null,
+            savedAt: typeof parsed.savedAt === 'string' ? parsed.savedAt : new Date().toISOString(),
+        };
+    } catch {
+        clearStoredGuestAlbum();
+        return null;
+    }
+};
+
+const openStoredGuestAlbum = (): void => {
+    if (typeof window === 'undefined' || resumeGuestAlbum.value === null) {
+        return;
+    }
+
+    window.location.assign(resumeGuestAlbum.value.albumUrl);
+};
+
+onMounted(() => {
+    const storedAlbum = loadStoredGuestAlbum();
+    if (storedAlbum === null) {
+        return;
+    }
+
+    if (!props.pwaLaunch && !isStandalonePwa()) {
+        return;
+    }
+
+    resumeGuestAlbum.value = storedAlbum;
+    resumeGuestAlbumOpen.value = true;
+});
 </script>
 
 <template>
@@ -365,6 +477,73 @@ const pageDescription = computed(() => t('marketing.home.meta.description'));
         :description="pageDescription"
         :can-register="canRegister"
     >
+        <Dialog :open="resumeGuestAlbumOpen" @update:open="resumeGuestAlbumOpen = $event">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader class="text-left">
+                    <div class="flex items-center gap-4">
+                        <div
+                            v-if="resumeGuestAlbum?.logoUrl"
+                            class="size-14 overflow-hidden rounded-[18px] border border-promo-line bg-promo-surface"
+                        >
+                            <img
+                                :src="resumeGuestAlbum.logoUrl"
+                                :alt="resumeGuestAlbum.eventName"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
+                        <div
+                            v-else
+                            class="flex size-14 items-center justify-center rounded-[18px] bg-promo-primary/12 text-promo-primary"
+                        >
+                            <QrCode class="size-6" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                                {{ t('marketing.pwa.resume.badge') }}
+                            </p>
+                            <DialogTitle class="mt-1 text-left text-xl">
+                                {{ t('marketing.pwa.resume.title') }}
+                            </DialogTitle>
+                        </div>
+                    </div>
+
+                    <DialogDescription class="space-y-3 pt-3 text-left">
+                        <p>
+                            {{ t('marketing.pwa.resume.description', { eventName: resumeGuestAlbum?.eventName ?? '' }) }}
+                        </p>
+                        <p v-if="resumeGuestAlbum?.guestName" class="text-sm font-medium text-promo-ink">
+                            {{ t('marketing.pwa.resume.guest_name', { name: resumeGuestAlbum.guestName }) }}
+                        </p>
+                    </DialogDescription>
+                </DialogHeader>
+
+                <DialogFooter class="gap-2 sm:justify-start">
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                        @click="openStoredGuestAlbum"
+                    >
+                        {{ t('marketing.pwa.resume.open') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full border border-promo-line bg-white px-5 py-3 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                        @click="resumeGuestAlbumOpen = false"
+                    >
+                        {{ t('marketing.pwa.resume.dismiss') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full px-3 py-2 text-sm font-medium text-promo-muted transition hover:text-promo-ink"
+                        @click="clearStoredGuestAlbum"
+                    >
+                        {{ t('marketing.pwa.resume.forget') }}
+                    </button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
         <section class="mx-auto max-w-7xl px-4 pb-18 pt-10 sm:px-6 lg:px-8 lg:pb-24 lg:pt-18">
             <div class="grid items-center gap-14 lg:grid-cols-[0.95fr_1.05fr]">
                 <div class="max-w-2xl">
