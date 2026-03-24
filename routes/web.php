@@ -66,6 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('events/{event}/guests', [EventController::class, 'guests'])->name('events.guests');
     Route::post('events/{event}/guests', [EventController::class, 'storeGuestParty'])->name('events.guests.store');
     Route::post('events/{event}/guests/import', [EventController::class, 'importGuestParties'])->name('events.guests.import');
+    Route::patch('events/{event}/guests/invitation-settings', [EventController::class, 'updateInvitationSettings'])->name('events.guests.invitation-settings.update');
     Route::patch('events/{event}/guests/{guestParty}', [EventController::class, 'updateGuestParty'])->name('events.guests.update');
     Route::delete('events/{event}/guests/{guestParty}', [EventController::class, 'destroyGuestParty'])->name('events.guests.destroy');
     Route::get('events/{event}/media', [EventController::class, 'media'])->name('events.media');
@@ -94,6 +95,18 @@ Route::post('collaborator-invites/{collaborator}/complete-register', [EventContr
 Route::post('collaborator-invites/{collaborator}/complete-login', [EventController::class, 'completeCollaboratorInviteLogin'])
     ->middleware(['signed'])
     ->name('events.collaborators.complete-login');
+Route::get('invite/{token}', [EventController::class, 'guestInvitation'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.guests.invitation.show');
+Route::post('invite/{token}', [EventController::class, 'respondToGuestInvitation'])
+    ->middleware('throttle:public-album-write')
+    ->name('events.guests.invitation.respond');
+Route::get('invite/public/{token}', [EventController::class, 'publicInvitation'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.guests.public-invitation.show');
+Route::post('invite/public/{token}', [EventController::class, 'respondToPublicInvitation'])
+    ->middleware('throttle:public-album-write')
+    ->name('events.guests.public-invitation.respond');
 
 Route::get('a/{shareToken}', [EventController::class, 'album'])->name('events.album');
 Route::get('a/{shareToken}/assets', [EventController::class, 'albumAssets'])

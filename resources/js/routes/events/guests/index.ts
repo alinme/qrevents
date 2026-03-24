@@ -1,7 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
+import invitationSettings from './invitation-settings'
+import invitation from './invitation'
+import publicInvitation from './public-invitation'
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:107
+* @see app/Http/Controllers/EventController.php:110
 * @route '/events/{event}/guests'
 */
 export const store = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +19,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:107
+* @see app/Http/Controllers/EventController.php:110
 * @route '/events/{event}/guests'
 */
 store.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +52,7 @@ store.url = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:107
+* @see app/Http/Controllers/EventController.php:110
 * @route '/events/{event}/guests'
 */
 store.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +62,7 @@ store.post = (args: { event: number | { id: number } } | [event: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:107
+* @see app/Http/Controllers/EventController.php:110
 * @route '/events/{event}/guests'
 */
 const storeForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -69,7 +72,7 @@ const storeForm = (args: { event: number | { id: number } } | [event: number | {
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:107
+* @see app/Http/Controllers/EventController.php:110
 * @route '/events/{event}/guests'
 */
 storeForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -81,7 +84,7 @@ store.form = storeForm
 
 /**
 * @see \App\Http\Controllers\EventController::importMethod
-* @see app/Http/Controllers/EventController.php:142
+* @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/guests/import'
 */
 export const importMethod = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -96,7 +99,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::importMethod
-* @see app/Http/Controllers/EventController.php:142
+* @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/guests/import'
 */
 importMethod.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -129,7 +132,7 @@ importMethod.url = (args: { event: number | { id: number } } | [event: number | 
 
 /**
 * @see \App\Http\Controllers\EventController::importMethod
-* @see app/Http/Controllers/EventController.php:142
+* @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/guests/import'
 */
 importMethod.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -139,7 +142,7 @@ importMethod.post = (args: { event: number | { id: number } } | [event: number |
 
 /**
 * @see \App\Http\Controllers\EventController::importMethod
-* @see app/Http/Controllers/EventController.php:142
+* @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/guests/import'
 */
 const importMethodForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -149,7 +152,7 @@ const importMethodForm = (args: { event: number | { id: number } } | [event: num
 
 /**
 * @see \App\Http\Controllers\EventController::importMethod
-* @see app/Http/Controllers/EventController.php:142
+* @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/guests/import'
 */
 importMethodForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -161,7 +164,7 @@ importMethod.form = importMethodForm
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:119
+* @see app/Http/Controllers/EventController.php:122
 * @route '/events/{event}/guests/{guestParty}'
 */
 export const update = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -176,7 +179,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:119
+* @see app/Http/Controllers/EventController.php:122
 * @route '/events/{event}/guests/{guestParty}'
 */
 update.url = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
@@ -206,7 +209,7 @@ update.url = (args: { event: number | { id: number }, guestParty: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:119
+* @see app/Http/Controllers/EventController.php:122
 * @route '/events/{event}/guests/{guestParty}'
 */
 update.patch = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -216,7 +219,7 @@ update.patch = (args: { event: number | { id: number }, guestParty: string | num
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:119
+* @see app/Http/Controllers/EventController.php:122
 * @route '/events/{event}/guests/{guestParty}'
 */
 const updateForm = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -231,7 +234,7 @@ const updateForm = (args: { event: number | { id: number }, guestParty: string |
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:119
+* @see app/Http/Controllers/EventController.php:122
 * @route '/events/{event}/guests/{guestParty}'
 */
 updateForm.patch = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -248,7 +251,7 @@ update.form = updateForm
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:132
+* @see app/Http/Controllers/EventController.php:135
 * @route '/events/{event}/guests/{guestParty}'
 */
 export const destroy = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -263,7 +266,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:132
+* @see app/Http/Controllers/EventController.php:135
 * @route '/events/{event}/guests/{guestParty}'
 */
 destroy.url = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
@@ -293,7 +296,7 @@ destroy.url = (args: { event: number | { id: number }, guestParty: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:132
+* @see app/Http/Controllers/EventController.php:135
 * @route '/events/{event}/guests/{guestParty}'
 */
 destroy.delete = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -303,7 +306,7 @@ destroy.delete = (args: { event: number | { id: number }, guestParty: string | n
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:132
+* @see app/Http/Controllers/EventController.php:135
 * @route '/events/{event}/guests/{guestParty}'
 */
 const destroyForm = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -318,7 +321,7 @@ const destroyForm = (args: { event: number | { id: number }, guestParty: string 
 
 /**
 * @see \App\Http\Controllers\EventController::destroy
-* @see app/Http/Controllers/EventController.php:132
+* @see app/Http/Controllers/EventController.php:135
 * @route '/events/{event}/guests/{guestParty}'
 */
 destroyForm.delete = (args: { event: number | { id: number }, guestParty: string | number | { id: string | number } } | [event: number | { id: number }, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -336,8 +339,11 @@ destroy.form = destroyForm
 const guests = {
     store: Object.assign(store, store),
     import: Object.assign(importMethod, importMethod),
+    invitationSettings: Object.assign(invitationSettings, invitationSettings),
     update: Object.assign(update, update),
     destroy: Object.assign(destroy, destroy),
+    invitation: Object.assign(invitation, invitation),
+    publicInvitation: Object.assign(publicInvitation, publicInvitation),
 }
 
 export default guests

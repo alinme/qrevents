@@ -6,6 +6,7 @@ use Database\Factories\EventGuestPartyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EventGuestParty extends Model
 {
@@ -20,6 +21,7 @@ class EventGuestParty extends Model
         'confirmed_attendees_count',
         'attendance_status',
         'notes',
+        'guest_names',
         'invitation_status',
         'invitation_delivery_channel',
         'invitation_delivered_at',
@@ -33,6 +35,10 @@ class EventGuestParty extends Model
         'gift_type',
         'gift_currency',
         'gift_amount',
+        'meal_preference',
+        'response_notes',
+        'response_ip_address',
+        'response_user_agent',
     ];
 
     /**
@@ -55,5 +61,10 @@ class EventGuestParty extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function invitationViews(): HasMany
+    {
+        return $this->hasMany(EventGuestPartyInvitationView::class);
     }
 }

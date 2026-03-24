@@ -138,7 +138,7 @@ store.form = storeForm
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 export const creating = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -153,7 +153,7 @@ creating.definition = {
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 creating.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -186,7 +186,7 @@ creating.url = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 creating.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -196,7 +196,7 @@ creating.get = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 creating.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -206,7 +206,7 @@ creating.head = (args: { event: number | { id: number } } | [event: number | { i
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 const creatingForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -216,7 +216,7 @@ const creatingForm = (args: { event: number | { id: number } } | [event: number 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 creatingForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -226,7 +226,7 @@ creatingForm.get = (args: { event: number | { id: number } } | [event: number | 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::creating
-* @see app/Http/Controllers/EventOnboardingController.php:103
+* @see app/Http/Controllers/EventOnboardingController.php:104
 * @route '/onboarding/{event}/creating'
 */
 creatingForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -243,7 +243,7 @@ creating.form = creatingForm
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 export const photos = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -258,7 +258,7 @@ photos.definition = {
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 photos.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -291,7 +291,7 @@ photos.url = (args: { event: number | { id: number } } | [event: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 photos.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -301,7 +301,7 @@ photos.get = (args: { event: number | { id: number } } | [event: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 photos.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -311,7 +311,7 @@ photos.head = (args: { event: number | { id: number } } | [event: number | { id:
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 const photosForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -321,7 +321,7 @@ const photosForm = (args: { event: number | { id: number } } | [event: number | 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 photosForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -331,7 +331,7 @@ photosForm.get = (args: { event: number | { id: number } } | [event: number | { 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::photos
-* @see app/Http/Controllers/EventOnboardingController.php:119
+* @see app/Http/Controllers/EventOnboardingController.php:120
 * @route '/onboarding/{event}/photos'
 */
 photosForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -348,7 +348,7 @@ photos.form = photosForm
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 export const ready = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -363,7 +363,7 @@ ready.definition = {
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 ready.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -396,7 +396,7 @@ ready.url = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 ready.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -406,7 +406,7 @@ ready.get = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 ready.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -416,7 +416,7 @@ ready.head = (args: { event: number | { id: number } } | [event: number | { id: 
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 const readyForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -426,7 +426,7 @@ const readyForm = (args: { event: number | { id: number } } | [event: number | {
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 readyForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -436,7 +436,7 @@ readyForm.get = (args: { event: number | { id: number } } | [event: number | { i
 
 /**
 * @see \App\Http\Controllers\EventOnboardingController::ready
-* @see app/Http/Controllers/EventOnboardingController.php:139
+* @see app/Http/Controllers/EventOnboardingController.php:140
 * @route '/onboarding/{event}/ready'
 */
 readyForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

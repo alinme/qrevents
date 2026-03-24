@@ -93,6 +93,7 @@ class EventOnboardingController extends Controller
             'photo_max_size_bytes' => $plan->photo_max_size_bytes,
             'video_max_size_bytes' => $plan->video_max_size_bytes,
             'share_token' => Str::random(32),
+            'public_invitation_token' => Str::lower((string) Str::uuid()),
         ]);
 
         $user->syncConfiguredAccountType();

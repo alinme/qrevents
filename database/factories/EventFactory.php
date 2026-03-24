@@ -75,7 +75,9 @@ class EventFactory extends Factory
             'moderation_enabled' => true,
             'auto_moderation_enabled' => true,
             'branding' => null,
+            'invitation_settings' => null,
             'share_token' => Str::random(32),
+            'public_invitation_token' => Str::lower((string) Str::uuid()),
         ];
     }
 }

@@ -26,6 +26,7 @@ class EventGuestPartyFactory extends Factory
             'confirmed_attendees_count' => null,
             'attendance_status' => 'pending',
             'notes' => $this->faker->optional()->sentence(),
+            'guest_names' => null,
             'invitation_status' => 'draft',
             'invitation_delivery_channel' => null,
             'invitation_delivered_at' => null,
@@ -39,6 +40,10 @@ class EventGuestPartyFactory extends Factory
             'gift_type' => null,
             'gift_currency' => null,
             'gift_amount' => null,
+            'meal_preference' => null,
+            'response_notes' => null,
+            'response_ip_address' => null,
+            'response_user_agent' => null,
         ];
     }
 }

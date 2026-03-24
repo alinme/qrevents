@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateEventCheckoutSessionRequest;
 use App\Http\Requests\ImportEventGuestPartiesRequest;
+use App\Http\Requests\RespondEventGuestInvitationRequest;
 use App\Http\Requests\UpdateEventBillingRequest;
+use App\Http\Requests\UpdateEventInvitationSettingsRequest;
 use App\Http\Requests\UpsertEventGuestPartyRequest;
 use App\Jobs\GenerateEventAssetImageVariants;
 use App\Jobs\GenerateEventAssetVideoThumbnails;
@@ -17,6 +19,7 @@ use App\Models\EventAssetLike;
 use App\Models\EventCollaborator;
 use App\Models\EventGuest;
 use App\Models\EventGuestParty;
+use App\Models\EventGuestPartyInvitationView;
 use App\Models\Plan;
 use App\Models\TextPostTheme;
 use App\Models\User;
@@ -184,6 +187,123 @@ class EventController extends Controller
         }
 
         return back()->with($created > 0 ? 'success' : 'info', $message);
+    }
+
+    public function updateInvitationSettings(
+        UpdateEventInvitationSettingsRequest $request,
+        Event $event,
+    ): RedirectResponse {
+        $this->assertCanManageEvent($request, $event);
+
+        $event->forceFill([
+            'public_invitation_token' => $this->ensurePublicInvitationToken($event),
+            'invitation_settings' => $request->settingsPayload(),
+        ])->save();
+
+        return back()->with('success', 'Invitation settings saved.');
+    }
+
+    public function guestInvitation(Request $request, string $token): Response
+    {
+        $guestParty = EventGuestParty::query()
+            ->with(['event.user:id,name'])
+            ->where('invitation_token', $token)
+            ->firstOrFail();
+        $event = $guestParty->event;
+
+        $this->recordInvitationOpen($request, $event, $guestParty, 'party');
+
+        return Inertia::render('invitations/EventGuestInvite', $this->invitationPageProps(
+            $request,
+            $event,
+            $guestParty->fresh(),
+            false,
+        ));
+    }
+
+    public function respondToGuestInvitation(
+        RespondEventGuestInvitationRequest $request,
+        string $token,
+    ): RedirectResponse {
+        $guestParty = EventGuestParty::query()
+            ->with('event')
+            ->where('invitation_token', $token)
+            ->firstOrFail();
+
+        $payload = $request->responsePayload();
+        if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
+            $payload['confirmed_attendees_count'] = $guestParty->invited_attendees_count;
+        }
+
+        $guestParty->forceFill($payload)->save();
+
+        return to_route('events.guests.invitation.show', [
+            'token' => $token,
+            'submitted' => 1,
+            'lang' => $request->query('lang'),
+        ])->with('success', 'RSVP received.');
+    }
+
+    public function publicInvitation(Request $request, string $token): Response
+    {
+        $event = Event::query()
+            ->with('user:id,name')
+            ->where('public_invitation_token', $token)
+            ->firstOrFail();
+
+        abort_unless($this->eventInvitationSettings($event)['publicRsvpEnabled'], 404);
+
+        $this->recordInvitationOpen($request, $event, null, 'public');
+
+        return Inertia::render('invitations/EventGuestInvite', $this->invitationPageProps(
+            $request,
+            $event,
+            null,
+            true,
+        ));
+    }
+
+    public function respondToPublicInvitation(
+        RespondEventGuestInvitationRequest $request,
+        string $token,
+    ): RedirectResponse {
+        $event = Event::query()
+            ->where('public_invitation_token', $token)
+            ->firstOrFail();
+
+        abort_unless($this->eventInvitationSettings($event)['publicRsvpEnabled'], 404);
+
+        $partyData = $request->publicPartyPayload();
+        $guestParty = $this->matchPublicInvitationGuestParty($event, $partyData['name'], $partyData['phone']);
+
+        if ($guestParty === null) {
+            $guestParty = $event->guestParties()->create([
+                ...$partyData,
+                'invitation_status' => 'draft',
+                'invitation_delivery_channel' => 'public_link',
+                'invitation_token' => (string) Str::lower((string) Str::uuid()),
+            ]);
+        } else {
+            $guestParty->forceFill([
+                'name' => $partyData['name'],
+                'phone' => $partyData['phone'],
+                'invited_attendees_count' => $partyData['invited_attendees_count'],
+                'invitation_delivery_channel' => $guestParty->invitation_delivery_channel ?: 'public_link',
+            ])->save();
+        }
+
+        $payload = $request->responsePayload();
+        if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
+            $payload['confirmed_attendees_count'] = $partyData['invited_attendees_count'];
+        }
+
+        $guestParty->forceFill($payload)->save();
+
+        return to_route('events.guests.public-invitation.show', [
+            'token' => $token,
+            'submitted' => 1,
+            'lang' => $request->query('lang'),
+        ])->with('success', 'RSVP received.');
     }
 
     public function startMediaExport(Request $request, Event $event): RedirectResponse
@@ -2024,6 +2144,7 @@ class EventController extends Controller
                 'settingsUpdate' => route('events.settings.update', $event),
                 'guestPartiesStore' => route('events.guests.store', $event),
                 'guestPartiesImport' => route('events.guests.import', $event),
+                'invitationSettingsUpdate' => route('events.guests.invitation-settings.update', $event),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
@@ -2106,6 +2227,8 @@ class EventController extends Controller
      */
     private function guestPartyProps(Event $event): array
     {
+        $publicInvitationToken = $this->ensurePublicInvitationToken($event);
+        $invitationSettings = $this->eventInvitationSettings($event);
         $guestParties = $event->guestParties()
             ->orderBy('name')
             ->get();
@@ -2115,6 +2238,8 @@ class EventController extends Controller
             ->reduce(fn (float $carry, EventGuestParty $party): float => $carry + (float) $party->gift_amount, 0.0);
 
         return [
+            'eventInvitationSettings' => $invitationSettings,
+            'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
             'guestPartyStats' => [
                 'partyCount' => $guestParties->count(),
                 'invitedAttendeesCount' => $guestParties->sum('invited_attendees_count'),
@@ -2147,12 +2272,268 @@ class EventController extends Controller
                     'giftType' => $party->gift_type,
                     'giftCurrency' => $party->gift_currency,
                     'giftAmount' => $party->gift_amount !== null ? (string) $party->gift_amount : null,
+                    'guestNames' => $party->guest_names,
+                    'mealPreference' => $party->meal_preference,
+                    'responseNotes' => $party->response_notes,
+                    'inviteUrl' => route('events.guests.invitation.show', $this->ensureGuestPartyInvitationToken($party)),
                     'updateUrl' => route('events.guests.update', [$event, $party]),
                     'deleteUrl' => route('events.guests.destroy', [$event, $party]),
                 ])
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @return array{
+     *   template: string,
+     *   headline: string,
+     *   message: string,
+     *   closing: string,
+     *   contactPhone: string|null,
+     *   publicRsvpEnabled: bool
+     * }
+     */
+    private function eventInvitationSettings(Event $event): array
+    {
+        $settings = is_array($event->invitation_settings) ? $event->invitation_settings : [];
+        $template = is_string($settings['template'] ?? null) ? $settings['template'] : 'classic';
+
+        if (! in_array($template, ['classic', 'floral', 'midnight'], true)) {
+            $template = 'classic';
+        }
+
+        return [
+            'template' => $template,
+            'headline' => is_string($settings['headline'] ?? null) && trim((string) $settings['headline']) !== ''
+                ? trim((string) $settings['headline'])
+                : "You're invited to {$event->name}",
+            'message' => is_string($settings['message'] ?? null) && trim((string) $settings['message']) !== ''
+                ? trim((string) $settings['message'])
+                : 'We would love to celebrate together. Please let us know if you can join us and how many will attend.',
+            'closing' => is_string($settings['closing'] ?? null) && trim((string) $settings['closing']) !== ''
+                ? trim((string) $settings['closing'])
+                : 'Please answer when you can so we can plan every seat with care.',
+            'contactPhone' => is_string($settings['contact_phone'] ?? null) && trim((string) $settings['contact_phone']) !== ''
+                ? trim((string) $settings['contact_phone'])
+                : null,
+            'publicRsvpEnabled' => (bool) ($settings['public_rsvp_enabled'] ?? true),
+        ];
+    }
+
+    private function ensurePublicInvitationToken(Event $event): string
+    {
+        $token = is_string($event->public_invitation_token ?? null) ? trim((string) $event->public_invitation_token) : '';
+
+        if ($token !== '') {
+            return $token;
+        }
+
+        $token = Str::lower((string) Str::uuid());
+        $event->forceFill([
+            'public_invitation_token' => $token,
+        ])->save();
+
+        return $token;
+    }
+
+    private function ensureGuestPartyInvitationToken(EventGuestParty $guestParty): string
+    {
+        $token = is_string($guestParty->invitation_token ?? null) ? trim((string) $guestParty->invitation_token) : '';
+
+        if ($token !== '') {
+            return $token;
+        }
+
+        $token = Str::lower((string) Str::uuid());
+        $guestParty->forceFill([
+            'invitation_token' => $token,
+        ])->save();
+
+        return $token;
+    }
+
+    private function matchPublicInvitationGuestParty(Event $event, string $name, ?string $phone): ?EventGuestParty
+    {
+        if ($phone !== null && trim($phone) !== '') {
+            $party = EventGuestParty::query()
+                ->where('event_id', $event->id)
+                ->where('phone', $phone)
+                ->first();
+
+            if ($party instanceof EventGuestParty) {
+                return $party;
+            }
+        }
+
+        return EventGuestParty::query()
+            ->where('event_id', $event->id)
+            ->whereRaw('LOWER(name) = ?', [Str::lower($name)])
+            ->first();
+    }
+
+    private function recordInvitationOpen(
+        Request $request,
+        Event $event,
+        ?EventGuestParty $guestParty,
+        string $invitationKind,
+    ): void {
+        $openedAt = now();
+
+        EventGuestPartyInvitationView::query()->create([
+            'event_id' => $event->id,
+            'event_guest_party_id' => $guestParty?->id,
+            'invitation_kind' => $invitationKind,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'opened_at' => $openedAt,
+        ]);
+
+        if (! $guestParty instanceof EventGuestParty) {
+            return;
+        }
+
+        $guestParty->forceFill([
+            'invitation_open_count' => (int) $guestParty->invitation_open_count + 1,
+            'invitation_first_opened_at' => $guestParty->invitation_first_opened_at ?? $openedAt,
+            'invitation_last_opened_at' => $openedAt,
+            'invitation_last_opened_ip' => $request->ip(),
+            'invitation_last_opened_user_agent' => $request->userAgent(),
+            'invitation_status' => $guestParty->invitation_status === 'responded' ? 'responded' : 'opened',
+        ])->save();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function invitationPageProps(
+        Request $request,
+        Event $event,
+        ?EventGuestParty $guestParty,
+        bool $isPublicInvite,
+    ): array {
+        $branding = $this->resolvedEventBranding($event);
+        app()->setLocale(FrontendLocalization::resolveEventLocale($request, $branding));
+        $settings = $this->eventInvitationSettings($event);
+        $token = $isPublicInvite
+            ? $this->ensurePublicInvitationToken($event)
+            : $this->ensureGuestPartyInvitationToken($guestParty);
+
+        return [
+            'eventName' => $event->name,
+            'eventType' => $event->type,
+            'submitted' => $request->boolean('submitted'),
+            'isPublicInvite' => $isPublicInvite,
+            'guestParty' => $guestParty instanceof EventGuestParty
+                ? [
+                    'name' => $guestParty->name,
+                    'phone' => $guestParty->phone,
+                    'invitedAttendeesCount' => $guestParty->invited_attendees_count,
+                    'confirmedAttendeesCount' => $guestParty->confirmed_attendees_count,
+                    'attendanceStatus' => $guestParty->attendance_status,
+                    'guestNames' => $guestParty->guest_names,
+                    'mealPreference' => $guestParty->meal_preference,
+                    'responseNotes' => $guestParty->response_notes,
+                ]
+                : null,
+            'invitation' => [
+                'template' => $settings['template'],
+                'headline' => $settings['headline'],
+                'message' => $settings['message'],
+                'closing' => $settings['closing'],
+                'contactPhone' => $settings['contactPhone'],
+            ],
+            'eventDetails' => [
+                'dateLabel' => $this->invitationPrimaryDateLabel($event),
+                'venueAddress' => $this->invitationVenueAddress($event),
+                'timezone' => $event->timezone,
+                'moments' => $this->invitationMoments($event),
+            ],
+            'links' => [
+                'respond' => $isPublicInvite
+                    ? route('events.guests.public-invitation.respond', $token)
+                    : route('events.guests.invitation.respond', $token),
+                'album' => route('events.album', $event->share_token),
+            ],
+            'branding' => [
+                'primaryColor' => (string) ($branding['primary_color'] ?? '#0F172A'),
+                'accentColor' => (string) ($branding['accent_color'] ?? '#D97706'),
+                'logoUrl' => $this->brandingLogoUrl($branding),
+                'albumBackgroundMode' => $this->albumBackgroundMode($branding),
+                'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
+                'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
+            ],
+            'appName' => config('app.name'),
+            'showPoweredBy' => ! $this->eventRemovesAppBranding($event),
+        ];
+    }
+
+    private function invitationPrimaryDateLabel(Event $event): string
+    {
+        $date = $event->event_date;
+
+        if ($date instanceof CarbonInterface) {
+            return $date->setTimezone($event->timezone)->isoFormat('dddd, D MMMM YYYY');
+        }
+
+        return 'Date to be confirmed';
+    }
+
+    private function invitationVenueAddress(Event $event): ?string
+    {
+        $venueAddress = is_string($event->venue_address ?? null) ? trim((string) $event->venue_address) : '';
+
+        if ($venueAddress !== '') {
+            return $venueAddress;
+        }
+
+        return collect($event->sub_events ?? [])
+            ->map(fn (mixed $subEvent): ?string => is_array($subEvent) && is_string($subEvent['address'] ?? null)
+                ? trim((string) $subEvent['address'])
+                : null)
+            ->filter(fn (?string $address): bool => is_string($address) && $address !== '')
+            ->first();
+    }
+
+    /**
+     * @return array<int, array{label: string, date: string, time: string, address: string}>
+     */
+    private function invitationMoments(Event $event): array
+    {
+        $timezone = $event->timezone;
+        $subEvents = is_array($event->sub_events) ? $event->sub_events : [];
+
+        if ($subEvents !== []) {
+            return collect($subEvents)
+                ->filter(fn (mixed $subEvent): bool => is_array($subEvent))
+                ->map(function (array $subEvent) use ($timezone): array {
+                    $date = is_string($subEvent['date'] ?? null) ? $subEvent['date'] : null;
+                    $startTime = is_string($subEvent['start_time'] ?? null) ? $subEvent['start_time'] : null;
+                    $address = is_string($subEvent['address'] ?? null) && trim((string) $subEvent['address']) !== ''
+                        ? trim((string) $subEvent['address'])
+                        : 'Address not needed';
+
+                    $dateLabel = $date !== null
+                        ? CarbonImmutable::parse($date, $timezone)->isoFormat('ddd, D MMM')
+                        : 'Date pending';
+
+                    return [
+                        'label' => is_string($subEvent['label'] ?? null) ? (string) $subEvent['label'] : 'Event moment',
+                        'date' => $dateLabel,
+                        'time' => $startTime !== null && trim($startTime) !== '' ? $startTime : 'Time pending',
+                        'address' => $address,
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        return [[
+            'label' => 'Main event',
+            'date' => $this->invitationPrimaryDateLabel($event),
+            'time' => 'Time pending',
+            'address' => $this->invitationVenueAddress($event) ?? 'Address pending',
+        ]];
     }
 
     /**

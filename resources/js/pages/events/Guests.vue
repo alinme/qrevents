@@ -3,15 +3,20 @@ import { Head, useForm } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     Clock3,
+    Copy,
+    ExternalLink,
     Import,
     Pencil,
     Phone,
+    ScrollText,
+    SendHorizontal,
     Trash2,
     UserPlus,
     Users,
     Wallet,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { toast } from 'vue-sonner';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -50,6 +55,16 @@ type EventLinks = {
     guests: string;
     guestPartiesStore: string;
     guestPartiesImport: string;
+    invitationSettingsUpdate: string;
+};
+
+type EventInvitationSettings = {
+    template: 'classic' | 'floral' | 'midnight';
+    headline: string;
+    message: string;
+    closing: string;
+    contactPhone: string | null;
+    publicRsvpEnabled: boolean;
 };
 
 type GuestParty = {
@@ -71,6 +86,10 @@ type GuestParty = {
     giftType: 'money' | 'gift' | null;
     giftCurrency: 'EUR' | 'GBP' | 'RON' | null;
     giftAmount: string | null;
+    guestNames: string | null;
+    mealPreference: 'standard' | 'vegetarian' | 'vegan' | 'halal' | 'other' | null;
+    responseNotes: string | null;
+    inviteUrl: string;
     updateUrl: string;
     deleteUrl: string;
 };
@@ -89,6 +108,8 @@ type GuestPartyStats = {
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
+    eventInvitationSettings: EventInvitationSettings;
+    publicInvitationUrl: string;
     guestPartyStats: GuestPartyStats;
     guestParties: GuestParty[];
 }>();
@@ -108,6 +129,7 @@ const guestDialogOpen = ref(false);
 const importDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
+const savingInvitationSettings = ref(false);
 
 const guestForm = useForm({
     name: '',
@@ -129,6 +151,15 @@ const importForm = useForm<{
 }>({
     import_text: '',
     import_file: null,
+});
+
+const invitationSettingsForm = useForm({
+    template: props.eventInvitationSettings.template,
+    headline: props.eventInvitationSettings.headline,
+    message: props.eventInvitationSettings.message,
+    closing: props.eventInvitationSettings.closing,
+    contact_phone: props.eventInvitationSettings.contactPhone ?? '',
+    public_rsvp_enabled: props.eventInvitationSettings.publicRsvpEnabled,
 });
 
 const isEditing = computed(() => activeGuestParty.value !== null);
@@ -256,6 +287,33 @@ const importGuestParties = (): void => {
     });
 };
 
+const saveInvitationSettings = (): void => {
+    savingInvitationSettings.value = true;
+
+    invitationSettingsForm.patch(props.eventLinks.invitationSettingsUpdate, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Invitation settings saved.');
+        },
+        onFinish: () => {
+            savingInvitationSettings.value = false;
+        },
+    });
+};
+
+const copyLink = async (url: string, label: string): Promise<void> => {
+    try {
+        await navigator.clipboard.writeText(url);
+        toast.success(`${label} copied.`);
+    } catch {
+        toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+};
+
+const openInvite = (url: string): void => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+};
+
 const onImportFileChange = (event: Event): void => {
     const input = event.target as HTMLInputElement;
     importForm.import_file = input.files?.[0] ?? null;
@@ -325,6 +383,20 @@ const giftLabel = (party: GuestParty): string => {
 
     return 'No gift yet';
 };
+
+const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null => {
+    if (!value) {
+        return null;
+    }
+
+    return {
+        standard: 'Standard meal',
+        vegetarian: 'Vegetarian meal',
+        vegan: 'Vegan meal',
+        halal: 'Halal meal',
+        other: 'Other meal request',
+    }[value];
+};
 </script>
 
 <template>
@@ -354,6 +426,123 @@ const giftLabel = (party: GuestParty): string => {
                         <UserPlus class="mr-2 size-4" />
                         Add guest party
                     </Button>
+                </div>
+            </section>
+
+            <section class="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="space-y-2">
+                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
+                                Invitation copy
+                            </p>
+                            <h2 class="text-lg font-semibold text-neutral-950">
+                                One invite style for every family link
+                            </h2>
+                            <p class="max-w-2xl text-sm leading-6 text-neutral-600">
+                                Save the main invitation message once, then copy tracked links for each family or open the public RSVP page.
+                            </p>
+                        </div>
+                        <div class="rounded-2xl bg-neutral-950 p-2 text-white">
+                            <ScrollText class="size-4" />
+                        </div>
+                    </div>
+
+                    <div class="mt-5 grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Template
+                            </label>
+                            <NativeSelect v-model="invitationSettingsForm.template">
+                                <NativeSelectOption value="classic">Classic</NativeSelectOption>
+                                <NativeSelectOption value="floral">Floral</NativeSelectOption>
+                                <NativeSelectOption value="midnight">Midnight</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Contact phone
+                            </label>
+                            <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional contact number" />
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Headline
+                            </label>
+                            <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Invitation message
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.message"
+                                rows="4"
+                                placeholder="Write the main invitation text once."
+                            />
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Closing note
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.closing"
+                                rows="3"
+                                placeholder="A warm closing reminder for the RSVP."
+                            />
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex flex-col gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                        <label class="inline-flex items-center gap-3 text-sm text-neutral-700">
+                            <input
+                                v-model="invitationSettingsForm.public_rsvp_enabled"
+                                type="checkbox"
+                                class="size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950"
+                            >
+                            Public RSVP link enabled
+                        </label>
+
+                        <Button
+                            class="rounded-full px-5"
+                            :disabled="savingInvitationSettings || invitationSettingsForm.processing"
+                            @click="saveInvitationSettings"
+                        >
+                            <SendHorizontal class="mr-2 size-4" />
+                            Save invitation copy
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
+                        Public RSVP
+                    </p>
+                    <h2 class="mt-2 text-lg font-semibold text-neutral-950">
+                        One shareable link for guests not on the list yet
+                    </h2>
+                    <p class="mt-2 text-sm leading-6 text-neutral-600">
+                        Use this when someone replies late or reaches out without already being in the guest list. Their answer still lands inside the ledger.
+                    </p>
+
+                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
+                        {{ publicInvitationUrl }}
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-3">
+                        <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
+                            <Copy class="mr-2 size-4" />
+                            Copy public RSVP link
+                        </Button>
+                        <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
+                            <ExternalLink class="mr-2 size-4" />
+                            Open public RSVP
+                        </Button>
+                    </div>
                 </div>
             </section>
 
@@ -452,6 +641,22 @@ const giftLabel = (party: GuestParty): string => {
                                 <Button
                                     variant="outline"
                                     class="rounded-full px-4"
+                                    @click="copyLink(party.inviteUrl, `${party.name} invite link`)"
+                                >
+                                    <Copy class="mr-2 size-4" />
+                                    Copy link
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
+                                    @click="openInvite(party.inviteUrl)"
+                                >
+                                    <ExternalLink class="mr-2 size-4" />
+                                    Open invite
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
                                     @click="openEditDialog(party)"
                                 >
                                     <Pencil class="mr-2 size-4" />
@@ -508,6 +713,15 @@ const giftLabel = (party: GuestParty): string => {
                                 </p>
                                 <p class="mt-2 text-sm leading-6 text-neutral-700">
                                     {{ party.notes || 'No notes yet.' }}
+                                </p>
+                                <p v-if="party.guestNames" class="mt-2 text-xs text-neutral-500">
+                                    Guest names: {{ party.guestNames }}
+                                </p>
+                                <p v-if="mealPreferenceLabel(party.mealPreference)" class="mt-1 text-xs text-neutral-500">
+                                    {{ mealPreferenceLabel(party.mealPreference) }}
+                                </p>
+                                <p v-if="party.responseNotes" class="mt-1 text-xs text-neutral-500">
+                                    RSVP note: {{ party.responseNotes }}
                                 </p>
                             </div>
                         </div>
