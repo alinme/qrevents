@@ -4023,11 +4023,11 @@ const onAlbumTouchCancel = (): void => {
                                 {{ t('public.album.profile_description') }}
                             </p>
 
-                            <div class="mt-5 grid grid-cols-4 gap-3 border-t border-white/14 pt-4">
+                            <div class="mx-auto mt-5 grid max-w-xl grid-cols-4 gap-3 border-t border-white/14 pt-4 text-center">
                                 <div
                                     v-for="stat in albumHeaderStats"
                                     :key="stat.label"
-                                    class="min-w-0 text-left"
+                                    class="min-w-0 text-center"
                                 >
                                     <p class="truncate text-lg font-semibold text-white">
                                         {{ stat.value }}
@@ -5634,55 +5634,57 @@ const onAlbumTouchCancel = (): void => {
                 </header>
 
                 <div
-                    class="flex h-screen w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-24 pt-16"
+                    class="flex h-screen w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))]"
                     @touchstart.passive="onViewerTouchStart"
                     @touchmove.passive="onViewerTouchMove"
                     @touchend.passive="onViewerTouchEnd"
                     @touchcancel.passive="onViewerTouchCancel"
                 >
-                    <img
-                        v-if="selectedAsset.kind === 'photo' && selectedAsset.previewUrl"
-                        :src="selectedAsset.previewUrl"
-                        :alt="t('public.shared.alt.selected_event_photo')"
-                        class="block max-h-full max-w-full object-contain"
-                    />
-                    <video
-                        v-else-if="selectedAsset.kind === 'video' && selectedAsset.previewUrl"
-                        :src="selectedAsset.previewUrl"
-                        :poster="selectedAsset.thumbnailUrl ?? undefined"
-                        class="block max-h-full max-w-full object-contain"
-                        controls
-                        autoplay
-                        playsinline
-                    />
-                    <div
-                        v-else-if="
-                            selectedAsset.kind === 'video' &&
-                            selectedAsset.videoProcessing
-                        "
-                        class="flex aspect-video w-full max-w-[min(92vw,1100px)] flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/20 bg-white/10 px-8 text-center text-white backdrop-blur"
-                    >
-                        <LoaderCircle class="size-10 animate-spin text-white/80" />
-                        <div class="space-y-1">
-                            <p class="text-base font-semibold">
-                                {{ t('public.album.labels.processing_video') }}
-                            </p>
-                            <p class="text-sm text-white/75">
-                                {{ t('public.album.labels.upload_preparing') }}
+                    <div class="flex h-full w-full items-center justify-center overflow-hidden">
+                        <img
+                            v-if="selectedAsset.kind === 'photo' && selectedAsset.previewUrl"
+                            :src="selectedAsset.previewUrl"
+                            :alt="t('public.shared.alt.selected_event_photo')"
+                            class="block max-h-full max-w-full object-contain object-center"
+                        />
+                        <video
+                            v-else-if="selectedAsset.kind === 'video' && selectedAsset.previewUrl"
+                            :src="selectedAsset.previewUrl"
+                            :poster="selectedAsset.thumbnailUrl ?? undefined"
+                            class="block max-h-full max-w-full object-contain object-center"
+                            controls
+                            autoplay
+                            playsinline
+                        />
+                        <div
+                            v-else-if="
+                                selectedAsset.kind === 'video' &&
+                                selectedAsset.videoProcessing
+                            "
+                            class="flex aspect-video w-full max-w-[min(92vw,1100px)] flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/20 bg-white/10 px-8 text-center text-white backdrop-blur"
+                        >
+                            <LoaderCircle class="size-10 animate-spin text-white/80" />
+                            <div class="space-y-1">
+                                <p class="text-base font-semibold">
+                                    {{ t('public.album.labels.processing_video') }}
+                                </p>
+                                <p class="text-sm text-white/75">
+                                    {{ t('public.album.labels.upload_preparing') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            v-else-if="selectedAsset.kind === 'text'"
+                            class="flex max-h-full w-full max-w-[min(90vw,80vh)] items-center justify-center rounded-[2rem] p-8 shadow-2xl"
+                            :style="textPostSurfaceStyle(selectedAsset)"
+                        >
+                            <p
+                                class="max-w-[78%] whitespace-pre-wrap text-center text-2xl font-semibold leading-relaxed sm:text-3xl"
+                                :style="textPostContentStyle(selectedAsset)"
+                            >
+                                {{ selectedAsset.text ?? t('public.album.labels.text_post') }}
                             </p>
                         </div>
-                    </div>
-                    <div
-                        v-else-if="selectedAsset.kind === 'text'"
-                        class="flex aspect-square w-full max-w-[min(90vw,80vh)] items-center justify-center rounded-[2rem] p-8 shadow-2xl"
-                        :style="textPostSurfaceStyle(selectedAsset)"
-                    >
-                        <p
-                            class="max-w-[78%] whitespace-pre-wrap text-center text-2xl font-semibold leading-relaxed sm:text-3xl"
-                            :style="textPostContentStyle(selectedAsset)"
-                        >
-                            {{ selectedAsset.text ?? t('public.album.labels.text_post') }}
-                        </p>
                     </div>
 
                     <button
