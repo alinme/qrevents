@@ -659,6 +659,23 @@ it('shares localized public album strings from the event display language', func
         );
 });
 
+it('allows overriding the public album locale from the query string', function () {
+    $event = Event::factory()->create([
+        'branding' => [
+            'display_language' => 'en',
+        ],
+    ]);
+
+    $this->get(route('events.album', ['shareToken' => $event->share_token, 'lang' => 'ro']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Album')
+            ->where('locale.current', 'ro')
+            ->where('translations.public.album.kicker', 'Album digital')
+            ->where('translations.public.album.nav.settings', 'Setări')
+        );
+});
+
 it('stores public guest profiles with optional avatars', function () {
     $event = Event::factory()->create();
 

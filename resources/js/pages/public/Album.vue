@@ -33,6 +33,7 @@ import {
 import {
     IconBoxMultiple,
     IconFileText,
+    IconLanguage,
     IconPhoto,
     IconVideo,
 } from '@tabler/icons-vue';
@@ -84,7 +85,13 @@ import {
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
 
-const page = usePage();
+const page = usePage<{
+    name?: string;
+    locale?: {
+        current?: string;
+        available?: string[];
+    };
+}>();
 const appName = computed(() => page.props.name ?? 'QR Events');
 
 type Limits = {
@@ -856,12 +863,12 @@ const albumPrimaryColor = computed(
     () => props.appearance.primaryColor || '#0f172a',
 );
 const albumAccentColor = computed(
-    () => props.appearance.accentColor || props.appearance.primaryColor || '#c2410c',
+    () => props.appearance.accentColor || props.appearance.primaryColor || '#334155',
 );
 const heroAccentStyle = computed(() => {
     return {
-        backgroundImage: `linear-gradient(135deg, ${albumPrimaryColor.value} 0%, ${albumAccentColor.value} 100%)`,
-        boxShadow: `0 18px 40px color-mix(in srgb, ${albumPrimaryColor.value} 28%, transparent)`,
+        backgroundColor: albumPrimaryColor.value,
+        boxShadow: `0 12px 26px color-mix(in srgb, ${albumPrimaryColor.value} 18%, transparent)`,
     };
 });
 const albumGradientStyle = computed(() => ({
@@ -1081,6 +1088,13 @@ const selectedAssetLiked = computed(() =>
         : false,
 );
 const showBottomNav = computed(() => onboardingDone.value);
+const availableLocales = computed(() => {
+    const nextLocales = page.props.locale?.available;
+
+    return Array.isArray(nextLocales) && nextLocales.length > 0
+        ? nextLocales.filter((value): value is string => typeof value === 'string')
+        : ['en', 'ro', 'el'];
+});
 
 const textPostSurfaceStyle = (item: {
     textThemeImageUrl: string | null;
@@ -1309,20 +1323,31 @@ const stackMediaBadgeIcon = (stack: GalleryStack) =>
             ? IconFileText
             : IconPhoto;
 
-const stackMediaBadgeLabel = (stack: GalleryStack): string => {
-    if (stack.mediaCount > 1) {
-        return t('public.album.labels.multiple_items');
+const cycleAlbumLocale = (): void => {
+    if (typeof window === 'undefined') {
+        return;
     }
 
-    if (stack.preview.kind === 'video') {
-        return t('public.album.stats.videos');
+    const url = new URL(window.location.href);
+    const currentOverride = url.searchParams.get('lang');
+    const localeOrder = ['auto', ...availableLocales.value];
+    const currentKey = currentOverride && availableLocales.value.includes(currentOverride)
+        ? currentOverride
+        : 'auto';
+    const currentIndex = localeOrder.indexOf(currentKey);
+    const nextLocale = localeOrder[(currentIndex + 1) % localeOrder.length] ?? 'auto';
+
+    if (nextLocale === 'auto') {
+        url.searchParams.delete('lang');
+    } else {
+        url.searchParams.set('lang', nextLocale);
     }
 
-    if (stack.preview.kind === 'text') {
-        return t('public.album.nav.text');
-    }
-
-    return t('public.album.stats.photos');
+    router.visit(url.toString(), {
+        method: 'get',
+        preserveScroll: true,
+        preserveState: false,
+    });
 };
 
 const messagePreviewLimit = 180;
@@ -4069,9 +4094,6 @@ const onAlbumTouchCancel = (): void => {
                                     <Rows3 class="size-4" />
                                 </button>
                             </div>
-                            <span class="text-xs text-slate-500">
-                                {{ t('public.album.gallery.items_count', { count: assetItems.length }) }}
-                            </span>
                         </div>
                     </div>
 
@@ -4344,15 +4366,12 @@ const onAlbumTouchCancel = (): void => {
                                 </button>
 
                                 <div
-                                    class="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/35 bg-black/42 px-3 py-2 text-white shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+                                    class="pointer-events-none absolute right-3 top-3 text-white"
                                 >
                                     <component
                                         :is="stackMediaBadgeIcon(stack)"
-                                        class="size-5"
+                                        class="size-6 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
                                     />
-                                    <span class="text-[0.65rem] font-semibold uppercase tracking-[0.14em]">
-                                        {{ stackMediaBadgeLabel(stack) }}
-                                    </span>
                                 </div>
 
                                 <div
@@ -4694,52 +4713,51 @@ const onAlbumTouchCancel = (): void => {
             class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40 px-3 pb-3"
             aria-label="Guest album actions"
         >
-            <div class="mx-auto flex max-w-2xl items-end justify-between gap-2 rounded-[2rem] border border-slate-200/80 bg-white/96 px-3 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+            <div class="mx-auto flex max-w-2xl items-center justify-between gap-2 rounded-[2rem] border border-slate-200/80 bg-white/96 px-3 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur-xl">
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
-                    :class="isComposerOpen && activeView === 'upload_media' ? 'bg-slate-900 text-white' : ''"
-                    @click="setActiveView('upload_media')"
+                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
+                    :aria-label="t('public.album.nav.language')"
+                    @click="cycleAlbumLocale"
                 >
-                    <Images class="size-5" />
-                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.photo') }}</span>
+                    <IconLanguage class="size-6" />
                 </button>
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
                     :class="isComposerOpen && activeView === 'video_testimonial' ? 'bg-slate-900 text-white' : ''"
+                    :aria-label="t('public.album.nav.video')"
                     @click="setActiveView('video_testimonial')"
                 >
-                    <Film class="size-5" />
-                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.video') }}</span>
+                    <Film class="size-6" />
                 </button>
                 <button
                     type="button"
-                    class="-mt-7 inline-flex size-18 shrink-0 flex-col items-center justify-center rounded-[1.7rem] text-white shadow-[0_16px_36px_rgba(15,23,42,0.28)] transition hover:-translate-y-0.5"
+                    class="-mt-4 inline-flex size-16 shrink-0 items-center justify-center rounded-[1.45rem] text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
                     :style="heroAccentStyle"
+                    :aria-label="t('public.album.nav.camera')"
                     @click="triggerQuickUpload"
                 >
                     <Camera class="size-7" />
-                    <span class="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]">{{ t('public.album.nav.camera') }}</span>
                 </button>
                 <button
                     v-if="props.allowTextPosts"
                     type="button"
-                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
                     :class="isComposerOpen && activeView === 'text_wish' ? 'bg-slate-900 text-white' : ''"
+                    :aria-label="t('public.album.nav.text')"
                     @click="setActiveView('text_wish')"
                 >
-                    <MessageSquareText class="size-5" />
-                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.text') }}</span>
+                    <MessageSquareText class="size-6" />
                 </button>
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-600 transition hover:bg-slate-100"
+                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
                     :class="menuOpen ? 'bg-slate-900 text-white' : ''"
+                    :aria-label="t('public.album.nav.settings')"
                     @click="openGuestSettings"
                 >
-                    <Menu class="size-5" />
-                    <span class="text-[0.7rem] font-semibold uppercase tracking-[0.12em]">{{ t('public.album.nav.settings') }}</span>
+                    <Menu class="size-6" />
                 </button>
             </div>
         </nav>
@@ -4936,25 +4954,22 @@ const onAlbumTouchCancel = (): void => {
                                 </button>
                             </div>
 
-                            <div class="rounded-[1.8rem] border border-slate-200 bg-white p-4 shadow-sm">
-                                <label for="upload-message" class="text-sm font-semibold text-slate-900">
-                                    {{ t('public.album.upload.message_placeholder') }}
-                                </label>
+                            <div class="space-y-2">
                                 <textarea
                                     id="upload-message"
                                     v-model="uploadForm.message"
                                     maxlength="500"
                                     :placeholder="t('public.album.upload.message_placeholder')"
                                     :disabled="!canUpload || uploadForm.processing"
-                                    rows="4"
-                                    class="mt-3 w-full resize-none rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                    rows="2"
+                                    class="min-h-12 w-full resize-none rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
                                 />
-                                <div class="mt-2 flex items-center justify-end text-xs font-medium text-slate-400">
+                                <div class="flex items-center justify-end text-xs font-medium text-slate-400">
                                     {{ uploadForm.message?.trim().length ?? 0 }}/500
                                 </div>
                                 <p
                                     v-if="uploadForm.errors.message"
-                                    class="mt-2 text-sm text-rose-700"
+                                    class="text-sm text-rose-700"
                                 >
                                     {{ uploadForm.errors.message }}
                                 </p>
@@ -5015,6 +5030,7 @@ const onAlbumTouchCancel = (): void => {
                                         {{ t('public.album.labels.selected_files') }} ({{ uploadForm.files.length }})
                                     </p>
                                     <button
+                                        v-if="uploadForm.files.length > 0"
                                         type="button"
                                         class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                         :disabled="uploadForm.processing || isValidatingVideos"
@@ -5084,6 +5100,7 @@ const onAlbumTouchCancel = (): void => {
                             </p>
 
                             <button
+                                v-if="uploadForm.processing || uploadForm.files.length > 0"
                                 type="button"
                                 class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                                 :style="heroAccentStyle"
@@ -5131,7 +5148,7 @@ const onAlbumTouchCancel = (): void => {
                                         :disabled="!canUploadText || textForm.processing"
                                         :placeholder="t('public.album.text.canvas_hint')"
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-[2rem] font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[2.4rem]"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent text-center text-[3rem] font-semibold leading-tight outline-none placeholder:opacity-82 sm:text-[3.6rem]"
                                         :class="
                                             !canUploadText || textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
@@ -5197,6 +5214,7 @@ const onAlbumTouchCancel = (): void => {
                                 {{ textForm.errors.text || textForm.errors.text_post_theme_id }}
                             </p>
                             <button
+                                v-if="textForm.processing || textForm.text.trim().length > 0"
                                 type="button"
                                 class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                                 :style="heroAccentStyle"
@@ -5753,15 +5771,6 @@ const onAlbumTouchCancel = (): void => {
                             <Copy class="size-3.5" />
                             {{ t('public.album.asset.share') }}
                         </button>
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
-                            :aria-label="t('public.album.actions.open_comments')"
-                            @click="openAssetComments(activeStackKey ?? '')"
-                        >
-                            <MessageCircle class="size-3.5" />
-                            {{ t('public.album.comments.title') }}
-                        </button>
                         <a
                             v-if="selectedAssetCanDownload"
                             :href="selectedAsset.downloadUrl"
@@ -5770,16 +5779,6 @@ const onAlbumTouchCancel = (): void => {
                             <Download class="size-3.5" />
                             {{ t('public.shared.download') }}
                         </a>
-                        <button
-                            v-if="showCaptions"
-                            type="button"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
-                            :aria-label="t('public.album.actions.open_info')"
-                            @click="openAssetInfo(activeStackKey ?? '', activeStackSlideIndex)"
-                        >
-                            <Info class="size-3.5" />
-                            {{ t('public.shared.info') }}
-                        </button>
                     </div>
 
                     <p

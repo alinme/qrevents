@@ -58,6 +58,12 @@ class FrontendLocalization
      */
     public static function resolveEventLocale(Request $request, array $branding): string
     {
+        $queryLocale = $request->query('lang');
+
+        if (is_string($queryLocale) && in_array($queryLocale, self::SUPPORTED_LOCALES, true)) {
+            return self::normalize($queryLocale);
+        }
+
         $configuredLocale = $branding['display_language'] ?? 'automatic';
 
         if (! is_string($configuredLocale) || $configuredLocale === '' || $configuredLocale === 'automatic') {
