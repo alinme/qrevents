@@ -140,6 +140,37 @@ it('exports the guest ledger as csv for the event owner', function () {
         ->and($content)->toContain('450.00');
 });
 
+it('allows an event owner to bulk mark invitations as delivered or sent', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $firstParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'invitation_status' => 'draft',
+    ]);
+
+    $secondParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Ionescu',
+        'invitation_status' => 'draft',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.guests.invitations.bulk-update', $event), [
+            'guest_party_ids' => [$firstParty->id, $secondParty->id],
+            'action' => 'mark_delivered_in_person',
+        ])
+        ->assertRedirect();
+
+    $firstParty->refresh();
+    $secondParty->refresh();
+
+    expect($firstParty->invitation_status)->toBe('delivered_in_person')
+        ->and($firstParty->invitation_delivery_channel)->toBe('in_person')
+        ->and($firstParty->invitation_delivered_at)->not->toBeNull()
+        ->and($secondParty->invitation_status)->toBe('delivered_in_person')
+        ->and($secondParty->invitation_delivery_channel)->toBe('in_person');
+});
+
 it('forbids another user from managing guest parties', function () {
     $owner = User::factory()->create();
     $otherUser = User::factory()->create();

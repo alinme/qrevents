@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -56,6 +57,7 @@ type EventLinks = {
     guests: string;
     guestPartiesStore: string;
     guestPartiesImport: string;
+    guestInvitationsBulkUpdate: string;
     invitationSettingsUpdate: string;
 };
 
@@ -132,6 +134,7 @@ const importDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
+const selectedGuestIds = ref<number[]>([]);
 
 const guestForm = useForm({
     name: '',
@@ -164,9 +167,41 @@ const invitationSettingsForm = useForm({
     public_rsvp_enabled: props.eventInvitationSettings.publicRsvpEnabled,
 });
 
+const invitationBulkForm = useForm({
+    guest_party_ids: [] as number[],
+    action: 'mark_sent_online' as 'mark_delivered_in_person' | 'mark_sent_online',
+    delivery_channel: 'other' as 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
+});
+
 const isEditing = computed(() => activeGuestParty.value !== null);
 const showGiftAmount = computed(() => guestForm.gift_type === 'money');
 const showConfirmedCount = computed(() => guestForm.attendance_status === 'accepted');
+const selectedGuestParties = computed(() => props.guestParties.filter((party) => selectedGuestIds.value.includes(party.id)));
+const allGuestsSelected = computed(() => props.guestParties.length > 0 && selectedGuestIds.value.length === props.guestParties.length);
+
+const invitationTemplateCards = [
+    {
+        id: 'classic',
+        label: 'Classic',
+        summary: 'Warm cream paper, elegant spacing, and a traditional feel for formal families.',
+        artClass: 'border-amber-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(255,255,255,0.95)),radial-gradient(circle_at_top,rgba(217,119,6,0.18),transparent_50%)] text-neutral-900',
+        accentClass: 'bg-amber-500/15 text-amber-700',
+    },
+    {
+        id: 'floral',
+        label: 'Floral',
+        summary: 'Soft rose tones with romantic energy for weddings, baptisms, and family celebrations.',
+        artClass: 'border-rose-200 bg-[linear-gradient(160deg,rgba(255,241,242,0.98),rgba(255,255,255,0.95)),radial-gradient(circle_at_top_right,rgba(244,114,182,0.22),transparent_45%)] text-neutral-900',
+        accentClass: 'bg-rose-500/15 text-rose-700',
+    },
+    {
+        id: 'midnight',
+        label: 'Midnight',
+        summary: 'Dark, polished, and modern with a richer stage-like mood for bold invitation pages.',
+        artClass: 'border-slate-800 bg-[linear-gradient(160deg,rgba(15,23,42,0.98),rgba(30,41,59,0.96)),radial-gradient(circle_at_top,rgba(234,179,8,0.18),transparent_42%)] text-white',
+        accentClass: 'bg-white/10 text-white/80',
+    },
+] as const;
 
 const statCards = computed(() => [
     {
@@ -307,6 +342,68 @@ const exportGuestLedger = (): void => {
     window.location.assign(props.guestLedgerExportUrl);
 };
 
+const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
+    if (checked) {
+        selectedGuestIds.value = Array.from(new Set([...selectedGuestIds.value, guestPartyId]));
+
+        return;
+    }
+
+    selectedGuestIds.value = selectedGuestIds.value.filter((id) => id !== guestPartyId);
+};
+
+const toggleSelectAllGuests = (checked: boolean): void => {
+    selectedGuestIds.value = checked
+        ? props.guestParties.map((party) => party.id)
+        : [];
+};
+
+const clearGuestSelection = (): void => {
+    selectedGuestIds.value = [];
+};
+
+const invitationMessageForParty = (party: GuestParty): string => {
+    return [
+        props.eventInvitationSettings.headline,
+        `${party.name},`,
+        props.eventInvitationSettings.message,
+        props.eventInvitationSettings.closing,
+        props.eventInvitationSettings.contactPhone ? `Contact: ${props.eventInvitationSettings.contactPhone}` : null,
+        `RSVP: ${party.inviteUrl}`,
+    ]
+        .filter((line): line is string => Boolean(line && line.trim() !== ''))
+        .join('\n\n');
+};
+
+const invitationMessageForParties = (parties: GuestParty[]): string => {
+    return parties
+        .map((party) => invitationMessageForParty(party))
+        .join('\n\n--------------------\n\n');
+};
+
+const updateInvitationDelivery = (
+    guestPartyIds: number[],
+    action: 'mark_delivered_in_person' | 'mark_sent_online',
+    deliveryChannel: 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
+): void => {
+    if (guestPartyIds.length === 0) {
+        return;
+    }
+
+    invitationBulkForm.guest_party_ids = guestPartyIds;
+    invitationBulkForm.action = action;
+    invitationBulkForm.delivery_channel = deliveryChannel;
+
+    invitationBulkForm.post(props.eventLinks.guestInvitationsBulkUpdate, {
+        preserveScroll: true,
+        onSuccess: () => {
+            if (guestPartyIds.length === selectedGuestIds.value.length) {
+                clearGuestSelection();
+            }
+        },
+    });
+};
+
 const copyLink = async (url: string, label: string): Promise<void> => {
     try {
         await navigator.clipboard.writeText(url);
@@ -318,6 +415,76 @@ const copyLink = async (url: string, label: string): Promise<void> => {
 
 const openInvite = (url: string): void => {
     window.open(url, '_blank', 'noopener,noreferrer');
+};
+
+const shareGuestInvite = async (party: GuestParty): Promise<void> => {
+    const text = invitationMessageForParty(party);
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: props.currentEvent.name,
+                text,
+                url: party.inviteUrl,
+            });
+        } else {
+            await navigator.clipboard.writeText(text);
+            toast.success(`${party.name} invitation copied.`);
+        }
+
+        updateInvitationDelivery([party.id], 'mark_sent_online', 'other');
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+        }
+
+        toast.error(`Could not share ${party.name}'s invitation.`);
+    }
+};
+
+const shareSelectedInvites = async (): Promise<void> => {
+    if (selectedGuestParties.value.length === 0) {
+        toast.error('Select at least one guest party first.');
+
+        return;
+    }
+
+    const text = invitationMessageForParties(selectedGuestParties.value);
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: `${props.currentEvent.name} invitations`,
+                text,
+            });
+        } else {
+            await navigator.clipboard.writeText(text);
+            toast.success('Selected invitation bundle copied.');
+        }
+
+        updateInvitationDelivery(selectedGuestParties.value.map((party) => party.id), 'mark_sent_online', 'other');
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+        }
+
+        toast.error('Could not share the selected invitations.');
+    }
+};
+
+const copySelectedInvites = async (): Promise<void> => {
+    if (selectedGuestParties.value.length === 0) {
+        toast.error('Select at least one guest party first.');
+
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(invitationMessageForParties(selectedGuestParties.value));
+        toast.success('Selected invitation bundle copied.');
+    } catch {
+        toast.error('Could not copy the selected invitation bundle.');
+    }
 };
 
 const onImportFileChange = (event: Event): void => {
@@ -458,52 +625,80 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                         </div>
                     </div>
 
-                    <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    <div class="mt-5 space-y-4">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
                                 Template
                             </label>
-                            <NativeSelect v-model="invitationSettingsForm.template">
-                                <NativeSelectOption value="classic">Classic</NativeSelectOption>
-                                <NativeSelectOption value="floral">Floral</NativeSelectOption>
-                                <NativeSelectOption value="midnight">Midnight</NativeSelectOption>
-                            </NativeSelect>
+                            <div class="grid gap-3 lg:grid-cols-3">
+                                <button
+                                    v-for="template in invitationTemplateCards"
+                                    :key="template.id"
+                                    type="button"
+                                    :class="[
+                                        'relative overflow-hidden rounded-[28px] border p-4 text-left transition duration-200',
+                                        template.artClass,
+                                        invitationSettingsForm.template === template.id
+                                            ? 'ring-2 ring-neutral-950 shadow-lg shadow-neutral-900/10'
+                                            : 'hover:-translate-y-0.5 hover:shadow-md',
+                                    ]"
+                                    @click="invitationSettingsForm.template = template.id"
+                                >
+                                    <div class="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/25 blur-2xl" />
+                                    <div class="pointer-events-none absolute -bottom-10 -left-6 h-24 w-24 rounded-full bg-current/10 blur-2xl" />
+                                    <div class="relative space-y-6">
+                                        <div :class="['inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]', template.accentClass]">
+                                            {{ template.label }}
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="text-xl font-semibold tracking-tight">
+                                                {{ template.label }} invitation
+                                            </p>
+                                            <p class="text-sm leading-6 opacity-80">
+                                                {{ template.summary }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Contact phone
-                            </label>
-                            <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional contact number" />
-                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Contact phone
+                                </label>
+                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional contact number" />
+                            </div>
 
-                        <div class="space-y-2 md:col-span-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Headline
-                            </label>
-                            <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
-                        </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Headline
+                                </label>
+                                <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
+                            </div>
 
-                        <div class="space-y-2 md:col-span-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Invitation message
-                            </label>
-                            <Textarea
-                                v-model="invitationSettingsForm.message"
-                                rows="4"
-                                placeholder="Write the main invitation text once."
-                            />
-                        </div>
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Invitation message
+                                </label>
+                                <Textarea
+                                    v-model="invitationSettingsForm.message"
+                                    rows="4"
+                                    placeholder="Write the main invitation text once."
+                                />
+                            </div>
 
-                        <div class="space-y-2 md:col-span-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Closing note
-                            </label>
-                            <Textarea
-                                v-model="invitationSettingsForm.closing"
-                                rows="3"
-                                placeholder="A warm closing reminder for the RSVP."
-                            />
+                            <div class="space-y-2 md:col-span-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Closing note
+                                </label>
+                                <Textarea
+                                    v-model="invitationSettingsForm.closing"
+                                    rows="3"
+                                    placeholder="A warm closing reminder for the RSVP."
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -616,6 +811,68 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                 </div>
 
                 <div v-else class="divide-y divide-neutral-200">
+                    <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-700">
+                                <Checkbox
+                                    :checked="allGuestsSelected"
+                                    @update:checked="toggleSelectAllGuests(Boolean($event))"
+                                />
+                                Select all guest parties
+                            </label>
+                            <span class="text-sm text-neutral-500">
+                                {{ selectedGuestIds.length }} selected
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                :disabled="selectedGuestIds.length === 0 || invitationBulkForm.processing"
+                                @click="shareSelectedInvites"
+                            >
+                                <SendHorizontal class="mr-2 size-4" />
+                                Share selected
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                :disabled="selectedGuestIds.length === 0"
+                                @click="copySelectedInvites"
+                            >
+                                <Copy class="mr-2 size-4" />
+                                Copy selected
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                :disabled="selectedGuestIds.length === 0 || invitationBulkForm.processing"
+                                @click="updateInvitationDelivery(selectedGuestIds, 'mark_delivered_in_person', 'in_person')"
+                            >
+                                <CheckCircle2 class="mr-2 size-4" />
+                                Mark delivered
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                :disabled="selectedGuestIds.length === 0 || invitationBulkForm.processing"
+                                @click="updateInvitationDelivery(selectedGuestIds, 'mark_sent_online', 'other')"
+                            >
+                                <SendHorizontal class="mr-2 size-4" />
+                                Mark sent
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                class="rounded-full px-4"
+                                :disabled="selectedGuestIds.length === 0"
+                                @click="clearGuestSelection"
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    </div>
+
                     <div
                         v-for="party in guestParties"
                         :key="party.id"
@@ -623,6 +880,13 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                     >
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div class="space-y-2">
+                                <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-500">
+                                    <Checkbox
+                                        :checked="selectedGuestIds.includes(party.id)"
+                                        @update:checked="toggleGuestSelection(party.id, Boolean($event))"
+                                    />
+                                    Select invitation
+                                </label>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="text-lg font-semibold text-neutral-950">
                                         {{ party.name }}
@@ -651,6 +915,14 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 <Button
                                     variant="outline"
                                     class="rounded-full px-4"
+                                    @click="shareGuestInvite(party)"
+                                >
+                                    <SendHorizontal class="mr-2 size-4" />
+                                    Share
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
                                     @click="copyLink(party.inviteUrl, `${party.name} invite link`)"
                                 >
                                     <Copy class="mr-2 size-4" />
@@ -663,6 +935,15 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 >
                                     <ExternalLink class="mr-2 size-4" />
                                     Open invite
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
+                                    :disabled="invitationBulkForm.processing"
+                                    @click="updateInvitationDelivery([party.id], 'mark_delivered_in_person', 'in_person')"
+                                >
+                                    <CheckCircle2 class="mr-2 size-4" />
+                                    Delivered
                                 </Button>
                                 <Button
                                     variant="outline"

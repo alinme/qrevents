@@ -103,6 +103,20 @@ const cardToneClass = computed(() => {
     }[props.invitation.template];
 });
 
+const invitationHeroClass = computed(() => {
+    return {
+        classic: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(217,119,6,0.14),transparent_48%)] before:content-[\'\']',
+        floral: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_right,rgba(244,114,182,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(251,207,232,0.22),transparent_35%)] before:content-[\'\']',
+        midnight: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.14),transparent_30%)] before:content-[\'\']',
+    }[props.invitation.template];
+});
+
+const headlineClass = computed(() => {
+    return props.invitation.template === 'midnight'
+        ? 'text-4xl font-semibold tracking-tight sm:text-5xl'
+        : 'text-4xl font-semibold tracking-tight sm:text-5xl font-serif';
+});
+
 const mutedTextClass = computed(() => {
     return props.invitation.template === 'midnight'
         ? 'text-white/70'
@@ -125,8 +139,8 @@ const submit = (): void => {
 
         <div class="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl items-center">
             <div class="grid w-full gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.85fr)]">
-                <section :class="['rounded-[32px] border p-6 shadow-2xl backdrop-blur sm:p-8', cardToneClass]">
-                    <div class="flex flex-wrap items-center gap-3">
+                <section :class="['relative overflow-hidden rounded-[32px] border p-6 shadow-2xl backdrop-blur sm:p-8', cardToneClass, invitationHeroClass]">
+                    <div class="relative flex flex-wrap items-center gap-3">
                         <div class="inline-flex items-center gap-2 rounded-full border border-current/15 bg-current/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em]">
                             <Sparkles class="size-3.5" />
                             {{ t('invitations.badge') }}
@@ -136,7 +150,7 @@ const submit = (): void => {
                         </div>
                     </div>
 
-                    <div class="mt-6 space-y-4">
+                    <div class="relative mt-6 space-y-4">
                         <img
                             v-if="branding.logoUrl"
                             :src="branding.logoUrl"
@@ -148,7 +162,7 @@ const submit = (): void => {
                             <p :class="['text-sm uppercase tracking-[0.28em]', mutedTextClass]">
                                 {{ eventName }}
                             </p>
-                            <h1 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+                            <h1 :class="['mt-3', headlineClass]">
                                 {{ invitation.headline }}
                             </h1>
                         </div>

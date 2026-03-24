@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkUpdateEventGuestInvitationsRequest;
 use App\Http\Requests\CreateEventCheckoutSessionRequest;
 use App\Http\Requests\ImportEventGuestPartiesRequest;
 use App\Http\Requests\RespondEventGuestInvitationRequest;
@@ -263,6 +264,42 @@ class EventController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    public function bulkUpdateGuestInvitations(
+        BulkUpdateEventGuestInvitationsRequest $request,
+        Event $event,
+    ): RedirectResponse {
+        $this->assertCanManageEvent($request, $event);
+
+        $guestParties = $event->guestParties()
+            ->whereIn('id', $request->guestPartyIds())
+            ->get();
+
+        if ($guestParties->isEmpty()) {
+            return back()->with('error', 'No matching guest parties were found for that invitation action.');
+        }
+
+        $updatedCount = 0;
+        $deliveredAt = now();
+
+        foreach ($guestParties as $guestParty) {
+            $status = $this->invitationStatusForDeliveryAction($guestParty, $request->actionName());
+            $guestParty->forceFill([
+                'invitation_status' => $status,
+                'invitation_delivery_channel' => $request->deliveryChannel(),
+                'invitation_delivered_at' => $deliveredAt,
+            ])->save();
+
+            $updatedCount++;
+        }
+
+        $message = match ($request->actionName()) {
+            'mark_delivered_in_person' => "{$updatedCount} invitation ".($updatedCount === 1 ? 'was' : 'were').' marked as delivered in person.',
+            default => "{$updatedCount} invitation ".($updatedCount === 1 ? 'was' : 'were').' marked as sent online.',
+        };
+
+        return back()->with('success', $message);
     }
 
     public function updateInvitationSettings(
@@ -2224,6 +2261,7 @@ class EventController extends Controller
                 'settingsUpdate' => route('events.settings.update', $event),
                 'guestPartiesStore' => route('events.guests.store', $event),
                 'guestPartiesImport' => route('events.guests.import', $event),
+                'guestInvitationsBulkUpdate' => route('events.guests.invitations.bulk-update', $event),
                 'invitationSettingsUpdate' => route('events.guests.invitation-settings.update', $event),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
@@ -2482,6 +2520,25 @@ class EventController extends Controller
             'invitation_last_opened_user_agent' => $request->userAgent(),
             'invitation_status' => $guestParty->invitation_status === 'responded' ? 'responded' : 'opened',
         ])->save();
+    }
+
+    private function invitationStatusForDeliveryAction(
+        EventGuestParty $guestParty,
+        string $action,
+    ): string {
+        if ($guestParty->invitation_status === 'responded') {
+            return 'responded';
+        }
+
+        if ($guestParty->invitation_status === 'opened') {
+            return 'opened';
+        }
+
+        return match ($action) {
+            'mark_delivered_in_person' => 'delivered_in_person',
+            'mark_sent_online' => 'sent',
+            default => $guestParty->invitation_status,
+        };
     }
 
     private function notifyEventOwnerAboutInvitationResponse(
