@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, Download } from 'lucide-vue-next';
+import { CheckCircle2, Download, Minus, Plus } from 'lucide-vue-next';
 import { computed, onMounted } from 'vue';
 import InputError from '@/components/InputError.vue';
 import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
@@ -94,6 +94,42 @@ const confirmedAttendeeMax = computed(() => {
     return Math.max(1, props.guestParty?.invitedAttendeesCount ?? 1);
 });
 
+const clampCount = (value: unknown, min: number, max: number): number => {
+    const numericValue = typeof value === 'number' ? value : Number(value);
+
+    if (! Number.isFinite(numericValue)) {
+        return min;
+    }
+
+    return Math.min(max, Math.max(min, Math.round(numericValue)));
+};
+
+const invitedCount = computed<number>({
+    get: () => clampCount(form.invited_attendees_count, 1, 1000),
+    set: (value) => {
+        form.invited_attendees_count = clampCount(value, 1, 1000);
+    },
+});
+
+const confirmedCount = computed<number>({
+    get: () => clampCount(form.confirmed_attendees_count, 1, confirmedAttendeeMax.value),
+    set: (value) => {
+        form.confirmed_attendees_count = clampCount(value, 1, confirmedAttendeeMax.value);
+    },
+});
+
+const adjustInvitedCount = (delta: number): void => {
+    invitedCount.value += delta;
+
+    if (confirmedCount.value > invitedCount.value) {
+        confirmedCount.value = invitedCount.value;
+    }
+};
+
+const adjustConfirmedCount = (delta: number): void => {
+    confirmedCount.value += delta;
+};
+
 const invitationSurfaceStyle = computed(() => ({
     '--invite-primary': props.branding.primaryColor,
     '--invite-accent': props.branding.accentColor,
@@ -115,6 +151,9 @@ const printInvitation = (): void => {
 };
 
 onMounted(() => {
+    invitedCount.value = invitedCount.value;
+    confirmedCount.value = confirmedCount.value;
+
     if (new URLSearchParams(window.location.search).get('print') === '1') {
         window.setTimeout(() => {
             window.print();
@@ -208,7 +247,34 @@ onMounted(() => {
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.invited_count') }}
                                 </label>
-                                <Input v-model="form.invited_attendees_count" type="number" min="1" max="1000" />
+                                <div class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="invitedCount <= 1"
+                                        @click="adjustInvitedCount(-1)"
+                                    >
+                                        <Minus class="size-5" />
+                                    </button>
+
+                                    <div class="min-w-0 flex-1 text-center">
+                                        <Input
+                                            :model-value="String(invitedCount)"
+                                            readonly
+                                            inputmode="none"
+                                            class="border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="invitedCount >= 1000"
+                                        @click="adjustInvitedCount(1)"
+                                    >
+                                        <Plus class="size-5" />
+                                    </button>
+                                </div>
                                 <InputError :message="form.errors.invited_attendees_count" />
                             </div>
                         </div>
@@ -266,7 +332,34 @@ onMounted(() => {
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.confirmed_count') }}
                                 </label>
-                                <Input v-model="form.confirmed_attendees_count" type="number" min="1" :max="confirmedAttendeeMax" />
+                                <div class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="confirmedCount <= 1"
+                                        @click="adjustConfirmedCount(-1)"
+                                    >
+                                        <Minus class="size-5" />
+                                    </button>
+
+                                    <div class="min-w-0 flex-1 text-center">
+                                        <Input
+                                            :model-value="String(confirmedCount)"
+                                            readonly
+                                            inputmode="none"
+                                            class="border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="confirmedCount >= confirmedAttendeeMax"
+                                        @click="adjustConfirmedCount(1)"
+                                    >
+                                        <Plus class="size-5" />
+                                    </button>
+                                </div>
                                 <InputError :message="form.errors.confirmed_attendees_count" />
                             </div>
 
