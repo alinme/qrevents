@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     Clock3,
@@ -155,9 +155,13 @@ const savingInvitationSettings = ref(false);
 const showInvitationAdvanced = ref(false);
 const activeSection = ref<'families' | 'invitation' | 'ledger'>('families');
 const expandedGuestPartyId = ref<number | null>(null);
+const quickSavingGuestId = ref<number | null>(null);
 const selectedGuestIds = ref<number[]>([]);
 const guestSearch = ref('');
 const guestFilter = ref<'all' | 'needing_reply' | 'accepted' | 'declined' | 'present' | 'absent' | 'not_sent' | 'responded' | 'no_gift'>('all');
+const quickGiftTypes = ref<Record<number, '' | 'gift' | 'money'>>({});
+const quickGiftCurrencies = ref<Record<number, 'EUR' | 'GBP' | 'RON'>>({});
+const quickGiftAmounts = ref<Record<number, string>>({});
 
 const guestForm = useForm({
     name: '',
@@ -334,6 +338,26 @@ const familyOverview = computed(() => [
     },
 ]);
 
+const ledgerGuestParties = computed(() => {
+    return [...props.guestParties].sort((left, right) => {
+        const leftNeedsAttendance = left.actualAttendanceStatus === 'unknown' ? 1 : 0;
+        const rightNeedsAttendance = right.actualAttendanceStatus === 'unknown' ? 1 : 0;
+
+        if (leftNeedsAttendance !== rightNeedsAttendance) {
+            return rightNeedsAttendance - leftNeedsAttendance;
+        }
+
+        const leftNeedsGift = left.giftType === null ? 1 : 0;
+        const rightNeedsGift = right.giftType === null ? 1 : 0;
+
+        if (leftNeedsGift !== rightNeedsGift) {
+            return rightNeedsGift - leftNeedsGift;
+        }
+
+        return left.name.localeCompare(right.name);
+    });
+});
+
 const selectedInvitationTemplateCard = computed(() => {
     return invitationTemplateCards.find((template) => template.id === invitationSettingsForm.template)
         ?? invitationTemplateCards[0];
@@ -492,6 +516,108 @@ const exportGuestLedger = (): void => {
 
 const openGuestReport = (): void => {
     window.open(props.eventLinks.guestReport, '_blank', 'noopener,noreferrer');
+};
+
+const guestPartyUpdatePayload = (
+    party: GuestParty,
+    overrides: Partial<{
+        invited_attendees_count: number;
+        confirmed_attendees_count: number | null;
+        attendance_status: GuestParty['attendanceStatus'];
+        actual_attendees_count: number | null;
+        actual_attendance_status: GuestParty['actualAttendanceStatus'];
+        invitation_status: GuestParty['invitationStatus'];
+        invitation_delivery_channel: GuestParty['invitationDeliveryChannel'];
+        gift_type: '' | 'gift' | 'money' | null;
+        gift_currency: GuestParty['giftCurrency'];
+        gift_amount: string | null;
+    }> = {},
+): Record<string, string | number | null> => {
+    const giftType = overrides.gift_type ?? party.giftType ?? '';
+
+    return {
+        name: party.name,
+        phone: party.phone ?? '',
+        invited_attendees_count: overrides.invited_attendees_count ?? party.invitedAttendeesCount,
+        confirmed_attendees_count: overrides.confirmed_attendees_count ?? party.confirmedAttendeesCount,
+        attendance_status: overrides.attendance_status ?? party.attendanceStatus,
+        actual_attendees_count: overrides.actual_attendees_count ?? party.actualAttendeesCount,
+        actual_attendance_status: overrides.actual_attendance_status ?? party.actualAttendanceStatus,
+        notes: party.notes ?? '',
+        invitation_status: overrides.invitation_status ?? party.invitationStatus,
+        invitation_delivery_channel: overrides.invitation_delivery_channel ?? party.invitationDeliveryChannel ?? '',
+        gift_type: giftType,
+        gift_currency: giftType === 'money'
+            ? (overrides.gift_currency ?? party.giftCurrency ?? 'EUR')
+            : null,
+        gift_amount: giftType === 'money'
+            ? (overrides.gift_amount ?? party.giftAmount ?? '')
+            : null,
+    };
+};
+
+const patchGuestPartyQuickly = (
+    party: GuestParty,
+    overrides: Parameters<typeof guestPartyUpdatePayload>[1],
+    successMessage: string,
+): void => {
+    quickSavingGuestId.value = party.id;
+
+    router.patch(party.updateUrl, guestPartyUpdatePayload(party, overrides), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            toast.success(successMessage);
+        },
+        onFinish: () => {
+            quickSavingGuestId.value = null;
+        },
+    });
+};
+
+const quickGiftTypeFor = (party: GuestParty): '' | 'gift' | 'money' => {
+    return quickGiftTypes.value[party.id] ?? party.giftType ?? '';
+};
+
+const quickGiftCurrencyFor = (party: GuestParty): 'EUR' | 'GBP' | 'RON' => {
+    return quickGiftCurrencies.value[party.id] ?? party.giftCurrency ?? 'EUR';
+};
+
+const quickGiftAmountFor = (party: GuestParty): string => {
+    return quickGiftAmounts.value[party.id] ?? party.giftAmount ?? '';
+};
+
+const setQuickGiftType = (party: GuestParty, value: '' | 'gift' | 'money'): void => {
+    quickGiftTypes.value = {
+        ...quickGiftTypes.value,
+        [party.id]: value,
+    };
+};
+
+const setQuickGiftCurrency = (party: GuestParty, value: 'EUR' | 'GBP' | 'RON'): void => {
+    quickGiftCurrencies.value = {
+        ...quickGiftCurrencies.value,
+        [party.id]: value,
+    };
+};
+
+const setQuickGiftAmount = (party: GuestParty, value: string): void => {
+    quickGiftAmounts.value = {
+        ...quickGiftAmounts.value,
+        [party.id]: value,
+    };
+};
+
+const updateQuickGiftType = (party: GuestParty, value: unknown): void => {
+    if (value === '' || value === 'gift' || value === 'money') {
+        setQuickGiftType(party, value);
+    }
+};
+
+const updateQuickGiftCurrency = (party: GuestParty, value: unknown): void => {
+    if (value === 'EUR' || value === 'GBP' || value === 'RON') {
+        setQuickGiftCurrency(party, value);
+    }
 };
 
 const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
@@ -668,6 +794,53 @@ const remindSelectedInvites = async (): Promise<void> => {
 
 const remindPendingInvites = async (): Promise<void> => {
     await shareGuestPartyBundle(pendingInvitationParties.value, 'reminder');
+};
+
+const markGuestPartyPresent = (party: GuestParty): void => {
+    patchGuestPartyQuickly(
+        party,
+        {
+            actual_attendance_status: 'present',
+            actual_attendees_count: party.confirmedAttendeesCount ?? party.invitedAttendeesCount,
+        },
+        `${party.name} marked as present.`,
+    );
+};
+
+const markGuestPartyAbsent = (party: GuestParty): void => {
+    patchGuestPartyQuickly(
+        party,
+        {
+            actual_attendance_status: 'absent',
+            actual_attendees_count: 0,
+        },
+        `${party.name} marked as absent.`,
+    );
+};
+
+const resetGuestPartyAttendance = (party: GuestParty): void => {
+    patchGuestPartyQuickly(
+        party,
+        {
+            actual_attendance_status: 'unknown',
+            actual_attendees_count: null,
+        },
+        `${party.name} moved back to not recorded.`,
+    );
+};
+
+const saveQuickGift = (party: GuestParty): void => {
+    const giftType = quickGiftTypeFor(party);
+
+    patchGuestPartyQuickly(
+        party,
+        {
+            gift_type: giftType === '' ? null : giftType,
+            gift_currency: giftType === 'money' ? quickGiftCurrencyFor(party) : null,
+            gift_amount: giftType === 'money' ? quickGiftAmountFor(party) : null,
+        },
+        `${party.name} ledger updated.`,
+    );
 };
 
 const copyPendingInvites = async (): Promise<void> => {
@@ -1500,12 +1673,27 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 </div>
 
                 <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-base font-semibold text-neutral-950">
-                        Ledger tools
-                    </h2>
-                    <p class="mt-1 text-sm text-neutral-600">
-                        Use the printable report for a full event-day view, then export the ledger before retention ends.
-                    </p>
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-neutral-950">
+                                Event day ledger
+                            </h2>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                Mark who came, then record the family gift right here.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Button class="rounded-full px-5" @click="openGuestReport">
+                                <Printer class="mr-2 size-4" />
+                                Open report
+                            </Button>
+                            <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
+                                <Download class="mr-2 size-4" />
+                                Export CSV
+                            </Button>
+                        </div>
+                    </div>
 
                     <div
                         v-if="retentionReminder"
@@ -1514,15 +1702,110 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         Retention ends on {{ retentionReminder.dateLabel }}.
                     </div>
 
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <Button class="rounded-full px-5" @click="openGuestReport">
-                            <Printer class="mr-2 size-4" />
-                            Open report
-                        </Button>
-                        <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
-                            <Download class="mr-2 size-4" />
-                            Export CSV
-                        </Button>
+                    <div class="mt-5 space-y-3">
+                        <div
+                            v-for="party in ledgerGuestParties"
+                            :key="party.id"
+                            class="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4"
+                        >
+                            <div class="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] xl:items-center">
+                                <div class="space-y-2">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <p class="text-sm font-semibold text-neutral-950">
+                                            {{ party.name }}
+                                        </p>
+                                        <Badge variant="outline" :class="attendanceBadgeClass(party.attendanceStatus)">
+                                            {{ attendanceLabel(party.attendanceStatus) }}
+                                        </Badge>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
+                                        <span>Invited {{ party.invitedAttendeesCount }}</span>
+                                        <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
+                                        <span>{{ actualAttendanceLabel(party.actualAttendanceStatus) }}</span>
+                                        <span>{{ giftLabel(party) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                        Attendance
+                                    </p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button
+                                            variant="outline"
+                                            class="rounded-full px-4"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="markGuestPartyPresent(party)"
+                                        >
+                                            <CheckCircle2 class="mr-2 size-4" />
+                                            Came
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            class="rounded-full px-4"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="markGuestPartyAbsent(party)"
+                                        >
+                                            <Trash2 class="mr-2 size-4" />
+                                            Did not come
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            class="rounded-full px-4"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="resetGuestPartyAttendance(party)"
+                                        >
+                                            <Clock3 class="mr-2 size-4" />
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                        Gift / Money
+                                    </p>
+                                    <div class="grid gap-2 sm:grid-cols-[120px_minmax(0,120px)_minmax(0,1fr)_auto]">
+                                        <NativeSelect
+                                            :model-value="quickGiftTypeFor(party)"
+                                            @update:model-value="updateQuickGiftType(party, $event)"
+                                        >
+                                            <NativeSelectOption value="">None</NativeSelectOption>
+                                            <NativeSelectOption value="gift">Gift</NativeSelectOption>
+                                            <NativeSelectOption value="money">Money</NativeSelectOption>
+                                        </NativeSelect>
+
+                                        <NativeSelect
+                                            v-if="quickGiftTypeFor(party) === 'money'"
+                                            :model-value="quickGiftCurrencyFor(party)"
+                                            @update:model-value="updateQuickGiftCurrency(party, $event)"
+                                        >
+                                            <NativeSelectOption value="EUR">EUR</NativeSelectOption>
+                                            <NativeSelectOption value="GBP">GBP</NativeSelectOption>
+                                            <NativeSelectOption value="RON">RON</NativeSelectOption>
+                                        </NativeSelect>
+
+                                        <Input
+                                            v-if="quickGiftTypeFor(party) === 'money'"
+                                            :model-value="quickGiftAmountFor(party)"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="Amount"
+                                            @update:model-value="setQuickGiftAmount(party, String($event))"
+                                        />
+
+                                        <Button
+                                            class="rounded-full px-4"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="saveQuickGift(party)"
+                                        >
+                                            Save
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </section>

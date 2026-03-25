@@ -12,7 +12,7 @@ it('shows the guest parties page for an event owner', function () {
         'currency' => 'EUR',
     ]);
 
-    EventGuestParty::factory()->for($event)->create([
+    $guestParty = EventGuestParty::factory()->for($event)->create([
         'name' => 'Familia Popescu',
         'invited_attendees_count' => 4,
         'attendance_status' => 'accepted',
@@ -43,6 +43,9 @@ it('shows the guest parties page for an event owner', function () {
             ->where('guestPartyStats.moneyGiftTotal', 300)
             ->has('guestParties', 1)
             ->where('guestParties.0.name', 'Familia Popescu')
+            ->where('guestParties.0.actualAttendanceStatus', 'present')
+            ->where('guestParties.0.giftType', 'money')
+            ->where('guestParties.0.updateUrl', route('events.guests.update', [$event, $guestParty]))
             ->where('guestParties.0.reminderCount', 1)
             ->where('guestParties.0.invitationHistory.0.type', 'reminded')
         );
