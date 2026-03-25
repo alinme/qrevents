@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle2, Clock3, MapPin, Phone, Sparkles, Users } from 'lucide-vue-next';
+import { CalendarDays, CheckCircle2, Clock3, Phone, Sparkles, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -126,10 +126,9 @@ const invitationTemplateVisuals = computed(() => {
 const invitationSurfaceStyle = computed(() => ({
     '--invite-primary': props.branding.primaryColor,
     '--invite-accent': props.branding.accentColor,
-    '--invite-background': props.branding.albumBackgroundColor,
     backgroundImage: props.branding.albumBackgroundImageUrl
-        ? `linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.45)), url(${props.branding.albumBackgroundImageUrl})`
-        : `radial-gradient(circle at top, ${props.branding.accentColor}22, transparent 46%), linear-gradient(135deg, #fff8ef, #ffffff 56%, ${props.branding.primaryColor}10)`,
+        ? `linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.84)), url(${props.branding.albumBackgroundImageUrl})`
+        : `radial-gradient(circle at top, ${props.branding.accentColor}18, transparent 42%), linear-gradient(180deg, #fff8ef 0%, #ffffff 48%, ${props.branding.primaryColor}08 100%)`,
     backgroundSize: props.branding.albumBackgroundImageUrl ? 'cover' : 'auto',
     backgroundPosition: 'center',
 }));
@@ -149,6 +148,8 @@ const mutedTextClass = computed(() => {
 });
 
 const invitationLabel = computed(() => invitationTemplateVisuals.value.tag);
+
+const compactMoments = computed(() => props.eventDetails.moments.slice(0, 2));
 
 const submit = (): void => {
     form.post(props.links.respond, {
@@ -170,13 +171,13 @@ const submit = (): void => {
             <div class="absolute bottom-[-7rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-white/28 blur-3xl" />
         </div>
 
-        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-7xl items-center">
-            <div class="grid w-full gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(360px,0.94fr)]">
-                <section :class="['relative overflow-hidden rounded-[36px] border p-6 shadow-2xl backdrop-blur sm:p-8', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]">
+        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-3xl items-center">
+            <div class="w-full space-y-5">
+                <section :class="['relative overflow-hidden rounded-[32px] border p-5 shadow-2xl backdrop-blur sm:p-7', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]">
                     <div class="pointer-events-none absolute inset-0">
                         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-80" />
-                        <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/35 blur-3xl" />
-                        <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[var(--invite-accent)]/8 blur-2xl" />
+                        <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
+                        <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[var(--invite-accent)]/10 blur-2xl" />
                     </div>
 
                     <div class="relative flex flex-wrap items-center gap-3">
@@ -198,178 +199,88 @@ const submit = (): void => {
                         </div>
                     </div>
 
-                    <div class="relative mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(240px,0.65fr)]">
-                        <div class="space-y-5">
-                            <div class="flex items-center gap-4">
-                                <img
-                                    v-if="branding.logoUrl"
-                                    :src="branding.logoUrl"
-                                    alt=""
-                                    class="h-14 w-14 rounded-[24px] border border-current/10 object-contain p-2 shadow-sm"
-                                >
-                                <div class="space-y-1">
-                                    <p :class="['text-xs font-semibold uppercase tracking-[0.28em]', mutedTextClass]">
-                                        {{ eventName }}
-                                    </p>
-                                    <p :class="['text-sm', mutedTextClass]">
-                                        {{ invitationTemplateVisuals.tag }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <h1 :class="['max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
-                                    {{ invitation.headline }}
-                                </h1>
-                                <p :class="['max-w-2xl text-base leading-8 sm:text-lg', mutedTextClass]">
-                                    {{ invitation.message }}
-                                </p>
-                            </div>
-
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <div :class="['rounded-[28px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
-                                    <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
-                                        {{ t('invitations.event_date') }}
-                                    </p>
-                                    <p class="mt-2 text-lg font-semibold">
-                                        {{ eventDetails.dateLabel }}
-                                    </p>
-                                </div>
-
-                                <div :class="['rounded-[28px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
-                                    <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
-                                        {{ t('invitations.venue') }}
-                                    </p>
-                                    <p class="mt-2 text-lg font-semibold">
-                                        {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-stretch">
-                            <div :class="['relative flex w-full flex-col justify-between overflow-hidden rounded-[30px] border p-5', invitationTemplateVisuals.softBorderClass]">
-                                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-80" :class="invitationTemplateVisuals.ribbonClass" />
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <div class="rounded-full border border-current/10 bg-current/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
-                                            {{ t('invitations.card_title') }}
-                                        </div>
-                                        <div class="text-xs font-medium opacity-70">
-                                            {{ eventDetails.timezone }}
-                                        </div>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <p class="text-sm uppercase tracking-[0.3em] opacity-70">
-                                                {{ t('invitations.rsvp') }}
-                                        </p>
-                                        <h2 class="text-3xl font-semibold tracking-tight">
-                                            {{ invitation.headline }}
-                                        </h2>
-                                        <p class="text-sm leading-6 opacity-80">
-                                            {{ invitation.message }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="mt-6 space-y-3">
-                                    <div
-                                        v-for="moment in eventDetails.moments.slice(0, 3)"
-                                        :key="`${moment.label}-${moment.date}-${moment.time}`"
-                                        class="rounded-[22px] border border-current/10 bg-white/70 p-3"
-                                    >
-                                        <div class="flex items-center justify-between gap-3">
-                                            <p class="text-sm font-semibold">
-                                                {{ moment.label }}
-                                            </p>
-                                            <p class="text-xs uppercase tracking-[0.2em] opacity-60">
-                                                RSVP
-                                            </p>
-                                        </div>
-                                        <div class="mt-2 flex flex-wrap gap-3 text-xs opacity-75">
-                                            <span class="inline-flex items-center gap-1.5">
-                                                <CalendarDays class="size-3.5" />
-                                                {{ moment.date }}
-                                            </span>
-                                            <span class="inline-flex items-center gap-1.5">
-                                                <Clock3 class="size-3.5" />
-                                                {{ moment.time }}
-                                            </span>
-                                        </div>
-                                        <p class="mt-2 inline-flex items-start gap-1.5 text-xs opacity-75">
-                                            <MapPin class="mt-0.5 size-3.5 shrink-0" />
-                                            <span>{{ moment.address }}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="relative mt-5 flex items-center gap-4">
+                        <img
+                            v-if="branding.logoUrl"
+                            :src="branding.logoUrl"
+                            alt=""
+                            class="h-14 w-14 rounded-[20px] border border-current/10 object-contain p-2 shadow-sm"
+                        >
+                        <div class="space-y-1">
+                            <p :class="['text-xs font-semibold uppercase tracking-[0.3em]', mutedTextClass]">
+                                {{ eventName }}
+                            </p>
+                            <p :class="['text-sm', mutedTextClass]">
+                                {{ invitationTemplateVisuals.tag }}
+                            </p>
                         </div>
                     </div>
 
-                    <div class="relative mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.7fr)]">
-                        <div class="rounded-[30px] border p-5 backdrop-blur-sm" :class="invitationTemplateVisuals.softBorderClass">
-                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
-                                {{ t('invitations.schedule') }}
-                            </p>
+                    <div class="relative mt-6 space-y-4">
+                        <h1 :class="['max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
+                            {{ invitation.headline }}
+                        </h1>
+                        <p :class="['max-w-2xl text-base leading-7 sm:text-lg', mutedTextClass]">
+                            {{ invitation.message }}
+                        </p>
+                    </div>
 
-                            <div class="mt-4 space-y-3">
-                                <div
-                                    v-for="moment in eventDetails.moments"
-                                    :key="`${moment.label}-${moment.date}-${moment.time}`"
-                                    :class="['rounded-[24px] border p-4', invitationTemplateVisuals.softBorderClass]"
-                                >
-                                    <div class="flex flex-wrap items-start justify-between gap-3">
-                                        <div>
-                                            <p class="text-lg font-semibold">
-                                                {{ moment.label }}
-                                            </p>
-                                            <div :class="['mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm', mutedTextClass]">
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <CalendarDays class="size-4" />
-                                                    {{ moment.date }}
-                                                </span>
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <Clock3 class="size-4" />
-                                                    {{ moment.time }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <p :class="['inline-flex max-w-sm items-start gap-1.5 text-sm text-right', mutedTextClass]">
-                                            <MapPin class="mt-0.5 size-4 shrink-0" />
-                                            <span>{{ moment.address }}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="relative mt-6 grid gap-3 sm:grid-cols-2">
+                        <div :class="['rounded-[22px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
+                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
+                                {{ t('invitations.event_date') }}
+                            </p>
+                            <p class="mt-2 text-base font-semibold">
+                                {{ eventDetails.dateLabel }}
+                            </p>
                         </div>
 
-                        <div :class="['flex flex-col justify-between rounded-[30px] border p-5 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
-                            <div class="space-y-3">
-                                <p class="text-base leading-7">
-                                    {{ invitation.closing }}
-                                </p>
-                            </div>
+                        <div :class="['rounded-[22px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
+                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
+                                {{ t('invitations.venue') }}
+                            </p>
+                            <p class="mt-2 text-base font-semibold">
+                                {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
+                            </p>
+                        </div>
+                    </div>
 
-                            <div class="mt-6 flex items-center justify-between gap-3">
-                                <p v-if="invitation.contactPhone" :class="['inline-flex items-center gap-2 text-sm font-medium', mutedTextClass]">
-                                    <Phone class="size-4" />
-                                    {{ invitation.contactPhone }}
-                                </p>
-                                <div class="rounded-full border border-current/10 bg-current/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                                    {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
-                                </div>
-                            </div>
+                    <div v-if="compactMoments.length > 0" class="relative mt-5 flex flex-wrap gap-2">
+                        <div
+                            v-for="moment in compactMoments"
+                            :key="`${moment.label}-${moment.date}-${moment.time}`"
+                            :class="['inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]"
+                        >
+                            <span class="font-medium">{{ moment.label }}</span>
+                            <span :class="['inline-flex items-center gap-1', mutedTextClass]">
+                                <CalendarDays class="size-3.5" />
+                                {{ moment.date }}
+                            </span>
+                            <span :class="['inline-flex items-center gap-1', mutedTextClass]">
+                                <Clock3 class="size-3.5" />
+                                {{ moment.time }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="relative mt-6 flex items-center justify-between gap-3 border-t border-current/10 pt-4">
+                        <p v-if="invitation.contactPhone" :class="['inline-flex items-center gap-2 text-sm font-medium', mutedTextClass]">
+                            <Phone class="size-4" />
+                            {{ invitation.contactPhone }}
+                        </p>
+                        <div class="rounded-full border border-current/10 bg-current/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+                            {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                         </div>
                     </div>
                 </section>
 
-                <section :class="['rounded-[36px] border p-6 shadow-2xl backdrop-blur sm:p-8', cardToneClass]">
+                <section :class="['rounded-[32px] border p-5 shadow-2xl backdrop-blur sm:p-6', cardToneClass]">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
                                 {{ t('invitations.rsvp') }}
                             </p>
-                            <h2 class="mt-2 text-3xl font-semibold tracking-tight sm:text-[2.1rem]">
+                            <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-[2rem]">
                                 {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                             </h2>
                             <p :class="['mt-2 text-sm leading-6', mutedTextClass]">
@@ -394,7 +305,7 @@ const submit = (): void => {
                         </p>
                     </div>
 
-                    <form class="mt-6 space-y-4" @submit.prevent="submit">
+                    <form class="mt-5 space-y-4" @submit.prevent="submit">
                         <div v-if="isPublicInvite" class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-2 sm:col-span-2">
                                 <label class="text-sm font-medium">
@@ -434,7 +345,7 @@ const submit = (): void => {
                             <button
                                 type="button"
                                 :class="[
-                                    'rounded-3xl border px-4 py-4 text-left transition',
+                                    'rounded-[24px] border px-4 py-4 text-left transition',
                                     form.attendance_status === 'accepted'
                                         ? 'border-emerald-400 bg-emerald-50 text-emerald-900'
                                         : 'border-neutral-200 bg-white/50 text-neutral-700',
@@ -452,7 +363,7 @@ const submit = (): void => {
                             <button
                                 type="button"
                                 :class="[
-                                    'rounded-3xl border px-4 py-4 text-left transition',
+                                    'rounded-[24px] border px-4 py-4 text-left transition',
                                     form.attendance_status === 'declined'
                                         ? 'border-rose-400 bg-rose-50 text-rose-900'
                                         : 'border-neutral-200 bg-white/50 text-neutral-700',
@@ -483,7 +394,7 @@ const submit = (): void => {
                             </label>
                             <Textarea
                                 v-model="form.guest_names"
-                                rows="4"
+                                rows="3"
                                 :placeholder="t('invitations.guest_names_placeholder')"
                             />
                             <InputError :message="form.errors.guest_names" />
@@ -509,7 +420,7 @@ const submit = (): void => {
                             </label>
                             <Textarea
                                 v-model="form.response_notes"
-                                rows="4"
+                                rows="3"
                                 :placeholder="t('invitations.note_placeholder')"
                             />
                             <InputError :message="form.errors.response_notes" />
@@ -533,7 +444,7 @@ const submit = (): void => {
                         </div>
                     </form>
 
-                    <p v-if="showPoweredBy" :class="['mt-6 text-xs', mutedTextClass]">
+                    <p v-if="showPoweredBy" :class="['mt-5 text-xs', mutedTextClass]">
                         {{ t('invitations.powered_by', { app: appName }) }}
                     </p>
                 </section>

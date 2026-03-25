@@ -272,36 +272,36 @@ const invitationTemplateCards = [
 
 const statCards = computed(() => [
     {
-        label: 'Guest parties',
+        label: 'Parties',
         value: props.guestPartyStats.partyCount,
-        detail: 'Families or named invite groups',
+        detail: 'Families on the list',
         icon: Users,
     },
     {
-        label: 'Invited seats',
+        label: 'Invited',
         value: props.guestPartyStats.invitedAttendeesCount,
-        detail: 'Expected people across all parties',
+        detail: 'Expected attendees',
         icon: UserPlus,
     },
     {
-        label: 'Confirmed seats',
+        label: 'Confirmed',
         value: props.guestPartyStats.confirmedAttendeesCount,
-        detail: `${props.guestPartyStats.acceptedPartyCount} parties accepted`,
+        detail: `${props.guestPartyStats.acceptedPartyCount} accepted`,
         icon: CheckCircle2,
     },
     {
-        label: 'Actually attended',
+        label: 'Present',
         value: props.guestPartyStats.actualAttendeesCount,
-        detail: `${props.guestPartyStats.presentPartyCount} parties marked present`,
+        detail: `${props.guestPartyStats.presentPartyCount} marked present`,
         icon: Clock3,
     },
     {
-        label: 'Gift ledger',
+        label: 'Ledger',
         value: formatMoney(
             props.guestPartyStats.moneyGiftTotal,
             props.guestPartyStats.moneyGiftCurrency,
         ),
-        detail: `${props.guestPartyStats.pendingPartyCount} still waiting to answer`,
+        detail: `${props.guestPartyStats.pendingPartyCount} still waiting`,
         icon: Wallet,
     },
 ]);
@@ -675,135 +675,132 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
     <Head title="Guests" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-4 md:p-6">
-            <section class="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm md:flex-row md:items-end md:justify-between">
-                <div class="space-y-2">
-                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
-                        Guest list and ledger
-                    </p>
-                    <h1 class="text-2xl font-semibold tracking-tight text-neutral-950">
-                        Keep every family, RSVP, and gift in one place
-                    </h1>
-                    <p class="max-w-3xl text-sm leading-6 text-neutral-600">
-                        Add families manually, paste a messy list from WhatsApp or notes, and keep a clean ledger for attendance and gifts.
-                    </p>
-                </div>
-
-                <div class="flex flex-col gap-3 sm:flex-row">
-                    <Button variant="outline" class="h-11 rounded-full px-5" @click="openGuestReport">
-                        <Printer class="mr-2 size-4" />
-                        Open report
-                    </Button>
-                    <Button variant="outline" class="h-11 rounded-full px-5" @click="exportGuestLedger">
-                        <Download class="mr-2 size-4" />
-                        Export ledger
-                    </Button>
-                    <Button class="h-11 rounded-full px-5" @click="importDialogOpen = true">
-                        <Import class="mr-2 size-4" />
-                        Import guest list
-                    </Button>
-                    <Button class="h-11 rounded-full px-5" @click="openCreateDialog">
-                        <UserPlus class="mr-2 size-4" />
-                        Add guest party
-                    </Button>
-                </div>
-            </section>
-
-            <section
-                v-if="retentionReminder"
-                class="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm"
-            >
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="space-y-1">
-                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-                            Export reminder
-                        </p>
-                        <h2 class="text-lg font-semibold text-neutral-950">
-                            Your guest ledger stays online for {{ retentionReminder.daysLeft }} more day<span v-if="retentionReminder.daysLeft !== 1">s</span>
-                        </h2>
-                        <p class="text-sm leading-6 text-neutral-700">
-                            Retention ends on {{ retentionReminder.dateLabel }}. Export the CSV and printable report before the archive window closes.
+        <div class="space-y-5 p-4 md:p-6">
+            <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h1 class="text-xl font-semibold tracking-tight text-neutral-950">
+                                Guests
+                            </h1>
+                            <span v-if="retentionReminder" class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+                                {{ retentionReminder.daysLeft }} days left to export
+                            </span>
+                        </div>
+                        <p class="max-w-2xl text-sm text-neutral-600">
+                            Families, RSVPs, invitations, and gifts in one place.
                         </p>
                     </div>
 
-                    <div class="flex flex-col gap-3 sm:flex-row">
-                        <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
-                            <Download class="mr-2 size-4" />
-                            Export CSV
-                        </Button>
-                        <Button class="rounded-full px-5" @click="openGuestReport">
+                    <div class="flex flex-wrap gap-2">
+                        <Button variant="outline" class="h-10 rounded-full px-4" @click="openGuestReport">
                             <Printer class="mr-2 size-4" />
-                            Open printable report
+                            Report
+                        </Button>
+                        <Button variant="outline" class="h-10 rounded-full px-4" @click="exportGuestLedger">
+                            <Download class="mr-2 size-4" />
+                            Export
+                        </Button>
+                        <Button variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
+                            <Import class="mr-2 size-4" />
+                            Import
+                        </Button>
+                        <Button class="h-10 rounded-full px-4" @click="openCreateDialog">
+                            <UserPlus class="mr-2 size-4" />
+                            Add family
                         </Button>
                     </div>
                 </div>
-            </section>
 
-            <section class="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="space-y-2">
-                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
-                                Invitation copy
+                <div class="mt-4 grid gap-0 overflow-hidden rounded-2xl border border-neutral-200 md:grid-cols-5">
+                    <div
+                        v-for="stat in statCards"
+                        :key="stat.label"
+                        class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 md:border-b-0 md:border-r last:border-r-0"
+                    >
+                        <div class="min-w-0">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                {{ stat.label }}
                             </p>
-                            <h2 class="text-lg font-semibold text-neutral-950">
-                                One invite style for every family link
-                            </h2>
-                            <p class="max-w-2xl text-sm leading-6 text-neutral-600">
-                                Save the main invitation message once, then copy tracked links for each family or open the public RSVP page.
+                            <p class="mt-1 text-lg font-semibold tracking-tight text-neutral-950">
+                                {{ stat.value }}
+                            </p>
+                            <p class="mt-1 text-xs text-neutral-500">
+                                {{ stat.detail }}
                             </p>
                         </div>
-                        <div class="rounded-2xl bg-neutral-950 p-2 text-white">
+                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                            <component :is="stat.icon" class="size-4" />
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    v-if="retentionReminder"
+                    class="mt-4 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 md:flex-row md:items-center md:justify-between"
+                >
+                    <p>
+                        Retention ends on {{ retentionReminder.dateLabel }}. Export the ledger before the archive window closes.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <Button variant="outline" class="h-9 rounded-full px-4" @click="exportGuestLedger">
+                            <Download class="mr-2 size-4" />
+                            CSV
+                        </Button>
+                        <Button class="h-9 rounded-full px-4" @click="openGuestReport">
+                            <Printer class="mr-2 size-4" />
+                            Printable report
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-base font-semibold text-neutral-950">
+                                Invitation setup
+                            </h2>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                Save the main invitation once, then share tracked family links.
+                            </p>
+                        </div>
+                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
                             <ScrollText class="size-4" />
                         </div>
                     </div>
 
-                    <div class="mt-5 space-y-4">
+                    <div class="mt-4 space-y-4">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
                                 Template
                             </label>
-                            <div class="grid gap-3 lg:grid-cols-3">
+                            <div class="grid gap-2 sm:grid-cols-3">
                                 <button
                                     v-for="template in invitationTemplateCards"
                                     :key="template.id"
                                     type="button"
                                     :class="[
-                                        'relative overflow-hidden rounded-[28px] border p-4 text-left transition duration-200',
+                                        'rounded-2xl border px-4 py-3 text-left transition',
                                         template.artClass,
                                         invitationSettingsForm.template === template.id
-                                            ? 'ring-2 ring-neutral-950 shadow-lg shadow-neutral-900/10'
-                                            : 'hover:-translate-y-0.5 hover:shadow-md',
+                                            ? 'ring-2 ring-neutral-950 shadow-sm'
+                                            : 'opacity-80 hover:opacity-100',
                                     ]"
                                     @click="invitationSettingsForm.template = template.id"
                                 >
-                                    <div class="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/25 blur-2xl" />
-                                    <div class="pointer-events-none absolute -bottom-10 -left-6 h-24 w-24 rounded-full bg-current/10 blur-2xl" />
-                                    <div class="relative space-y-6">
-                                        <div :class="['inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]', template.accentClass]">
-                                            {{ template.label }}
-                                        </div>
-                                        <div class="space-y-2">
-                                            <p class="text-xl font-semibold tracking-tight">
-                                                {{ template.label }} invitation
-                                            </p>
-                                            <p class="text-sm leading-6 opacity-80">
-                                                {{ template.summary }}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <p class="text-sm font-semibold">
+                                        {{ template.label }}
+                                    </p>
+                                    <p class="mt-1 text-xs leading-5 opacity-80">
+                                        {{ template.summary }}
+                                    </p>
                                 </button>
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Contact phone
-                                </label>
-                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional contact number" />
-                            </div>
-
                             <div class="space-y-2 md:col-span-2">
                                 <label class="text-sm font-medium text-neutral-700">
                                     Headline
@@ -813,115 +810,122 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
 
                             <div class="space-y-2 md:col-span-2">
                                 <label class="text-sm font-medium text-neutral-700">
-                                    Invitation message
+                                    Message
                                 </label>
                                 <Textarea
                                     v-model="invitationSettingsForm.message"
-                                    rows="4"
-                                    placeholder="Write the main invitation text once."
+                                    rows="3"
+                                    placeholder="Short invitation message."
                                 />
                             </div>
 
                             <div class="space-y-2 md:col-span-2">
                                 <label class="text-sm font-medium text-neutral-700">
-                                    Closing note
+                                    Closing
                                 </label>
                                 <Textarea
                                     v-model="invitationSettingsForm.closing"
-                                    rows="3"
-                                    placeholder="A warm closing reminder for the RSVP."
+                                    rows="2"
+                                    placeholder="A short RSVP reminder."
                                 />
                             </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Contact phone
+                                </label>
+                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional" />
+                            </div>
+
+                            <label class="flex items-center gap-3 rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
+                                <input
+                                    v-model="invitationSettingsForm.public_rsvp_enabled"
+                                    type="checkbox"
+                                    class="size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950"
+                                >
+                                Public RSVP link enabled
+                            </label>
                         </div>
                     </div>
 
-                    <div class="mt-5 flex flex-col gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                        <label class="inline-flex items-center gap-3 text-sm text-neutral-700">
-                            <input
-                                v-model="invitationSettingsForm.public_rsvp_enabled"
-                                type="checkbox"
-                                class="size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950"
-                            >
-                            Public RSVP link enabled
-                        </label>
-
+                    <div class="mt-4 flex justify-end border-t border-neutral-200 pt-4">
                         <Button
                             class="rounded-full px-5"
                             :disabled="savingInvitationSettings || invitationSettingsForm.processing"
                             @click="saveInvitationSettings"
                         >
                             <SendHorizontal class="mr-2 size-4" />
-                            Save invitation copy
+                            Save invitation
                         </Button>
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-neutral-500">
-                        Public RSVP
-                    </p>
-                    <h2 class="mt-2 text-lg font-semibold text-neutral-950">
-                        One shareable link for guests not on the list yet
+                    <h2 class="text-base font-semibold text-neutral-950">
+                        Public RSVP link
                     </h2>
-                    <p class="mt-2 text-sm leading-6 text-neutral-600">
-                        Use this when someone replies late or reaches out without already being in the guest list. Their answer still lands inside the ledger.
+                    <p class="mt-1 text-sm text-neutral-600">
+                        Use this when a family is not already on the list.
                     </p>
 
-                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
+                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600 break-all">
                         {{ publicInvitationUrl }}
                     </div>
 
-                    <div class="mt-4 flex flex-col gap-3">
+                    <div class="mt-4 flex flex-col gap-2">
                         <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
                             <Copy class="mr-2 size-4" />
-                            Copy public RSVP link
+                            Copy link
                         </Button>
                         <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
                             <ExternalLink class="mr-2 size-4" />
-                            Open public RSVP
+                            Open page
                         </Button>
                     </div>
-                </div>
-            </section>
-
-            <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div
-                    v-for="stat in statCards"
-                    :key="stat.label"
-                    class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
-                >
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-500">
-                                {{ stat.label }}
-                            </p>
-                            <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                                {{ stat.value }}
-                            </p>
-                        </div>
-                        <div class="rounded-2xl bg-neutral-950 p-2 text-white">
-                            <component :is="stat.icon" class="size-4" />
-                        </div>
-                    </div>
-                    <p class="mt-3 text-sm text-neutral-600">
-                        {{ stat.detail }}
-                    </p>
                 </div>
             </section>
 
             <section class="rounded-3xl border border-neutral-200 bg-white shadow-sm">
-                <div class="flex flex-col gap-2 border-b border-neutral-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h2 class="text-lg font-semibold text-neutral-950">
-                            Guest parties
+                        <h2 class="text-base font-semibold text-neutral-950">
+                            Families
                         </h2>
                         <p class="text-sm text-neutral-600">
-                            Family-based records with attendance, invitation status, and gift notes.
+                            {{ guestParties.length }} total records
                         </p>
                     </div>
-                    <div class="flex items-center gap-2 text-sm text-neutral-500">
-                        <Clock3 class="size-4" />
-                        <span>{{ guestParties.length }} total records</span>
+
+                    <div class="flex flex-1 flex-col gap-3 lg:max-w-3xl">
+                        <div class="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+                            <label class="inline-flex items-center gap-3 font-medium text-neutral-700">
+                                <Checkbox
+                                    :checked="allGuestsSelected"
+                                    @update:checked="toggleSelectAllGuests(Boolean($event))"
+                                />
+                                Select visible
+                            </label>
+                            <span>{{ selectedGuestIds.length }} selected</span>
+                            <span>{{ filteredGuestParties.length }} shown</span>
+                        </div>
+
+                        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                            <div class="relative">
+                                <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+                                <Input v-model="guestSearch" class="pl-9" placeholder="Search family, phone, or notes" />
+                            </div>
+                            <NativeSelect v-model="guestFilter">
+                                <NativeSelectOption value="all">All guest parties</NativeSelectOption>
+                                <NativeSelectOption value="needing_reply">Need reply</NativeSelectOption>
+                                <NativeSelectOption value="accepted">Accepted RSVP</NativeSelectOption>
+                                <NativeSelectOption value="declined">Declined RSVP</NativeSelectOption>
+                                <NativeSelectOption value="present">Actually came</NativeSelectOption>
+                                <NativeSelectOption value="absent">Did not come</NativeSelectOption>
+                                <NativeSelectOption value="not_sent">Not sent yet</NativeSelectOption>
+                                <NativeSelectOption value="responded">Responded</NativeSelectOption>
+                                <NativeSelectOption value="no_gift">No gift recorded</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
                     </div>
                 </div>
 
@@ -944,44 +948,7 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                 </div>
 
                 <div v-else class="divide-y divide-neutral-200">
-                    <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div class="flex flex-1 flex-col gap-3">
-                            <div class="flex flex-wrap items-center gap-3">
-                                <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-700">
-                                    <Checkbox
-                                        :checked="allGuestsSelected"
-                                        @update:checked="toggleSelectAllGuests(Boolean($event))"
-                                    />
-                                    Select visible guest parties
-                                </label>
-                                <span class="text-sm text-neutral-500">
-                                    {{ selectedGuestIds.length }} selected
-                                </span>
-                                <span class="text-sm text-neutral-500">
-                                    {{ filteredGuestParties.length }} shown
-                                </span>
-                            </div>
-
-                            <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
-                                <div class="relative">
-                                    <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-                                    <Input v-model="guestSearch" class="pl-9" placeholder="Search family, phone, or notes" />
-                                </div>
-                                <NativeSelect v-model="guestFilter">
-                                    <NativeSelectOption value="all">All guest parties</NativeSelectOption>
-                                    <NativeSelectOption value="needing_reply">Need reply</NativeSelectOption>
-                                    <NativeSelectOption value="accepted">Accepted RSVP</NativeSelectOption>
-                                    <NativeSelectOption value="declined">Declined RSVP</NativeSelectOption>
-                                    <NativeSelectOption value="present">Actually came</NativeSelectOption>
-                                    <NativeSelectOption value="absent">Did not come</NativeSelectOption>
-                                    <NativeSelectOption value="not_sent">Not sent yet</NativeSelectOption>
-                                    <NativeSelectOption value="responded">Responded</NativeSelectOption>
-                                    <NativeSelectOption value="no_gift">No gift recorded</NativeSelectOption>
-                                </NativeSelect>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 px-5 py-4">
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
@@ -1026,7 +993,6 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             >
                                 Clear
                             </Button>
-                        </div>
                     </div>
 
                     <div
@@ -1136,9 +1102,9 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             </div>
                         </div>
 
-                        <div class="grid gap-3 md:grid-cols-3">
-                            <div class="rounded-2xl bg-neutral-50 p-3">
-                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
                                     Invitation tracking
                                 </p>
                                 <p class="mt-2 text-sm text-neutral-700">
@@ -1155,8 +1121,8 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 </p>
                             </div>
 
-                            <div class="rounded-2xl bg-neutral-50 p-3">
-                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
                                     Delivery
                                 </p>
                                 <p class="mt-2 text-sm text-neutral-700">
@@ -1170,8 +1136,8 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 </p>
                             </div>
 
-                            <div class="rounded-2xl bg-neutral-50 p-3">
-                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
                                     Event day attendance
                                 </p>
                                 <p class="mt-2 text-sm text-neutral-700">
@@ -1185,8 +1151,8 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 </p>
                             </div>
 
-                            <div class="rounded-2xl bg-neutral-50 p-3">
-                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
                                     Notes
                                 </p>
                                 <p class="mt-2 text-sm leading-6 text-neutral-700">
