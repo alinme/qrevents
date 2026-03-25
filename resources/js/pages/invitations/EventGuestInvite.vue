@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle2, Clock3, Phone, Sparkles, Users } from 'lucide-vue-next';
+import { CalendarDays, CheckCircle2, MapPin, Phone } from 'lucide-vue-next';
 import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -83,6 +83,7 @@ const form = useForm({
 });
 
 const showConfirmedCount = computed(() => form.attendance_status === 'accepted');
+const showResponseDetails = computed(() => form.attendance_status === 'accepted');
 const confirmedAttendeeMax = computed(() => {
     if (props.isPublicInvite) {
         return Math.max(1, Number(form.invited_attendees_count) || 1);
@@ -147,10 +148,6 @@ const mutedTextClass = computed(() => {
     return invitationTemplateVisuals.value.mutedClass;
 });
 
-const invitationLabel = computed(() => invitationTemplateVisuals.value.tag);
-
-const compactMoments = computed(() => props.eventDetails.moments.slice(0, 2));
-
 const submit = (): void => {
     form.post(props.links.respond, {
         preserveScroll: true,
@@ -171,111 +168,64 @@ const submit = (): void => {
             <div class="absolute bottom-[-7rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-white/28 blur-3xl" />
         </div>
 
-        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-3xl items-center">
+        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center">
             <div class="w-full space-y-5">
-                <section :class="['relative overflow-hidden rounded-[32px] border p-5 shadow-2xl backdrop-blur sm:p-7', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]">
+                <section :class="['relative overflow-hidden rounded-[30px] border p-6 shadow-xl backdrop-blur sm:p-8', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]">
                     <div class="pointer-events-none absolute inset-0">
                         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-80" />
                         <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
                         <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[var(--invite-accent)]/10 blur-2xl" />
                     </div>
 
-                    <div class="relative flex flex-wrap items-center gap-3">
-                        <div :class="['inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em]', invitationTemplateVisuals.accentClass]">
-                            <Sparkles class="size-3.5" />
-                            {{ t('invitations.badge') }}
-                        </div>
-                        <div
-                            v-if="guestParty && !isPublicInvite"
-                            :class="[
-                                'rounded-full border px-3 py-1 text-xs font-medium',
-                                invitation.template === 'midnight' ? 'border-white/10 bg-white/8 text-white/80' : 'border-stone-200 bg-white/80 text-neutral-700',
-                            ]"
-                        >
-                            {{ guestParty.name }}
-                        </div>
-                        <div :class="['rounded-full border px-3 py-1 text-xs font-medium', invitationTemplateVisuals.accentClass]">
-                            {{ invitationLabel }}
-                        </div>
-                    </div>
-
-                    <div class="relative mt-5 flex items-center gap-4">
+                    <div class="relative flex items-center gap-4">
                         <img
                             v-if="branding.logoUrl"
                             :src="branding.logoUrl"
                             alt=""
-                            class="h-14 w-14 rounded-[20px] border border-current/10 object-contain p-2 shadow-sm"
+                            class="h-12 w-12 rounded-[18px] border border-current/10 object-contain p-2 shadow-sm"
                         >
                         <div class="space-y-1">
                             <p :class="['text-xs font-semibold uppercase tracking-[0.3em]', mutedTextClass]">
                                 {{ eventName }}
                             </p>
                             <p :class="['text-sm', mutedTextClass]">
-                                {{ invitationTemplateVisuals.tag }}
+                                {{ guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge') }}
                             </p>
                         </div>
                     </div>
 
-                    <div class="relative mt-6 space-y-4">
-                        <h1 :class="['max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
+                    <div class="relative mt-8 space-y-4">
+                        <h1 :class="['max-w-xl text-3xl font-semibold tracking-tight sm:text-[3.3rem]', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
                             {{ invitation.headline }}
                         </h1>
-                        <p :class="['max-w-2xl text-base leading-7 sm:text-lg', mutedTextClass]">
+                        <p :class="['max-w-xl text-base leading-7 sm:text-lg', mutedTextClass]">
                             {{ invitation.message }}
                         </p>
                     </div>
 
-                    <div class="relative mt-6 grid gap-3 sm:grid-cols-2">
-                        <div :class="['rounded-[22px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
-                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
-                                {{ t('invitations.event_date') }}
-                            </p>
-                            <p class="mt-2 text-base font-semibold">
+                    <div class="relative mt-8 space-y-3 border-t border-current/10 pt-5">
+                        <div :class="['flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-5', mutedTextClass]">
+                            <span class="inline-flex items-center gap-2">
+                                <CalendarDays class="size-4" />
                                 {{ eventDetails.dateLabel }}
-                            </p>
-                        </div>
-
-                        <div :class="['rounded-[22px] border p-4 backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]">
-                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
-                                {{ t('invitations.venue') }}
-                            </p>
-                            <p class="mt-2 text-base font-semibold">
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <MapPin class="size-4" />
                                 {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div v-if="compactMoments.length > 0" class="relative mt-5 flex flex-wrap gap-2">
-                        <div
-                            v-for="moment in compactMoments"
-                            :key="`${moment.label}-${moment.date}-${moment.time}`"
-                            :class="['inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm backdrop-blur-sm', invitationTemplateVisuals.softBorderClass]"
-                        >
-                            <span class="font-medium">{{ moment.label }}</span>
-                            <span :class="['inline-flex items-center gap-1', mutedTextClass]">
-                                <CalendarDays class="size-3.5" />
-                                {{ moment.date }}
                             </span>
-                            <span :class="['inline-flex items-center gap-1', mutedTextClass]">
-                                <Clock3 class="size-3.5" />
-                                {{ moment.time }}
+                            <span v-if="invitation.contactPhone" class="inline-flex items-center gap-2">
+                                <Phone class="size-4" />
+                                {{ invitation.contactPhone }}
                             </span>
                         </div>
-                    </div>
-
-                    <div class="relative mt-6 flex items-center justify-between gap-3 border-t border-current/10 pt-4">
-                        <p v-if="invitation.contactPhone" :class="['inline-flex items-center gap-2 text-sm font-medium', mutedTextClass]">
-                            <Phone class="size-4" />
-                            {{ invitation.contactPhone }}
+                        <p :class="['text-sm leading-6', mutedTextClass]">
+                            {{ invitation.closing }}
                         </p>
-                        <div class="rounded-full border border-current/10 bg-current/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                            {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
-                        </div>
                     </div>
                 </section>
 
-                <section :class="['rounded-[32px] border p-5 shadow-2xl backdrop-blur sm:p-6', cardToneClass]">
-                    <div class="flex items-start justify-between gap-4">
+                <section :class="['rounded-[30px] border p-5 shadow-xl backdrop-blur sm:p-6', cardToneClass]">
+                    <div>
                         <div>
                             <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
                                 {{ t('invitations.rsvp') }}
@@ -283,18 +233,15 @@ const submit = (): void => {
                             <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-[2rem]">
                                 {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                             </h2>
-                            <p :class="['mt-2 text-sm leading-6', mutedTextClass]">
+                            <p :class="['mt-2 max-w-lg text-sm leading-6', mutedTextClass]">
                                 {{ t('invitations.response_help') }}
                             </p>
-                        </div>
-                        <div class="rounded-[22px] border border-current/10 bg-[var(--invite-primary)]/10 p-3 text-[var(--invite-primary)]">
-                            <Users class="size-5" />
                         </div>
                     </div>
 
                     <div
                         v-if="submitted"
-                        class="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                        class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
                     >
                         <div class="flex items-center gap-2">
                             <CheckCircle2 class="size-4" />
@@ -306,8 +253,8 @@ const submit = (): void => {
                     </div>
 
                     <form class="mt-5 space-y-4" @submit.prevent="submit">
-                        <div v-if="isPublicInvite" class="grid gap-4 sm:grid-cols-2">
-                            <div class="space-y-2 sm:col-span-2">
+                        <div v-if="isPublicInvite" class="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)]">
+                            <div class="space-y-2">
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.family_name') }}
                                 </label>
@@ -332,7 +279,7 @@ const submit = (): void => {
                             </div>
                         </div>
 
-                        <div v-else class="rounded-3xl border border-current/10 bg-current/5 px-4 py-3">
+                        <div v-else class="rounded-2xl border border-current/10 bg-current/5 px-4 py-3">
                             <p class="text-sm font-medium">
                                 {{ guestParty?.name }}
                             </p>
@@ -345,14 +292,14 @@ const submit = (): void => {
                             <button
                                 type="button"
                                 :class="[
-                                    'rounded-[24px] border px-4 py-4 text-left transition',
+                                    'rounded-2xl border px-4 py-4 text-left transition',
                                     form.attendance_status === 'accepted'
                                         ? 'border-emerald-400 bg-emerald-50 text-emerald-900'
                                         : 'border-neutral-200 bg-white/50 text-neutral-700',
                                 ]"
                                 @click="form.attendance_status = 'accepted'"
                             >
-                                <p class="text-sm font-semibold uppercase tracking-[0.18em]">
+                                <p class="text-sm font-semibold uppercase tracking-[0.16em]">
                                     {{ t('invitations.accept') }}
                                 </p>
                                 <p class="mt-2 text-sm">
@@ -363,14 +310,14 @@ const submit = (): void => {
                             <button
                                 type="button"
                                 :class="[
-                                    'rounded-[24px] border px-4 py-4 text-left transition',
+                                    'rounded-2xl border px-4 py-4 text-left transition',
                                     form.attendance_status === 'declined'
                                         ? 'border-rose-400 bg-rose-50 text-rose-900'
                                         : 'border-neutral-200 bg-white/50 text-neutral-700',
                                 ]"
                                 @click="form.attendance_status = 'declined'"
                             >
-                                <p class="text-sm font-semibold uppercase tracking-[0.18em]">
+                                <p class="text-sm font-semibold uppercase tracking-[0.16em]">
                                     {{ t('invitations.decline') }}
                                 </p>
                                 <p class="mt-2 text-sm">
@@ -380,50 +327,52 @@ const submit = (): void => {
                         </div>
                         <InputError :message="form.errors.attendance_status" />
 
-                        <div v-if="showConfirmedCount" class="space-y-2">
-                            <label class="text-sm font-medium">
-                                {{ t('invitations.confirmed_count') }}
-                            </label>
-                            <Input v-model="form.confirmed_attendees_count" type="number" min="1" :max="confirmedAttendeeMax" />
-                            <InputError :message="form.errors.confirmed_attendees_count" />
-                        </div>
+                        <div v-if="showResponseDetails" class="grid gap-4 rounded-2xl border border-current/10 bg-current/5 p-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">
+                                    {{ t('invitations.confirmed_count') }}
+                                </label>
+                                <Input v-model="form.confirmed_attendees_count" type="number" min="1" :max="confirmedAttendeeMax" />
+                                <InputError :message="form.errors.confirmed_attendees_count" />
+                            </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">
-                                {{ t('invitations.guest_names') }}
-                            </label>
-                            <Textarea
-                                v-model="form.guest_names"
-                                rows="3"
-                                :placeholder="t('invitations.guest_names_placeholder')"
-                            />
-                            <InputError :message="form.errors.guest_names" />
-                        </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">
+                                    {{ t('invitations.meal_preference') }}
+                                </label>
+                                <NativeSelect v-model="form.meal_preference">
+                                    <NativeSelectOption value="standard">{{ t('invitations.meal.standard') }}</NativeSelectOption>
+                                    <NativeSelectOption value="vegetarian">{{ t('invitations.meal.vegetarian') }}</NativeSelectOption>
+                                    <NativeSelectOption value="vegan">{{ t('invitations.meal.vegan') }}</NativeSelectOption>
+                                    <NativeSelectOption value="halal">{{ t('invitations.meal.halal') }}</NativeSelectOption>
+                                    <NativeSelectOption value="other">{{ t('invitations.meal.other') }}</NativeSelectOption>
+                                </NativeSelect>
+                                <InputError :message="form.errors.meal_preference" />
+                            </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">
-                                {{ t('invitations.meal_preference') }}
-                            </label>
-                            <NativeSelect v-model="form.meal_preference">
-                                <NativeSelectOption value="standard">{{ t('invitations.meal.standard') }}</NativeSelectOption>
-                                <NativeSelectOption value="vegetarian">{{ t('invitations.meal.vegetarian') }}</NativeSelectOption>
-                                <NativeSelectOption value="vegan">{{ t('invitations.meal.vegan') }}</NativeSelectOption>
-                                <NativeSelectOption value="halal">{{ t('invitations.meal.halal') }}</NativeSelectOption>
-                                <NativeSelectOption value="other">{{ t('invitations.meal.other') }}</NativeSelectOption>
-                            </NativeSelect>
-                            <InputError :message="form.errors.meal_preference" />
-                        </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">
+                                    {{ t('invitations.guest_names') }}
+                                </label>
+                                <Textarea
+                                    v-model="form.guest_names"
+                                    rows="2"
+                                    :placeholder="t('invitations.guest_names_placeholder')"
+                                />
+                                <InputError :message="form.errors.guest_names" />
+                            </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">
-                                {{ t('invitations.note_optional') }}
-                            </label>
-                            <Textarea
-                                v-model="form.response_notes"
-                                rows="3"
-                                :placeholder="t('invitations.note_placeholder')"
-                            />
-                            <InputError :message="form.errors.response_notes" />
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">
+                                    {{ t('invitations.note_optional') }}
+                                </label>
+                                <Textarea
+                                    v-model="form.response_notes"
+                                    rows="2"
+                                    :placeholder="t('invitations.note_placeholder')"
+                                />
+                                <InputError :message="form.errors.response_notes" />
+                            </div>
                         </div>
 
                         <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">

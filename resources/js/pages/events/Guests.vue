@@ -152,6 +152,7 @@ const importDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
+const showInvitationAdvanced = ref(false);
 const activeSection = ref<'families' | 'invitation' | 'ledger'>('families');
 const expandedGuestPartyId = ref<number | null>(null);
 const selectedGuestIds = ref<number[]>([]);
@@ -331,6 +332,11 @@ const familyOverview = computed(() => [
         value: props.guestPartyStats.acceptedPartyCount,
     },
 ]);
+
+const selectedInvitationTemplateCard = computed(() => {
+    return invitationTemplateCards.find((template) => template.id === invitationSettingsForm.template)
+        ?? invitationTemplateCards[0];
+});
 
 const openCreateDialog = (): void => {
     activeGuestParty.value = null;
@@ -1171,23 +1177,23 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 </section>
             </section>
 
-            <section v-else-if="activeSection === 'invitation'" class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="text-base font-semibold text-neutral-950">
-                                Invitation setup
-                            </h2>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                Keep it simple, save it once, then share family links.
-                            </p>
+            <section v-else-if="activeSection === 'invitation'" class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <div class="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-base font-semibold text-neutral-950">
+                                    Invitation
+                                </h2>
+                                <p class="mt-1 text-sm text-neutral-600">
+                                    Pick a style, write the message, then share the link.
+                                </p>
+                            </div>
+                            <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                                <ScrollText class="size-4" />
+                            </div>
                         </div>
-                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                            <ScrollText class="size-4" />
-                        </div>
-                    </div>
 
-                    <div class="mt-4 space-y-4">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
                                 Template
@@ -1198,15 +1204,16 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     :key="template.id"
                                     type="button"
                                     :class="[
-                                        'rounded-2xl border px-4 py-3 text-left transition',
+                                        'rounded-2xl border p-3 text-left transition',
                                         template.artClass,
                                         invitationSettingsForm.template === template.id
                                             ? 'ring-2 ring-neutral-950 shadow-sm'
-                                            : 'opacity-80 hover:opacity-100',
+                                            : 'hover:-translate-y-0.5 hover:shadow-sm',
                                     ]"
                                     @click="invitationSettingsForm.template = template.id"
                                 >
-                                    <p class="text-sm font-semibold">
+                                    <div class="h-16 rounded-xl border border-current/10 bg-white/35" />
+                                    <p class="mt-3 text-sm font-semibold">
                                         {{ template.label }}
                                     </p>
                                 </button>
@@ -1242,15 +1249,8 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             />
                         </div>
 
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Contact phone
-                                </label>
-                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional" />
-                            </div>
-
-                            <label class="flex items-center gap-3 rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
+                        <div class="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <label class="flex items-center gap-3 text-sm text-neutral-700">
                                 <input
                                     v-model="invitationSettingsForm.public_rsvp_enabled"
                                     type="checkbox"
@@ -1258,43 +1258,95 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 >
                                 Public RSVP link enabled
                             </label>
+
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                @click="showInvitationAdvanced = !showInvitationAdvanced"
+                            >
+                                {{ showInvitationAdvanced ? 'Hide advanced' : 'Advanced' }}
+                            </Button>
+                        </div>
+
+                        <div v-if="showInvitationAdvanced" class="space-y-2 rounded-2xl border border-neutral-200 px-4 py-4">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Contact phone
+                            </label>
+                            <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional" />
                         </div>
                     </div>
 
-                    <div class="mt-4 flex justify-end border-t border-neutral-200 pt-4">
-                        <Button
-                            class="rounded-full px-5"
-                            :disabled="savingInvitationSettings || invitationSettingsForm.processing"
-                            @click="saveInvitationSettings"
-                        >
-                            <SendHorizontal class="mr-2 size-4" />
-                            Save invitation
-                        </Button>
+                    <div class="space-y-4">
+                        <div :class="['rounded-[30px] border p-5 shadow-sm', selectedInvitationTemplateCard.artClass]">
+                            <p class="text-xs font-semibold uppercase tracking-[0.26em] text-current/70">
+                                {{ currentEvent.name }}
+                            </p>
+                            <h3 class="mt-4 text-2xl font-semibold tracking-tight">
+                                {{ invitationSettingsForm.headline || "You're invited" }}
+                            </h3>
+                            <p class="mt-3 text-sm leading-6 text-current/75">
+                                {{ invitationSettingsForm.message || 'Add the main invitation message here.' }}
+                            </p>
+                            <p class="mt-5 text-sm font-medium text-current/80">
+                                {{ invitationSettingsForm.closing || 'A short RSVP reminder.' }}
+                            </p>
+                            <p
+                                v-if="showInvitationAdvanced && invitationSettingsForm.contact_phone"
+                                class="mt-4 text-sm text-current/75"
+                            >
+                                {{ invitationSettingsForm.contact_phone }}
+                            </p>
+                        </div>
+
+                        <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-neutral-950">
+                                        Public RSVP link
+                                    </p>
+                                    <p class="mt-1 text-sm text-neutral-600">
+                                        Share this if a family is not already on the list.
+                                    </p>
+                                </div>
+                                <span
+                                    :class="[
+                                        'rounded-full px-3 py-1 text-xs font-medium',
+                                        invitationSettingsForm.public_rsvp_enabled
+                                            ? 'bg-emerald-100 text-emerald-700'
+                                            : 'bg-neutral-200 text-neutral-600',
+                                    ]"
+                                >
+                                    {{ invitationSettingsForm.public_rsvp_enabled ? 'On' : 'Off' }}
+                                </span>
+                            </div>
+
+                            <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-600 break-all">
+                                {{ publicInvitationUrl }}
+                            </div>
+
+                            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+                                <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
+                                    <Copy class="mr-2 size-4" />
+                                    Copy link
+                                </Button>
+                                <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
+                                    <ExternalLink class="mr-2 size-4" />
+                                    Open page
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-base font-semibold text-neutral-950">
-                        Public RSVP link
-                    </h2>
-                    <p class="mt-1 text-sm text-neutral-600">
-                        Share this if a family is not already in the list.
-                    </p>
-
-                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600 break-all">
-                        {{ publicInvitationUrl }}
-                    </div>
-
-                    <div class="mt-4 flex flex-col gap-2">
-                        <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
-                            <Copy class="mr-2 size-4" />
-                            Copy link
-                        </Button>
-                        <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
-                            <ExternalLink class="mr-2 size-4" />
-                            Open page
-                        </Button>
-                    </div>
+                <div class="mt-5 flex justify-end border-t border-neutral-200 pt-4">
+                    <Button
+                        class="rounded-full px-5"
+                        :disabled="savingInvitationSettings || invitationSettingsForm.processing"
+                        @click="saveInvitationSettings"
+                    >
+                        <SendHorizontal class="mr-2 size-4" />
+                        Save invitation
+                    </Button>
                 </div>
             </section>
 
