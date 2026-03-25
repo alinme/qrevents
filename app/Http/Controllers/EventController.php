@@ -415,9 +415,15 @@ class EventController extends Controller
             ->where('public_invitation_token', $token)
             ->firstOrFail();
 
-        abort_unless($this->eventInvitationSettings($event)['publicRsvpEnabled'], 404);
+        $settings = $this->eventInvitationSettings($event);
+        abort_unless(
+            $settings['publicRsvpEnabled'] || $this->canPreviewInvitationAsManager($request, $event),
+            404,
+        );
 
-        $this->recordInvitationOpen($request, $event, null, 'public');
+        if ($settings['publicRsvpEnabled']) {
+            $this->recordInvitationOpen($request, $event, null, 'public');
+        }
 
         return Inertia::render('invitations/EventGuestInvite', $this->invitationPageProps(
             $request,
@@ -2412,6 +2418,7 @@ class EventController extends Controller
     {
         $publicInvitationToken = $this->ensurePublicInvitationToken($event);
         $invitationSettings = $this->eventInvitationSettings($event);
+        $branding = $this->resolvedEventBranding($event);
         $guestParties = $event->guestParties()
             ->orderBy('name')
             ->get();
@@ -2422,6 +2429,15 @@ class EventController extends Controller
             'eventInvitationSettings' => $invitationSettings,
             'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
             'guestLedgerExportUrl' => route('events.guests.export', $event),
+            'invitationPreview' => [
+                'eventDetails' => [
+                    'dateLabel' => $this->invitationPrimaryDateLabel($event),
+                    'venueAddress' => $this->invitationVenueAddress($event),
+                ],
+                'branding' => [
+                    'logoUrl' => $this->brandingLogoUrl($branding),
+                ],
+            ],
             'guestPartyStats' => $stats,
             'guestReport' => $report,
             'guestParties' => $guestParties
@@ -3164,6 +3180,25 @@ class EventController extends Controller
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['active', 'accepted'])
             ->first();
+    }
+
+    private function canPreviewInvitationAsManager(Request $request, Event $event): bool
+    {
+        if ($request->user() === null) {
+            return false;
+        }
+
+        if ($request->user()->canAccessAdmin()) {
+            return true;
+        }
+
+        if ($request->user()->id === $event->user_id) {
+            return true;
+        }
+
+        $membership = $this->activeCollaboratorMembership($request, $event);
+
+        return $membership !== null && $membership->role === 'manager';
     }
 
     private function shouldShowEventOverviewLink(Request $request): bool

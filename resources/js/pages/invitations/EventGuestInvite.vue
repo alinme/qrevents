@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle2, MapPin, Phone } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { CheckCircle2, Download } from 'lucide-vue-next';
+import { computed, onMounted } from 'vue';
 import InputError from '@/components/InputError.vue';
+import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    invitationTemplateMap,
-    type InvitationTemplateId,
-} from '@/lib/invitation-templates';
+import { type InvitationTemplateId } from '@/lib/invitation-templates';
 import {
     NativeSelect,
     NativeSelectOption,
@@ -96,49 +94,6 @@ const confirmedAttendeeMax = computed(() => {
     return Math.max(1, props.guestParty?.invitedAttendeesCount ?? 1);
 });
 
-const invitationTemplateVisuals = computed(() => {
-    const selectedTemplate = invitationTemplateMap[props.invitation.template];
-
-    return {
-        classic: {
-            tag: 'Classic stationery',
-            surfaceClass: 'border-stone-200 bg-[linear-gradient(180deg,rgba(255,252,247,0.98),rgba(255,255,255,0.92))] text-neutral-950',
-            accentClass: 'border-amber-200/70 bg-amber-500/10 text-amber-700',
-            ribbonClass: 'from-amber-500 via-orange-400 to-amber-600',
-            cardGlowClass: 'shadow-[0_32px_90px_rgba(161,98,7,0.14)]',
-            softBorderClass: 'border-stone-200/80 bg-white/75',
-            mutedClass: 'text-neutral-600',
-        },
-        floral: {
-            tag: 'Floral romance',
-            surfaceClass: 'border-rose-200 bg-[linear-gradient(180deg,rgba(255,247,249,0.98),rgba(255,255,255,0.92))] text-neutral-950',
-            accentClass: 'border-rose-200/70 bg-rose-500/10 text-rose-700',
-            ribbonClass: 'from-rose-500 via-fuchsia-400 to-rose-600',
-            cardGlowClass: 'shadow-[0_32px_90px_rgba(244,114,182,0.12)]',
-            softBorderClass: 'border-rose-200/75 bg-white/78',
-            mutedClass: 'text-neutral-600',
-        },
-        midnight: {
-            tag: 'Midnight modern',
-            surfaceClass: 'border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(15,23,42,0.9))] text-white',
-            accentClass: 'border-white/15 bg-white/10 text-white/85',
-            ribbonClass: 'from-sky-400 via-indigo-400 to-cyan-300',
-            cardGlowClass: 'shadow-[0_32px_90px_rgba(15,23,42,0.35)]',
-            softBorderClass: 'border-white/10 bg-white/6',
-            mutedClass: 'text-white/72',
-        },
-        canva_cream: {
-            tag: selectedTemplate.label,
-            surfaceClass: 'border-stone-200 bg-[#f9f7f2] text-neutral-950',
-            accentClass: 'border-stone-200/70 bg-white/75 text-stone-700',
-            ribbonClass: 'from-stone-300 via-stone-200 to-stone-300',
-            cardGlowClass: 'shadow-[0_32px_90px_rgba(120,113,108,0.12)]',
-            softBorderClass: 'border-stone-200/80 bg-white/78',
-            mutedClass: 'text-neutral-600',
-        },
-    }[props.invitation.template];
-});
-
 const invitationSurfaceStyle = computed(() => ({
     '--invite-primary': props.branding.primaryColor,
     '--invite-accent': props.branding.accentColor,
@@ -149,40 +104,23 @@ const invitationSurfaceStyle = computed(() => ({
     backgroundPosition: 'center',
 }));
 
-const invitationArtwork = computed(() => invitationTemplateMap[props.invitation.template]);
-
-const cardToneClass = computed(() => invitationTemplateVisuals.value.surfaceClass);
-
-const invitationPaperStyle = computed(() => {
-    if (!invitationArtwork.value.baseUrl) {
-        return undefined;
-    }
-
-    return {
-        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.18)), url(${invitationArtwork.value.baseUrl})`,
-        backgroundPosition: 'center',
-        backgroundSize: 'cover',
-    };
-});
-
-const invitationHeroClass = computed(() => {
-    return {
-        classic: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(217,119,6,0.14),transparent_48%)] before:content-[\'\']',
-        floral: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_right,rgba(244,114,182,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(251,207,232,0.22),transparent_35%)] before:content-[\'\']',
-        midnight: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.14),transparent_30%)] before:content-[\'\']',
-        canva_cream: '',
-    }[props.invitation.template];
-});
-
-const mutedTextClass = computed(() => {
-    return invitationTemplateVisuals.value.mutedClass;
-});
-
 const submit = (): void => {
     form.post(props.links.respond, {
         preserveScroll: true,
     });
 };
+
+const printInvitation = (): void => {
+    window.print();
+};
+
+onMounted(() => {
+    if (new URLSearchParams(window.location.search).get('print') === '1') {
+        window.setTimeout(() => {
+            window.print();
+        }, 250);
+    }
+});
 </script>
 
 <template>
@@ -200,77 +138,37 @@ const submit = (): void => {
 
         <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center">
             <div class="w-full space-y-5">
-                <section
-                    :class="['relative overflow-hidden rounded-[30px] border p-3 shadow-xl backdrop-blur sm:p-4', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]"
-                    :style="invitationPaperStyle"
-                >
-                    <div class="pointer-events-none absolute inset-0">
-                        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-75" />
-                        <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/20 blur-3xl" />
-                        <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[var(--invite-accent)]/10 blur-2xl" />
-                    </div>
+                <InvitationPaper
+                    :template="invitation.template"
+                    :event-name="eventName"
+                    :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
+                    :headline="invitation.headline"
+                    :message="invitation.message"
+                    :closing="invitation.closing"
+                    :contact-phone="invitation.contactPhone"
+                    :date-label="eventDetails.dateLabel"
+                    :venue-address="eventDetails.venueAddress || t('invitations.venue_pending')"
+                    :logo-url="branding.logoUrl"
+                    mode="live"
+                />
 
-                    <div class="relative aspect-[210/297] overflow-hidden rounded-[24px] border border-current/10 bg-white/10">
-                        <div class="flex h-full flex-col px-[10.5%] py-[11%] text-center">
-                            <div class="flex items-center justify-center gap-3">
-                                <img
-                                    v-if="branding.logoUrl"
-                                    :src="branding.logoUrl"
-                                    alt=""
-                                    class="h-10 w-10 rounded-[16px] border border-current/10 object-contain p-2 shadow-sm"
-                                >
-                                <div class="space-y-1">
-                                    <p :class="['text-[0.68rem] font-semibold uppercase tracking-[0.34em]', mutedTextClass]">
-                                        {{ eventName }}
-                                    </p>
-                                    <p :class="['text-sm', mutedTextClass]">
-                                        {{ guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge') }}
-                                    </p>
-                                </div>
-                            </div>
+                <div class="flex justify-end">
+                    <Button variant="outline" class="rounded-full px-5" @click="printInvitation">
+                        <Download class="mr-2 size-4" />
+                        Save or print invitation
+                    </Button>
+                </div>
 
-                            <div class="my-auto space-y-5">
-                                <h1 :class="['mx-auto max-w-[12ch] text-[2rem] font-semibold tracking-tight sm:text-[3rem]', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
-                                    {{ invitation.headline }}
-                                </h1>
-                                <p :class="['mx-auto max-w-[26ch] text-[0.95rem] leading-7 sm:text-lg', mutedTextClass]">
-                                    {{ invitation.message }}
-                                </p>
-                            </div>
-
-                            <div class="space-y-4 border-t border-current/10 pt-5">
-                                <div :class="['flex flex-col items-center gap-3 text-sm', mutedTextClass]">
-                                    <span class="inline-flex items-center gap-2 text-center">
-                                        <CalendarDays class="size-4" />
-                                        {{ eventDetails.dateLabel }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-2 text-center">
-                                        <MapPin class="size-4" />
-                                        {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
-                                    </span>
-                                    <span v-if="invitation.contactPhone" class="inline-flex items-center gap-2 text-center">
-                                        <Phone class="size-4" />
-                                        {{ invitation.contactPhone }}
-                                    </span>
-                                </div>
-                                <p :class="['mx-auto max-w-[24ch] text-sm leading-6', mutedTextClass]">
-                                    {{ invitation.closing }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section :class="['rounded-[30px] border p-5 shadow-xl backdrop-blur sm:p-6', cardToneClass]">
+                <section class="rounded-[30px] border border-neutral-200 bg-white/92 p-5 shadow-xl backdrop-blur sm:p-6">
                     <div>
                         <div>
-                            <p :class="['text-xs font-semibold uppercase tracking-[0.24em]', mutedTextClass]">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
                                 {{ t('invitations.rsvp') }}
                             </p>
                             <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-[2rem]">
                                 {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                             </h2>
-                            <p :class="['mt-2 max-w-lg text-sm leading-6', mutedTextClass]">
+                            <p class="mt-2 max-w-lg text-sm leading-6 text-neutral-600">
                                 {{ t('invitations.response_help') }}
                             </p>
                         </div>
@@ -316,11 +214,11 @@ const submit = (): void => {
                             </div>
                         </div>
 
-                        <div v-else class="rounded-2xl border border-current/10 bg-current/5 px-4 py-3">
+                        <div v-else class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
                             <p class="text-sm font-medium">
                                 {{ guestParty?.name }}
                             </p>
-                            <p :class="['mt-1 text-sm', mutedTextClass]">
+                            <p class="mt-1 text-sm text-neutral-600">
                                 {{ t('invitations.invited_for', { count: guestParty?.invitedAttendeesCount ?? 1 }) }}
                             </p>
                         </div>
@@ -364,7 +262,7 @@ const submit = (): void => {
                         </div>
                         <InputError :message="form.errors.attendance_status" />
 
-                        <div v-if="showResponseDetails" class="grid gap-4 rounded-2xl border border-current/10 bg-current/5 p-4">
+                        <div v-if="showResponseDetails" class="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.confirmed_count') }}
@@ -415,7 +313,7 @@ const submit = (): void => {
                         <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                             <Link
                                 :href="links.album"
-                                :class="['text-sm font-medium underline underline-offset-4', mutedTextClass]"
+                                class="text-sm font-medium text-neutral-600 underline underline-offset-4"
                             >
                                 {{ t('invitations.open_album') }}
                             </Link>
@@ -430,7 +328,7 @@ const submit = (): void => {
                         </div>
                     </form>
 
-                    <p v-if="showPoweredBy" :class="['mt-5 text-xs', mutedTextClass]">
+                    <p v-if="showPoweredBy" class="mt-5 text-xs text-neutral-500">
                         {{ t('invitations.powered_by', { app: appName }) }}
                     </p>
                 </section>

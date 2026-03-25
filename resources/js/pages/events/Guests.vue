@@ -51,6 +51,7 @@ import {
     invitationTemplateDefinitions,
     type InvitationTemplateId,
 } from '@/lib/invitation-templates';
+import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -130,11 +131,22 @@ type GuestPartyStats = {
     moneyGiftCurrency: string;
 };
 
+type InvitationPreviewPayload = {
+    eventDetails: {
+        dateLabel: string;
+        venueAddress: string | null;
+    };
+    branding: {
+        logoUrl: string | null;
+    };
+};
+
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
+    invitationPreview: InvitationPreviewPayload;
     guestLedgerExportUrl: string;
     guestPartyStats: GuestPartyStats;
     guestParties: GuestParty[];
@@ -339,23 +351,6 @@ const ledgerGuestParties = computed(() => {
 
         return left.name.localeCompare(right.name);
     });
-});
-
-const selectedInvitationTemplateCard = computed(() => {
-    return invitationTemplateCards.find((template) => template.id === invitationSettingsForm.template)
-        ?? invitationTemplateCards[0];
-});
-
-const selectedInvitationPreviewStyle = computed(() => {
-    if (!selectedInvitationTemplateCard.value.baseUrl) {
-        return undefined;
-    }
-
-    return {
-        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.16)), url(${selectedInvitationTemplateCard.value.baseUrl})`,
-        backgroundPosition: 'center',
-        backgroundSize: 'cover',
-    };
 });
 
 const previewingInvitationTemplateCard = computed(() => {
@@ -737,6 +732,12 @@ const copyLink = async (url: string, label: string): Promise<void> => {
 
 const openInvite = (url: string): void => {
     window.open(url, '_blank', 'noopener,noreferrer');
+};
+
+const saveInvitationPreview = (): void => {
+    const separator = props.publicInvitationUrl.includes('?') ? '&' : '?';
+
+    window.open(`${props.publicInvitationUrl}${separator}print=1`, '_blank', 'noopener,noreferrer');
 };
 
 const shareGuestPartyBundle = async (
@@ -1550,39 +1551,34 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </div>
 
                     <div class="space-y-4">
-                        <div
-                            :class="['rounded-[30px] border p-3 shadow-sm sm:p-4', selectedInvitationTemplateCard.artClass]"
-                            :style="selectedInvitationPreviewStyle"
-                        >
-                            <div class="aspect-[210/297] overflow-hidden rounded-[24px] border border-current/10 bg-white/16">
-                                <div class="flex h-full flex-col px-[11%] py-[12%] text-center">
-                                    <p class="text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-current/65">
-                                        {{ currentEvent.name }}
-                                    </p>
-
-                                    <div class="my-auto space-y-4">
-                                        <h3 class="text-[1.7rem] font-semibold tracking-tight sm:text-[2rem]">
-                                            {{ invitationSettingsForm.headline || "You're invited" }}
-                                        </h3>
-                                        <p class="mx-auto max-w-[24ch] text-sm leading-6 text-current/75 sm:text-[0.95rem]">
-                                            {{ invitationSettingsForm.message || 'Add the main invitation message here.' }}
-                                        </p>
-                                    </div>
-
-                                    <div class="space-y-3 border-t border-current/10 pt-4">
-                                        <p class="text-sm font-medium text-current/80">
-                                            {{ invitationSettingsForm.closing || 'A short RSVP reminder.' }}
-                                        </p>
-                                        <p
-                                            v-if="showInvitationAdvanced && invitationSettingsForm.contact_phone"
-                                            class="text-sm text-current/75"
-                                        >
-                                            {{ invitationSettingsForm.contact_phone }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Button class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
+                                <ExternalLink class="mr-2 size-4" />
+                                Open preview
+                            </Button>
+                            <Button variant="outline" class="rounded-full px-5" @click="saveInvitationPreview">
+                                <Download class="mr-2 size-4" />
+                                Save or print
+                            </Button>
+                            <Button variant="outline" class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Invitation preview link')">
+                                <Copy class="mr-2 size-4" />
+                                Copy preview link
+                            </Button>
                         </div>
+
+                        <InvitationPaper
+                            :template="invitationSettingsForm.template"
+                            :event-name="currentEvent.name"
+                            guest-label="Invitation preview"
+                            :headline="invitationSettingsForm.headline || `You're invited`"
+                            :message="invitationSettingsForm.message || 'Add the main invitation message here.'"
+                            :closing="invitationSettingsForm.closing || 'A short RSVP reminder.'"
+                            :contact-phone="showInvitationAdvanced ? invitationSettingsForm.contact_phone : null"
+                            :date-label="props.invitationPreview.eventDetails.dateLabel"
+                            :venue-address="props.invitationPreview.eventDetails.venueAddress"
+                            :logo-url="props.invitationPreview.branding.logoUrl"
+                            mode="preview"
+                        />
 
                         <div class="rounded-2xl border border-neutral-200 bg-white p-4">
                             <p class="text-sm font-semibold text-neutral-950">

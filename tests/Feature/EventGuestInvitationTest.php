@@ -179,3 +179,23 @@ it('creates or updates a guest party from the public invitation page', function 
             && $summary['mealPreference'] === 'halal';
     });
 });
+
+it('allows an owner to preview the public invitation even when public rsvp is disabled', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'invitation_settings' => [
+            'template' => 'canva_cream',
+            'public_rsvp_enabled' => false,
+        ],
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('events.guests.public-invitation.show', $event->public_invitation_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('invitations/EventGuestInvite')
+            ->where('eventName', $event->name)
+            ->where('isPublicInvite', true)
+            ->where('invitation.template', 'canva_cream')
+        );
+});
