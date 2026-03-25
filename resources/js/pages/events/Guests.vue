@@ -346,6 +346,18 @@ const selectedInvitationTemplateCard = computed(() => {
         ?? invitationTemplateCards[0];
 });
 
+const selectedInvitationPreviewStyle = computed(() => {
+    if (!selectedInvitationTemplateCard.value.baseUrl) {
+        return undefined;
+    }
+
+    return {
+        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.16)), url(${selectedInvitationTemplateCard.value.baseUrl})`,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+    };
+});
+
 const previewingInvitationTemplateCard = computed(() => {
     if (!previewingInvitationTemplateId.value) {
         return null;
@@ -1448,14 +1460,22 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         @click="invitationSettingsForm.template = template.id"
                                     >
                                         <div
-                                            class="h-12 overflow-hidden rounded-xl border border-current/10 bg-white/35"
+                                            class="overflow-hidden rounded-xl border border-current/10 bg-white/45 shadow-sm"
                                         >
-                                            <img
-                                                v-if="template.previewUrl"
-                                                :src="template.previewUrl"
-                                                alt=""
-                                                class="h-full w-full object-cover"
-                                            >
+                                            <div class="aspect-[210/297]">
+                                                <img
+                                                    v-if="template.previewUrl"
+                                                    :src="template.previewUrl"
+                                                    alt=""
+                                                    class="h-full w-full object-contain"
+                                                >
+                                                <div
+                                                    v-else
+                                                    class="flex h-full items-center justify-center px-3 text-center text-sm font-semibold"
+                                                >
+                                                    {{ template.label }}
+                                                </div>
+                                            </div>
                                         </div>
                                         <p class="mt-2 text-sm font-semibold">
                                             {{ template.label }}
@@ -1531,31 +1551,37 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
                     <div class="space-y-4">
                         <div
-                            :class="['rounded-[30px] border p-5 shadow-sm', selectedInvitationTemplateCard.artClass]"
-                            :style="selectedInvitationTemplateCard.baseUrl ? {
-                                backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.24)), url(${selectedInvitationTemplateCard.baseUrl})`,
-                                backgroundPosition: 'center',
-                                backgroundSize: 'cover',
-                            } : undefined"
+                            :class="['rounded-[30px] border p-3 shadow-sm sm:p-4', selectedInvitationTemplateCard.artClass]"
+                            :style="selectedInvitationPreviewStyle"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.26em] text-current/70">
-                                {{ currentEvent.name }}
-                            </p>
-                            <h3 class="mt-4 text-2xl font-semibold tracking-tight">
-                                {{ invitationSettingsForm.headline || "You're invited" }}
-                            </h3>
-                            <p class="mt-3 text-sm leading-6 text-current/75">
-                                {{ invitationSettingsForm.message || 'Add the main invitation message here.' }}
-                            </p>
-                            <p class="mt-5 text-sm font-medium text-current/80">
-                                {{ invitationSettingsForm.closing || 'A short RSVP reminder.' }}
-                            </p>
-                            <p
-                                v-if="showInvitationAdvanced && invitationSettingsForm.contact_phone"
-                                class="mt-4 text-sm text-current/75"
-                            >
-                                {{ invitationSettingsForm.contact_phone }}
-                            </p>
+                            <div class="aspect-[210/297] overflow-hidden rounded-[24px] border border-current/10 bg-white/16">
+                                <div class="flex h-full flex-col px-[11%] py-[12%] text-center">
+                                    <p class="text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-current/65">
+                                        {{ currentEvent.name }}
+                                    </p>
+
+                                    <div class="my-auto space-y-4">
+                                        <h3 class="text-[1.7rem] font-semibold tracking-tight sm:text-[2rem]">
+                                            {{ invitationSettingsForm.headline || "You're invited" }}
+                                        </h3>
+                                        <p class="mx-auto max-w-[24ch] text-sm leading-6 text-current/75 sm:text-[0.95rem]">
+                                            {{ invitationSettingsForm.message || 'Add the main invitation message here.' }}
+                                        </p>
+                                    </div>
+
+                                    <div class="space-y-3 border-t border-current/10 pt-4">
+                                        <p class="text-sm font-medium text-current/80">
+                                            {{ invitationSettingsForm.closing || 'A short RSVP reminder.' }}
+                                        </p>
+                                        <p
+                                            v-if="showInvitationAdvanced && invitationSettingsForm.contact_phone"
+                                            class="text-sm text-current/75"
+                                        >
+                                            {{ invitationSettingsForm.contact_phone }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="rounded-2xl border border-neutral-200 bg-white p-4">
@@ -2046,7 +2072,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
         </Dialog>
 
         <Dialog :open="previewingInvitationTemplateCard !== null" @update:open="handleInvitationTemplatePreviewOpenChange">
-            <DialogContent class="max-w-3xl">
+            <DialogContent class="max-w-[min(96vw,46rem)] p-4 sm:p-5">
                 <DialogHeader>
                     <DialogTitle>
                         {{ previewingInvitationTemplateCard?.label ?? 'Invitation preview' }}
@@ -2056,12 +2082,12 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50">
+                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
                     <img
                         v-if="previewingInvitationTemplateCard?.previewUrl || previewingInvitationTemplateCard?.baseUrl"
                         :src="previewingInvitationTemplateCard?.previewUrl ?? previewingInvitationTemplateCard?.baseUrl ?? ''"
                         alt=""
-                        class="mx-auto max-h-[75vh] w-auto max-w-full object-contain"
+                        class="mx-auto aspect-[210/297] max-h-[82vh] w-full max-w-[42rem] object-contain"
                     >
                 </div>
             </DialogContent>

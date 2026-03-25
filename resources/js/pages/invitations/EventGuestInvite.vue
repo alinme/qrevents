@@ -153,6 +153,18 @@ const invitationArtwork = computed(() => invitationTemplateMap[props.invitation.
 
 const cardToneClass = computed(() => invitationTemplateVisuals.value.surfaceClass);
 
+const invitationPaperStyle = computed(() => {
+    if (!invitationArtwork.value.baseUrl) {
+        return undefined;
+    }
+
+    return {
+        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.18)), url(${invitationArtwork.value.baseUrl})`,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+    };
+});
+
 const invitationHeroClass = computed(() => {
     return {
         classic: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(217,119,6,0.14),transparent_48%)] before:content-[\'\']',
@@ -189,63 +201,63 @@ const submit = (): void => {
         <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center">
             <div class="w-full space-y-5">
                 <section
-                    :class="['relative overflow-hidden rounded-[30px] border p-6 shadow-xl backdrop-blur sm:p-8', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]"
-                    :style="invitationArtwork.baseUrl ? {
-                        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.24)), url(${invitationArtwork.baseUrl})`,
-                        backgroundPosition: 'center',
-                        backgroundSize: 'cover',
-                    } : undefined"
+                    :class="['relative overflow-hidden rounded-[30px] border p-3 shadow-xl backdrop-blur sm:p-4', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]"
+                    :style="invitationPaperStyle"
                 >
                     <div class="pointer-events-none absolute inset-0">
-                        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-80" />
-                        <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
+                        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-75" />
+                        <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/20 blur-3xl" />
                         <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[var(--invite-accent)]/10 blur-2xl" />
                     </div>
 
-                    <div class="relative flex items-center gap-4">
-                        <img
-                            v-if="branding.logoUrl"
-                            :src="branding.logoUrl"
-                            alt=""
-                            class="h-12 w-12 rounded-[18px] border border-current/10 object-contain p-2 shadow-sm"
-                        >
-                        <div class="space-y-1">
-                            <p :class="['text-xs font-semibold uppercase tracking-[0.3em]', mutedTextClass]">
-                                {{ eventName }}
-                            </p>
-                            <p :class="['text-sm', mutedTextClass]">
-                                {{ guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge') }}
-                            </p>
-                        </div>
-                    </div>
+                    <div class="relative aspect-[210/297] overflow-hidden rounded-[24px] border border-current/10 bg-white/10">
+                        <div class="flex h-full flex-col px-[10.5%] py-[11%] text-center">
+                            <div class="flex items-center justify-center gap-3">
+                                <img
+                                    v-if="branding.logoUrl"
+                                    :src="branding.logoUrl"
+                                    alt=""
+                                    class="h-10 w-10 rounded-[16px] border border-current/10 object-contain p-2 shadow-sm"
+                                >
+                                <div class="space-y-1">
+                                    <p :class="['text-[0.68rem] font-semibold uppercase tracking-[0.34em]', mutedTextClass]">
+                                        {{ eventName }}
+                                    </p>
+                                    <p :class="['text-sm', mutedTextClass]">
+                                        {{ guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge') }}
+                                    </p>
+                                </div>
+                            </div>
 
-                    <div class="relative mt-8 space-y-4">
-                        <h1 :class="['max-w-xl text-3xl font-semibold tracking-tight sm:text-[3.3rem]', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
-                            {{ invitation.headline }}
-                        </h1>
-                        <p :class="['max-w-xl text-base leading-7 sm:text-lg', mutedTextClass]">
-                            {{ invitation.message }}
-                        </p>
-                    </div>
+                            <div class="my-auto space-y-5">
+                                <h1 :class="['mx-auto max-w-[12ch] text-[2rem] font-semibold tracking-tight sm:text-[3rem]', invitation.template === 'midnight' ? 'text-white' : 'text-neutral-950', invitation.template !== 'midnight' ? 'font-serif' : '']">
+                                    {{ invitation.headline }}
+                                </h1>
+                                <p :class="['mx-auto max-w-[26ch] text-[0.95rem] leading-7 sm:text-lg', mutedTextClass]">
+                                    {{ invitation.message }}
+                                </p>
+                            </div>
 
-                    <div class="relative mt-8 space-y-3 border-t border-current/10 pt-5">
-                        <div :class="['flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-5', mutedTextClass]">
-                            <span class="inline-flex items-center gap-2">
-                                <CalendarDays class="size-4" />
-                                {{ eventDetails.dateLabel }}
-                            </span>
-                            <span class="inline-flex items-center gap-2">
-                                <MapPin class="size-4" />
-                                {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
-                            </span>
-                            <span v-if="invitation.contactPhone" class="inline-flex items-center gap-2">
-                                <Phone class="size-4" />
-                                {{ invitation.contactPhone }}
-                            </span>
+                            <div class="space-y-4 border-t border-current/10 pt-5">
+                                <div :class="['flex flex-col items-center gap-3 text-sm', mutedTextClass]">
+                                    <span class="inline-flex items-center gap-2 text-center">
+                                        <CalendarDays class="size-4" />
+                                        {{ eventDetails.dateLabel }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-2 text-center">
+                                        <MapPin class="size-4" />
+                                        {{ eventDetails.venueAddress || t('invitations.venue_pending') }}
+                                    </span>
+                                    <span v-if="invitation.contactPhone" class="inline-flex items-center gap-2 text-center">
+                                        <Phone class="size-4" />
+                                        {{ invitation.contactPhone }}
+                                    </span>
+                                </div>
+                                <p :class="['mx-auto max-w-[24ch] text-sm leading-6', mutedTextClass]">
+                                    {{ invitation.closing }}
+                                </p>
+                            </div>
                         </div>
-                        <p :class="['text-sm leading-6', mutedTextClass]">
-                            {{ invitation.closing }}
-                        </p>
                     </div>
                 </section>
 
