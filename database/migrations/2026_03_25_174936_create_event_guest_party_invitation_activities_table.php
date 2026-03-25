@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('event_guest_party_invitation_activities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('event_guest_party_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('actor_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('event_guest_party_id');
+            $table->foreignId('actor_user_id')->nullable();
             $table->string('activity_type', 40);
             $table->string('delivery_channel')->nullable();
             $table->json('meta')->nullable();
@@ -20,8 +20,16 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->timestamps();
 
-            $table->index(['event_guest_party_id', 'created_at']);
-            $table->index(['event_id', 'activity_type']);
+            $table->foreign('event_guest_party_id', 'egpia_guest_party_fk')
+                ->references('id')
+                ->on('event_guest_parties')
+                ->cascadeOnDelete();
+            $table->foreign('actor_user_id', 'egpia_actor_user_fk')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+            $table->index(['event_guest_party_id', 'created_at'], 'egpia_party_created_idx');
+            $table->index(['event_id', 'activity_type'], 'egpia_event_type_idx');
         });
     }
 
