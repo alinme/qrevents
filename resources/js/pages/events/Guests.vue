@@ -1496,9 +1496,9 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
-                                Headline
+                                Title
                             </label>
-                            <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
+                            <Input v-model="invitationSettingsForm.headline" :placeholder="currentEvent.name" />
                         </div>
 
                         <div class="space-y-2">
@@ -1569,14 +1569,12 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <InvitationPaper
                             :template="invitationSettingsForm.template"
                             :event-name="currentEvent.name"
-                            guest-label="Invitation preview"
-                            :headline="invitationSettingsForm.headline || `You're invited`"
+                            :headline="invitationSettingsForm.headline || currentEvent.name"
                             :message="invitationSettingsForm.message || 'Add the main invitation message here.'"
                             :closing="invitationSettingsForm.closing || 'A short RSVP reminder.'"
                             :contact-phone="showInvitationAdvanced ? invitationSettingsForm.contact_phone : null"
                             :date-label="props.invitationPreview.eventDetails.dateLabel"
                             :venue-address="props.invitationPreview.eventDetails.venueAddress"
-                            :logo-url="props.invitationPreview.branding.logoUrl"
                             mode="preview"
                         />
 

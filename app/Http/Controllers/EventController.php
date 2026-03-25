@@ -2649,7 +2649,7 @@ class EventController extends Controller
             'template' => $template,
             'headline' => is_string($settings['headline'] ?? null) && trim((string) $settings['headline']) !== ''
                 ? trim((string) $settings['headline'])
-                : "You're invited to {$event->name}",
+                : $event->name,
             'message' => is_string($settings['message'] ?? null) && trim((string) $settings['message']) !== ''
                 ? trim((string) $settings['message'])
                 : 'We would love to celebrate together. Please let us know if you can join us and how many will attend.',

@@ -665,6 +665,7 @@
     "public.album.info.message": "Μηνυμα",
     "invitations.badge": "Προσκληση εκδηλωσης",
     "invitations.card_title": "Καρτα προσκλησης",
+    "invitations.lead_in": "Εισαι προσκεκλημενος στο",
     "invitations.event_date": "Ημερομηνια εκδηλωσης",
     "invitations.venue": "Τοποθεσια",
     "invitations.venue_pending": "Η τοποθεσια θα επιβεβαιωθει αργοτερα",

@@ -141,14 +141,12 @@ onMounted(() => {
                 <InvitationPaper
                     :template="invitation.template"
                     :event-name="eventName"
-                    :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
                     :headline="invitation.headline"
                     :message="invitation.message"
                     :closing="invitation.closing"
                     :contact-phone="invitation.contactPhone"
                     :date-label="eventDetails.dateLabel"
                     :venue-address="eventDetails.venueAddress || t('invitations.venue_pending')"
-                    :logo-url="branding.logoUrl"
                     mode="live"
                 />
 

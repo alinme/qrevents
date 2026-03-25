@@ -60,6 +60,7 @@ it('shows a guest invitation page and records the open', function () {
             ->where('guestParty.name', 'Familia Popescu')
             ->where('isPublicInvite', false)
             ->where('invitation.template', 'canva_cream')
+            ->where('invitation.headline', $event->name)
         );
 
     $guestParty->refresh();

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useTranslations } from '@/composables/useTranslations';
 import {
     invitationTemplateMap,
-    type InvitationTemplateFooterConfig,
     type InvitationTemplateTextBlockConfig,
     type InvitationTemplateId,
 } from '@/lib/invitation-templates';
@@ -18,16 +18,15 @@ const props = withDefaults(defineProps<{
     contactPhone?: string | null;
     dateLabel?: string | null;
     venueAddress?: string | null;
-    logoUrl?: string | null;
     mode?: 'preview' | 'live';
 }>(), {
-    guestLabel: null,
     contactPhone: null,
     dateLabel: null,
     venueAddress: null,
-    logoUrl: null,
     mode: 'live',
 });
+
+const { t } = useTranslations();
 
 const invitationArtwork = computed(() => invitationTemplateMap[props.template]);
 
@@ -201,14 +200,7 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
                     :class="['absolute', fontFamilyClass(templateLayout.header.eventName.fontFamily), mutedTextClass]"
                     :style="blockStyle(templateLayout.header.eventName)"
                 >
-                    {{ eventName }}
-                </p>
-                <p
-                    v-if="guestLabel"
-                    :class="['absolute', fontFamilyClass(templateLayout.header.guestLabel.fontFamily), mutedTextClass]"
-                    :style="blockStyle(templateLayout.header.guestLabel)"
-                >
-                    {{ guestLabel }}
+                    {{ t('invitations.lead_in') }}
                 </p>
             </div>
 
