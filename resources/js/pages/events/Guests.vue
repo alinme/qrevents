@@ -239,6 +239,7 @@ const filteredGuestParties = computed(() => {
 });
 const selectedGuestParties = computed(() => props.guestParties.filter((party) => selectedGuestIds.value.includes(party.id)));
 const selectedPendingGuestParties = computed(() => selectedGuestParties.value.filter((party) => party.attendanceStatus === 'pending'));
+const pendingInvitationParties = computed(() => props.guestParties.filter((party) => party.attendanceStatus === 'pending'));
 const allGuestsSelected = computed(() => filteredGuestParties.value.length > 0 && filteredGuestParties.value.every((party) => selectedGuestIds.value.includes(party.id)));
 const retentionReminder = computed(() => {
     if (!props.currentEvent.retentionEndsAt) {
@@ -336,6 +337,40 @@ const familyOverview = computed(() => [
 const selectedInvitationTemplateCard = computed(() => {
     return invitationTemplateCards.find((template) => template.id === invitationSettingsForm.template)
         ?? invitationTemplateCards[0];
+});
+
+const invitationSummaryCards = computed(() => [
+    {
+        label: 'Pending',
+        value: pendingInvitationParties.value.length,
+    },
+    {
+        label: 'Opened',
+        value: props.guestParties.filter((party) => party.invitationOpenCount > 0).length,
+    },
+    {
+        label: 'Answered',
+        value: props.guestParties.filter((party) => party.respondedAt !== null).length,
+    },
+    {
+        label: 'Reminded',
+        value: props.guestParties.filter((party) => party.reminderCount > 0).length,
+    },
+]);
+
+const invitationRecentActivity = computed(() => {
+    return props.guestParties
+        .flatMap((party) => party.invitationHistory.map((activity) => ({
+            ...activity,
+            guestName: party.name,
+        })))
+        .sort((left, right) => {
+            const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
+            const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
+
+            return rightTime - leftTime;
+        })
+        .slice(0, 6);
 });
 
 const openCreateDialog = (): void => {
@@ -619,12 +654,35 @@ const shareSelectedInvites = async (): Promise<void> => {
     await shareGuestPartyBundle(selectedGuestParties.value, 'invite');
 };
 
+const sharePendingInvites = async (): Promise<void> => {
+    await shareGuestPartyBundle(pendingInvitationParties.value, 'invite');
+};
+
 const remindSelectedInvites = async (): Promise<void> => {
     const parties = selectedGuestIds.value.length > 0
         ? selectedPendingGuestParties.value
         : filteredGuestParties.value.filter((party) => party.attendanceStatus === 'pending');
 
     await shareGuestPartyBundle(parties, 'reminder');
+};
+
+const remindPendingInvites = async (): Promise<void> => {
+    await shareGuestPartyBundle(pendingInvitationParties.value, 'reminder');
+};
+
+const copyPendingInvites = async (): Promise<void> => {
+    if (pendingInvitationParties.value.length === 0) {
+        toast.error('There are no pending families to copy right now.');
+
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(invitationMessageForParties(pendingInvitationParties.value));
+        toast.success('Pending invitation bundle copied.');
+    } catch {
+        toast.error('Could not copy the pending invitation bundle.');
+    }
 };
 
 const copySelectedInvites = async (): Promise<void> => {
@@ -1298,6 +1356,41 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             </p>
                         </div>
 
+                        <div class="rounded-2xl border border-neutral-200 bg-white p-4">
+                            <p class="text-sm font-semibold text-neutral-950">
+                                Invitation campaign
+                            </p>
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <div
+                                    v-for="item in invitationSummaryCards"
+                                    :key="item.label"
+                                    class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3"
+                                >
+                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                        {{ item.label }}
+                                    </p>
+                                    <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
+                                        {{ item.value }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex flex-col gap-2">
+                                <Button class="rounded-full px-5" @click="sharePendingInvites">
+                                    <SendHorizontal class="mr-2 size-4" />
+                                    Share pending
+                                </Button>
+                                <Button variant="outline" class="rounded-full px-5" @click="copyPendingInvites">
+                                    <Copy class="mr-2 size-4" />
+                                    Copy pending
+                                </Button>
+                                <Button variant="outline" class="rounded-full px-5" @click="remindPendingInvites">
+                                    <Clock3 class="mr-2 size-4" />
+                                    Remind pending
+                                </Button>
+                            </div>
+                        </div>
+
                         <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
@@ -1334,6 +1427,36 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     Open page
                                 </Button>
                             </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                            <p class="text-sm font-semibold text-neutral-950">
+                                Recent activity
+                            </p>
+
+                            <div v-if="invitationRecentActivity.length > 0" class="mt-4 space-y-2">
+                                <div
+                                    v-for="activity in invitationRecentActivity"
+                                    :key="`${activity.guestName}-${activity.type}-${activity.createdAt}`"
+                                    class="flex items-start justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3"
+                                >
+                                    <div>
+                                        <p class="text-sm font-medium text-neutral-950">
+                                            {{ activity.guestName }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-neutral-600">
+                                            {{ invitationHistoryLabel(activity) }}
+                                        </p>
+                                    </div>
+                                    <p class="text-xs text-neutral-500">
+                                        {{ formatDateTime(activity.createdAt) }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p v-else class="mt-4 text-sm text-neutral-500">
+                                Invitation activity will appear here after you start sharing links.
+                            </p>
                         </div>
                     </div>
                 </div>
