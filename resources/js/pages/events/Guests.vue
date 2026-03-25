@@ -1569,6 +1569,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <InvitationPaper
                             :template="invitationSettingsForm.template"
                             :event-name="currentEvent.name"
+                            guest-label="Invitation preview"
                             :headline="invitationSettingsForm.headline || currentEvent.name"
                             :message="invitationSettingsForm.message || 'Add the main invitation message here.'"
                             :closing="invitationSettingsForm.closing || 'A short RSVP reminder.'"

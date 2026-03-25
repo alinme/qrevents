@@ -141,6 +141,7 @@ onMounted(() => {
                 <InvitationPaper
                     :template="invitation.template"
                     :event-name="eventName"
+                    :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
                     :headline="invitation.headline"
                     :message="invitation.message"
                     :closing="invitation.closing"
