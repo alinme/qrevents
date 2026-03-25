@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
     invitationTemplateMap,
     type InvitationTemplateTextBlockConfig,
@@ -27,6 +27,9 @@ const props = withDefaults(defineProps<{
 });
 
 const invitationArtwork = computed(() => invitationTemplateMap[props.template]);
+const paperContainer = ref<HTMLElement | null>(null);
+const paperWidth = ref<number | null>(null);
+let resizeObserver: ResizeObserver | null = null;
 
 const invitationTemplateVisuals = computed(() => {
     const selectedTemplate = invitationTemplateMap[props.template];
@@ -67,6 +70,15 @@ const invitationPaperStyle = computed(() => {
 const isPreviewMode = computed(() => props.mode === 'preview');
 const mutedTextClass = computed(() => invitationTemplateVisuals.value.mutedClass);
 const templateLayout = computed(() => invitationArtwork.value.layout);
+const paperScale = computed(() => {
+    if (paperWidth.value === null) {
+        return 1;
+    }
+
+    const baselineWidth = isPreviewMode.value ? 260 : 620;
+
+    return Math.min(1, Math.max(0.58, paperWidth.value / baselineWidth));
+});
 
 const resolveFontFamily = (fontFamily?: string): string | undefined => {
     if (! fontFamily) {
@@ -102,6 +114,22 @@ const resolveFontSize = (block: InvitationTemplateTextBlockConfig): string | und
     return block.fontSizeLive ?? block.fontSizePreview;
 };
 
+const scaleCssSize = (value?: string): string | undefined => {
+    if (! value) {
+        return undefined;
+    }
+
+    const match = value.trim().match(/^(-?\d*\.?\d+)(rem|px)$/);
+    if (! match) {
+        return value;
+    }
+
+    const numericValue = Number.parseFloat(match[1]);
+    const unit = match[2];
+
+    return `${(numericValue * paperScale.value).toFixed(4).replace(/\.?0+$/, '')}${unit}`;
+};
+
 const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, string> => {
     const style: Record<string, string> = {
         top: block.top,
@@ -112,7 +140,7 @@ const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, st
 
     const fontSize = resolveFontSize(block);
     if (fontSize) {
-        style.fontSize = fontSize;
+        style.fontSize = scaleCssSize(fontSize) ?? fontSize;
     }
 
     if (block.lineHeight) {
@@ -156,7 +184,7 @@ const footerMetaStyle = computed<Record<string, string>>(() => {
 
     return {
         gap: footer.metaGap,
-        fontSize: footer.fontSize,
+        fontSize: scaleCssSize(footer.fontSize) ?? footer.fontSize,
         lineHeight: footer.lineHeight,
         ...(footer.fontFamily ? { fontFamily: resolveFontFamily(footer.fontFamily) } : {}),
         ...(footer.color ? { color: footer.color } : {}),
@@ -174,7 +202,7 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
         : (closing.fontSizeLive ?? closing.fontSizePreview);
 
     if (fontSize) {
-        style.fontSize = fontSize;
+        style.fontSize = scaleCssSize(fontSize) ?? fontSize;
     }
 
     if (closing.lineHeight) {
@@ -190,6 +218,30 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
     }
 
     return style;
+});
+
+const updatePaperWidth = (): void => {
+    paperWidth.value = paperContainer.value?.clientWidth ?? null;
+};
+
+onMounted(() => {
+    updatePaperWidth();
+
+    if (typeof ResizeObserver === 'undefined') {
+        return;
+    }
+
+    resizeObserver = new ResizeObserver(() => {
+        updatePaperWidth();
+    });
+
+    if (paperContainer.value) {
+        resizeObserver.observe(paperContainer.value);
+    }
+});
+
+onBeforeUnmount(() => {
+    resizeObserver?.disconnect();
 });
 </script>
 
@@ -209,6 +261,7 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
         </div>
 
         <div
+            ref="paperContainer"
             class="relative overflow-hidden border border-current/10 bg-white/10"
             :style="{
                 aspectRatio: templateLayout.paper.aspectRatio,
