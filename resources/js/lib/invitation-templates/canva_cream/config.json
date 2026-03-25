@@ -16,7 +16,7 @@
       "fontSizePreview": "0.62rem",
       "letterSpacing": "0.34em",
       "fontWeight": "600",
-      "fontFamily": "sans",
+      "fontFamily": "Montserrat",
       "uppercase": true,
       "color": "#6d6257"
     },
@@ -29,7 +29,7 @@
       "fontSizePreview": "0.68rem",
       "letterSpacing": "0.18em",
       "fontWeight": "500",
-      "fontFamily": "sans",
+      "fontFamily": "Montserrat",
       "uppercase": true,
       "color": "#7a6f63"
     }
@@ -43,7 +43,7 @@
     "fontSizePreview": "2rem",
     "lineHeight": "1.02",
     "fontWeight": "600",
-    "fontFamily": "serif",
+    "fontFamily": "Cinzel",
     "color": "#332d29"
   },
   "message": {
@@ -55,7 +55,7 @@
     "fontSizePreview": "0.92rem",
     "lineHeight": "1.78",
     "fontWeight": "400",
-    "fontFamily": "sans",
+    "fontFamily": "Montserrat",
     "color": "#5e564f"
   },
   "footer": {
@@ -67,13 +67,14 @@
     "metaGap": "0.65rem",
     "fontSize": "0.88rem",
     "lineHeight": "1.5",
+    "fontFamily": "Montserrat",
     "color": "#6b6158",
     "closing": {
       "fontSizeLive": "0.9rem",
       "fontSizePreview": "0.84rem",
       "lineHeight": "1.6",
       "fontWeight": "500",
-      "fontFamily": "sans",
+      "fontFamily": "Montserrat",
       "maxWidth": "24ch",
       "color": "#5e564f"
     }

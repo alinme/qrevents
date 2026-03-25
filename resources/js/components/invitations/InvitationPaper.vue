@@ -68,12 +68,30 @@ const isPreviewMode = computed(() => props.mode === 'preview');
 const mutedTextClass = computed(() => invitationTemplateVisuals.value.mutedClass);
 const templateLayout = computed(() => invitationArtwork.value.layout);
 
-const fontFamilyClass = (fontFamily?: 'serif' | 'sans'): string => {
-    if (fontFamily === 'serif') {
-        return 'font-serif';
+const resolveFontFamily = (fontFamily?: string): string | undefined => {
+    if (! fontFamily) {
+        return undefined;
     }
 
-    return '';
+    const normalizedFontFamily = fontFamily.trim().toLowerCase();
+
+    if (normalizedFontFamily === 'serif') {
+        return 'var(--font-serif)';
+    }
+
+    if (normalizedFontFamily === 'sans') {
+        return 'var(--font-sans)';
+    }
+
+    if (normalizedFontFamily === 'cinzel') {
+        return '"Cinzel", var(--font-serif)';
+    }
+
+    if (normalizedFontFamily === 'montserrat') {
+        return '"Montserrat", var(--font-sans)';
+    }
+
+    return `"${fontFamily}", var(--font-sans)`;
 };
 
 const resolveFontSize = (block: InvitationTemplateTextBlockConfig): string | undefined => {
@@ -113,6 +131,11 @@ const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, st
         style.color = block.color;
     }
 
+    const fontFamily = resolveFontFamily(block.fontFamily);
+    if (fontFamily) {
+        style.fontFamily = fontFamily;
+    }
+
     if (block.uppercase) {
         style.textTransform = 'uppercase';
     }
@@ -135,6 +158,7 @@ const footerMetaStyle = computed<Record<string, string>>(() => {
         gap: footer.metaGap,
         fontSize: footer.fontSize,
         lineHeight: footer.lineHeight,
+        ...(footer.fontFamily ? { fontFamily: resolveFontFamily(footer.fontFamily) } : {}),
         ...(footer.color ? { color: footer.color } : {}),
     };
 });
@@ -195,14 +219,14 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
 
             <div v-if="templateLayout.header.enabled" class="absolute inset-0">
                 <p
-                    :class="['absolute', fontFamilyClass(templateLayout.header.eventName.fontFamily), mutedTextClass]"
+                    :class="['absolute', mutedTextClass]"
                     :style="blockStyle(templateLayout.header.eventName)"
                 >
                     {{ eventName }}
                 </p>
                 <p
                     v-if="guestLabel"
-                    :class="['absolute', fontFamilyClass(templateLayout.header.guestLabel.fontFamily), mutedTextClass]"
+                    :class="['absolute', mutedTextClass]"
                     :style="blockStyle(templateLayout.header.guestLabel)"
                 >
                     {{ guestLabel }}
@@ -211,20 +235,13 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
 
             <div class="absolute inset-0">
                 <h2
-                    :class="[
-                        'absolute',
-                        fontFamilyClass(templateLayout.headline.fontFamily),
-                    ]"
+                    class="absolute"
                     :style="blockStyle(templateLayout.headline)"
                 >
                     {{ headline }}
                 </h2>
                 <p
-                    :class="[
-                        'absolute',
-                        fontFamilyClass(templateLayout.message.fontFamily),
-                        mutedTextClass,
-                    ]"
+                    :class="['absolute', mutedTextClass]"
                     :style="blockStyle(templateLayout.message)"
                 >
                     {{ message }}
@@ -252,11 +269,7 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
                     </span>
                 </div>
                 <p
-                    :class="[
-                        'mx-auto',
-                        fontFamilyClass(templateLayout.footer.closing.fontFamily),
-                        mutedTextClass,
-                    ]"
+                    :class="['mx-auto', mutedTextClass]"
                     :style="footerClosingStyle"
                 >
                     {{ closing }}

@@ -15,7 +15,7 @@ export type InvitationTemplateTextBlockConfig = {
     lineHeight?: string;
     letterSpacing?: string;
     fontWeight?: string;
-    fontFamily?: 'serif' | 'sans';
+    fontFamily?: string;
     uppercase?: boolean;
     color?: string | null;
 };
@@ -36,6 +36,7 @@ export type InvitationTemplateFooterConfig = {
     metaGap: string;
     fontSize: string;
     lineHeight: string;
+    fontFamily?: string;
     color?: string | null;
     closing: Omit<InvitationTemplateTextBlockConfig, 'top' | 'left' | 'width' | 'align'> & {
         maxWidth: string;
