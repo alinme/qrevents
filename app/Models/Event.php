@@ -155,4 +155,9 @@ class Event extends Model
     {
         return $this->hasMany(EventGuestParty::class);
     }
+
+    public function guestLedgerReminderLogs(): HasMany
+    {
+        return $this->hasMany(EventGuestLedgerReminderLog::class);
+    }
 }

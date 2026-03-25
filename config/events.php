@@ -44,6 +44,14 @@ return [
         'hour' => (int) env('EVENTS_CLEANUP_DIGEST_HOUR', 8),
         'minute' => (int) env('EVENTS_CLEANUP_DIGEST_MINUTE', 5),
     ],
+    'guest_ledger_export_reminder' => [
+        'hour' => (int) env('EVENTS_GUEST_LEDGER_EXPORT_REMINDER_HOUR', 9),
+        'minute' => (int) env('EVENTS_GUEST_LEDGER_EXPORT_REMINDER_MINUTE', 15),
+        'days_before_expiry' => array_values(array_filter(array_map(
+            static fn (string $value): int => (int) trim($value),
+            explode(',', (string) env('EVENTS_GUEST_LEDGER_EXPORT_REMINDER_DAYS', '30,7,1')),
+        ), static fn (int $value): bool => $value > 0)),
+    ],
     'public_rate_limits' => [
         'read_per_minute' => (int) env('EVENTS_PUBLIC_READ_RATE_LIMIT', 120),
         'write_per_minute' => (int) env('EVENTS_PUBLIC_WRITE_RATE_LIMIT', 40),
