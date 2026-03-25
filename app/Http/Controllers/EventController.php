@@ -2625,7 +2625,7 @@ class EventController extends Controller
         $settings = is_array($event->invitation_settings) ? $event->invitation_settings : [];
         $template = is_string($settings['template'] ?? null) ? $settings['template'] : 'classic';
 
-        if (! in_array($template, ['classic', 'floral', 'midnight'], true)) {
+        if (! in_array($template, ['classic', 'floral', 'midnight', 'canva_cream'], true)) {
             $template = 'classic';
         }
 

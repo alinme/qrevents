@@ -6,6 +6,10 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+    invitationTemplateMap,
+    type InvitationTemplateId,
+} from '@/lib/invitation-templates';
+import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
@@ -24,7 +28,7 @@ type GuestParty = {
 };
 
 type InvitationCopy = {
-    template: 'classic' | 'floral' | 'midnight';
+    template: InvitationTemplateId;
     headline: string;
     message: string;
     closing: string;
@@ -93,6 +97,8 @@ const confirmedAttendeeMax = computed(() => {
 });
 
 const invitationTemplateVisuals = computed(() => {
+    const selectedTemplate = invitationTemplateMap[props.invitation.template];
+
     return {
         classic: {
             tag: 'Classic stationery',
@@ -121,6 +127,15 @@ const invitationTemplateVisuals = computed(() => {
             softBorderClass: 'border-white/10 bg-white/6',
             mutedClass: 'text-white/72',
         },
+        canva_cream: {
+            tag: selectedTemplate.label,
+            surfaceClass: 'border-stone-200 bg-[#f9f7f2] text-neutral-950',
+            accentClass: 'border-stone-200/70 bg-white/75 text-stone-700',
+            ribbonClass: 'from-stone-300 via-stone-200 to-stone-300',
+            cardGlowClass: 'shadow-[0_32px_90px_rgba(120,113,108,0.12)]',
+            softBorderClass: 'border-stone-200/80 bg-white/78',
+            mutedClass: 'text-neutral-600',
+        },
     }[props.invitation.template];
 });
 
@@ -134,6 +149,8 @@ const invitationSurfaceStyle = computed(() => ({
     backgroundPosition: 'center',
 }));
 
+const invitationArtwork = computed(() => invitationTemplateMap[props.invitation.template]);
+
 const cardToneClass = computed(() => invitationTemplateVisuals.value.surfaceClass);
 
 const invitationHeroClass = computed(() => {
@@ -141,6 +158,7 @@ const invitationHeroClass = computed(() => {
         classic: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(217,119,6,0.14),transparent_48%)] before:content-[\'\']',
         floral: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_right,rgba(244,114,182,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(251,207,232,0.22),transparent_35%)] before:content-[\'\']',
         midnight: 'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.14),transparent_30%)] before:content-[\'\']',
+        canva_cream: '',
     }[props.invitation.template];
 });
 
@@ -170,7 +188,14 @@ const submit = (): void => {
 
         <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center">
             <div class="w-full space-y-5">
-                <section :class="['relative overflow-hidden rounded-[30px] border p-6 shadow-xl backdrop-blur sm:p-8', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]">
+                <section
+                    :class="['relative overflow-hidden rounded-[30px] border p-6 shadow-xl backdrop-blur sm:p-8', invitationTemplateVisuals.cardGlowClass, cardToneClass, invitationHeroClass]"
+                    :style="invitationArtwork.baseUrl ? {
+                        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.24)), url(${invitationArtwork.baseUrl})`,
+                        backgroundPosition: 'center',
+                        backgroundSize: 'cover',
+                    } : undefined"
+                >
                     <div class="pointer-events-none absolute inset-0">
                         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--invite-primary)] via-[var(--invite-accent)] to-[var(--invite-primary)] opacity-80" />
                         <div class="absolute -right-20 top-12 h-48 w-48 rounded-full bg-white/25 blur-3xl" />

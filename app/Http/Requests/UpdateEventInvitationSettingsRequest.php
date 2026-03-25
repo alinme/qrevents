@@ -15,7 +15,7 @@ class UpdateEventInvitationSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'template' => ['required', 'string', Rule::in(['classic', 'floral', 'midnight'])],
+            'template' => ['required', 'string', Rule::in(['classic', 'floral', 'midnight', 'canva_cream'])],
             'headline' => ['nullable', 'string', 'max:160'],
             'message' => ['nullable', 'string', 'max:1500'],
             'closing' => ['nullable', 'string', 'max:240'],

@@ -17,7 +17,7 @@ it('allows an event owner to update invitation settings', function () {
 
     $this->actingAs($owner)
         ->patch(route('events.guests.invitation-settings.update', $event), [
-            'template' => 'floral',
+            'template' => 'canva_cream',
             'headline' => 'Join us for a beautiful day',
             'message' => 'Please celebrate with us and let us know your answer.',
             'closing' => 'We cannot wait to see you there.',
@@ -29,7 +29,7 @@ it('allows an event owner to update invitation settings', function () {
     $event->refresh();
 
     expect($event->invitation_settings)->toMatchArray([
-        'template' => 'floral',
+        'template' => 'canva_cream',
         'headline' => 'Join us for a beautiful day',
         'message' => 'Please celebrate with us and let us know your answer.',
         'closing' => 'We cannot wait to see you there.',
@@ -40,6 +40,9 @@ it('allows an event owner to update invitation settings', function () {
 
 it('shows a guest invitation page and records the open', function () {
     $event = Event::factory()->create([
+        'invitation_settings' => [
+            'template' => 'canva_cream',
+        ],
         'branding' => [
             'display_language' => 'en',
         ],
@@ -56,6 +59,7 @@ it('shows a guest invitation page and records the open', function () {
             ->where('eventName', $event->name)
             ->where('guestParty.name', 'Familia Popescu')
             ->where('isPublicInvite', false)
+            ->where('invitation.template', 'canva_cream')
         );
 
     $guestParty->refresh();

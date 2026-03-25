@@ -47,6 +47,10 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    invitationTemplateDefinitions,
+    type InvitationTemplateId,
+} from '@/lib/invitation-templates';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -66,7 +70,7 @@ type EventLinks = {
 };
 
 type EventInvitationSettings = {
-    template: 'classic' | 'floral' | 'midnight';
+    template: InvitationTemplateId;
     headline: string;
     message: string;
     closing: string;
@@ -263,29 +267,7 @@ const retentionReminder = computed(() => {
     };
 });
 
-const invitationTemplateCards = [
-    {
-        id: 'classic',
-        label: 'Classic',
-        summary: 'Warm cream paper, elegant spacing, and a traditional feel for formal families.',
-        artClass: 'border-amber-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(255,255,255,0.95)),radial-gradient(circle_at_top,rgba(217,119,6,0.18),transparent_50%)] text-neutral-900',
-        accentClass: 'bg-amber-500/15 text-amber-700',
-    },
-    {
-        id: 'floral',
-        label: 'Floral',
-        summary: 'Soft rose tones with romantic energy for weddings, baptisms, and family celebrations.',
-        artClass: 'border-rose-200 bg-[linear-gradient(160deg,rgba(255,241,242,0.98),rgba(255,255,255,0.95)),radial-gradient(circle_at_top_right,rgba(244,114,182,0.22),transparent_45%)] text-neutral-900',
-        accentClass: 'bg-rose-500/15 text-rose-700',
-    },
-    {
-        id: 'midnight',
-        label: 'Midnight',
-        summary: 'Dark, polished, and modern with a richer stage-like mood for bold invitation pages.',
-        artClass: 'border-slate-800 bg-[linear-gradient(160deg,rgba(15,23,42,0.98),rgba(30,41,59,0.96)),radial-gradient(circle_at_top,rgba(234,179,8,0.18),transparent_42%)] text-white',
-        accentClass: 'bg-white/10 text-white/80',
-    },
-] as const;
+const invitationTemplateCards = invitationTemplateDefinitions;
 
 const statCards = computed(() => [
     {
@@ -1443,7 +1425,16 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     ]"
                                     @click="invitationSettingsForm.template = template.id"
                                 >
-                                    <div class="h-16 rounded-xl border border-current/10 bg-white/35" />
+                                    <div
+                                        class="h-16 overflow-hidden rounded-xl border border-current/10 bg-white/35"
+                                    >
+                                        <img
+                                            v-if="template.previewUrl"
+                                            :src="template.previewUrl"
+                                            alt=""
+                                            class="h-full w-full object-cover"
+                                        >
+                                    </div>
                                     <p class="mt-3 text-sm font-semibold">
                                         {{ template.label }}
                                     </p>
@@ -1508,7 +1499,14 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </div>
 
                     <div class="space-y-4">
-                        <div :class="['rounded-[30px] border p-5 shadow-sm', selectedInvitationTemplateCard.artClass]">
+                        <div
+                            :class="['rounded-[30px] border p-5 shadow-sm', selectedInvitationTemplateCard.artClass]"
+                            :style="selectedInvitationTemplateCard.baseUrl ? {
+                                backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.24)), url(${selectedInvitationTemplateCard.baseUrl})`,
+                                backgroundPosition: 'center',
+                                backgroundSize: 'cover',
+                            } : undefined"
+                        >
                             <p class="text-xs font-semibold uppercase tracking-[0.26em] text-current/70">
                                 {{ currentEvent.name }}
                             </p>
