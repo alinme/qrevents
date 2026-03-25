@@ -157,6 +157,7 @@ const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
 const showInvitationAdvanced = ref(false);
+const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
 const activeSection = ref<'families' | 'invitation' | 'ledger'>('families');
 const expandedGuestPartyId = ref<number | null>(null);
 const quickSavingGuestId = ref<number | null>(null);
@@ -343,6 +344,14 @@ const ledgerGuestParties = computed(() => {
 const selectedInvitationTemplateCard = computed(() => {
     return invitationTemplateCards.find((template) => template.id === invitationSettingsForm.template)
         ?? invitationTemplateCards[0];
+});
+
+const previewingInvitationTemplateCard = computed(() => {
+    if (!previewingInvitationTemplateId.value) {
+        return null;
+    }
+
+    return invitationTemplateCards.find((template) => template.id === previewingInvitationTemplateId.value) ?? null;
 });
 
 const invitationSummaryCards = computed(() => [
@@ -599,6 +608,16 @@ const updateQuickGiftType = (party: GuestParty, value: unknown): void => {
 const updateQuickGiftCurrency = (party: GuestParty, value: unknown): void => {
     if (value === 'EUR' || value === 'GBP' || value === 'RON') {
         setQuickGiftCurrency(party, value);
+    }
+};
+
+const closeInvitationTemplatePreview = (): void => {
+    previewingInvitationTemplateId.value = null;
+};
+
+const handleInvitationTemplatePreviewOpenChange = (open: boolean): void => {
+    if (!open) {
+        closeInvitationTemplatePreview();
     }
 };
 
@@ -1411,34 +1430,46 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             <label class="text-sm font-medium text-neutral-700">
                                 Template
                             </label>
-                            <div class="grid gap-2 sm:grid-cols-3">
-                                <button
+                            <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                                <div
                                     v-for="template in invitationTemplateCards"
                                     :key="template.id"
-                                    type="button"
                                     :class="[
-                                        'rounded-2xl border p-3 text-left transition',
+                                        'rounded-2xl border p-2.5 transition',
                                         template.artClass,
                                         invitationSettingsForm.template === template.id
                                             ? 'ring-2 ring-neutral-950 shadow-sm'
                                             : 'hover:-translate-y-0.5 hover:shadow-sm',
                                     ]"
-                                    @click="invitationSettingsForm.template = template.id"
                                 >
-                                    <div
-                                        class="h-16 overflow-hidden rounded-xl border border-current/10 bg-white/35"
+                                    <button
+                                        type="button"
+                                        class="block w-full text-left"
+                                        @click="invitationSettingsForm.template = template.id"
                                     >
-                                        <img
-                                            v-if="template.previewUrl"
-                                            :src="template.previewUrl"
-                                            alt=""
-                                            class="h-full w-full object-cover"
+                                        <div
+                                            class="h-12 overflow-hidden rounded-xl border border-current/10 bg-white/35"
                                         >
-                                    </div>
-                                    <p class="mt-3 text-sm font-semibold">
-                                        {{ template.label }}
-                                    </p>
-                                </button>
+                                            <img
+                                                v-if="template.previewUrl"
+                                                :src="template.previewUrl"
+                                                alt=""
+                                                class="h-full w-full object-cover"
+                                            >
+                                        </div>
+                                        <p class="mt-2 text-sm font-semibold">
+                                            {{ template.label }}
+                                        </p>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="mt-1 text-xs font-medium text-current/70 underline underline-offset-4"
+                                        @click="previewingInvitationTemplateId = template.id"
+                                    >
+                                        Preview
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -2011,6 +2042,28 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         Import guests
                     </Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog :open="previewingInvitationTemplateCard !== null" @update:open="handleInvitationTemplatePreviewOpenChange">
+            <DialogContent class="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ previewingInvitationTemplateCard?.label ?? 'Invitation preview' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Full preview of the invitation artwork.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50">
+                    <img
+                        v-if="previewingInvitationTemplateCard?.previewUrl || previewingInvitationTemplateCard?.baseUrl"
+                        :src="previewingInvitationTemplateCard?.previewUrl ?? previewingInvitationTemplateCard?.baseUrl ?? ''"
+                        alt=""
+                        class="mx-auto max-h-[75vh] w-auto max-w-full object-contain"
+                    >
+                </div>
             </DialogContent>
         </Dialog>
 
