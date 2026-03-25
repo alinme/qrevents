@@ -3,6 +3,8 @@ import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
 import { computed } from 'vue';
 import {
     invitationTemplateMap,
+    type InvitationTemplateFooterConfig,
+    type InvitationTemplateTextBlockConfig,
     type InvitationTemplateId,
 } from '@/lib/invitation-templates';
 
@@ -67,6 +69,107 @@ const invitationPaperStyle = computed(() => {
 
 const isPreviewMode = computed(() => props.mode === 'preview');
 const mutedTextClass = computed(() => invitationTemplateVisuals.value.mutedClass);
+const templateLayout = computed(() => invitationArtwork.value.layout);
+
+const fontFamilyClass = (fontFamily?: 'serif' | 'sans'): string => {
+    if (fontFamily === 'serif') {
+        return 'font-serif';
+    }
+
+    return '';
+};
+
+const resolveFontSize = (block: InvitationTemplateTextBlockConfig): string | undefined => {
+    if (isPreviewMode.value) {
+        return block.fontSizePreview ?? block.fontSizeLive;
+    }
+
+    return block.fontSizeLive ?? block.fontSizePreview;
+};
+
+const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, string> => {
+    const style: Record<string, string> = {
+        top: block.top,
+        left: block.left,
+        width: block.width,
+        textAlign: block.align,
+    };
+
+    const fontSize = resolveFontSize(block);
+    if (fontSize) {
+        style.fontSize = fontSize;
+    }
+
+    if (block.lineHeight) {
+        style.lineHeight = block.lineHeight;
+    }
+
+    if (block.letterSpacing) {
+        style.letterSpacing = block.letterSpacing;
+    }
+
+    if (block.fontWeight) {
+        style.fontWeight = block.fontWeight;
+    }
+
+    if (block.color) {
+        style.color = block.color;
+    }
+
+    if (block.uppercase) {
+        style.textTransform = 'uppercase';
+    }
+
+    return style;
+};
+
+const footerStyle = computed<Record<string, string>>(() => ({
+    top: templateLayout.value.footer.top,
+    left: templateLayout.value.footer.left,
+    width: templateLayout.value.footer.width,
+    textAlign: templateLayout.value.footer.align,
+    gap: templateLayout.value.footer.gap,
+}));
+
+const footerMetaStyle = computed<Record<string, string>>(() => {
+    const footer = templateLayout.value.footer;
+
+    return {
+        gap: footer.metaGap,
+        fontSize: footer.fontSize,
+        lineHeight: footer.lineHeight,
+        ...(footer.color ? { color: footer.color } : {}),
+    };
+});
+
+const footerClosingStyle = computed<Record<string, string>>(() => {
+    const closing = templateLayout.value.footer.closing;
+    const style: Record<string, string> = {
+        maxWidth: closing.maxWidth,
+    };
+
+    const fontSize = isPreviewMode.value
+        ? (closing.fontSizePreview ?? closing.fontSizeLive)
+        : (closing.fontSizeLive ?? closing.fontSizePreview);
+
+    if (fontSize) {
+        style.fontSize = fontSize;
+    }
+
+    if (closing.lineHeight) {
+        style.lineHeight = closing.lineHeight;
+    }
+
+    if (closing.fontWeight) {
+        style.fontWeight = closing.fontWeight;
+    }
+
+    if (closing.color) {
+        style.color = closing.color;
+    }
+
+    return style;
+});
 </script>
 
 <template>
@@ -84,74 +187,107 @@ const mutedTextClass = computed(() => invitationTemplateVisuals.value.mutedClass
             <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-black/5 blur-2xl" />
         </div>
 
-        <div class="relative aspect-[210/297] overflow-hidden rounded-[24px] border border-current/10 bg-white/10">
-            <div class="flex h-full flex-col px-[10.5%] py-[11%] text-center">
-                <div class="flex items-center justify-center gap-3">
-                    <img
-                        v-if="logoUrl"
-                        :src="logoUrl"
-                        alt=""
-                        class="h-10 w-10 rounded-[16px] border border-current/10 object-contain p-2 shadow-sm"
-                    >
-                    <div class="space-y-1">
-                        <p :class="['text-[0.68rem] font-semibold uppercase tracking-[0.34em]', mutedTextClass]">
-                            {{ eventName }}
-                        </p>
-                        <p v-if="guestLabel" :class="['text-sm', mutedTextClass]">
-                            {{ guestLabel }}
-                        </p>
-                    </div>
-                </div>
+        <div
+            class="relative overflow-hidden border border-current/10 bg-white/10"
+            :style="{
+                aspectRatio: templateLayout.paper.aspectRatio,
+                borderRadius: templateLayout.paper.innerRadius,
+            }"
+        >
+            <div class="absolute inset-0" :style="{ backgroundColor: `rgba(255,255,255,${templateLayout.paper.overlayOpacity})` }" />
 
-                <div class="my-auto space-y-5">
-                    <h2
-                        :class="[
-                            'mx-auto max-w-[12ch] font-semibold tracking-tight',
-                            template !== 'midnight' ? 'font-serif' : '',
-                            isPreviewMode ? 'text-[1.7rem] sm:text-[2rem]' : 'text-[2rem] sm:text-[3rem]',
-                        ]"
-                    >
-                        {{ headline }}
-                    </h2>
-                    <p
-                        :class="[
-                            'mx-auto leading-7',
-                            mutedTextClass,
-                            isPreviewMode ? 'max-w-[24ch] text-sm sm:text-[0.95rem]' : 'max-w-[26ch] text-[0.95rem] sm:text-lg',
-                        ]"
-                    >
+            <div v-if="templateLayout.header.enabled" class="absolute inset-0">
+                <p
+                    :class="['absolute', fontFamilyClass(templateLayout.header.eventName.fontFamily), mutedTextClass]"
+                    :style="blockStyle(templateLayout.header.eventName)"
+                >
+                    {{ eventName }}
+                </p>
+                <p
+                    v-if="guestLabel"
+                    :class="['absolute', fontFamilyClass(templateLayout.header.guestLabel.fontFamily), mutedTextClass]"
+                    :style="blockStyle(templateLayout.header.guestLabel)"
+                >
+                    {{ guestLabel }}
+                </p>
+            </div>
+
+            <div class="absolute inset-0">
+                <h2
+                    :class="[
+                        'absolute',
+                        fontFamilyClass(templateLayout.headline.fontFamily),
+                    ]"
+                    :style="blockStyle(templateLayout.headline)"
+                >
+                    {{ headline }}
+                </h2>
+                <p
+                    :class="[
+                        'absolute',
+                        fontFamilyClass(templateLayout.message.fontFamily),
+                        mutedTextClass,
+                    ]"
+                    :style="blockStyle(templateLayout.message)"
+                >
+                    {{ message }}
+                </p>
+            </div>
+
+            <div class="absolute flex flex-col items-center" :style="footerStyle">
+                <div
+                    v-if="dateLabel || venueAddress || contactPhone"
+                    class="flex flex-col items-center"
+                    :class="mutedTextClass"
+                    :style="footerMetaStyle"
+                >
+                    <span v-if="dateLabel" class="inline-flex items-center gap-2 text-center">
+                        <CalendarDays class="size-4" />
+                        {{ dateLabel }}
+                    </span>
+                    <span v-if="venueAddress" class="inline-flex items-center gap-2 text-center">
+                        <MapPin class="size-4" />
+                        {{ venueAddress }}
+                    </span>
+                    <span v-if="contactPhone" class="inline-flex items-center gap-2 text-center">
+                        <Phone class="size-4" />
+                        {{ contactPhone }}
+                    </span>
+                </div>
+                <p
+                    :class="[
+                        'mx-auto',
+                        fontFamilyClass(templateLayout.footer.closing.fontFamily),
+                        mutedTextClass,
+                    ]"
+                    :style="footerClosingStyle"
+                >
+                    {{ closing }}
+                </p>
+            </div>
+
+            <div class="sr-only">
+                <p>
+                        {{ eventName }}
+                </p>
+                <p v-if="guestLabel">
+                        {{ guestLabel }}
+                </p>
+                <p>
                         {{ message }}
-                    </p>
-                </div>
-
-                <div class="space-y-4 border-t border-current/10 pt-5">
-                    <div
-                        v-if="dateLabel || venueAddress || contactPhone"
-                        :class="['flex flex-col items-center gap-3 text-sm', mutedTextClass]"
-                    >
-                        <span v-if="dateLabel" class="inline-flex items-center gap-2 text-center">
-                            <CalendarDays class="size-4" />
-                            {{ dateLabel }}
-                        </span>
-                        <span v-if="venueAddress" class="inline-flex items-center gap-2 text-center">
-                            <MapPin class="size-4" />
-                            {{ venueAddress }}
-                        </span>
-                        <span v-if="contactPhone" class="inline-flex items-center gap-2 text-center">
-                            <Phone class="size-4" />
-                            {{ contactPhone }}
-                        </span>
-                    </div>
-                    <p
-                        :class="[
-                            'mx-auto max-w-[24ch] leading-6',
-                            mutedTextClass,
-                            isPreviewMode ? 'text-sm' : 'text-sm',
-                        ]"
-                    >
+                </p>
+                <p v-if="dateLabel">
+                    {{ dateLabel }}
+                </p>
+                <p v-if="venueAddress">
+                    {{ venueAddress }}
+                </p>
+                <p v-if="contactPhone">
+                    {{ contactPhone }}
+                </p>
+                <p>
                         {{ closing }}
-                    </p>
-                </div>
+                </p>
             </div>
         </div>
     </div>
