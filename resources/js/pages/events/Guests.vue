@@ -144,6 +144,8 @@ const importDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
+const activeSection = ref<'families' | 'invitation' | 'ledger'>('families');
+const expandedGuestPartyId = ref<number | null>(null);
 const selectedGuestIds = ref<number[]>([]);
 const guestSearch = ref('');
 const guestFilter = ref<'all' | 'needing_reply' | 'accepted' | 'declined' | 'present' | 'absent' | 'not_sent' | 'responded' | 'no_gift'>('all');
@@ -306,6 +308,21 @@ const statCards = computed(() => [
     },
 ]);
 
+const familyOverview = computed(() => [
+    {
+        label: 'Families',
+        value: props.guestPartyStats.partyCount,
+    },
+    {
+        label: 'Pending',
+        value: props.guestPartyStats.pendingPartyCount,
+    },
+    {
+        label: 'Accepted',
+        value: props.guestPartyStats.acceptedPartyCount,
+    },
+]);
+
 const openCreateDialog = (): void => {
     activeGuestParty.value = null;
     guestForm.reset();
@@ -451,6 +468,12 @@ const toggleSelectAllGuests = (checked: boolean): void => {
 
 const clearGuestSelection = (): void => {
     selectedGuestIds.value = [];
+};
+
+const toggleGuestDetails = (guestPartyId: number): void => {
+    expandedGuestPartyId.value = expandedGuestPartyId.value === guestPartyId
+        ? null
+        : guestPartyId;
 };
 
 const invitationMessageForParty = (party: GuestParty): string => {
@@ -677,7 +700,7 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-5 p-4 md:p-6">
             <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center gap-2">
                             <h1 class="text-xl font-semibold tracking-tight text-neutral-950">
@@ -688,221 +711,116 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             </span>
                         </div>
                         <p class="max-w-2xl text-sm text-neutral-600">
-                            Families, RSVPs, invitations, and gifts in one place.
+                            Work on one thing at a time: families, invitation, or ledger.
                         </p>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                        <Button variant="outline" class="h-10 rounded-full px-4" @click="openGuestReport">
-                            <Printer class="mr-2 size-4" />
-                            Report
-                        </Button>
-                        <Button variant="outline" class="h-10 rounded-full px-4" @click="exportGuestLedger">
-                            <Download class="mr-2 size-4" />
-                            Export
-                        </Button>
-                        <Button variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
+                        <Button v-if="activeSection === 'families'" variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
                             <Import class="mr-2 size-4" />
                             Import
                         </Button>
-                        <Button class="h-10 rounded-full px-4" @click="openCreateDialog">
+                        <Button v-if="activeSection === 'families'" class="h-10 rounded-full px-4" @click="openCreateDialog">
                             <UserPlus class="mr-2 size-4" />
                             Add family
                         </Button>
-                    </div>
-                </div>
-
-                <div class="mt-4 grid gap-0 overflow-hidden rounded-2xl border border-neutral-200 md:grid-cols-5">
-                    <div
-                        v-for="stat in statCards"
-                        :key="stat.label"
-                        class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 md:border-b-0 md:border-r last:border-r-0"
-                    >
-                        <div class="min-w-0">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-                                {{ stat.label }}
-                            </p>
-                            <p class="mt-1 text-lg font-semibold tracking-tight text-neutral-950">
-                                {{ stat.value }}
-                            </p>
-                            <p class="mt-1 text-xs text-neutral-500">
-                                {{ stat.detail }}
-                            </p>
-                        </div>
-                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                            <component :is="stat.icon" class="size-4" />
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    v-if="retentionReminder"
-                    class="mt-4 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 md:flex-row md:items-center md:justify-between"
-                >
-                    <p>
-                        Retention ends on {{ retentionReminder.dateLabel }}. Export the ledger before the archive window closes.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <Button variant="outline" class="h-9 rounded-full px-4" @click="exportGuestLedger">
+                        <Button v-if="activeSection === 'ledger'" variant="outline" class="h-10 rounded-full px-4" @click="exportGuestLedger">
                             <Download class="mr-2 size-4" />
-                            CSV
+                            Export
                         </Button>
-                        <Button class="h-9 rounded-full px-4" @click="openGuestReport">
+                        <Button v-if="activeSection === 'ledger'" class="h-10 rounded-full px-4" @click="openGuestReport">
                             <Printer class="mr-2 size-4" />
-                            Printable report
+                            Report
                         </Button>
                     </div>
                 </div>
-            </section>
 
-            <section class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
-                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <div class="flex items-center justify-between gap-3">
+                <div class="mt-4 grid gap-2 sm:grid-cols-3">
+                    <button
+                        type="button"
+                        :class="[
+                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
+                            activeSection === 'families' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                        ]"
+                        @click="activeSection = 'families'"
+                    >
                         <div>
-                            <h2 class="text-base font-semibold text-neutral-950">
-                                Invitation setup
-                            </h2>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                Save the main invitation once, then share tracked family links.
+                            <p class="text-sm font-semibold">Families</p>
+                            <p :class="activeSection === 'families' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
+                                Main working list
                             </p>
                         </div>
-                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                            <ScrollText class="size-4" />
+                        <Users class="size-4" />
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
+                            activeSection === 'invitation' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                        ]"
+                        @click="activeSection = 'invitation'"
+                    >
+                        <div>
+                            <p class="text-sm font-semibold">Invitation</p>
+                            <p :class="activeSection === 'invitation' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
+                                Message and public link
+                            </p>
                         </div>
-                    </div>
-
-                    <div class="mt-4 space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Template
-                            </label>
-                            <div class="grid gap-2 sm:grid-cols-3">
-                                <button
-                                    v-for="template in invitationTemplateCards"
-                                    :key="template.id"
-                                    type="button"
-                                    :class="[
-                                        'rounded-2xl border px-4 py-3 text-left transition',
-                                        template.artClass,
-                                        invitationSettingsForm.template === template.id
-                                            ? 'ring-2 ring-neutral-950 shadow-sm'
-                                            : 'opacity-80 hover:opacity-100',
-                                    ]"
-                                    @click="invitationSettingsForm.template = template.id"
-                                >
-                                    <p class="text-sm font-semibold">
-                                        {{ template.label }}
-                                    </p>
-                                    <p class="mt-1 text-xs leading-5 opacity-80">
-                                        {{ template.summary }}
-                                    </p>
-                                </button>
-                            </div>
+                        <ScrollText class="size-4" />
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
+                            activeSection === 'ledger' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                        ]"
+                        @click="activeSection = 'ledger'"
+                    >
+                        <div>
+                            <p class="text-sm font-semibold">Ledger</p>
+                            <p :class="activeSection === 'ledger' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
+                                Gifts, attendance, export
+                            </p>
                         </div>
-
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div class="space-y-2 md:col-span-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Headline
-                                </label>
-                                <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
-                            </div>
-
-                            <div class="space-y-2 md:col-span-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Message
-                                </label>
-                                <Textarea
-                                    v-model="invitationSettingsForm.message"
-                                    rows="3"
-                                    placeholder="Short invitation message."
-                                />
-                            </div>
-
-                            <div class="space-y-2 md:col-span-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Closing
-                                </label>
-                                <Textarea
-                                    v-model="invitationSettingsForm.closing"
-                                    rows="2"
-                                    placeholder="A short RSVP reminder."
-                                />
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-neutral-700">
-                                    Contact phone
-                                </label>
-                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional" />
-                            </div>
-
-                            <label class="flex items-center gap-3 rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
-                                <input
-                                    v-model="invitationSettingsForm.public_rsvp_enabled"
-                                    type="checkbox"
-                                    class="size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950"
-                                >
-                                Public RSVP link enabled
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 flex justify-end border-t border-neutral-200 pt-4">
-                        <Button
-                            class="rounded-full px-5"
-                            :disabled="savingInvitationSettings || invitationSettingsForm.processing"
-                            @click="saveInvitationSettings"
-                        >
-                            <SendHorizontal class="mr-2 size-4" />
-                            Save invitation
-                        </Button>
-                    </div>
-                </div>
-
-                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-base font-semibold text-neutral-950">
-                        Public RSVP link
-                    </h2>
-                    <p class="mt-1 text-sm text-neutral-600">
-                        Use this when a family is not already on the list.
-                    </p>
-
-                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600 break-all">
-                        {{ publicInvitationUrl }}
-                    </div>
-
-                    <div class="mt-4 flex flex-col gap-2">
-                        <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
-                            <Copy class="mr-2 size-4" />
-                            Copy link
-                        </Button>
-                        <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
-                            <ExternalLink class="mr-2 size-4" />
-                            Open page
-                        </Button>
-                    </div>
+                        <Wallet class="size-4" />
+                    </button>
                 </div>
             </section>
 
-            <section class="rounded-3xl border border-neutral-200 bg-white shadow-sm">
-                <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <h2 class="text-base font-semibold text-neutral-950">
-                            Families
-                        </h2>
-                        <p class="text-sm text-neutral-600">
-                            {{ guestParties.length }} total records
+            <section v-if="activeSection === 'families'" class="space-y-4">
+                <div class="grid gap-3 sm:grid-cols-3">
+                    <div
+                        v-for="item in familyOverview"
+                        :key="item.label"
+                        class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm"
+                    >
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                            {{ item.label }}
+                        </p>
+                        <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
+                            {{ item.value }}
                         </p>
                     </div>
+                </div>
 
-                    <div class="flex flex-1 flex-col gap-3 lg:max-w-3xl">
-                        <div class="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
-                            <label class="inline-flex items-center gap-3 font-medium text-neutral-700">
-                                <Checkbox
-                                    :checked="allGuestsSelected"
-                                    @update:checked="toggleSelectAllGuests(Boolean($event))"
-                                />
+                <section class="rounded-3xl border border-neutral-200 bg-white shadow-sm">
+                    <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-neutral-950">
+                                Families
+                            </h2>
+                            <p class="text-sm text-neutral-600">
+                                {{ guestParties.length }} total records
+                            </p>
+                        </div>
+
+                        <div class="flex flex-1 flex-col gap-3 lg:max-w-3xl">
+                            <div class="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+                                <label class="inline-flex items-center gap-3 font-medium text-neutral-700">
+                                    <Checkbox
+                                        :checked="allGuestsSelected"
+                                        @update:checked="toggleSelectAllGuests(Boolean($event))"
+                                    />
                                 Select visible
                             </label>
                             <span>{{ selectedGuestIds.length }} selected</span>
@@ -926,29 +844,29 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                 <NativeSelectOption value="no_gift">No gift recorded</NativeSelectOption>
                             </NativeSelect>
                         </div>
+                        </div>
                     </div>
-                </div>
 
-                <div v-if="guestParties.length === 0" class="px-5 py-12 text-center">
-                    <Users class="mx-auto size-10 text-neutral-300" />
-                    <h3 class="mt-4 text-lg font-semibold text-neutral-950">
-                        No guest parties yet
-                    </h3>
-                    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
-                        Start with one family manually or paste a list like <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span> and the app will sort the names and phones for you.
-                    </p>
-                    <div class="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-                        <Button class="rounded-full px-5" @click="openCreateDialog">
-                            Add first guest party
-                        </Button>
-                        <Button variant="outline" class="rounded-full px-5" @click="importDialogOpen = true">
-                            Paste or upload a list
-                        </Button>
+                    <div v-if="guestParties.length === 0" class="px-5 py-12 text-center">
+                        <Users class="mx-auto size-10 text-neutral-300" />
+                        <h3 class="mt-4 text-lg font-semibold text-neutral-950">
+                            No guest parties yet
+                        </h3>
+                        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
+                            Start with one family manually or paste a list like <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span>.
+                        </p>
+                        <div class="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+                            <Button class="rounded-full px-5" @click="openCreateDialog">
+                                Add first guest party
+                            </Button>
+                            <Button variant="outline" class="rounded-full px-5" @click="importDialogOpen = true">
+                                Paste or upload a list
+                            </Button>
+                        </div>
                     </div>
-                </div>
 
-                <div v-else class="divide-y divide-neutral-200">
-                    <div class="flex flex-wrap gap-2 px-5 py-4">
+                    <div v-else class="divide-y divide-neutral-200">
+                        <div class="flex flex-wrap gap-2 px-5 py-4">
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
@@ -993,184 +911,337 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             >
                                 Clear
                             </Button>
-                    </div>
+                        </div>
 
-                    <div
-                        v-if="filteredGuestParties.length === 0"
-                        class="px-5 py-12 text-center"
-                    >
-                        <Users class="mx-auto size-10 text-neutral-300" />
-                        <h3 class="mt-4 text-lg font-semibold text-neutral-950">
-                            No guest parties match this filter
-                        </h3>
-                        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
-                            Try a different filter or clear the search to see the full list again.
-                        </p>
-                    </div>
+                        <div
+                            v-if="filteredGuestParties.length === 0"
+                            class="px-5 py-12 text-center"
+                        >
+                            <Users class="mx-auto size-10 text-neutral-300" />
+                            <h3 class="mt-4 text-lg font-semibold text-neutral-950">
+                                No guest parties match this filter
+                            </h3>
+                            <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
+                                Try a different filter or clear the search.
+                            </p>
+                        </div>
 
-                    <div
-                        v-for="party in filteredGuestParties"
-                        :key="party.id"
-                        class="flex flex-col gap-4 px-5 py-4"
-                    >
-                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                            <div class="space-y-2">
-                                <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-500">
-                                    <Checkbox
-                                        :checked="selectedGuestIds.includes(party.id)"
-                                        @update:checked="toggleGuestSelection(party.id, Boolean($event))"
-                                    />
-                                    Select invitation
-                                </label>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="text-lg font-semibold text-neutral-950">
-                                        {{ party.name }}
-                                    </h3>
-                                    <Badge :class="attendanceBadgeClass(party.attendanceStatus)">
-                                        {{ attendanceLabel(party.attendanceStatus) }}
-                                    </Badge>
-                                    <Badge variant="outline" class="border-neutral-200 bg-neutral-50 text-neutral-700">
-                                        {{ invitationLabel(party.invitationStatus) }}
-                                    </Badge>
+                        <div
+                            v-for="party in filteredGuestParties"
+                            :key="party.id"
+                            class="px-5 py-4"
+                        >
+                            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                <div class="space-y-2">
+                                    <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-500">
+                                        <Checkbox
+                                            :checked="selectedGuestIds.includes(party.id)"
+                                            @update:checked="toggleGuestSelection(party.id, Boolean($event))"
+                                        />
+                                        Select
+                                    </label>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="text-lg font-semibold text-neutral-950">
+                                            {{ party.name }}
+                                        </h3>
+                                        <Badge :class="attendanceBadgeClass(party.attendanceStatus)">
+                                            {{ attendanceLabel(party.attendanceStatus) }}
+                                        </Badge>
+                                        <Badge variant="outline" class="border-neutral-200 bg-neutral-50 text-neutral-700">
+                                            {{ invitationLabel(party.invitationStatus) }}
+                                        </Badge>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-600">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <Phone class="size-4" />
+                                            {{ party.phone || 'No phone saved' }}
+                                        </span>
+                                        <span>Invited {{ party.invitedAttendeesCount }}</span>
+                                        <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
+                                        <span v-if="party.actualAttendeesCount !== null">Came {{ party.actualAttendeesCount }}</span>
+                                        <span>{{ giftLabel(party) }}</span>
+                                    </div>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-600">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <Phone class="size-4" />
-                                        {{ party.phone || 'No phone saved' }}
-                                    </span>
-                                    <span>Invited {{ party.invitedAttendeesCount }}</span>
-                                    <span v-if="party.confirmedAttendeesCount !== null">
-                                        Confirmed {{ party.confirmedAttendeesCount }}
-                                    </span>
-                                    <span v-if="party.actualAttendeesCount !== null">
-                                        Came {{ party.actualAttendeesCount }}
-                                    </span>
-                                    <span>{{ giftLabel(party) }}</span>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        @click="shareGuestInvite(party)"
+                                    >
+                                        <SendHorizontal class="mr-2 size-4" />
+                                        Share
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        @click="openEditDialog(party)"
+                                    >
+                                        <Pencil class="mr-2 size-4" />
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        @click="toggleGuestDetails(party.id)"
+                                    >
+                                        {{ expandedGuestPartyId === party.id ? 'Hide details' : 'Details' }}
+                                    </Button>
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap gap-2">
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4"
-                                    @click="shareGuestInvite(party)"
+                            <div
+                                v-if="expandedGuestPartyId === party.id"
+                                class="mt-4 grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4 md:grid-cols-2"
+                            >
+                                <div class="space-y-2 text-sm text-neutral-600">
+                                    <p><span class="font-medium text-neutral-900">Opens:</span> {{ party.invitationOpenCount }}</p>
+                                    <p><span class="font-medium text-neutral-900">First open:</span> {{ formatDateTime(party.invitationFirstOpenedAt) }}</p>
+                                    <p><span class="font-medium text-neutral-900">Last open:</span> {{ formatDateTime(party.invitationLastOpenedAt) }}</p>
+                                    <p><span class="font-medium text-neutral-900">Last IP:</span> {{ party.invitationLastOpenedIp || 'Not captured yet' }}</p>
+                                    <p><span class="font-medium text-neutral-900">Delivery:</span> {{ party.invitationDeliveryChannel || 'Not set' }}</p>
+                                    <p><span class="font-medium text-neutral-900">Delivered:</span> {{ formatDateTime(party.invitationDeliveredAt) }}</p>
+                                    <p><span class="font-medium text-neutral-900">Responded:</span> {{ formatDateTime(party.respondedAt) }}</p>
+                                </div>
+
+                                <div class="space-y-2 text-sm text-neutral-600">
+                                    <p><span class="font-medium text-neutral-900">Event day:</span> {{ actualAttendanceLabel(party.actualAttendanceStatus) }}</p>
+                                    <p><span class="font-medium text-neutral-900">Count:</span> {{ party.actualAttendeesCount ?? 'Not recorded' }}</p>
+                                    <p v-if="party.notes"><span class="font-medium text-neutral-900">Notes:</span> {{ party.notes }}</p>
+                                    <p v-if="party.guestNames"><span class="font-medium text-neutral-900">Guest names:</span> {{ party.guestNames }}</p>
+                                    <p v-if="mealPreferenceLabel(party.mealPreference)"><span class="font-medium text-neutral-900">Meal:</span> {{ mealPreferenceLabel(party.mealPreference) }}</p>
+                                    <p v-if="party.responseNotes"><span class="font-medium text-neutral-900">RSVP note:</span> {{ party.responseNotes }}</p>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 md:col-span-2">
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        @click="copyLink(party.inviteUrl, `${party.name} invite link`)"
+                                    >
+                                        <Copy class="mr-2 size-4" />
+                                        Copy link
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        @click="openInvite(party.inviteUrl)"
+                                    >
+                                        <ExternalLink class="mr-2 size-4" />
+                                        Open invite
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        :disabled="invitationBulkForm.processing"
+                                        @click="updateInvitationDelivery([party.id], 'mark_delivered_in_person', 'in_person')"
+                                    >
+                                        <CheckCircle2 class="mr-2 size-4" />
+                                        Delivered
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        :disabled="invitationBulkForm.processing"
+                                        @click="updateInvitationDelivery([party.id], 'mark_sent_online', 'other')"
+                                    >
+                                        <SendHorizontal class="mr-2 size-4" />
+                                        Mark sent
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4 text-rose-600 hover:text-rose-700"
+                                        @click="confirmDelete(party)"
+                                    >
+                                        <Trash2 class="mr-2 size-4" />
+                                        Delete
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <section v-else-if="activeSection === 'invitation'" class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-base font-semibold text-neutral-950">
+                                Invitation setup
+                            </h2>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                Keep it simple, save it once, then share family links.
+                            </p>
+                        </div>
+                        <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                            <ScrollText class="size-4" />
+                        </div>
+                    </div>
+
+                    <div class="mt-4 space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Template
+                            </label>
+                            <div class="grid gap-2 sm:grid-cols-3">
+                                <button
+                                    v-for="template in invitationTemplateCards"
+                                    :key="template.id"
+                                    type="button"
+                                    :class="[
+                                        'rounded-2xl border px-4 py-3 text-left transition',
+                                        template.artClass,
+                                        invitationSettingsForm.template === template.id
+                                            ? 'ring-2 ring-neutral-950 shadow-sm'
+                                            : 'opacity-80 hover:opacity-100',
+                                    ]"
+                                    @click="invitationSettingsForm.template = template.id"
                                 >
-                                    <SendHorizontal class="mr-2 size-4" />
-                                    Share
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4"
-                                    @click="copyLink(party.inviteUrl, `${party.name} invite link`)"
-                                >
-                                    <Copy class="mr-2 size-4" />
-                                    Copy link
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4"
-                                    @click="openInvite(party.inviteUrl)"
-                                >
-                                    <ExternalLink class="mr-2 size-4" />
-                                    Open invite
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4"
-                                    :disabled="invitationBulkForm.processing"
-                                    @click="updateInvitationDelivery([party.id], 'mark_delivered_in_person', 'in_person')"
-                                >
-                                    <CheckCircle2 class="mr-2 size-4" />
-                                    Delivered
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4"
-                                    @click="openEditDialog(party)"
-                                >
-                                    <Pencil class="mr-2 size-4" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    class="rounded-full px-4 text-rose-600 hover:text-rose-700"
-                                    @click="confirmDelete(party)"
-                                >
-                                    <Trash2 class="mr-2 size-4" />
-                                    Delete
-                                </Button>
+                                    <p class="text-sm font-semibold">
+                                        {{ template.label }}
+                                    </p>
+                                </button>
                             </div>
                         </div>
 
-                        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                                    Invitation tracking
-                                </p>
-                                <p class="mt-2 text-sm text-neutral-700">
-                                    {{ party.invitationOpenCount }} opens
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    First open: {{ formatDateTime(party.invitationFirstOpenedAt) }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    Last open: {{ formatDateTime(party.invitationLastOpenedAt) }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    Last IP: {{ party.invitationLastOpenedIp || 'Not captured yet' }}
-                                </p>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Headline
+                            </label>
+                            <Input v-model="invitationSettingsForm.headline" placeholder="You're invited..." />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Message
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.message"
+                                rows="3"
+                                placeholder="Short invitation message."
+                            />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Closing
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.closing"
+                                rows="2"
+                                placeholder="A short RSVP reminder."
+                            />
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Contact phone
+                                </label>
+                                <Input v-model="invitationSettingsForm.contact_phone" placeholder="Optional" />
                             </div>
 
-                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                                    Delivery
+                            <label class="flex items-center gap-3 rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
+                                <input
+                                    v-model="invitationSettingsForm.public_rsvp_enabled"
+                                    type="checkbox"
+                                    class="size-4 rounded border-neutral-300 text-neutral-950 focus:ring-neutral-950"
+                                >
+                                Public RSVP link enabled
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end border-t border-neutral-200 pt-4">
+                        <Button
+                            class="rounded-full px-5"
+                            :disabled="savingInvitationSettings || invitationSettingsForm.processing"
+                            @click="saveInvitationSettings"
+                        >
+                            <SendHorizontal class="mr-2 size-4" />
+                            Save invitation
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <h2 class="text-base font-semibold text-neutral-950">
+                        Public RSVP link
+                    </h2>
+                    <p class="mt-1 text-sm text-neutral-600">
+                        Share this if a family is not already in the list.
+                    </p>
+
+                    <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600 break-all">
+                        {{ publicInvitationUrl }}
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-2">
+                        <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
+                            <Copy class="mr-2 size-4" />
+                            Copy link
+                        </Button>
+                        <Button variant="outline" class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
+                            <ExternalLink class="mr-2 size-4" />
+                            Open page
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            <section v-else class="space-y-4">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <div
+                        v-for="stat in statCards"
+                        :key="stat.label"
+                        class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                    {{ stat.label }}
                                 </p>
-                                <p class="mt-2 text-sm text-neutral-700">
-                                    {{ party.invitationDeliveryChannel || 'Not set' }}
+                                <p class="mt-2 text-xl font-semibold tracking-tight text-neutral-950">
+                                    {{ stat.value }}
                                 </p>
                                 <p class="mt-1 text-xs text-neutral-500">
-                                    Delivered: {{ formatDateTime(party.invitationDeliveredAt) }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    Responded: {{ formatDateTime(party.respondedAt) }}
+                                    {{ stat.detail }}
                                 </p>
                             </div>
-
-                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                                    Event day attendance
-                                </p>
-                                <p class="mt-2 text-sm text-neutral-700">
-                                    {{ actualAttendanceLabel(party.actualAttendanceStatus) }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    Count: {{ party.actualAttendeesCount ?? 'Not recorded' }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    Recorded: {{ formatDateTime(party.actualAttendanceRecordedAt) }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-2xl border border-neutral-200 bg-neutral-50/60 p-3">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                                    Notes
-                                </p>
-                                <p class="mt-2 text-sm leading-6 text-neutral-700">
-                                    {{ party.notes || 'No notes yet.' }}
-                                </p>
-                                <p v-if="party.guestNames" class="mt-2 text-xs text-neutral-500">
-                                    Guest names: {{ party.guestNames }}
-                                </p>
-                                <p v-if="mealPreferenceLabel(party.mealPreference)" class="mt-1 text-xs text-neutral-500">
-                                    {{ mealPreferenceLabel(party.mealPreference) }}
-                                </p>
-                                <p v-if="party.responseNotes" class="mt-1 text-xs text-neutral-500">
-                                    RSVP note: {{ party.responseNotes }}
-                                </p>
+                            <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
+                                <component :is="stat.icon" class="size-4" />
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <h2 class="text-base font-semibold text-neutral-950">
+                        Ledger tools
+                    </h2>
+                    <p class="mt-1 text-sm text-neutral-600">
+                        Use the printable report for a full event-day view, then export the ledger before retention ends.
+                    </p>
+
+                    <div
+                        v-if="retentionReminder"
+                        class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                    >
+                        Retention ends on {{ retentionReminder.dateLabel }}.
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <Button class="rounded-full px-5" @click="openGuestReport">
+                            <Printer class="mr-2 size-4" />
+                            Open report
+                        </Button>
+                        <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
+                            <Download class="mr-2 size-4" />
+                            Export CSV
+                        </Button>
+                    </div>
+                </section>
             </section>
         </div>
 
