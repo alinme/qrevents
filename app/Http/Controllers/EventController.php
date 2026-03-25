@@ -20,6 +20,7 @@ use App\Models\EventAssetLike;
 use App\Models\EventCollaborator;
 use App\Models\EventGuest;
 use App\Models\EventGuestParty;
+use App\Models\EventGuestPartyInvitationActivity;
 use App\Models\EventGuestPartyInvitationView;
 use App\Models\Plan;
 use App\Models\TextPostTheme;
@@ -213,6 +214,7 @@ class EventController extends Controller
             ->value();
 
         $guestParties = $event->guestParties()
+            ->with('invitationActivities')
             ->orderBy('name')
             ->get();
 
@@ -305,14 +307,30 @@ class EventController extends Controller
             $guestParty->forceFill([
                 'invitation_status' => $status,
                 'invitation_delivery_channel' => $request->deliveryChannel(),
-                'invitation_delivered_at' => $deliveredAt,
+                'invitation_delivered_at' => $request->actionName() === 'mark_reminded_online'
+                    ? ($guestParty->invitation_delivered_at ?? $deliveredAt)
+                    : $deliveredAt,
             ])->save();
+            $this->recordInvitationActivity(
+                $guestParty,
+                match ($request->actionName()) {
+                    'mark_delivered_in_person' => 'delivered_in_person',
+                    'mark_reminded_online' => 'reminded',
+                    default => 'sent_online',
+                },
+                $request->deliveryChannel(),
+                [
+                    'invitationStatus' => $status,
+                ],
+                $request,
+            );
 
             $updatedCount++;
         }
 
         $message = match ($request->actionName()) {
             'mark_delivered_in_person' => "{$updatedCount} invitation ".($updatedCount === 1 ? 'was' : 'were').' marked as delivered in person.',
+            'mark_reminded_online' => "{$updatedCount} reminder ".($updatedCount === 1 ? 'was' : 'were').' saved.',
             default => "{$updatedCount} invitation ".($updatedCount === 1 ? 'was' : 'were').' marked as sent online.',
         };
 
@@ -371,6 +389,16 @@ class EventController extends Controller
         );
 
         $guestParty->forceFill($payload)->save();
+        $this->recordInvitationActivity(
+            $guestParty,
+            'responded',
+            $guestParty->invitation_delivery_channel,
+            [
+                'attendanceStatus' => $guestParty->attendance_status,
+                'confirmedAttendeesCount' => $guestParty->confirmed_attendees_count,
+            ],
+            $request,
+        );
         $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
 
         return to_route('events.guests.invitation.show', [
@@ -439,6 +467,17 @@ class EventController extends Controller
         );
 
         $guestParty->forceFill($payload)->save();
+        $this->recordInvitationActivity(
+            $guestParty,
+            'responded',
+            $guestParty->invitation_delivery_channel,
+            [
+                'attendanceStatus' => $guestParty->attendance_status,
+                'confirmedAttendeesCount' => $guestParty->confirmed_attendees_count,
+                'publicInvite' => true,
+            ],
+            $request,
+        );
         $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
 
         return to_route('events.guests.public-invitation.show', [
@@ -2405,6 +2444,21 @@ class EventController extends Controller
                     'invitationLastOpenedAt' => $party->invitation_last_opened_at?->toIso8601String(),
                     'invitationLastOpenedIp' => $party->invitation_last_opened_ip,
                     'respondedAt' => $party->responded_at?->toIso8601String(),
+                    'reminderCount' => $party->invitationActivities->where('activity_type', 'reminded')->count(),
+                    'lastReminderAt' => $party->invitationActivities
+                        ->first(fn (EventGuestPartyInvitationActivity $activity): bool => $activity->activity_type === 'reminded')
+                        ?->created_at
+                        ?->toIso8601String(),
+                    'invitationHistory' => $party->invitationActivities
+                        ->take(8)
+                        ->map(fn (EventGuestPartyInvitationActivity $activity): array => [
+                            'type' => $activity->activity_type,
+                            'deliveryChannel' => $activity->delivery_channel,
+                            'createdAt' => $activity->created_at?->toIso8601String(),
+                            'meta' => is_array($activity->meta) ? $activity->meta : [],
+                        ])
+                        ->values()
+                        ->all(),
                     'giftType' => $party->gift_type,
                     'giftCurrency' => $party->gift_currency,
                     'giftAmount' => $party->gift_amount !== null ? (string) $party->gift_amount : null,
@@ -2673,6 +2727,17 @@ class EventController extends Controller
             'invitation_last_opened_user_agent' => $request->userAgent(),
             'invitation_status' => $guestParty->invitation_status === 'responded' ? 'responded' : 'opened',
         ])->save();
+
+        $this->recordInvitationActivity(
+            $guestParty,
+            'opened',
+            $guestParty->invitation_delivery_channel,
+            [
+                'invitationKind' => $invitationKind,
+            ],
+            $request,
+            $openedAt,
+        );
     }
 
     private function invitationStatusForDeliveryAction(
@@ -2689,9 +2754,36 @@ class EventController extends Controller
 
         return match ($action) {
             'mark_delivered_in_person' => 'delivered_in_person',
-            'mark_sent_online' => 'sent',
+            'mark_sent_online', 'mark_reminded_online' => 'sent',
             default => $guestParty->invitation_status,
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    private function recordInvitationActivity(
+        EventGuestParty $guestParty,
+        string $activityType,
+        ?string $deliveryChannel = null,
+        array $meta = [],
+        ?Request $request = null,
+        ?CarbonInterface $recordedAt = null,
+    ): void {
+        $timestamp = $recordedAt ?? now();
+
+        EventGuestPartyInvitationActivity::query()->create([
+            'event_id' => $guestParty->event_id,
+            'event_guest_party_id' => $guestParty->id,
+            'actor_user_id' => $request?->user()?->id,
+            'activity_type' => $activityType,
+            'delivery_channel' => $deliveryChannel,
+            'meta' => $meta === [] ? null : $meta,
+            'ip_address' => $request?->ip(),
+            'user_agent' => $request?->userAgent(),
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ]);
     }
 
     private function notifyEventOwnerAboutInvitationResponse(

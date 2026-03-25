@@ -93,6 +93,14 @@ type GuestParty = {
     invitationLastOpenedAt: string | null;
     invitationLastOpenedIp: string | null;
     respondedAt: string | null;
+    reminderCount: number;
+    lastReminderAt: string | null;
+    invitationHistory: Array<{
+        type: 'sent_online' | 'delivered_in_person' | 'reminded' | 'opened' | 'responded';
+        deliveryChannel: string | null;
+        createdAt: string | null;
+        meta: Record<string, unknown>;
+    }>;
     giftType: 'money' | 'gift' | null;
     giftCurrency: 'EUR' | 'GBP' | 'RON' | null;
     giftAmount: string | null;
@@ -185,7 +193,7 @@ const invitationSettingsForm = useForm({
 
 const invitationBulkForm = useForm({
     guest_party_ids: [] as number[],
-    action: 'mark_sent_online' as 'mark_delivered_in_person' | 'mark_sent_online',
+    action: 'mark_sent_online' as 'mark_delivered_in_person' | 'mark_sent_online' | 'mark_reminded_online',
     delivery_channel: 'other' as 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
 });
 
@@ -229,6 +237,7 @@ const filteredGuestParties = computed(() => {
     });
 });
 const selectedGuestParties = computed(() => props.guestParties.filter((party) => selectedGuestIds.value.includes(party.id)));
+const selectedPendingGuestParties = computed(() => selectedGuestParties.value.filter((party) => party.attendanceStatus === 'pending'));
 const allGuestsSelected = computed(() => filteredGuestParties.value.length > 0 && filteredGuestParties.value.every((party) => selectedGuestIds.value.includes(party.id)));
 const retentionReminder = computed(() => {
     if (!props.currentEvent.retentionEndsAt) {
@@ -495,9 +504,28 @@ const invitationMessageForParties = (parties: GuestParty[]): string => {
         .join('\n\n--------------------\n\n');
 };
 
+const reminderMessageForParty = (party: GuestParty): string => {
+    return [
+        `${party.name},`,
+        'Just a kind reminder to let us know if you can join us.',
+        props.eventInvitationSettings.headline,
+        props.eventInvitationSettings.message,
+        props.eventInvitationSettings.contactPhone ? `Contact: ${props.eventInvitationSettings.contactPhone}` : null,
+        `RSVP: ${party.inviteUrl}`,
+    ]
+        .filter((line): line is string => Boolean(line && line.trim() !== ''))
+        .join('\n\n');
+};
+
+const reminderMessageForParties = (parties: GuestParty[]): string => {
+    return parties
+        .map((party) => reminderMessageForParty(party))
+        .join('\n\n--------------------\n\n');
+};
+
 const updateInvitationDelivery = (
     guestPartyIds: number[],
-    action: 'mark_delivered_in_person' | 'mark_sent_online',
+    action: 'mark_delivered_in_person' | 'mark_sent_online' | 'mark_reminded_online',
     deliveryChannel: 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
 ): void => {
     if (guestPartyIds.length === 0) {
@@ -531,59 +559,66 @@ const openInvite = (url: string): void => {
     window.open(url, '_blank', 'noopener,noreferrer');
 };
 
-const shareGuestInvite = async (party: GuestParty): Promise<void> => {
-    const text = invitationMessageForParty(party);
-
-    try {
-        if (navigator.share) {
-            await navigator.share({
-                title: props.currentEvent.name,
-                text,
-                url: party.inviteUrl,
-            });
-        } else {
-            await navigator.clipboard.writeText(text);
-            toast.success(`${party.name} invitation copied.`);
-        }
-
-        updateInvitationDelivery([party.id], 'mark_sent_online', 'other');
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            return;
-        }
-
-        toast.error(`Could not share ${party.name}'s invitation.`);
-    }
-};
-
-const shareSelectedInvites = async (): Promise<void> => {
-    if (selectedGuestParties.value.length === 0) {
-        toast.error('Select at least one guest party first.');
+const shareGuestPartyBundle = async (
+    parties: GuestParty[],
+    mode: 'invite' | 'reminder',
+): Promise<void> => {
+    if (parties.length === 0) {
+        toast.error(mode === 'reminder' ? 'No pending guest parties to remind.' : 'Select at least one guest party first.');
 
         return;
     }
 
-    const text = invitationMessageForParties(selectedGuestParties.value);
+    const text = mode === 'reminder'
+        ? reminderMessageForParties(parties)
+        : invitationMessageForParties(parties);
+    const title = mode === 'reminder'
+        ? `${props.currentEvent.name} reminder`
+        : `${props.currentEvent.name} invitations`;
 
     try {
         if (navigator.share) {
             await navigator.share({
-                title: `${props.currentEvent.name} invitations`,
+                title,
                 text,
             });
         } else {
             await navigator.clipboard.writeText(text);
-            toast.success('Selected invitation bundle copied.');
+            toast.success(mode === 'reminder' ? 'Reminder bundle copied.' : 'Invitation bundle copied.');
         }
 
-        updateInvitationDelivery(selectedGuestParties.value.map((party) => party.id), 'mark_sent_online', 'other');
+        updateInvitationDelivery(
+            parties.map((party) => party.id),
+            mode === 'reminder' ? 'mark_reminded_online' : 'mark_sent_online',
+            'other',
+        );
     } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
             return;
         }
 
-        toast.error('Could not share the selected invitations.');
+        toast.error(mode === 'reminder' ? 'Could not share the reminder bundle.' : 'Could not share the invitation bundle.');
     }
+};
+
+const shareGuestInvite = async (party: GuestParty): Promise<void> => {
+    await shareGuestPartyBundle([party], 'invite');
+};
+
+const remindGuestInvite = async (party: GuestParty): Promise<void> => {
+    await shareGuestPartyBundle([party], 'reminder');
+};
+
+const shareSelectedInvites = async (): Promise<void> => {
+    await shareGuestPartyBundle(selectedGuestParties.value, 'invite');
+};
+
+const remindSelectedInvites = async (): Promise<void> => {
+    const parties = selectedGuestIds.value.length > 0
+        ? selectedPendingGuestParties.value
+        : filteredGuestParties.value.filter((party) => party.attendanceStatus === 'pending');
+
+    await shareGuestPartyBundle(parties, 'reminder');
 };
 
 const copySelectedInvites = async (): Promise<void> => {
@@ -691,6 +726,22 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
         halal: 'Halal meal',
         other: 'Other meal request',
     }[value];
+};
+
+const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]): string => {
+    const attendanceStatus = typeof party.meta.attendanceStatus === 'string' ? party.meta.attendanceStatus : null;
+
+    return {
+        sent_online: 'Invitation shared',
+        delivered_in_person: 'Delivered in person',
+        reminded: 'Reminder sent',
+        opened: 'Invitation opened',
+        responded: attendanceStatus === 'accepted'
+            ? 'RSVP accepted'
+            : attendanceStatus === 'declined'
+                ? 'RSVP declined'
+                : 'RSVP updated',
+    }[party.type];
 };
 </script>
 
@@ -888,6 +939,15 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
+                                :disabled="(selectedGuestIds.length > 0 && selectedPendingGuestParties.length === 0) || invitationBulkForm.processing"
+                                @click="remindSelectedInvites"
+                            >
+                                <Clock3 class="mr-2 size-4" />
+                                Remind pending
+                            </Button>
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
                                 :disabled="selectedGuestIds.length === 0 || invitationBulkForm.processing"
                                 @click="updateInvitationDelivery(selectedGuestIds, 'mark_delivered_in_person', 'in_person')"
                             >
@@ -951,32 +1011,42 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                             {{ invitationLabel(party.invitationStatus) }}
                                         </Badge>
                                     </div>
-                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-600">
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <Phone class="size-4" />
-                                            {{ party.phone || 'No phone saved' }}
-                                        </span>
-                                        <span>Invited {{ party.invitedAttendeesCount }}</span>
-                                        <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
-                                        <span v-if="party.actualAttendeesCount !== null">Came {{ party.actualAttendeesCount }}</span>
-                                        <span>{{ giftLabel(party) }}</span>
-                                    </div>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-600">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <Phone class="size-4" />
+                                        {{ party.phone || 'No phone saved' }}
+                                    </span>
+                                    <span>Invited {{ party.invitedAttendeesCount }}</span>
+                                    <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
+                                    <span v-if="party.actualAttendeesCount !== null">Came {{ party.actualAttendeesCount }}</span>
+                                    <span>{{ giftLabel(party) }}</span>
+                                    <span v-if="party.reminderCount > 0">Reminded {{ party.reminderCount }}</span>
                                 </div>
+                            </div>
 
-                                <div class="flex flex-wrap gap-2">
-                                    <Button
+                            <div class="flex flex-wrap gap-2">
+                                <Button
                                         variant="outline"
                                         class="rounded-full px-4"
                                         @click="shareGuestInvite(party)"
                                     >
-                                        <SendHorizontal class="mr-2 size-4" />
-                                        Share
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        class="rounded-full px-4"
-                                        @click="openEditDialog(party)"
-                                    >
+                                    <SendHorizontal class="mr-2 size-4" />
+                                    Share
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
+                                    :disabled="party.attendanceStatus !== 'pending'"
+                                    @click="remindGuestInvite(party)"
+                                >
+                                    <Clock3 class="mr-2 size-4" />
+                                    Remind
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    class="rounded-full px-4"
+                                    @click="openEditDialog(party)"
+                                >
                                         <Pencil class="mr-2 size-4" />
                                         Edit
                                     </Button>
@@ -1001,6 +1071,7 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                     <p><span class="font-medium text-neutral-900">Last IP:</span> {{ party.invitationLastOpenedIp || 'Not captured yet' }}</p>
                                     <p><span class="font-medium text-neutral-900">Delivery:</span> {{ party.invitationDeliveryChannel || 'Not set' }}</p>
                                     <p><span class="font-medium text-neutral-900">Delivered:</span> {{ formatDateTime(party.invitationDeliveredAt) }}</p>
+                                    <p><span class="font-medium text-neutral-900">Last reminder:</span> {{ formatDateTime(party.lastReminderAt) }}</p>
                                     <p><span class="font-medium text-neutral-900">Responded:</span> {{ formatDateTime(party.respondedAt) }}</p>
                                 </div>
 
@@ -1011,6 +1082,34 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                     <p v-if="party.guestNames"><span class="font-medium text-neutral-900">Guest names:</span> {{ party.guestNames }}</p>
                                     <p v-if="mealPreferenceLabel(party.mealPreference)"><span class="font-medium text-neutral-900">Meal:</span> {{ mealPreferenceLabel(party.mealPreference) }}</p>
                                     <p v-if="party.responseNotes"><span class="font-medium text-neutral-900">RSVP note:</span> {{ party.responseNotes }}</p>
+                                </div>
+
+                                <div class="rounded-2xl border border-neutral-200 bg-white/70 p-3 md:col-span-2">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                                        Invitation history
+                                    </p>
+                                    <div v-if="party.invitationHistory.length > 0" class="mt-3 space-y-2">
+                                        <div
+                                            v-for="activity in party.invitationHistory"
+                                            :key="`${activity.type}-${activity.createdAt}-${activity.deliveryChannel}`"
+                                            class="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+                                        >
+                                            <div>
+                                                <p class="font-medium text-neutral-900">
+                                                    {{ invitationHistoryLabel(activity) }}
+                                                </p>
+                                                <p class="text-xs text-neutral-500">
+                                                    {{ activity.deliveryChannel || 'No channel saved' }}
+                                                </p>
+                                            </div>
+                                            <p class="text-xs text-neutral-500">
+                                                {{ formatDateTime(activity.createdAt) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p v-else class="mt-3 text-sm text-neutral-500">
+                                        No invitation activity yet.
+                                    </p>
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 md:col-span-2">
@@ -1047,6 +1146,15 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                     >
                                         <SendHorizontal class="mr-2 size-4" />
                                         Mark sent
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        class="rounded-full px-4"
+                                        :disabled="party.attendanceStatus !== 'pending' || invitationBulkForm.processing"
+                                        @click="remindGuestInvite(party)"
+                                    >
+                                        <Clock3 class="mr-2 size-4" />
+                                        Remind
                                     </Button>
                                     <Button
                                         variant="outline"

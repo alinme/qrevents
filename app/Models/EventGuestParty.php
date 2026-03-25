@@ -72,4 +72,10 @@ class EventGuestParty extends Model
     {
         return $this->hasMany(EventGuestPartyInvitationView::class);
     }
+
+    public function invitationActivities(): HasMany
+    {
+        return $this->hasMany(EventGuestPartyInvitationActivity::class)
+            ->latest();
+    }
 }

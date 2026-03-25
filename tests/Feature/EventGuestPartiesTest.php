@@ -2,6 +2,7 @@
 
 use App\Models\Event;
 use App\Models\EventGuestParty;
+use App\Models\EventGuestPartyInvitationActivity;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -21,6 +22,11 @@ it('shows the guest parties page for an event owner', function () {
         'gift_type' => 'money',
         'gift_currency' => 'EUR',
         'gift_amount' => 300,
+    ])->invitationActivities()->create([
+        'event_id' => $event->id,
+        'activity_type' => 'reminded',
+        'delivery_channel' => 'whatsapp',
+        'meta' => ['invitationStatus' => 'sent'],
     ]);
 
     $this->actingAs($owner)
@@ -37,6 +43,8 @@ it('shows the guest parties page for an event owner', function () {
             ->where('guestPartyStats.moneyGiftTotal', 300)
             ->has('guestParties', 1)
             ->where('guestParties.0.name', 'Familia Popescu')
+            ->where('guestParties.0.reminderCount', 1)
+            ->where('guestParties.0.invitationHistory.0.type', 'reminded')
         );
 });
 
@@ -226,7 +234,36 @@ it('allows an event owner to bulk mark invitations as delivered or sent', functi
         ->and($firstParty->invitation_delivery_channel)->toBe('in_person')
         ->and($firstParty->invitation_delivered_at)->not->toBeNull()
         ->and($secondParty->invitation_status)->toBe('delivered_in_person')
-        ->and($secondParty->invitation_delivery_channel)->toBe('in_person');
+        ->and($secondParty->invitation_delivery_channel)->toBe('in_person')
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $firstParty->id)->where('activity_type', 'delivered_in_person')->exists())->toBeTrue()
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $secondParty->id)->where('activity_type', 'delivered_in_person')->exists())->toBeTrue();
+});
+
+it('allows an event owner to mark pending invitations as reminded', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $guestParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Marinescu',
+        'attendance_status' => 'pending',
+        'invitation_status' => 'sent',
+        'invitation_delivery_channel' => 'whatsapp',
+        'invitation_delivered_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.guests.invitations.bulk-update', $event), [
+            'guest_party_ids' => [$guestParty->id],
+            'action' => 'mark_reminded_online',
+            'delivery_channel' => 'whatsapp',
+        ])
+        ->assertRedirect();
+
+    $guestParty->refresh();
+
+    expect($guestParty->invitation_status)->toBe('sent')
+        ->and($guestParty->invitation_delivered_at)->not->toBeNull()
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $guestParty->id)->where('activity_type', 'reminded')->exists())->toBeTrue();
 });
 
 it('forbids another user from managing guest parties', function () {

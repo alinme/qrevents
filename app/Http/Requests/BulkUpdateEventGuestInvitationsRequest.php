@@ -17,7 +17,7 @@ class BulkUpdateEventGuestInvitationsRequest extends FormRequest
         return [
             'guest_party_ids' => ['required', 'array', 'min:1'],
             'guest_party_ids.*' => ['required', 'integer', 'distinct'],
-            'action' => ['required', 'string', Rule::in(['mark_delivered_in_person', 'mark_sent_online'])],
+            'action' => ['required', 'string', Rule::in(['mark_delivered_in_person', 'mark_sent_online', 'mark_reminded_online'])],
             'delivery_channel' => [
                 'nullable',
                 'string',
@@ -44,7 +44,7 @@ class BulkUpdateEventGuestInvitationsRequest extends FormRequest
             'action' => $action,
             'delivery_channel' => match ($action) {
                 'mark_delivered_in_person' => 'in_person',
-                'mark_sent_online' => $deliveryChannel ?? 'other',
+                'mark_sent_online', 'mark_reminded_online' => $deliveryChannel ?? 'other',
                 default => $deliveryChannel,
             },
         ]);

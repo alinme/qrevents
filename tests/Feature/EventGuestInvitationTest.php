@@ -2,6 +2,7 @@
 
 use App\Models\Event;
 use App\Models\EventGuestParty;
+use App\Models\EventGuestPartyInvitationActivity;
 use App\Models\EventGuestPartyInvitationView;
 use App\Models\User;
 use App\Notifications\EventGuestInvitationResponseNotification;
@@ -61,7 +62,8 @@ it('shows a guest invitation page and records the open', function () {
 
     expect($guestParty->invitation_open_count)->toBe(1)
         ->and($guestParty->invitation_status)->toBe('opened')
-        ->and(EventGuestPartyInvitationView::query()->where('event_guest_party_id', $guestParty->id)->count())->toBe(1);
+        ->and(EventGuestPartyInvitationView::query()->where('event_guest_party_id', $guestParty->id)->count())->toBe(1)
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $guestParty->id)->where('activity_type', 'opened')->count())->toBe(1);
 });
 
 it('stores an RSVP from a guest-specific invitation', function () {
@@ -93,7 +95,8 @@ it('stores an RSVP from a guest-specific invitation', function () {
         ->and($guestParty->meal_preference)->toBe('vegetarian')
         ->and($guestParty->response_notes)->toBe('We will arrive after the ceremony.')
         ->and($guestParty->invitation_status)->toBe('responded')
-        ->and($guestParty->responded_at)->not->toBeNull();
+        ->and($guestParty->responded_at)->not->toBeNull()
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $guestParty->id)->where('activity_type', 'responded')->count())->toBe(1);
 
     Notification::assertSentTo($owner, EventGuestInvitationResponseNotification::class, function (
         EventGuestInvitationResponseNotification $notification,
@@ -159,7 +162,8 @@ it('creates or updates a guest party from the public invitation page', function 
         ->and($guestParty?->confirmed_attendees_count)->toBe(4)
         ->and($guestParty?->meal_preference)->toBe('halal')
         ->and($guestParty?->invitation_delivery_channel)->toBe('public_link')
-        ->and($guestParty?->invitation_status)->toBe('responded');
+        ->and($guestParty?->invitation_status)->toBe('responded')
+        ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $guestParty?->id)->where('activity_type', 'responded')->count())->toBe(1);
 
     Notification::assertSentTo($event->user, EventGuestInvitationResponseNotification::class, function (
         EventGuestInvitationResponseNotification $notification,
