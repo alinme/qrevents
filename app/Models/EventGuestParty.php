@@ -19,7 +19,9 @@ class EventGuestParty extends Model
         'phone',
         'invited_attendees_count',
         'confirmed_attendees_count',
+        'actual_attendees_count',
         'attendance_status',
+        'actual_attendance_status',
         'notes',
         'guest_names',
         'invitation_status',
@@ -39,6 +41,7 @@ class EventGuestParty extends Model
         'response_notes',
         'response_ip_address',
         'response_user_agent',
+        'actual_attendance_recorded_at',
     ];
 
     /**
@@ -49,11 +52,13 @@ class EventGuestParty extends Model
         return [
             'invited_attendees_count' => 'integer',
             'confirmed_attendees_count' => 'integer',
+            'actual_attendees_count' => 'integer',
             'invitation_delivered_at' => 'datetime',
             'invitation_open_count' => 'integer',
             'invitation_first_opened_at' => 'datetime',
             'invitation_last_opened_at' => 'datetime',
             'responded_at' => 'datetime',
+            'actual_attendance_recorded_at' => 'datetime',
             'gift_amount' => 'decimal:2',
         ];
     }

@@ -83,6 +83,13 @@ const form = useForm({
 });
 
 const showConfirmedCount = computed(() => form.attendance_status === 'accepted');
+const confirmedAttendeeMax = computed(() => {
+    if (props.isPublicInvite) {
+        return Math.max(1, Number(form.invited_attendees_count) || 1);
+    }
+
+    return Math.max(1, props.guestParty?.invitedAttendeesCount ?? 1);
+});
 
 const invitationTemplateVisuals = computed(() => {
     return {
@@ -466,7 +473,7 @@ const submit = (): void => {
                             <label class="text-sm font-medium">
                                 {{ t('invitations.confirmed_count') }}
                             </label>
-                            <Input v-model="form.confirmed_attendees_count" type="number" min="1" max="1000" />
+                            <Input v-model="form.confirmed_attendees_count" type="number" min="1" :max="confirmedAttendeeMax" />
                             <InputError :message="form.errors.confirmed_attendees_count" />
                         </div>
 

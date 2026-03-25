@@ -230,6 +230,9 @@ class EventController extends Controller
                 'Phone',
                 'Invited attendees',
                 'Confirmed attendees',
+                'Actual attendance status',
+                'Actual attendees',
+                'Actual attendance recorded at',
                 'Attendance status',
                 'Invitation status',
                 'Invitation delivery channel',
@@ -253,6 +256,9 @@ class EventController extends Controller
                     $guestParty->phone,
                     $guestParty->invited_attendees_count,
                     $guestParty->confirmed_attendees_count,
+                    $guestParty->actual_attendance_status,
+                    $guestParty->actual_attendees_count,
+                    $guestParty->actual_attendance_recorded_at?->toDateTimeString(),
                     $guestParty->attendance_status,
                     $guestParty->invitation_status,
                     $guestParty->invitation_delivery_channel,
@@ -359,6 +365,10 @@ class EventController extends Controller
         if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
             $payload['confirmed_attendees_count'] = $guestParty->invited_attendees_count;
         }
+        $payload['confirmed_attendees_count'] = min(
+            (int) $guestParty->invited_attendees_count,
+            max(0, (int) $payload['confirmed_attendees_count']),
+        );
 
         $guestParty->forceFill($payload)->save();
         $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
@@ -423,6 +433,10 @@ class EventController extends Controller
         if ($payload['attendance_status'] === 'accepted' && (int) $payload['confirmed_attendees_count'] <= 0) {
             $payload['confirmed_attendees_count'] = $partyData['invited_attendees_count'];
         }
+        $payload['confirmed_attendees_count'] = min(
+            max(1, (int) $partyData['invited_attendees_count']),
+            max(0, (int) $payload['confirmed_attendees_count']),
+        );
 
         $guestParty->forceFill($payload)->save();
         $this->notifyEventOwnerAboutInvitationResponse($guestParty->fresh(['event.user']), $previousAttendanceStatus);
@@ -2379,6 +2393,9 @@ class EventController extends Controller
                     'invitedAttendeesCount' => $party->invited_attendees_count,
                     'confirmedAttendeesCount' => $party->confirmed_attendees_count,
                     'attendanceStatus' => $party->attendance_status,
+                    'actualAttendeesCount' => $party->actual_attendees_count,
+                    'actualAttendanceStatus' => $party->actual_attendance_status,
+                    'actualAttendanceRecordedAt' => $party->actual_attendance_recorded_at?->toIso8601String(),
                     'notes' => $party->notes,
                     'invitationStatus' => $party->invitation_status,
                     'invitationDeliveryChannel' => $party->invitation_delivery_channel,
@@ -2409,9 +2426,12 @@ class EventController extends Controller
      *   partyCount: int,
      *   invitedAttendeesCount: int,
      *   confirmedAttendeesCount: int,
+     *   actualAttendeesCount: int,
      *   acceptedPartyCount: int,
      *   pendingPartyCount: int,
      *   declinedPartyCount: int,
+     *   presentPartyCount: int,
+     *   absentPartyCount: int,
      *   moneyGiftTotal: float,
      *   moneyGiftCurrency: string
      * }
@@ -2428,9 +2448,14 @@ class EventController extends Controller
             'confirmedAttendeesCount' => $guestParties->sum(
                 fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0),
             ),
+            'actualAttendeesCount' => $guestParties->sum(
+                fn (EventGuestParty $party): int => (int) ($party->actual_attendees_count ?? 0),
+            ),
             'acceptedPartyCount' => $guestParties->where('attendance_status', 'accepted')->count(),
             'pendingPartyCount' => $guestParties->where('attendance_status', 'pending')->count(),
             'declinedPartyCount' => $guestParties->where('attendance_status', 'declined')->count(),
+            'presentPartyCount' => $guestParties->where('actual_attendance_status', 'present')->count(),
+            'absentPartyCount' => $guestParties->where('actual_attendance_status', 'absent')->count(),
             'moneyGiftTotal' => round($moneyGiftTotal, 2),
             'moneyGiftCurrency' => $event->currency ?: 'EUR',
         ];
@@ -2464,11 +2489,16 @@ class EventController extends Controller
             'openedPartyCount' => $openedParties->count(),
             'respondedPartyCount' => $respondedParties->count(),
             'giftRecordedPartyCount' => $giftRecordedParties->count(),
+            'presentPartyCount' => $guestParties->where('actual_attendance_status', 'present')->count(),
+            'absentPartyCount' => $guestParties->where('actual_attendance_status', 'absent')->count(),
             'responseRate' => $guestParties->count() > 0
                 ? round(($respondedParties->count() / $guestParties->count()) * 100, 1)
                 : 0.0,
             'attendanceFillRate' => $guestParties->sum('invited_attendees_count') > 0
                 ? round(($guestParties->sum(fn (EventGuestParty $party): int => (int) ($party->confirmed_attendees_count ?? 0)) / $guestParties->sum('invited_attendees_count')) * 100, 1)
+                : 0.0,
+            'actualAttendanceFillRate' => $guestParties->sum('invited_attendees_count') > 0
+                ? round(($guestParties->sum(fn (EventGuestParty $party): int => (int) ($party->actual_attendees_count ?? 0)) / $guestParties->sum('invited_attendees_count')) * 100, 1)
                 : 0.0,
             'averageMoneyGiftPerAcceptedParty' => $acceptedParties->count() > 0
                 ? round(
@@ -2487,6 +2517,8 @@ class EventController extends Controller
                     'name' => $party->name,
                     'attendanceStatus' => $party->attendance_status,
                     'confirmedAttendeesCount' => $party->confirmed_attendees_count,
+                    'actualAttendanceStatus' => $party->actual_attendance_status,
+                    'actualAttendeesCount' => $party->actual_attendees_count,
                     'respondedAt' => $party->responded_at?->toIso8601String(),
                     'mealPreference' => $party->meal_preference,
                     'responseNotes' => $party->response_notes,

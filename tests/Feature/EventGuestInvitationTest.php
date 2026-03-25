@@ -109,6 +109,23 @@ it('stores an RSVP from a guest-specific invitation', function () {
     });
 });
 
+it('caps a private invitation response to the original invited count', function () {
+    $event = Event::factory()->create();
+    $guestParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Stoica',
+        'invited_attendees_count' => 3,
+    ]);
+
+    $this->post(route('events.guests.invitation.respond', $guestParty->invitation_token), [
+        'attendance_status' => 'accepted',
+        'confirmed_attendees_count' => 9,
+    ])->assertRedirect();
+
+    $guestParty->refresh();
+
+    expect($guestParty->confirmed_attendees_count)->toBe(3);
+});
+
 it('creates or updates a guest party from the public invitation page', function () {
     Notification::fake();
 

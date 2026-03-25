@@ -16,6 +16,8 @@ it('shows the guest parties page for an event owner', function () {
         'invited_attendees_count' => 4,
         'attendance_status' => 'accepted',
         'confirmed_attendees_count' => 4,
+        'actual_attendance_status' => 'present',
+        'actual_attendees_count' => 4,
         'gift_type' => 'money',
         'gift_currency' => 'EUR',
         'gift_amount' => 300,
@@ -31,6 +33,7 @@ it('shows the guest parties page for an event owner', function () {
             ->where('guestPartyStats.partyCount', 1)
             ->where('guestPartyStats.invitedAttendeesCount', 4)
             ->where('guestPartyStats.confirmedAttendeesCount', 4)
+            ->where('guestPartyStats.actualAttendeesCount', 4)
             ->where('guestPartyStats.moneyGiftTotal', 300)
             ->has('guestParties', 1)
             ->where('guestParties.0.name', 'Familia Popescu')
@@ -49,6 +52,9 @@ it('shows the printable guest report for an event owner', function () {
         'invited_attendees_count' => 4,
         'confirmed_attendees_count' => 4,
         'attendance_status' => 'accepted',
+        'actual_attendance_status' => 'present',
+        'actual_attendees_count' => 4,
+        'actual_attendance_recorded_at' => now()->subMinutes(15),
         'invitation_status' => 'responded',
         'invitation_delivery_channel' => 'whatsapp',
         'invitation_open_count' => 3,
@@ -71,6 +77,8 @@ it('shows the printable guest report for an event owner', function () {
             ->where('guestReport.respondedPartyCount', 1)
             ->where('guestReport.openedPartyCount', 1)
             ->where('guestReport.giftRecordedPartyCount', 1)
+            ->where('guestReport.presentPartyCount', 1)
+            ->where('guestParties.0.actualAttendeesCount', 4)
             ->where('guestReport.moneyGiftTotals.0.currency', 'EUR')
             ->where('guestReport.moneyGiftTotals.0.amount', 450)
             ->where('guestReport.recentResponses.0.name', 'Familia Popescu')
@@ -90,6 +98,8 @@ it('allows an event owner to add a guest party with ledger details', function ()
             'invited_attendees_count' => 3,
             'confirmed_attendees_count' => 3,
             'attendance_status' => 'accepted',
+            'actual_attendance_status' => 'present',
+            'actual_attendees_count' => 3,
             'notes' => 'Close family friends',
             'invitation_status' => 'delivered_in_person',
             'invitation_delivery_channel' => 'in_person',
@@ -107,6 +117,8 @@ it('allows an event owner to add a guest party with ledger details', function ()
         ->and($party?->invited_attendees_count)->toBe(3)
         ->and($party?->confirmed_attendees_count)->toBe(3)
         ->and($party?->attendance_status)->toBe('accepted')
+        ->and($party?->actual_attendance_status)->toBe('present')
+        ->and($party?->actual_attendees_count)->toBe(3)
         ->and($party?->invitation_status)->toBe('delivered_in_person')
         ->and($party?->gift_type)->toBe('money')
         ->and($party?->gift_currency)->toBe('EUR')
@@ -158,6 +170,8 @@ it('exports the guest ledger as csv for the event owner', function () {
         'phone' => '0722123456',
         'invited_attendees_count' => 4,
         'confirmed_attendees_count' => 4,
+        'actual_attendance_status' => 'present',
+        'actual_attendees_count' => 4,
         'attendance_status' => 'accepted',
         'guest_names' => 'Marcel, Ana, Vlad, Ioana',
         'meal_preference' => 'halal',
@@ -180,6 +194,7 @@ it('exports the guest ledger as csv for the event owner', function () {
         ->and($content)->toContain('Familia Popescu')
         ->and($content)->toContain('0722123456')
         ->and($content)->toContain('Marcel, Ana, Vlad, Ioana')
+        ->and($content)->toContain('present')
         ->and($content)->toContain('450.00');
 });
 

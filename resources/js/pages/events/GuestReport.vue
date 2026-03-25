@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 type EventPayload = {
     id: number;
     name: string;
+    retentionEndsAt?: string | null;
 };
 
 type EventLinks = {
@@ -28,6 +29,9 @@ type GuestParty = {
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number | null;
     attendanceStatus: 'pending' | 'accepted' | 'declined';
+    actualAttendeesCount: number | null;
+    actualAttendanceStatus: 'unknown' | 'present' | 'absent';
+    actualAttendanceRecordedAt: string | null;
     notes: string | null;
     invitationStatus: 'draft' | 'delivered_in_person' | 'sent' | 'opened' | 'responded';
     invitationDeliveryChannel: string | null;
@@ -49,9 +53,12 @@ type GuestPartyStats = {
     partyCount: number;
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number;
+    actualAttendeesCount: number;
     acceptedPartyCount: number;
     pendingPartyCount: number;
     declinedPartyCount: number;
+    presentPartyCount: number;
+    absentPartyCount: number;
     moneyGiftTotal: number;
     moneyGiftCurrency: string;
 };
@@ -62,8 +69,11 @@ type GuestReport = {
     openedPartyCount: number;
     respondedPartyCount: number;
     giftRecordedPartyCount: number;
+    presentPartyCount: number;
+    absentPartyCount: number;
     responseRate: number;
     attendanceFillRate: number;
+    actualAttendanceFillRate: number;
     averageMoneyGiftPerAcceptedParty: number;
     moneyGiftTotals: Array<{
         currency: string;
@@ -73,6 +83,8 @@ type GuestReport = {
         name: string;
         attendanceStatus: 'pending' | 'accepted' | 'declined';
         confirmedAttendeesCount: number | null;
+        actualAttendanceStatus: 'unknown' | 'present' | 'absent';
+        actualAttendeesCount: number | null;
         respondedAt: string | null;
         mealPreference: 'standard' | 'vegetarian' | 'vegan' | 'halal' | 'other' | null;
         responseNotes: string | null;
@@ -103,9 +115,9 @@ const summaryCards = computed(() => [
         icon: MailCheck,
     },
     {
-        label: 'Confirmed seats',
-        value: props.guestPartyStats.confirmedAttendeesCount,
-        detail: `${props.guestPartyStats.invitedAttendeesCount} invited in total`,
+        label: 'Actually attended',
+        value: props.guestPartyStats.actualAttendeesCount,
+        detail: `${props.guestPartyStats.presentPartyCount} parties marked present`,
         icon: CheckCircle2,
     },
     {
@@ -123,6 +135,24 @@ const summaryCards = computed(() => [
         icon: Wallet,
     },
 ]);
+
+const retentionReminder = computed(() => {
+    if (!props.currentEvent.retentionEndsAt) {
+        return null;
+    }
+
+    const endsAt = new Date(props.currentEvent.retentionEndsAt);
+    const diffDays = Math.ceil((endsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    if (Number.isNaN(diffDays) || diffDays < 0) {
+        return null;
+    }
+
+    return {
+        daysLeft: diffDays,
+        dateLabel: formatDateTime(props.currentEvent.retentionEndsAt),
+    };
+});
 
 const printReport = (): void => {
     window.print();
@@ -156,6 +186,14 @@ const attendanceLabel = (status: GuestParty['attendanceStatus']): string => {
         accepted: 'Accepted',
         declined: 'Declined',
         pending: 'Pending',
+    }[status];
+};
+
+const actualAttendanceLabel = (status: GuestParty['actualAttendanceStatus']): string => {
+    return {
+        unknown: 'Not recorded',
+        present: 'Present',
+        absent: 'Absent',
     }[status];
 };
 
@@ -258,6 +296,36 @@ const giftLabel = (party: GuestParty): string => {
                     </article>
                 </section>
 
+                <section
+                    v-if="retentionReminder"
+                    class="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 print:hidden"
+                >
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                                Retention countdown
+                            </p>
+                            <h2 class="text-lg font-semibold text-neutral-950">
+                                Export this ledger within {{ retentionReminder.daysLeft }} more day<span v-if="retentionReminder.daysLeft !== 1">s</span>
+                            </h2>
+                            <p class="text-sm leading-6 text-neutral-700">
+                                Event data retention ends on {{ retentionReminder.dateLabel }}.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
+                                <Download class="mr-2 size-4" />
+                                Export CSV
+                            </Button>
+                            <Button class="rounded-full px-5" @click="printReport">
+                                <Printer class="mr-2 size-4" />
+                                Save PDF
+                            </Button>
+                        </div>
+                    </div>
+                </section>
+
                 <section class="mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.78fr)_minmax(320px,0.52fr)] print:grid-cols-[1.2fr_0.8fr]">
                     <div class="rounded-3xl border border-stone-200 bg-stone-50 p-5">
                         <div class="flex items-center justify-between gap-3">
@@ -318,13 +386,24 @@ const giftLabel = (party: GuestParty): string => {
                             </div>
                             <div class="rounded-2xl border border-stone-200 bg-white p-4">
                                 <p class="text-sm font-medium text-neutral-500">
-                                    Attendance fill
+                                    RSVP fill
                                 </p>
                                 <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
                                     {{ guestReport.attendanceFillRate }}%
                                 </p>
                                 <p class="mt-2 text-sm text-neutral-600">
-                                    Based on confirmed seats versus the full invited count.
+                                    Based on RSVP-confirmed seats versus the full invited count.
+                                </p>
+                            </div>
+                            <div class="rounded-2xl border border-stone-200 bg-white p-4">
+                                <p class="text-sm font-medium text-neutral-500">
+                                    Real attendance fill
+                                </p>
+                                <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
+                                    {{ guestReport.actualAttendanceFillRate }}%
+                                </p>
+                                <p class="mt-2 text-sm text-neutral-600">
+                                    Based on the final came-to-event count recorded after the event.
                                 </p>
                             </div>
                         </div>
@@ -400,6 +479,12 @@ const giftLabel = (party: GuestParty): string => {
                                     {{ attendanceLabel(response.attendanceStatus) }}
                                     <span v-if="response.confirmedAttendeesCount !== null">
                                         · {{ response.confirmedAttendeesCount }} confirmed
+                                    </span>
+                                    <span v-if="response.actualAttendeesCount !== null">
+                                        · {{ response.actualAttendeesCount }} came
+                                    </span>
+                                    <span>
+                                        · {{ actualAttendanceLabel(response.actualAttendanceStatus) }}
                                     </span>
                                     <span v-if="response.mealPreference">
                                         · {{ response.mealPreference }}
@@ -479,6 +564,7 @@ const giftLabel = (party: GuestParty): string => {
                                     <th class="px-4 py-3 font-semibold">Phone</th>
                                     <th class="px-4 py-3 font-semibold">Seats</th>
                                     <th class="px-4 py-3 font-semibold">RSVP</th>
+                                    <th class="px-4 py-3 font-semibold">Event day</th>
                                     <th class="px-4 py-3 font-semibold">Invitation</th>
                                     <th class="px-4 py-3 font-semibold">Gift</th>
                                     <th class="px-4 py-3 font-semibold">Tracking</th>
@@ -506,6 +592,15 @@ const giftLabel = (party: GuestParty): string => {
                                         <p>{{ attendanceLabel(party.attendanceStatus) }}</p>
                                         <p v-if="party.respondedAt" class="mt-1 text-xs text-neutral-500">
                                             {{ formatDateTime(party.respondedAt) }}
+                                        </p>
+                                    </td>
+                                    <td class="px-4 py-4 text-neutral-600">
+                                        <p>{{ actualAttendanceLabel(party.actualAttendanceStatus) }}</p>
+                                        <p class="mt-1 text-xs text-neutral-500">
+                                            Came: {{ party.actualAttendeesCount ?? '—' }}
+                                        </p>
+                                        <p v-if="party.actualAttendanceRecordedAt" class="mt-1 text-xs text-neutral-500">
+                                            {{ formatDateTime(party.actualAttendanceRecordedAt) }}
                                         </p>
                                     </td>
                                     <td class="px-4 py-4 text-neutral-600">

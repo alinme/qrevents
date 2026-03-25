@@ -10,6 +10,7 @@ import {
     Pencil,
     Phone,
     Printer,
+    Search,
     ScrollText,
     SendHorizontal,
     Trash2,
@@ -52,6 +53,7 @@ import type { BreadcrumbItem } from '@/types';
 type EventPayload = {
     id: number;
     name: string;
+    retentionEndsAt?: string | null;
 };
 
 type EventLinks = {
@@ -79,6 +81,9 @@ type GuestParty = {
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number | null;
     attendanceStatus: 'pending' | 'accepted' | 'declined';
+    actualAttendeesCount: number | null;
+    actualAttendanceStatus: 'unknown' | 'present' | 'absent';
+    actualAttendanceRecordedAt: string | null;
     notes: string | null;
     invitationStatus: 'draft' | 'delivered_in_person' | 'sent' | 'opened' | 'responded';
     invitationDeliveryChannel: string | null;
@@ -103,9 +108,12 @@ type GuestPartyStats = {
     partyCount: number;
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number;
+    actualAttendeesCount: number;
     acceptedPartyCount: number;
     pendingPartyCount: number;
     declinedPartyCount: number;
+    presentPartyCount: number;
+    absentPartyCount: number;
     moneyGiftTotal: number;
     moneyGiftCurrency: string;
 };
@@ -137,6 +145,8 @@ const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
 const selectedGuestIds = ref<number[]>([]);
+const guestSearch = ref('');
+const guestFilter = ref<'all' | 'needing_reply' | 'accepted' | 'declined' | 'present' | 'absent' | 'not_sent' | 'responded' | 'no_gift'>('all');
 
 const guestForm = useForm({
     name: '',
@@ -144,6 +154,8 @@ const guestForm = useForm({
     invited_attendees_count: 1,
     confirmed_attendees_count: '',
     attendance_status: 'pending',
+    actual_attendees_count: '',
+    actual_attendance_status: 'unknown',
     notes: '',
     invitation_status: 'draft',
     invitation_delivery_channel: '',
@@ -178,8 +190,61 @@ const invitationBulkForm = useForm({
 const isEditing = computed(() => activeGuestParty.value !== null);
 const showGiftAmount = computed(() => guestForm.gift_type === 'money');
 const showConfirmedCount = computed(() => guestForm.attendance_status === 'accepted');
+const showActualCount = computed(() => guestForm.actual_attendance_status === 'present');
+const filteredGuestParties = computed(() => {
+    const search = guestSearch.value.trim().toLowerCase();
+
+    return props.guestParties.filter((party) => {
+        const matchesSearch = search === ''
+            || party.name.toLowerCase().includes(search)
+            || (party.phone ?? '').toLowerCase().includes(search)
+            || (party.notes ?? '').toLowerCase().includes(search);
+
+        const matchesFilter = (() => {
+            switch (guestFilter.value) {
+                case 'needing_reply':
+                    return party.attendanceStatus === 'pending';
+                case 'accepted':
+                    return party.attendanceStatus === 'accepted';
+                case 'declined':
+                    return party.attendanceStatus === 'declined';
+                case 'present':
+                    return party.actualAttendanceStatus === 'present';
+                case 'absent':
+                    return party.actualAttendanceStatus === 'absent';
+                case 'not_sent':
+                    return party.invitationStatus === 'draft';
+                case 'responded':
+                    return party.invitationStatus === 'responded';
+                case 'no_gift':
+                    return party.giftType === null;
+                default:
+                    return true;
+            }
+        })();
+
+        return matchesSearch && matchesFilter;
+    });
+});
 const selectedGuestParties = computed(() => props.guestParties.filter((party) => selectedGuestIds.value.includes(party.id)));
-const allGuestsSelected = computed(() => props.guestParties.length > 0 && selectedGuestIds.value.length === props.guestParties.length);
+const allGuestsSelected = computed(() => filteredGuestParties.value.length > 0 && filteredGuestParties.value.every((party) => selectedGuestIds.value.includes(party.id)));
+const retentionReminder = computed(() => {
+    if (!props.currentEvent.retentionEndsAt) {
+        return null;
+    }
+
+    const endsAt = new Date(props.currentEvent.retentionEndsAt);
+    const diffDays = Math.ceil((endsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    if (Number.isNaN(diffDays) || diffDays < 0) {
+        return null;
+    }
+
+    return {
+        daysLeft: diffDays,
+        dateLabel: formatDateTime(props.currentEvent.retentionEndsAt),
+    };
+});
 
 const invitationTemplateCards = [
     {
@@ -225,6 +290,12 @@ const statCards = computed(() => [
         icon: CheckCircle2,
     },
     {
+        label: 'Actually attended',
+        value: props.guestPartyStats.actualAttendeesCount,
+        detail: `${props.guestPartyStats.presentPartyCount} parties marked present`,
+        icon: Clock3,
+    },
+    {
         label: 'Gift ledger',
         value: formatMoney(
             props.guestPartyStats.moneyGiftTotal,
@@ -243,6 +314,7 @@ const openCreateDialog = (): void => {
     guestForm.invitation_status = 'draft';
     guestForm.invited_attendees_count = 1;
     guestForm.gift_currency = 'EUR';
+    guestForm.actual_attendance_status = 'unknown';
     guestDialogOpen.value = true;
 };
 
@@ -254,6 +326,8 @@ const openEditDialog = (party: GuestParty): void => {
     guestForm.invited_attendees_count = party.invitedAttendeesCount;
     guestForm.confirmed_attendees_count = party.confirmedAttendeesCount?.toString() ?? '';
     guestForm.attendance_status = party.attendanceStatus;
+    guestForm.actual_attendees_count = party.actualAttendeesCount?.toString() ?? '';
+    guestForm.actual_attendance_status = party.actualAttendanceStatus;
     guestForm.notes = party.notes ?? '';
     guestForm.invitation_status = party.invitationStatus;
     guestForm.invitation_delivery_channel = party.invitationDeliveryChannel ?? '';
@@ -274,7 +348,11 @@ const saveGuestParty = (): void => {
         confirmed_attendees_count: guestForm.confirmed_attendees_count === ''
             ? null
             : Number(guestForm.confirmed_attendees_count),
+        actual_attendees_count: guestForm.actual_attendees_count === ''
+            ? null
+            : Number(guestForm.actual_attendees_count),
         invitation_delivery_channel: guestForm.invitation_delivery_channel || null,
+        actual_attendance_status: guestForm.actual_attendance_status,
         gift_type: guestForm.gift_type || null,
         gift_currency: guestForm.gift_type === 'money' ? guestForm.gift_currency : null,
         gift_amount: guestForm.gift_type === 'money' ? guestForm.gift_amount : null,
@@ -297,6 +375,7 @@ const saveGuestParty = (): void => {
         onSuccess: () => {
             guestDialogOpen.value = false;
             guestForm.reset();
+            guestForm.actual_attendance_status = 'unknown';
         },
     });
 };
@@ -359,9 +438,15 @@ const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
 };
 
 const toggleSelectAllGuests = (checked: boolean): void => {
-    selectedGuestIds.value = checked
-        ? props.guestParties.map((party) => party.id)
-        : [];
+    const visibleIds = filteredGuestParties.value.map((party) => party.id);
+
+    if (checked) {
+        selectedGuestIds.value = Array.from(new Set([...selectedGuestIds.value, ...visibleIds]));
+
+        return;
+    }
+
+    selectedGuestIds.value = selectedGuestIds.value.filter((id) => !visibleIds.includes(id));
 };
 
 const clearGuestSelection = (): void => {
@@ -541,6 +626,14 @@ const attendanceLabel = (status: GuestParty['attendanceStatus']): string => {
     return 'Waiting';
 };
 
+const actualAttendanceLabel = (status: GuestParty['actualAttendanceStatus']): string => {
+    return {
+        unknown: 'Not recorded',
+        present: 'Came to the event',
+        absent: 'Did not come',
+    }[status];
+};
+
 const invitationLabel = (status: GuestParty['invitationStatus']): string => {
     return {
         draft: 'Draft',
@@ -613,6 +706,36 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                         <UserPlus class="mr-2 size-4" />
                         Add guest party
                     </Button>
+                </div>
+            </section>
+
+            <section
+                v-if="retentionReminder"
+                class="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm"
+            >
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                            Export reminder
+                        </p>
+                        <h2 class="text-lg font-semibold text-neutral-950">
+                            Your guest ledger stays online for {{ retentionReminder.daysLeft }} more day<span v-if="retentionReminder.daysLeft !== 1">s</span>
+                        </h2>
+                        <p class="text-sm leading-6 text-neutral-700">
+                            Retention ends on {{ retentionReminder.dateLabel }}. Export the CSV and printable report before the archive window closes.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 sm:flex-row">
+                        <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
+                            <Download class="mr-2 size-4" />
+                            Export CSV
+                        </Button>
+                        <Button class="rounded-full px-5" @click="openGuestReport">
+                            <Printer class="mr-2 size-4" />
+                            Open printable report
+                        </Button>
+                    </div>
                 </div>
             </section>
 
@@ -822,17 +945,40 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
 
                 <div v-else class="divide-y divide-neutral-200">
                     <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div class="flex flex-wrap items-center gap-3">
-                            <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-700">
-                                <Checkbox
-                                    :checked="allGuestsSelected"
-                                    @update:checked="toggleSelectAllGuests(Boolean($event))"
-                                />
-                                Select all guest parties
-                            </label>
-                            <span class="text-sm text-neutral-500">
-                                {{ selectedGuestIds.length }} selected
-                            </span>
+                        <div class="flex flex-1 flex-col gap-3">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <label class="inline-flex items-center gap-3 text-sm font-medium text-neutral-700">
+                                    <Checkbox
+                                        :checked="allGuestsSelected"
+                                        @update:checked="toggleSelectAllGuests(Boolean($event))"
+                                    />
+                                    Select visible guest parties
+                                </label>
+                                <span class="text-sm text-neutral-500">
+                                    {{ selectedGuestIds.length }} selected
+                                </span>
+                                <span class="text-sm text-neutral-500">
+                                    {{ filteredGuestParties.length }} shown
+                                </span>
+                            </div>
+
+                            <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                                <div class="relative">
+                                    <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+                                    <Input v-model="guestSearch" class="pl-9" placeholder="Search family, phone, or notes" />
+                                </div>
+                                <NativeSelect v-model="guestFilter">
+                                    <NativeSelectOption value="all">All guest parties</NativeSelectOption>
+                                    <NativeSelectOption value="needing_reply">Need reply</NativeSelectOption>
+                                    <NativeSelectOption value="accepted">Accepted RSVP</NativeSelectOption>
+                                    <NativeSelectOption value="declined">Declined RSVP</NativeSelectOption>
+                                    <NativeSelectOption value="present">Actually came</NativeSelectOption>
+                                    <NativeSelectOption value="absent">Did not come</NativeSelectOption>
+                                    <NativeSelectOption value="not_sent">Not sent yet</NativeSelectOption>
+                                    <NativeSelectOption value="responded">Responded</NativeSelectOption>
+                                    <NativeSelectOption value="no_gift">No gift recorded</NativeSelectOption>
+                                </NativeSelect>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
@@ -884,7 +1030,20 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                     </div>
 
                     <div
-                        v-for="party in guestParties"
+                        v-if="filteredGuestParties.length === 0"
+                        class="px-5 py-12 text-center"
+                    >
+                        <Users class="mx-auto size-10 text-neutral-300" />
+                        <h3 class="mt-4 text-lg font-semibold text-neutral-950">
+                            No guest parties match this filter
+                        </h3>
+                        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
+                            Try a different filter or clear the search to see the full list again.
+                        </p>
+                    </div>
+
+                    <div
+                        v-for="party in filteredGuestParties"
                         :key="party.id"
                         class="flex flex-col gap-4 px-5 py-4"
                     >
@@ -916,6 +1075,9 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                                     <span>Invited {{ party.invitedAttendeesCount }}</span>
                                     <span v-if="party.confirmedAttendeesCount !== null">
                                         Confirmed {{ party.confirmedAttendeesCount }}
+                                    </span>
+                                    <span v-if="party.actualAttendeesCount !== null">
+                                        Came {{ party.actualAttendeesCount }}
                                     </span>
                                     <span>{{ giftLabel(party) }}</span>
                                 </div>
@@ -1010,6 +1172,21 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
 
                             <div class="rounded-2xl bg-neutral-50 p-3">
                                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                                    Event day attendance
+                                </p>
+                                <p class="mt-2 text-sm text-neutral-700">
+                                    {{ actualAttendanceLabel(party.actualAttendanceStatus) }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Count: {{ party.actualAttendeesCount ?? 'Not recorded' }}
+                                </p>
+                                <p class="mt-1 text-xs text-neutral-500">
+                                    Recorded: {{ formatDateTime(party.actualAttendanceRecordedAt) }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-2xl bg-neutral-50 p-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
                                     Notes
                                 </p>
                                 <p class="mt-2 text-sm leading-6 text-neutral-700">
@@ -1083,6 +1260,24 @@ const mealPreferenceLabel = (value: GuestParty['mealPreference']): string | null
                             Confirmed attendees
                         </label>
                         <Input v-model="guestForm.confirmed_attendees_count" type="number" min="0" max="1000" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Actually attended
+                        </label>
+                        <NativeSelect v-model="guestForm.actual_attendance_status">
+                            <NativeSelectOption value="unknown">Not recorded yet</NativeSelectOption>
+                            <NativeSelectOption value="present">Came to the event</NativeSelectOption>
+                            <NativeSelectOption value="absent">Did not come</NativeSelectOption>
+                        </NativeSelect>
+                    </div>
+
+                    <div v-if="showActualCount" class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Attended count
+                        </label>
+                        <Input v-model="guestForm.actual_attendees_count" type="number" min="0" max="1000" />
                     </div>
 
                     <div class="space-y-2">
