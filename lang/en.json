@@ -664,6 +664,7 @@
     "public.album.info.format": "Format",
     "public.album.info.message": "Message",
     "invitations.badge": "Event invitation",
+    "invitations.card_title": "Invitation card",
     "invitations.event_date": "Event date",
     "invitations.venue": "Venue",
     "invitations.venue_pending": "Venue to be confirmed",
