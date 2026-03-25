@@ -141,6 +141,16 @@ type InvitationPreviewPayload = {
     };
 };
 
+type InvitationTemplatePreviewContent = {
+    eventName: string;
+    guestLabel: string | null;
+    headline: string;
+    message: string;
+    closing: string;
+    dateLabel: string | null;
+    venueAddress: string | null;
+};
+
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
@@ -360,6 +370,30 @@ const previewingInvitationTemplateCard = computed(() => {
 
     return invitationTemplateCards.find((template) => template.id === previewingInvitationTemplateId.value) ?? null;
 });
+
+const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): InvitationTemplatePreviewContent => {
+    if (templateId === 'canva_cream') {
+        return {
+            eventName: 'You’re invited to',
+            guestLabel: null,
+            headline: 'Luca\n&\nDanielle',
+            message: 'We are getting married!',
+            closing: 'See you there',
+            dateLabel: 'Saturday • 15 November 2023 • 6 PM',
+            venueAddress: '123 Anywhere St., Any City',
+        };
+    }
+
+    return {
+        eventName: currentEvent.name,
+        guestLabel: 'Invitation preview',
+        headline: invitationSettingsForm.headline || currentEvent.name,
+        message: invitationSettingsForm.message || 'Add the main invitation message here.',
+        closing: invitationSettingsForm.closing || 'A short RSVP reminder.',
+        dateLabel: props.invitationPreview.eventDetails.dateLabel,
+        venueAddress: props.invitationPreview.eventDetails.venueAddress,
+    };
+};
 
 const invitationSummaryCards = computed(() => [
     {
@@ -1464,18 +1498,17 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                             class="overflow-hidden rounded-xl border border-current/10 bg-white/45 shadow-sm"
                                         >
                                             <div class="aspect-[210/297]">
-                                                <img
-                                                    v-if="template.previewUrl"
-                                                    :src="template.previewUrl"
-                                                    alt=""
-                                                    class="h-full w-full object-contain"
-                                                >
-                                                <div
-                                                    v-else
-                                                    class="flex h-full items-center justify-center px-3 text-center text-sm font-semibold"
-                                                >
-                                                    {{ template.label }}
-                                                </div>
+                                                <InvitationPaper
+                                                    :template="template.id"
+                                                    :event-name="invitationTemplatePreviewContent(template.id).eventName"
+                                                    :guest-label="invitationTemplatePreviewContent(template.id).guestLabel"
+                                                    :headline="invitationTemplatePreviewContent(template.id).headline"
+                                                    :message="invitationTemplatePreviewContent(template.id).message"
+                                                    :closing="invitationTemplatePreviewContent(template.id).closing"
+                                                    :date-label="invitationTemplatePreviewContent(template.id).dateLabel"
+                                                    :venue-address="invitationTemplatePreviewContent(template.id).venueAddress"
+                                                    mode="preview"
+                                                />
                                             </div>
                                         </div>
                                         <p class="mt-2 text-sm font-semibold">
@@ -2078,12 +2111,18 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 </DialogHeader>
 
                 <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
-                    <img
-                        v-if="previewingInvitationTemplateCard?.previewUrl || previewingInvitationTemplateCard?.baseUrl"
-                        :src="previewingInvitationTemplateCard?.previewUrl ?? previewingInvitationTemplateCard?.baseUrl ?? ''"
-                        alt=""
-                        class="mx-auto aspect-[210/297] max-h-[82vh] w-full max-w-[42rem] object-contain"
-                    >
+                    <InvitationPaper
+                        v-if="previewingInvitationTemplateCard"
+                        :template="previewingInvitationTemplateCard.id"
+                        :event-name="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).eventName"
+                        :guest-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).guestLabel"
+                        :headline="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).headline"
+                        :message="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).message"
+                        :closing="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).closing"
+                        :date-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).dateLabel"
+                        :venue-address="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).venueAddress"
+                        mode="preview"
+                    />
                 </div>
             </DialogContent>
         </Dialog>
