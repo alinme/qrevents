@@ -162,6 +162,9 @@ const props = defineProps<{
     guestParties: GuestParty[];
 }>();
 
+const currentEvent = props.currentEvent;
+const publicInvitationUrl = props.publicInvitationUrl;
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: props.currentEvent.name,
