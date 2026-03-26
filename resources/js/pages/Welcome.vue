@@ -839,13 +839,13 @@ onMounted(() => {
         <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
             <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
                 <div>
-                    <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                         {{ t('marketing.home.social.eyebrow') }}
                     </p>
-                    <h2 class="mt-4 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.45rem] lg:text-[1.7rem]">
+                    <h2 class="mt-3 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.35rem] lg:text-[1.55rem]">
                         {{ t('marketing.home.social.title') }}
                     </h2>
-                    <p class="mt-5 max-w-lg text-sm leading-7 text-promo-muted sm:text-base">
+                    <p class="mt-3 max-w-lg text-sm leading-6 text-promo-muted sm:text-[0.95rem]">
                         {{ t('marketing.home.social.description') }}
                     </p>
 
@@ -902,14 +902,14 @@ onMounted(() => {
                     :title="t('marketing.home.reviews.title')"
                 />
 
-                <div class="mt-6 inline-flex items-center gap-3 rounded-full bg-promo-surface px-4 py-2 text-sm font-semibold text-promo-ink">
+                <div class="mt-5 inline-flex items-center gap-3 rounded-full bg-promo-surface px-4 py-2 text-sm font-semibold text-promo-ink">
                     <div class="flex items-center gap-1 text-promo-primary">
                         <Star v-for="star in 5" :key="`summary-${star}`" class="size-4 fill-current" />
                     </div>
                     {{ t('marketing.home.reviews.rating_summary') }}
                 </div>
 
-                <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <div class="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                     <MarketingTestimonialCard
                         v-for="item in testimonials"
                         :key="item.name"

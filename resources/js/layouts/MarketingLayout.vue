@@ -138,7 +138,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             <ChevronDown class="size-4 transition group-hover:rotate-180" />
                         </button>
 
-                        <div class="invisible absolute left-0 top-full mt-4 w-64 rounded-[22px] border border-promo-line bg-white p-3 opacity-0 shadow-[0_20px_60px_rgba(120,86,255,0.12)] transition duration-200 group-hover:visible group-hover:opacity-100">
+                        <div class="invisible absolute left-0 top-full mt-4 w-64 rounded-[20px] border border-promo-line/80 bg-white p-3 opacity-0 shadow-[0_14px_32px_rgba(120,86,255,0.08)] transition duration-200 group-hover:visible group-hover:opacity-100">
                             <Link
                                 v-for="item in useCaseLinks"
                                 :key="item.label"
@@ -177,7 +177,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
                         <DropdownMenuContent
                             align="end"
-                            class="w-64 rounded-[24px] border-promo-line bg-white p-2 shadow-[0_24px_70px_rgba(120,86,255,0.16)]"
+                            class="w-64 rounded-[22px] border-promo-line/80 bg-white p-2 shadow-[0_14px_32px_rgba(120,86,255,0.08)]"
                         >
                             <div class="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                                 {{ t('marketing.language.label') }}
