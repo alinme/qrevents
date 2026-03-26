@@ -524,8 +524,8 @@ onMounted(() => {
 
         <Dialog v-model:open="maybeModalOpen">
             <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
-                <div class="p-6 sm:p-7">
-                    <div class="relative overflow-hidden rounded-[1.75rem] border border-amber-200 bg-amber-50">
+                <div>
+                    <div class="relative overflow-hidden bg-amber-50">
                         <img
                             v-if="maybeMemeImageVisible"
                             :src="maybeMemeImageUrl"
@@ -554,7 +554,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="mt-6 flex justify-end">
+                    <div class="flex justify-end px-5 py-5 sm:px-6">
                         <Button class="rounded-full px-6" @click="maybeModalOpen = false">
                             {{ t('invitations.back_to_invitation') }}
                         </Button>
@@ -565,8 +565,8 @@ onMounted(() => {
 
         <Dialog v-model:open="declineModalOpen">
             <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
-                <div class="p-6 sm:p-7">
-                    <div class="relative overflow-hidden rounded-[1.75rem] border border-rose-200 bg-rose-50">
+                <div>
+                    <div class="relative overflow-hidden bg-rose-50">
                         <img
                             v-if="declineMemeImageVisible"
                             :src="declineMemeImageUrl"
@@ -595,7 +595,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="mt-5 space-y-4">
+                    <div class="space-y-4 px-5 py-5 sm:px-6">
                         <p class="text-sm leading-6 text-neutral-600">
                             {{ t('invitations.decline_note') }}
                         </p>
