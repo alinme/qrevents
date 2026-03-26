@@ -50,6 +50,13 @@ it('updates event settings and recalculates event windows', function () {
             'welcome_screen_collect_name' => true,
             'welcome_screen_collect_email' => true,
             'welcome_screen_collect_phone' => false,
+            'wedding_details' => [
+                'partner_one_name' => 'Ana',
+                'partner_two_name' => 'Andrei',
+                'bride_parents' => 'Maria and Ion Popescu',
+                'groom_parents' => 'Elena and Mihai Ionescu',
+                'godparents' => 'Raluca and Stefan Marin',
+            ],
             'album_background_enabled' => true,
             'album_background_mode' => 'image',
             'album_background_color' => '#0F172A',
@@ -103,6 +110,13 @@ it('updates event settings and recalculates event windows', function () {
         ->and($branding['welcome_screen_collect_name'] ?? null)->toBeTrue()
         ->and($branding['welcome_screen_collect_email'] ?? null)->toBeTrue()
         ->and($branding['welcome_screen_collect_phone'] ?? null)->toBeFalse()
+        ->and($branding['wedding_details'] ?? null)->toBe([
+            'partner_one_name' => 'Ana',
+            'partner_two_name' => 'Andrei',
+            'bride_parents' => 'Maria and Ion Popescu',
+            'groom_parents' => 'Elena and Mihai Ionescu',
+            'godparents' => 'Raluca and Stefan Marin',
+        ])
         ->and($branding['album_background_enabled'] ?? null)->toBeTrue()
         ->and($branding['album_background_mode'] ?? null)->toBe('image')
         ->and($branding['album_background_color'] ?? null)->toBe('#0F172A')
@@ -218,6 +232,13 @@ it('restores saved settings in the settings page after refresh', function () {
         'welcome_screen_collect_name' => true,
         'welcome_screen_collect_email' => true,
         'welcome_screen_collect_phone' => true,
+        'wedding_details' => [
+            'partner_one_name' => 'Ioana',
+            'partner_two_name' => 'Mihai',
+            'bride_parents' => 'Laura and Adrian',
+            'groom_parents' => 'Cristina and Victor',
+            'godparents' => 'Bianca and Stefan',
+        ],
         'album_background_enabled' => true,
         'album_background_mode' => 'image',
         'album_background_color' => '#112233',
@@ -260,6 +281,11 @@ it('restores saved settings in the settings page after refresh', function () {
             ->where('currentEvent.settings.welcomeScreenCollectName', true)
             ->where('currentEvent.settings.welcomeScreenCollectEmail', true)
             ->where('currentEvent.settings.welcomeScreenCollectPhone', true)
+            ->where('currentEvent.settings.weddingDetails.partnerOneName', 'Ioana')
+            ->where('currentEvent.settings.weddingDetails.partnerTwoName', 'Mihai')
+            ->where('currentEvent.settings.weddingDetails.brideParents', 'Laura and Adrian')
+            ->where('currentEvent.settings.weddingDetails.groomParents', 'Cristina and Victor')
+            ->where('currentEvent.settings.weddingDetails.godparents', 'Bianca and Stefan')
             ->where('currentEvent.settings.albumBackgroundEnabled', true)
             ->where('currentEvent.settings.albumBackgroundMode', 'image')
             ->where('currentEvent.settings.albumBackgroundColor', '#112233')

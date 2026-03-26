@@ -106,6 +106,13 @@ type EventSettingsPayload = {
     albumPermission: 'view_upload' | 'view_only' | 'upload_only';
     allowedMediaTypes: string[];
     moderationFilters: string[];
+    weddingDetails: {
+        partnerOneName: string;
+        partnerTwoName: string;
+        brideParents: string;
+        groomParents: string;
+        godparents: string;
+    };
 };
 
 type WelcomeScreenField = {
@@ -302,9 +309,23 @@ const defaults: EventSettingsPayload = {
         : 'upload_only',
     allowedMediaTypes: ['photo', 'video'],
     moderationFilters: ['adult', 'nudity', 'violence', 'suggestive'],
+    weddingDetails: {
+        partnerOneName: '',
+        partnerTwoName: '',
+        brideParents: '',
+        groomParents: '',
+        godparents: '',
+    },
 };
 
-const currentSettings = { ...defaults, ...(props.currentEvent.settings ?? {}) };
+const currentSettings: EventSettingsPayload = {
+    ...defaults,
+    ...(props.currentEvent.settings ?? {}),
+    weddingDetails: {
+        ...defaults.weddingDetails,
+        ...(props.currentEvent.settings?.weddingDetails ?? {}),
+    },
+};
 
 const normalizeWelcomeScreenFields = (value: unknown): WelcomeScreenField[] => {
     if (!Array.isArray(value)) {
@@ -397,6 +418,10 @@ const planFeatures = computed(() => props.currentEvent.planFeatures);
 const canEditLogo = computed(() => planFeatures.value.allowsBetterCustomization);
 const canEditAdvancedAppearance = computed(() => planFeatures.value.allowsAdvancedCustomization);
 const canUseModeration = computed(() => planFeatures.value.allowsModerationTools);
+const isWeddingEventType = computed(() => form.type === 'wedding');
+const hasWeddingDetails = computed(() =>
+    Object.values(form.wedding_details).some((value) => value.trim().length > 0),
+);
 const visibleTabItems = computed(() =>
     allTabItems.filter(
         (tab) => tab.id !== 'moderation' || canUseModeration.value,
@@ -467,6 +492,13 @@ const form = useForm({
     welcome_screen_collect_name: currentSettings.welcomeScreenCollectName,
     welcome_screen_collect_email: currentSettings.welcomeScreenCollectEmail,
     welcome_screen_collect_phone: currentSettings.welcomeScreenCollectPhone,
+    wedding_details: {
+        partner_one_name: currentSettings.weddingDetails.partnerOneName,
+        partner_two_name: currentSettings.weddingDetails.partnerTwoName,
+        bride_parents: currentSettings.weddingDetails.brideParents,
+        groom_parents: currentSettings.weddingDetails.groomParents,
+        godparents: currentSettings.weddingDetails.godparents,
+    },
     welcome_screen_background_file: null as File | null,
     remove_welcome_screen_background: false,
     album_background_enabled: currentSettings.albumBackgroundEnabled,
@@ -847,6 +879,7 @@ const autoSavePayload = computed(() => ({
     welcome_screen_collect_name: form.welcome_screen_collect_name,
     welcome_screen_collect_email: form.welcome_screen_collect_email,
     welcome_screen_collect_phone: form.welcome_screen_collect_phone,
+    wedding_details: { ...form.wedding_details },
     album_background_enabled: form.album_background_enabled,
     album_background_mode: form.album_background_mode,
     album_background_color: form.album_background_color,
@@ -1767,6 +1800,162 @@ function resolveSupportedTimezones(): string[] {
                                         </NativeSelectOption>
                                     </NativeSelect>
                                     <InputError :message="form.errors.type" />
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="isWeddingEventType"
+                                class="grid gap-4 rounded-2xl border border-rose-200/80 bg-rose-50/70 p-4 md:grid-cols-[minmax(0,1fr)_420px] md:items-start"
+                            >
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-sm font-semibold">
+                                            Wedding Details
+                                        </h3>
+                                        <Badge
+                                            variant="secondary"
+                                            class="border-rose-200 bg-white text-rose-700"
+                                        >
+                                            Optional
+                                        </Badge>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground">
+                                        Keep this light for now. These names
+                                        will help us prepare wedding
+                                        invitations later, and you can refine
+                                        them anytime.
+                                    </p>
+                                    <p
+                                        v-if="!hasWeddingDetails"
+                                        class="text-sm text-rose-700/80"
+                                    >
+                                        Start with the couple names only if you
+                                        want. Parents and godparents can be
+                                        added later.
+                                    </p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="partner-one-name"
+                                            >
+                                                Partner one
+                                            </label>
+                                            <Input
+                                                id="partner-one-name"
+                                                v-model="
+                                                    form.wedding_details.partner_one_name
+                                                "
+                                                class="h-11 bg-white"
+                                                placeholder="Ana"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.partner_one_name'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="partner-two-name"
+                                            >
+                                                Partner two
+                                            </label>
+                                            <Input
+                                                id="partner-two-name"
+                                                v-model="
+                                                    form.wedding_details.partner_two_name
+                                                "
+                                                class="h-11 bg-white"
+                                                placeholder="Andrei"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.partner_two_name'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-medium text-slate-700"
+                                            for="bride-parents"
+                                        >
+                                            Bride's parents
+                                        </label>
+                                        <Input
+                                            id="bride-parents"
+                                            v-model="
+                                                form.wedding_details.bride_parents
+                                            "
+                                            class="h-11 bg-white"
+                                            placeholder="Maria and Ion Popescu"
+                                        />
+                                        <InputError
+                                            :message="
+                                                form.errors[
+                                                    'wedding_details.bride_parents'
+                                                ]
+                                            "
+                                        />
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-medium text-slate-700"
+                                            for="groom-parents"
+                                        >
+                                            Groom's parents
+                                        </label>
+                                        <Input
+                                            id="groom-parents"
+                                            v-model="
+                                                form.wedding_details.groom_parents
+                                            "
+                                            class="h-11 bg-white"
+                                            placeholder="Elena and Mihai Ionescu"
+                                        />
+                                        <InputError
+                                            :message="
+                                                form.errors[
+                                                    'wedding_details.groom_parents'
+                                                ]
+                                            "
+                                        />
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-medium text-slate-700"
+                                            for="godparents"
+                                        >
+                                            Godparents
+                                        </label>
+                                        <Input
+                                            id="godparents"
+                                            v-model="
+                                                form.wedding_details.godparents
+                                            "
+                                            class="h-11 bg-white"
+                                            placeholder="Raluca and Stefan Marin"
+                                        />
+                                        <InputError
+                                            :message="
+                                                form.errors[
+                                                    'wedding_details.godparents'
+                                                ]
+                                            "
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

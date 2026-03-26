@@ -100,7 +100,7 @@ show.form = showForm
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:430
+* @see app/Http/Controllers/EventController.php:436
 * @route '/invite/public/{token}'
 */
 export const respond = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -115,7 +115,7 @@ respond.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:430
+* @see app/Http/Controllers/EventController.php:436
 * @route '/invite/public/{token}'
 */
 respond.url = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -142,7 +142,7 @@ respond.url = (args: { token: string | number } | [token: string | number ] | st
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:430
+* @see app/Http/Controllers/EventController.php:436
 * @route '/invite/public/{token}'
 */
 respond.post = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -152,7 +152,7 @@ respond.post = (args: { token: string | number } | [token: string | number ] | s
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:430
+* @see app/Http/Controllers/EventController.php:436
 * @route '/invite/public/{token}'
 */
 const respondForm = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -162,7 +162,7 @@ const respondForm = (args: { token: string | number } | [token: string | number 
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:430
+* @see app/Http/Controllers/EventController.php:436
 * @route '/invite/public/{token}'
 */
 respondForm.post = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

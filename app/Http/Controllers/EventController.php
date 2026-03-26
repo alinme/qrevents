@@ -724,6 +724,12 @@ class EventController extends Controller
             'welcome_screen_fields.*.attach_to' => ['nullable', 'string', Rule::in($this->welcomeScreenAttachToValues())],
             'welcome_screen_fields.*.required' => ['required', 'boolean'],
             'welcome_screen_fields.*.enabled' => ['required', 'boolean'],
+            'wedding_details' => ['sometimes', 'array'],
+            'wedding_details.partner_one_name' => ['nullable', 'string', 'max:80'],
+            'wedding_details.partner_two_name' => ['nullable', 'string', 'max:80'],
+            'wedding_details.bride_parents' => ['nullable', 'string', 'max:160'],
+            'wedding_details.groom_parents' => ['nullable', 'string', 'max:160'],
+            'wedding_details.godparents' => ['nullable', 'string', 'max:160'],
             'welcome_screen_background_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:6144'],
             'remove_welcome_screen_background' => ['sometimes', 'boolean'],
             'album_background_enabled' => ['sometimes', 'boolean'],
@@ -943,6 +949,9 @@ class EventController extends Controller
             $welcomeScreenFieldsSource = $this->defaultWelcomeScreenFields();
         }
         $welcomeScreenFields = $this->normalizeWelcomeScreenFields($welcomeScreenFieldsSource);
+        $weddingDetailsSource = $validated['wedding_details']
+            ?? ($currentBranding['wedding_details'] ?? []);
+        $weddingDetails = $this->normalizeWeddingDetails($weddingDetailsSource);
         $collectName = collect($welcomeScreenFields)->contains(
             fn (array $field): bool => $field['enabled'] === true && $field['id'] === 'name',
         );
@@ -972,6 +981,7 @@ class EventController extends Controller
             'welcome_screen_collect_email' => (bool) ($validated['welcome_screen_collect_email'] ?? $collectEmail),
             'welcome_screen_collect_phone' => (bool) ($validated['welcome_screen_collect_phone'] ?? $collectPhone),
             'welcome_screen_fields' => $welcomeScreenFields,
+            'wedding_details' => $weddingDetails,
             'album_background_enabled' => (bool) ($validated['album_background_enabled'] ?? ($currentBranding['album_background_enabled'] ?? false)),
             'album_background_mode' => $albumBackgroundMode,
             'album_background_color' => $validated['album_background_color'] ?? ($currentBranding['album_background_color'] ?? '#0F172A'),
@@ -2308,6 +2318,7 @@ class EventController extends Controller
                     'welcomeScreenCollectEmail' => (bool) ($branding['welcome_screen_collect_email'] ?? false),
                     'welcomeScreenCollectPhone' => (bool) ($branding['welcome_screen_collect_phone'] ?? false),
                     'welcomeScreenFields' => $this->normalizeWelcomeScreenFields($branding['welcome_screen_fields'] ?? []),
+                    'weddingDetails' => $this->weddingDetailsPayload($branding['wedding_details'] ?? []),
                     'albumBackgroundEnabled' => (bool) ($branding['album_background_enabled'] ?? false),
                     'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                     'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
@@ -2433,6 +2444,7 @@ class EventController extends Controller
                 'eventDetails' => [
                     'dateLabel' => $this->invitationPrimaryDateLabel($event),
                     'venueAddress' => $this->invitationVenueAddress($event),
+                    'weddingDetails' => $this->weddingDetailsPayload($branding['wedding_details'] ?? []),
                 ],
                 'branding' => [
                     'logoUrl' => $this->brandingLogoUrl($branding),
@@ -2894,6 +2906,7 @@ class EventController extends Controller
             'eventDetails' => [
                 'dateLabel' => $this->invitationPrimaryDateLabel($event),
                 'venueAddress' => $this->invitationVenueAddress($event),
+                'weddingDetails' => $this->weddingDetailsPayload($branding['wedding_details'] ?? []),
                 'timezone' => $event->timezone,
                 'moments' => $this->invitationMoments($event),
             ],
@@ -5116,6 +5129,50 @@ class EventController extends Controller
         }
 
         return array_slice($normalized, 0, 12);
+    }
+
+    /**
+     * @return array{
+     *   partner_one_name: string,
+     *   partner_two_name: string,
+     *   bride_parents: string,
+     *   groom_parents: string,
+     *   godparents: string
+     * }
+     */
+    private function normalizeWeddingDetails(mixed $details): array
+    {
+        $source = is_array($details) ? $details : [];
+
+        return [
+            'partner_one_name' => Str::limit(trim((string) ($source['partner_one_name'] ?? $source['partnerOneName'] ?? '')), 80, ''),
+            'partner_two_name' => Str::limit(trim((string) ($source['partner_two_name'] ?? $source['partnerTwoName'] ?? '')), 80, ''),
+            'bride_parents' => Str::limit(trim((string) ($source['bride_parents'] ?? $source['brideParents'] ?? '')), 160, ''),
+            'groom_parents' => Str::limit(trim((string) ($source['groom_parents'] ?? $source['groomParents'] ?? '')), 160, ''),
+            'godparents' => Str::limit(trim((string) ($source['godparents'] ?? '')), 160, ''),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   partnerOneName: string,
+     *   partnerTwoName: string,
+     *   brideParents: string,
+     *   groomParents: string,
+     *   godparents: string
+     * }
+     */
+    private function weddingDetailsPayload(mixed $details): array
+    {
+        $normalized = $this->normalizeWeddingDetails($details);
+
+        return [
+            'partnerOneName' => $normalized['partner_one_name'],
+            'partnerTwoName' => $normalized['partner_two_name'],
+            'brideParents' => $normalized['bride_parents'],
+            'groomParents' => $normalized['groom_parents'],
+            'godparents' => $normalized['godparents'],
+        ];
     }
 
     /**
