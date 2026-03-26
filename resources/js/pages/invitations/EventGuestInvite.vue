@@ -6,6 +6,7 @@ import InputError from '@/components/InputError.vue';
 import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import { Button } from '@/components/ui/button';
 import {
+    DialogClose,
     Dialog,
     DialogContent,
     DialogDescription,
@@ -387,6 +388,55 @@ onMounted(() => {
 
                 <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitAccepted">
                     <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5 sm:px-7">
+                        <div class="mx-auto flex w-full max-w-xs flex-col items-center space-y-2 text-center">
+                            <label class="text-sm font-medium">
+                                {{ t('invitations.confirmed_count') }}
+                            </label>
+                            <div class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="confirmedCount <= 1"
+                                        @click="adjustConfirmedCount(-1)"
+                                    >
+                                        <Minus class="size-5" />
+                                    </button>
+
+                                    <div class="min-w-0 flex-1 text-center">
+                                        <Input
+                                            :model-value="String(confirmedCount)"
+                                            readonly
+                                            inputmode="none"
+                                            class="h-11 border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        :disabled="confirmedCount >= confirmedAttendeeMax"
+                                        @click="adjustConfirmedCount(1)"
+                                    >
+                                        <Plus class="size-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-neutral-600">
+                                {{ t('invitations.how_many_hint') }}
+                            </p>
+                            <InputError :message="form.errors.confirmed_attendees_count" />
+                        </div>
+
+                        <div v-if="!isPublicInvite" class="space-y-1 text-center">
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ guestParty?.name }}
+                            </p>
+                            <p class="text-sm text-neutral-600">
+                                {{ t('invitations.invited_for', { count: guestParty?.invitedAttendeesCount ?? 1 }) }}
+                            </p>
+                        </div>
+
                         <div v-if="isPublicInvite" class="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)]">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
@@ -409,49 +459,21 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div v-else class="space-y-1">
-                            <p class="text-sm font-medium text-neutral-900">
-                                {{ guestParty?.name }}
-                            </p>
-                            <p class="text-sm text-neutral-600">
-                                {{ t('invitations.invited_for', { count: guestParty?.invitedAttendeesCount ?? 1 }) }}
-                            </p>
-                        </div>
-
                         <div class="space-y-4">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
-                                    {{ t('invitations.confirmed_count') }}
+                                    {{ t('invitations.guest_names') }}
                                 </label>
-                                <div class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                        :disabled="confirmedCount <= 1"
-                                        @click="adjustConfirmedCount(-1)"
-                                    >
-                                        <Minus class="size-5" />
-                                    </button>
-
-                                    <div class="min-w-0 flex-1 text-center">
-                                        <Input
-                                            :model-value="String(confirmedCount)"
-                                            readonly
-                                            inputmode="none"
-                                            class="border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                        :disabled="confirmedCount >= confirmedAttendeeMax"
-                                        @click="adjustConfirmedCount(1)"
-                                    >
-                                        <Plus class="size-5" />
-                                    </button>
-                                </div>
-                                <InputError :message="form.errors.confirmed_attendees_count" />
+                                <Textarea
+                                    v-model="form.guest_names"
+                                    rows="2"
+                                    :placeholder="t('invitations.guest_names_placeholder')"
+                                    class="min-h-14 rounded-2xl py-3"
+                                />
+                                <p class="text-sm text-neutral-500">
+                                    {{ t('invitations.guest_names_help') }}
+                                </p>
+                                <InputError :message="form.errors.guest_names" />
                             </div>
 
                             <div class="space-y-2">
@@ -470,26 +492,13 @@ onMounted(() => {
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
-                                    {{ t('invitations.guest_names') }}
-                                </label>
-                                <Textarea
-                                    v-model="form.guest_names"
-                                    rows="2"
-                                    :placeholder="t('invitations.guest_names_placeholder')"
-                                    class="min-h-14 rounded-2xl"
-                                />
-                                <InputError :message="form.errors.guest_names" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">
                                     {{ t('invitations.note_optional') }}
                                 </label>
                                 <Textarea
                                     v-model="form.response_notes"
                                     rows="2"
                                     :placeholder="t('invitations.note_placeholder')"
-                                    class="min-h-14 rounded-2xl"
+                                    class="min-h-14 rounded-2xl py-3"
                                 />
                                 <InputError :message="form.errors.response_notes" />
                             </div>
@@ -497,19 +506,7 @@ onMounted(() => {
                     </div>
 
                     <div class="shrink-0 border-t border-neutral-200/80 px-6 py-4 sm:px-7">
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p v-if="isPublicInvite" class="text-sm text-neutral-600">
-                                {{ t('invitations.how_many_hint') }}
-                            </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                class="rounded-full px-6"
-                                @click="acceptModalOpen = false"
-                            >
-                                {{ t('invitations.back_to_invitation') }}
-                            </Button>
-
+                        <div class="flex justify-end">
                             <Button
                                 type="submit"
                                 class="rounded-full px-6"
@@ -524,23 +521,29 @@ onMounted(() => {
         </Dialog>
 
         <Dialog v-model:open="maybeModalOpen">
-            <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
-                <div>
-                    <div class="relative overflow-hidden bg-amber-50">
+            <DialogContent
+                :show-close-button="false"
+                class="max-w-md overflow-hidden rounded-[2rem] border-0 bg-transparent p-0 shadow-none"
+            >
+                <div class="relative overflow-hidden rounded-[2rem] bg-amber-50">
+                    <DialogClose class="absolute right-4 top-4 z-20 inline-flex size-11 items-center justify-center rounded-full bg-black/28 text-white backdrop-blur-sm transition hover:bg-black/40">
+                        <span class="sr-only">{{ t('common.close') }}</span>
+                    </DialogClose>
+                    <div class="relative overflow-hidden">
                         <img
                             v-if="maybeMemeImageVisible"
                             :src="maybeMemeImageUrl"
                             :alt="t('invitations.maybe_meme_alt')"
-                            class="h-auto w-full object-cover"
+                            class="block h-auto w-full object-cover"
                             @error="maybeMemeImageVisible = false"
                         >
-                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-10 top-12 text-center">
-                            <p class="text-4xl font-black uppercase tracking-[0.18em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.85)] sm:text-5xl">
+                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-8 top-10 text-center">
+                            <p class="text-5xl font-black uppercase tracking-[0.12em] text-white [-webkit-text-stroke:2.5px_rgba(0,0,0,0.95)] [paint-order:stroke_fill] sm:text-6xl">
                                 {{ t('invitations.maybe_meme_top') }}
                             </p>
                         </div>
-                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-10 bottom-24 text-center">
-                            <p class="text-2xl font-black uppercase tracking-[0.16em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.85)] sm:text-3xl">
+                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-8 bottom-10 text-center">
+                            <p class="text-3xl font-black uppercase tracking-[0.12em] text-white [-webkit-text-stroke:2px_rgba(0,0,0,0.95)] [paint-order:stroke_fill] sm:text-4xl">
                                 {{ t('invitations.maybe_meme_bottom') }}
                             </p>
                         </div>
@@ -554,36 +557,61 @@ onMounted(() => {
                             </p>
                         </div>
                     </div>
-
-                    <div class="flex justify-end px-5 py-5 sm:px-6">
-                        <Button class="rounded-full px-6" @click="maybeModalOpen = false">
-                            {{ t('invitations.back_to_invitation') }}
-                        </Button>
-                    </div>
                 </div>
             </DialogContent>
         </Dialog>
 
         <Dialog v-model:open="declineModalOpen">
-            <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
-                <div>
-                    <div class="relative overflow-hidden bg-rose-50">
+            <DialogContent
+                :show-close-button="false"
+                class="max-w-md overflow-hidden rounded-[2rem] border-0 bg-transparent p-0 shadow-none"
+            >
+                <div class="relative overflow-hidden rounded-[2rem] bg-rose-50">
+                    <DialogClose class="absolute right-4 top-4 z-20 inline-flex size-11 items-center justify-center rounded-full bg-black/28 text-white backdrop-blur-sm transition hover:bg-black/40">
+                        <span class="sr-only">{{ t('common.close') }}</span>
+                    </DialogClose>
+                    <div class="relative overflow-hidden">
                         <img
                             v-if="declineMemeImageVisible"
                             :src="declineMemeImageUrl"
                             :alt="t('invitations.decline_meme_alt')"
-                            class="h-auto w-full object-cover"
+                            class="block h-auto w-full object-cover"
                             @error="declineMemeImageVisible = false"
                         >
-                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-10 top-12 text-center">
-                            <p class="text-4xl font-black uppercase tracking-[0.18em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.9)] sm:text-5xl">
+                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-8 top-10 text-center">
+                            <p class="text-5xl font-black uppercase tracking-[0.12em] text-white [-webkit-text-stroke:2.5px_rgba(0,0,0,0.95)] [paint-order:stroke_fill] sm:text-6xl">
                                 {{ t('invitations.decline_meme_top') }}
                             </p>
                         </div>
-                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-10 bottom-24 text-center">
-                            <p class="text-2xl font-black uppercase tracking-[0.14em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.9)] sm:text-3xl">
+                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-8 top-32 text-center sm:top-36">
+                            <p class="text-3xl font-black uppercase tracking-[0.12em] text-white [-webkit-text-stroke:2px_rgba(0,0,0,0.95)] [paint-order:stroke_fill] sm:text-4xl">
                                 {{ t('invitations.decline_meme_bottom') }}
                             </p>
+                        </div>
+                        <div v-if="declineMemeImageVisible" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/58 to-transparent px-4 pb-4 pt-24 text-white sm:px-5 sm:pb-5">
+                            <p class="text-sm leading-6 text-white/92">
+                                {{ t('invitations.decline_note') }}
+                            </p>
+
+                            <div class="mt-4 grid grid-cols-2 gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    class="h-12 rounded-2xl border-white/35 bg-white/10 px-4 text-white backdrop-blur-sm hover:bg-white/18"
+                                    @click="declineModalOpen = false"
+                                >
+                                    {{ t('invitations.keep_invitation') }}
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    class="h-12 rounded-2xl bg-rose-600 px-4 text-white hover:bg-rose-700"
+                                    :disabled="form.processing"
+                                    @click="submitDeclined"
+                                >
+                                    {{ t('invitations.confirm_decline') }}
+                                </Button>
+                            </div>
                         </div>
                         <div v-else class="flex min-h-72 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
                             <p class="text-6xl">🥹</p>
@@ -593,34 +621,28 @@ onMounted(() => {
                             <p class="max-w-sm text-sm text-rose-900/80">
                                 {{ t('invitations.decline_fallback_body') }}
                             </p>
-                        </div>
-                    </div>
+                            <p class="max-w-sm text-sm leading-6 text-rose-950/80">
+                                {{ t('invitations.decline_note') }}
+                            </p>
+                            <div class="mt-3 grid w-full max-w-sm grid-cols-2 gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    class="h-12 rounded-2xl px-4"
+                                    @click="declineModalOpen = false"
+                                >
+                                    {{ t('invitations.keep_invitation') }}
+                                </Button>
 
-                    <div class="space-y-4 px-5 py-5 sm:px-6">
-                        <p class="text-sm leading-6 text-neutral-600">
-                            {{ t('invitations.decline_note') }}
-                        </p>
-
-                        <InputError :message="form.errors.name" />
-
-                        <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                class="rounded-full px-6"
-                                @click="declineModalOpen = false"
-                            >
-                                {{ t('invitations.keep_invitation') }}
-                            </Button>
-
-                            <Button
-                                type="button"
-                                class="rounded-full bg-rose-600 px-6 text-white hover:bg-rose-700"
-                                :disabled="form.processing"
-                                @click="submitDeclined"
-                            >
-                                {{ t('invitations.confirm_decline') }}
-                            </Button>
+                                <Button
+                                    type="button"
+                                    class="h-12 rounded-2xl bg-rose-600 px-4 text-white hover:bg-rose-700"
+                                    :disabled="form.processing"
+                                    @click="submitDeclined"
+                                >
+                                    {{ t('invitations.confirm_decline') }}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
