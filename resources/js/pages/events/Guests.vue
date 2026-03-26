@@ -410,6 +410,62 @@ const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): Inv
         };
     }
 
+    if (templateId === 'canva_brown') {
+        const samplePresentation = composeInvitationPaperPresentation({
+            eventName: 'You are invited to',
+            eventType: 'wedding',
+            headline: 'You are invited to',
+            weddingDetails: {
+                partnerOneName: 'Elena',
+                partnerTwoName: 'Matei',
+                familyName: '',
+                showFamilyName: false,
+                brideParents: 'Adriana and Pavel',
+                groomParents: 'Monica and Sorin',
+                godparents: 'Bianca and Vlad',
+            },
+        });
+
+        return {
+            eventName: samplePresentation.leadIn,
+            guestLabel: null,
+            headline: samplePresentation.title,
+            message: 'We are getting married!',
+            closing: 'With love',
+            detailLines: samplePresentation.detailLines,
+            dateLabel: 'Saturday • 20 September 2026 • 10 PM',
+            venueAddress: '123 Anywhere St., Any City',
+        };
+    }
+
+    if (templateId === 'canva_watercolor') {
+        const samplePresentation = composeInvitationPaperPresentation({
+            eventName: 'You are invited to',
+            eventType: 'wedding',
+            headline: 'You are invited to',
+            weddingDetails: {
+                partnerOneName: 'Francois',
+                partnerTwoName: 'Juliana',
+                familyName: '',
+                showFamilyName: false,
+                brideParents: 'Sofia and Mircea',
+                groomParents: 'Camelia and Adrian',
+                godparents: 'Andreea and Stefan',
+            },
+        });
+
+        return {
+            eventName: samplePresentation.leadIn,
+            guestLabel: null,
+            headline: samplePresentation.title,
+            message: 'Join us for our wedding celebration.',
+            closing: 'Please respond when you can',
+            detailLines: samplePresentation.detailLines,
+            dateLabel: 'Sunday • 28 January 2027 • 10 PM',
+            venueAddress: '123 Anywhere St., Any City',
+        };
+    }
+
     const presentation = composeInvitationPaperPresentation({
         eventName: currentEvent.name,
         eventType: currentEvent.type,

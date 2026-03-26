@@ -1,9 +1,17 @@
+import canvaBrownConfig from './invitation-templates/canva_brown/config.json';
 import canvaCreamConfig from './invitation-templates/canva_cream/config.json';
+import canvaWatercolorConfig from './invitation-templates/canva_watercolor/config.json';
 import classicConfig from './invitation-templates/classic/config.json';
 import floralConfig from './invitation-templates/floral/config.json';
 import midnightConfig from './invitation-templates/midnight/config.json';
 
-export type InvitationTemplateId = 'classic' | 'floral' | 'midnight' | 'canva_cream';
+export type InvitationTemplateId =
+    | 'classic'
+    | 'floral'
+    | 'midnight'
+    | 'canva_cream'
+    | 'canva_brown'
+    | 'canva_watercolor';
 
 export type InvitationTemplateTextBlockConfig = {
     top: string;
@@ -110,6 +118,28 @@ export const invitationTemplateDefinitions: InvitationTemplateDefinition[] = [
         layout: defineInvitationTemplateLayout(canvaCreamConfig as InvitationTemplateLayoutConfig),
         previewUrl: '/invitation-templates/canva/cream/preview.png',
         baseUrl: '/invitation-templates/canva/cream/base.png',
+        artworkTemplate: true,
+    },
+    {
+        id: 'canva_brown',
+        label: 'Brown Canva',
+        summary: 'Warm watercolor florals with a romantic script headline and gentle earthy tones.',
+        artClass: 'border-[#e7d4c7] bg-[#fcf7f3] text-neutral-900',
+        accentClass: 'bg-[#8f5c46]/10 text-[#8f5c46]',
+        layout: defineInvitationTemplateLayout(canvaBrownConfig as InvitationTemplateLayoutConfig),
+        previewUrl: '/invitation-templates/canva/brown/preview.png',
+        baseUrl: '/invitation-templates/canva/brown/base.png',
+        artworkTemplate: true,
+    },
+    {
+        id: 'canva_watercolor',
+        label: 'Watercolor Canva',
+        summary: 'Soft green watercolor paper with a framed layout and airy garden invitation mood.',
+        artClass: 'border-[#dfe6d8] bg-[#f7faf5] text-neutral-900',
+        accentClass: 'bg-[#7b8b72]/10 text-[#6f7e69]',
+        layout: defineInvitationTemplateLayout(canvaWatercolorConfig as InvitationTemplateLayoutConfig),
+        previewUrl: '/invitation-templates/canva/watercolor/base.png',
+        baseUrl: '/invitation-templates/canva/watercolor/preview.png',
         artworkTemplate: true,
     },
 ];

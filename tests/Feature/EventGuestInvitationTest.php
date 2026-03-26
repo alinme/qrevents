@@ -17,7 +17,7 @@ it('allows an event owner to update invitation settings', function () {
 
     $this->actingAs($owner)
         ->patch(route('events.guests.invitation-settings.update', $event), [
-            'template' => 'canva_cream',
+            'template' => 'canva_brown',
             'headline' => 'Join us for a beautiful day',
             'message' => 'Please celebrate with us and let us know your answer.',
             'closing' => 'We cannot wait to see you there.',
@@ -29,7 +29,7 @@ it('allows an event owner to update invitation settings', function () {
     $event->refresh();
 
     expect($event->invitation_settings)->toMatchArray([
-        'template' => 'canva_cream',
+        'template' => 'canva_brown',
         'headline' => 'Join us for a beautiful day',
         'message' => 'Please celebrate with us and let us know your answer.',
         'closing' => 'We cannot wait to see you there.',

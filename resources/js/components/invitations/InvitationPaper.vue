@@ -55,6 +55,16 @@ const invitationTemplateVisuals = computed(() => {
             mutedClass: 'text-neutral-600',
             label: selectedTemplate.label,
         },
+        canva_brown: {
+            surfaceClass: 'border-[#ead7ca] bg-[#fcf7f3] text-neutral-950',
+            mutedClass: 'text-[#8f6556]',
+            label: selectedTemplate.label,
+        },
+        canva_watercolor: {
+            surfaceClass: 'border-[#dfe6d8] bg-[#f7faf5] text-neutral-950',
+            mutedClass: 'text-[#7a8676]',
+            label: selectedTemplate.label,
+        },
     }[props.template];
 });
 
@@ -104,6 +114,14 @@ const resolveFontFamily = (fontFamily?: string): string | undefined => {
 
     if (normalizedFontFamily === 'montserrat') {
         return '"Montserrat", var(--font-sans)';
+    }
+
+    if (normalizedFontFamily === 'great vibes') {
+        return '"Great Vibes", var(--font-serif)';
+    }
+
+    if (normalizedFontFamily === 'cormorant garamond') {
+        return '"Cormorant Garamond", var(--font-serif)';
     }
 
     return `"${fontFamily}", var(--font-sans)`;
