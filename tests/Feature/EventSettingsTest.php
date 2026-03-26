@@ -53,6 +53,8 @@ it('updates event settings and recalculates event windows', function () {
             'wedding_details' => [
                 'partner_one_name' => 'Ana',
                 'partner_two_name' => 'Andrei',
+                'family_name' => 'Miller',
+                'show_family_name' => true,
                 'bride_parents' => 'Maria and Ion Popescu',
                 'groom_parents' => 'Elena and Mihai Ionescu',
                 'godparents' => 'Raluca and Stefan Marin',
@@ -113,6 +115,8 @@ it('updates event settings and recalculates event windows', function () {
         ->and($branding['wedding_details'] ?? null)->toBe([
             'partner_one_name' => 'Ana',
             'partner_two_name' => 'Andrei',
+            'family_name' => 'Miller',
+            'show_family_name' => true,
             'bride_parents' => 'Maria and Ion Popescu',
             'groom_parents' => 'Elena and Mihai Ionescu',
             'godparents' => 'Raluca and Stefan Marin',
@@ -235,6 +239,8 @@ it('restores saved settings in the settings page after refresh', function () {
         'wedding_details' => [
             'partner_one_name' => 'Ioana',
             'partner_two_name' => 'Mihai',
+            'family_name' => 'Dumitrescu',
+            'show_family_name' => false,
             'bride_parents' => 'Laura and Adrian',
             'groom_parents' => 'Cristina and Victor',
             'godparents' => 'Bianca and Stefan',
@@ -283,6 +289,8 @@ it('restores saved settings in the settings page after refresh', function () {
             ->where('currentEvent.settings.welcomeScreenCollectPhone', true)
             ->where('currentEvent.settings.weddingDetails.partnerOneName', 'Ioana')
             ->where('currentEvent.settings.weddingDetails.partnerTwoName', 'Mihai')
+            ->where('currentEvent.settings.weddingDetails.familyName', 'Dumitrescu')
+            ->where('currentEvent.settings.weddingDetails.showFamilyName', false)
             ->where('currentEvent.settings.weddingDetails.brideParents', 'Laura and Adrian')
             ->where('currentEvent.settings.weddingDetails.groomParents', 'Cristina and Victor')
             ->where('currentEvent.settings.weddingDetails.godparents', 'Bianca and Stefan')

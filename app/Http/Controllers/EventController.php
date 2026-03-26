@@ -727,6 +727,8 @@ class EventController extends Controller
             'wedding_details' => ['sometimes', 'array'],
             'wedding_details.partner_one_name' => ['nullable', 'string', 'max:80'],
             'wedding_details.partner_two_name' => ['nullable', 'string', 'max:80'],
+            'wedding_details.family_name' => ['nullable', 'string', 'max:80'],
+            'wedding_details.show_family_name' => ['sometimes', 'boolean'],
             'wedding_details.bride_parents' => ['nullable', 'string', 'max:160'],
             'wedding_details.groom_parents' => ['nullable', 'string', 'max:160'],
             'wedding_details.godparents' => ['nullable', 'string', 'max:160'],
@@ -5135,6 +5137,8 @@ class EventController extends Controller
      * @return array{
      *   partner_one_name: string,
      *   partner_two_name: string,
+     *   family_name: string,
+     *   show_family_name: bool,
      *   bride_parents: string,
      *   groom_parents: string,
      *   godparents: string
@@ -5147,6 +5151,8 @@ class EventController extends Controller
         return [
             'partner_one_name' => Str::limit(trim((string) ($source['partner_one_name'] ?? $source['partnerOneName'] ?? '')), 80, ''),
             'partner_two_name' => Str::limit(trim((string) ($source['partner_two_name'] ?? $source['partnerTwoName'] ?? '')), 80, ''),
+            'family_name' => Str::limit(trim((string) ($source['family_name'] ?? $source['familyName'] ?? '')), 80, ''),
+            'show_family_name' => (bool) ($source['show_family_name'] ?? $source['showFamilyName'] ?? false),
             'bride_parents' => Str::limit(trim((string) ($source['bride_parents'] ?? $source['brideParents'] ?? '')), 160, ''),
             'groom_parents' => Str::limit(trim((string) ($source['groom_parents'] ?? $source['groomParents'] ?? '')), 160, ''),
             'godparents' => Str::limit(trim((string) ($source['godparents'] ?? '')), 160, ''),
@@ -5157,6 +5163,8 @@ class EventController extends Controller
      * @return array{
      *   partnerOneName: string,
      *   partnerTwoName: string,
+     *   familyName: string,
+     *   showFamilyName: bool,
      *   brideParents: string,
      *   groomParents: string,
      *   godparents: string
@@ -5169,6 +5177,8 @@ class EventController extends Controller
         return [
             'partnerOneName' => $normalized['partner_one_name'],
             'partnerTwoName' => $normalized['partner_two_name'],
+            'familyName' => $normalized['family_name'],
+            'showFamilyName' => $normalized['show_family_name'],
             'brideParents' => $normalized['bride_parents'],
             'groomParents' => $normalized['groom_parents'],
             'godparents' => $normalized['godparents'],

@@ -109,6 +109,8 @@ type EventSettingsPayload = {
     weddingDetails: {
         partnerOneName: string;
         partnerTwoName: string;
+        familyName: string;
+        showFamilyName: boolean;
         brideParents: string;
         groomParents: string;
         godparents: string;
@@ -312,6 +314,8 @@ const defaults: EventSettingsPayload = {
     weddingDetails: {
         partnerOneName: '',
         partnerTwoName: '',
+        familyName: '',
+        showFamilyName: false,
         brideParents: '',
         groomParents: '',
         godparents: '',
@@ -495,6 +499,8 @@ const form = useForm({
     wedding_details: {
         partner_one_name: currentSettings.weddingDetails.partnerOneName,
         partner_two_name: currentSettings.weddingDetails.partnerTwoName,
+        family_name: currentSettings.weddingDetails.familyName,
+        show_family_name: currentSettings.weddingDetails.showFamilyName,
         bride_parents: currentSettings.weddingDetails.brideParents,
         groom_parents: currentSettings.weddingDetails.groomParents,
         godparents: currentSettings.weddingDetails.godparents,
@@ -1883,6 +1889,69 @@ function resolveSupportedTimezones(): string[] {
                                                 "
                                             />
                                         </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-medium text-slate-700"
+                                            for="family-name"
+                                        >
+                                            Shared last name
+                                        </label>
+                                        <Input
+                                            id="family-name"
+                                            v-model="
+                                                form.wedding_details.family_name
+                                            "
+                                            class="h-11 bg-white"
+                                            placeholder="Miller"
+                                        />
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            Keep the shared last name here and
+                                            choose later if the invitation
+                                            should show it.
+                                        </p>
+                                        <label
+                                            class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
+                                            for="show-family-name"
+                                        >
+                                            <Switch
+                                                id="show-family-name"
+                                                v-model="
+                                                    form.wedding_details.show_family_name
+                                                "
+                                            />
+                                            <span class="min-w-0">
+                                                <span
+                                                    class="block text-sm font-medium text-slate-700"
+                                                >
+                                                    Show last name on the
+                                                    invitation
+                                                </span>
+                                                <span
+                                                    class="block text-xs text-muted-foreground"
+                                                >
+                                                    Example: Jessica &amp;
+                                                    Simon Miller
+                                                </span>
+                                            </span>
+                                        </label>
+                                        <InputError
+                                            :message="
+                                                form.errors[
+                                                    'wedding_details.family_name'
+                                                ]
+                                            "
+                                        />
+                                        <InputError
+                                            :message="
+                                                form.errors[
+                                                    'wedding_details.show_family_name'
+                                                ]
+                                            "
+                                        />
                                     </div>
 
                                     <div class="space-y-2">
