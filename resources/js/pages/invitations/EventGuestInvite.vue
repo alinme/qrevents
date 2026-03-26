@@ -104,11 +104,9 @@ const form = useForm({
     response_notes: props.guestParty?.responseNotes ?? '',
 });
 
-const showConfirmedCount = computed(() => form.attendance_status === 'accepted');
-const showResponseDetails = computed(() => form.attendance_status === 'accepted');
 const confirmedAttendeeMax = computed(() => {
     if (props.isPublicInvite) {
-        return Math.max(1, Number(form.invited_attendees_count) || 1);
+        return 1000;
     }
 
     return Math.max(1, props.guestParty?.invitedAttendeesCount ?? 1);
@@ -124,27 +122,12 @@ const clampCount = (value: unknown, min: number, max: number): number => {
     return Math.min(max, Math.max(min, Math.round(numericValue)));
 };
 
-const invitedCount = computed<number>({
-    get: () => clampCount(form.invited_attendees_count, 1, 1000),
-    set: (value) => {
-        form.invited_attendees_count = clampCount(value, 1, 1000);
-    },
-});
-
 const confirmedCount = computed<number>({
     get: () => clampCount(form.confirmed_attendees_count, 1, confirmedAttendeeMax.value),
     set: (value) => {
         form.confirmed_attendees_count = clampCount(value, 1, confirmedAttendeeMax.value);
     },
 });
-
-const adjustInvitedCount = (delta: number): void => {
-    invitedCount.value += delta;
-
-    if (confirmedCount.value > invitedCount.value) {
-        confirmedCount.value = invitedCount.value;
-    }
-};
 
 const adjustConfirmedCount = (delta: number): void => {
     confirmedCount.value += delta;
@@ -196,11 +179,24 @@ const openDeclineModal = (): void => {
 
 const submitAccepted = (): void => {
     form.attendance_status = 'accepted';
+
+    if (props.isPublicInvite) {
+        form.invited_attendees_count = confirmedCount.value;
+    }
+
     submit();
 };
 
 const submitDeclined = (): void => {
     form.attendance_status = 'declined';
+
+    if (props.isPublicInvite && form.name.trim() === '') {
+        form.name = `${t('invitations.declined_guest_label')} ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
+    }
+
+    form.invited_attendees_count = 1;
+    form.confirmed_attendees_count = 0;
+
     submit();
 };
 
@@ -209,7 +205,6 @@ const printInvitation = (): void => {
 };
 
 onMounted(() => {
-    invitedCount.value = invitedCount.value;
     confirmedCount.value = confirmedCount.value;
 
     if (new URLSearchParams(window.location.search).get('print') === '1') {
@@ -377,24 +372,30 @@ onMounted(() => {
         </div>
 
         <Dialog v-model:open="acceptModalOpen">
-            <DialogContent class="max-h-[92vh] overflow-y-auto rounded-[2rem] p-0 sm:max-w-2xl">
-                <div class="p-6 sm:p-7">
-                    <DialogHeader class="space-y-2 text-left">
+            <DialogContent class="flex h-[min(92vh,840px)] flex-col overflow-hidden rounded-[2rem] p-0 sm:max-w-2xl">
+                <DialogHeader class="shrink-0 border-b border-neutral-200/80 px-6 py-5 text-left sm:px-7">
+                    <div class="space-y-2">
                         <DialogTitle class="text-2xl font-semibold tracking-tight">
                             {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                         </DialogTitle>
                         <DialogDescription class="text-sm leading-6 text-neutral-600">
                             {{ t('invitations.accept_modal_description') }}
                         </DialogDescription>
-                    </DialogHeader>
+                    </div>
+                </DialogHeader>
 
-                    <form class="mt-6 space-y-4" @submit.prevent="submitAccepted">
+                <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitAccepted">
+                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5 sm:px-7">
                         <div v-if="isPublicInvite" class="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)]">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.family_name') }}
                                 </label>
-                                <Input v-model="form.name" :placeholder="t('invitations.family_placeholder')" />
+                                <Input
+                                    v-model="form.name"
+                                    :placeholder="t('invitations.family_placeholder')"
+                                    class="h-14 rounded-2xl"
+                                />
                                 <InputError :message="form.errors.name" />
                             </div>
 
@@ -402,56 +403,21 @@ onMounted(() => {
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.phone_optional') }}
                                 </label>
-                                <Input v-model="form.phone" placeholder="07..." />
+                                <Input v-model="form.phone" placeholder="07..." class="h-14 rounded-2xl" />
                                 <InputError :message="form.errors.phone" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">
-                                    {{ t('invitations.invited_count') }}
-                                </label>
-                                <div class="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                        :disabled="invitedCount <= 1"
-                                        @click="adjustInvitedCount(-1)"
-                                    >
-                                        <Minus class="size-5" />
-                                    </button>
-
-                                    <div class="min-w-0 flex-1 text-center">
-                                        <Input
-                                            :model-value="String(invitedCount)"
-                                            readonly
-                                            inputmode="none"
-                                            class="border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                        :disabled="invitedCount >= 1000"
-                                        @click="adjustInvitedCount(1)"
-                                    >
-                                        <Plus class="size-5" />
-                                    </button>
-                                </div>
-                                <InputError :message="form.errors.invited_attendees_count" />
                             </div>
                         </div>
 
-                        <div v-else class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-                            <p class="text-sm font-medium">
+                        <div v-else class="space-y-1">
+                            <p class="text-sm font-medium text-neutral-900">
                                 {{ guestParty?.name }}
                             </p>
-                            <p class="mt-1 text-sm text-neutral-600">
+                            <p class="text-sm text-neutral-600">
                                 {{ t('invitations.invited_for', { count: guestParty?.invitedAttendeesCount ?? 1 }) }}
                             </p>
                         </div>
 
-                        <div class="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                        <div class="space-y-4">
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.confirmed_count') }}
@@ -491,7 +457,7 @@ onMounted(() => {
                                 <label class="text-sm font-medium">
                                     {{ t('invitations.meal_preference') }}
                                 </label>
-                                <NativeSelect v-model="form.meal_preference">
+                                <NativeSelect v-model="form.meal_preference" class="h-14 rounded-2xl">
                                     <NativeSelectOption value="standard">{{ t('invitations.meal.standard') }}</NativeSelectOption>
                                     <NativeSelectOption value="vegetarian">{{ t('invitations.meal.vegetarian') }}</NativeSelectOption>
                                     <NativeSelectOption value="vegan">{{ t('invitations.meal.vegan') }}</NativeSelectOption>
@@ -509,6 +475,7 @@ onMounted(() => {
                                     v-model="form.guest_names"
                                     rows="2"
                                     :placeholder="t('invitations.guest_names_placeholder')"
+                                    class="min-h-14 rounded-2xl"
                                 />
                                 <InputError :message="form.errors.guest_names" />
                             </div>
@@ -521,12 +488,18 @@ onMounted(() => {
                                     v-model="form.response_notes"
                                     rows="2"
                                     :placeholder="t('invitations.note_placeholder')"
+                                    class="min-h-14 rounded-2xl"
                                 />
                                 <InputError :message="form.errors.response_notes" />
                             </div>
                         </div>
+                    </div>
 
-                        <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+                    <div class="shrink-0 border-t border-neutral-200/80 px-6 py-4 sm:px-7">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p v-if="isPublicInvite" class="text-sm text-neutral-600">
+                                {{ t('invitations.how_many_hint') }}
+                            </p>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -544,24 +517,15 @@ onMounted(() => {
                                 {{ t('invitations.submit') }}
                             </Button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </DialogContent>
         </Dialog>
 
         <Dialog v-model:open="maybeModalOpen">
             <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
                 <div class="p-6 sm:p-7">
-                    <DialogHeader class="space-y-2 text-left">
-                        <DialogTitle class="text-2xl font-semibold tracking-tight">
-                            {{ t('invitations.maybe_modal_title') }}
-                        </DialogTitle>
-                        <DialogDescription class="text-sm leading-6 text-neutral-600">
-                            {{ t('invitations.maybe_modal_description') }}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div class="mt-5 overflow-hidden rounded-[1.75rem] border border-amber-200 bg-amber-50">
+                    <div class="relative overflow-hidden rounded-[1.75rem] border border-amber-200 bg-amber-50">
                         <img
                             v-if="maybeMemeImageVisible"
                             :src="maybeMemeImageUrl"
@@ -569,6 +533,16 @@ onMounted(() => {
                             class="h-auto w-full object-cover"
                             @error="maybeMemeImageVisible = false"
                         >
+                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-10 top-12 text-center">
+                            <p class="text-4xl font-black uppercase tracking-[0.18em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.85)] sm:text-5xl">
+                                {{ t('invitations.maybe_meme_top') }}
+                            </p>
+                        </div>
+                        <div v-if="maybeMemeImageVisible" class="pointer-events-none absolute inset-x-10 bottom-24 text-center">
+                            <p class="text-2xl font-black uppercase tracking-[0.16em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.85)] sm:text-3xl">
+                                {{ t('invitations.maybe_meme_bottom') }}
+                            </p>
+                        </div>
                         <div v-else class="flex min-h-72 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
                             <p class="text-6xl">🙂</p>
                             <p class="text-lg font-semibold text-amber-950">
@@ -592,16 +566,7 @@ onMounted(() => {
         <Dialog v-model:open="declineModalOpen">
             <DialogContent class="max-w-md rounded-[2rem] p-0 overflow-hidden">
                 <div class="p-6 sm:p-7">
-                    <DialogHeader class="space-y-2 text-left">
-                        <DialogTitle class="text-2xl font-semibold tracking-tight">
-                            {{ t('invitations.decline_modal_title') }}
-                        </DialogTitle>
-                        <DialogDescription class="text-sm leading-6 text-neutral-600">
-                            {{ t('invitations.decline_modal_description') }}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div class="mt-5 overflow-hidden rounded-[1.75rem] border border-rose-200 bg-rose-50">
+                    <div class="relative overflow-hidden rounded-[1.75rem] border border-rose-200 bg-rose-50">
                         <img
                             v-if="declineMemeImageVisible"
                             :src="declineMemeImageUrl"
@@ -609,6 +574,16 @@ onMounted(() => {
                             class="h-auto w-full object-cover"
                             @error="declineMemeImageVisible = false"
                         >
+                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-10 top-12 text-center">
+                            <p class="text-4xl font-black uppercase tracking-[0.18em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.9)] sm:text-5xl">
+                                {{ t('invitations.decline_meme_top') }}
+                            </p>
+                        </div>
+                        <div v-if="declineMemeImageVisible" class="pointer-events-none absolute inset-x-10 bottom-24 text-center">
+                            <p class="text-2xl font-black uppercase tracking-[0.14em] text-white [text-shadow:_0_3px_12px_rgba(0,0,0,0.9)] sm:text-3xl">
+                                {{ t('invitations.decline_meme_bottom') }}
+                            </p>
+                        </div>
                         <div v-else class="flex min-h-72 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
                             <p class="text-6xl">🥹</p>
                             <p class="text-lg font-semibold text-rose-950">
@@ -620,24 +595,12 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <form class="mt-5 space-y-4" @submit.prevent="submitDeclined">
-                        <div v-if="isPublicInvite" class="grid gap-4">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">
-                                    {{ t('invitations.family_name') }}
-                                </label>
-                                <Input v-model="form.name" :placeholder="t('invitations.family_placeholder')" />
-                                <InputError :message="form.errors.name" />
-                            </div>
+                    <div class="mt-5 space-y-4">
+                        <p class="text-sm leading-6 text-neutral-600">
+                            {{ t('invitations.decline_note') }}
+                        </p>
 
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">
-                                    {{ t('invitations.phone_optional') }}
-                                </label>
-                                <Input v-model="form.phone" placeholder="07..." />
-                                <InputError :message="form.errors.phone" />
-                            </div>
-                        </div>
+                        <InputError :message="form.errors.name" />
 
                         <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
                             <Button
@@ -650,14 +613,15 @@ onMounted(() => {
                             </Button>
 
                             <Button
-                                type="submit"
+                                type="button"
                                 class="rounded-full bg-rose-600 px-6 text-white hover:bg-rose-700"
                                 :disabled="form.processing"
+                                @click="submitDeclined"
                             >
                                 {{ t('invitations.confirm_decline') }}
                             </Button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
