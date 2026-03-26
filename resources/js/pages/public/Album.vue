@@ -92,7 +92,7 @@ const page = usePage<{
         available?: string[];
     };
 }>();
-const appName = computed(() => page.props.name ?? 'QR Events');
+const appName = computed(() => page.props.name ?? 'EventSmart');
 
 type Limits = {
     storageLimitBytes: number;

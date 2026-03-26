@@ -844,8 +844,8 @@ onMounted(() => {
             </div>
         </section>
 
-        <section class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div class="grid gap-10 rounded-[34px] border border-promo-line bg-white p-6 shadow-[0_22px_70px_rgba(120,86,255,0.1)] lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
+        <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+            <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
                         {{ t('marketing.home.social.eyebrow') }}
@@ -857,20 +857,20 @@ onMounted(() => {
                         {{ t('marketing.home.social.description') }}
                     </p>
 
-                    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+                    <dl class="mt-8 grid gap-4 border-y border-promo-line/70 py-5 sm:grid-cols-2">
                         <div
                             v-for="item in stats"
                             :key="item.label"
-                            class="rounded-[22px] border border-promo-line bg-promo-surface p-5"
+                            class="min-w-0"
                         >
-                            <div class="text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.35rem]">
+                            <dt class="text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.35rem]">
                                 {{ item.value }}
-                            </div>
-                            <div class="mt-2 text-sm text-promo-muted">
+                            </dt>
+                            <dd class="mt-1 text-sm text-promo-muted">
                                 {{ item.label }}
-                            </div>
+                            </dd>
                         </div>
-                    </div>
+                    </dl>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                         <Link
@@ -895,7 +895,7 @@ onMounted(() => {
                         :key="`stat-${image}`"
                         :src="image"
                         :alt="t('marketing.home.social.gallery_alt')"
-                        class="aspect-[4/3] w-full rounded-[26px] object-cover"
+                        class="aspect-[4/3] w-full rounded-[24px] object-cover"
                         loading="lazy"
                         decoding="async"
                     />

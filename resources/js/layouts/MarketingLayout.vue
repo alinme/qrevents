@@ -40,7 +40,7 @@ defineProps<{
 const page = usePage();
 const authedUser = page.props.auth?.user ?? null;
 const { locale, t } = useTranslations();
-const appName = computed(() => page.props.name ?? 'QR Events');
+const appName = computed(() => page.props.name ?? 'EventSmart');
 
 const homeUrl = home().url;
 
@@ -108,24 +108,24 @@ const switchMarketingLocale = (nextLocale: string): void => {
         <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-[1400px]">
                 <div class="relative h-[34rem]">
-                    <div class="absolute left-[-8rem] top-[-9rem] h-[24rem] w-[24rem] rounded-full bg-promo-purple/70 blur-3xl" />
-                    <div class="absolute right-[-5rem] top-[2rem] h-[28rem] w-[28rem] rounded-full bg-promo-surface-strong/70 blur-3xl" />
-                    <div class="absolute left-[34%] top-[6rem] h-[16rem] w-[16rem] rounded-full bg-promo-warm/80 blur-3xl" />
+                    <div class="absolute left-[-8rem] top-[-9rem] h-[21rem] w-[21rem] rounded-full bg-promo-purple/40 blur-3xl" />
+                    <div class="absolute right-[-5rem] top-[2rem] h-[24rem] w-[24rem] rounded-full bg-promo-surface-strong/45 blur-3xl" />
+                    <div class="absolute left-[34%] top-[6rem] h-[13rem] w-[13rem] rounded-full bg-promo-warm/45 blur-3xl" />
                 </div>
             </div>
         </div>
 
-        <header class="sticky top-0 z-40 border-b border-promo-line/80 bg-promo-bg/90 backdrop-blur-xl">
+        <header class="sticky top-0 z-40 border-b border-promo-line/60 bg-promo-bg/92 backdrop-blur-md">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
                 <Link :href="home()" class="flex items-center gap-3">
-                    <div class="flex size-11 items-center justify-center rounded-[18px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_10px_24px_rgba(232,79,154,0.25)]">
+                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_8px_18px_rgba(232,79,154,0.16)]">
                         <QrCode class="size-5" />
                     </div>
                     <div>
                         <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
                             {{ t('marketing.brand.title', { appName }) }}
                         </div>
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                        <div class="text-[11px] font-medium uppercase tracking-[0.18em] text-promo-muted">
                             {{ t('marketing.brand.subtitle') }}
                         </div>
                     </div>
@@ -165,7 +165,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         <DropdownMenuTrigger as-child>
                             <button
                                 type="button"
-                                class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-semibold text-promo-ink shadow-[0_12px_30px_rgba(120,86,255,0.08)] transition hover:bg-promo-surface"
+                                class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                             >
                                 <span class="text-base leading-none">{{ selectedLocaleOption.flag }}</span>
                                 <span class="hidden min-w-0 text-left xl:block">
@@ -358,7 +358,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             </div>
                             <div>
                                 <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
-                                    {{ t('marketing.brand.subtitle') }}
+                                    {{ t('marketing.brand.title', { appName }) }}
                                 </div>
                                 <div class="text-sm text-promo-muted">
                                     {{ t('marketing.footer.tagline') }}

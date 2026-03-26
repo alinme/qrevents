@@ -48,7 +48,7 @@ const props = defineProps<{
 
 const page = usePage();
 const { t } = useTranslations();
-const appName = computed(() => page.props.name ?? 'QR Events');
+const appName = computed(() => page.props.name ?? 'EventSmart');
 
 const pageTitle = computed(() => t('marketing.pricing.meta.title'));
 const pageDescription = computed(() => t('marketing.pricing.meta.description'));
@@ -120,10 +120,10 @@ const openFeatureHelp = (label: string, help: string): void => {
                         {{ t('marketing.pricing.hero.badge') }}
                 </p>
                 <h1 class="mt-6 text-[1.85rem] font-extrabold leading-tight tracking-[-0.03em] text-promo-ink sm:text-[2.15rem]">
-                    {{ t('marketing.pricing.hero.badge') }}
+                    {{ t('marketing.pricing.hero.title') }}
                 </h1>
                 <p class="mt-3 text-sm leading-7 text-promo-muted sm:text-base">
-                    {{ t('marketing.pricing.hero.title') }}
+                    {{ t('marketing.pricing.hero.description') }}
                 </p>
             </div>
 
@@ -150,7 +150,7 @@ const openFeatureHelp = (label: string, help: string): void => {
                 <article
                     v-for="plan in plans"
                     :key="plan.id"
-                    class="flex h-full flex-col rounded-[28px] border-2 bg-white px-5 py-6 shadow-[0_16px_44px_rgba(232,79,154,0.06)] sm:px-6"
+                    class="flex h-full flex-col rounded-[26px] border bg-white px-5 py-6 shadow-[0_12px_30px_rgba(232,79,154,0.04)] sm:px-6"
                     :class="plan.isHighlighted ? 'border-promo-primary/45' : 'border-promo-line'"
                 >
                     <div class="flex items-start justify-between gap-4">

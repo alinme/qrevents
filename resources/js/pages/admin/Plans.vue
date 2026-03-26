@@ -393,7 +393,7 @@ const submitEditForm = (): void => {
                         </label>
                         <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
                             <input v-model="createForm.remove_app_branding" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
-                            <span class="text-sm font-medium text-[#171411]">Hide QR Events branding</span>
+                            <span class="text-sm font-medium text-[#171411]">Hide EventSmart branding</span>
                         </label>
                         <label class="flex items-center gap-3 rounded-2xl border border-black/8 bg-[#fbfaf7] px-4 py-3">
                             <input v-model="createForm.is_default" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
@@ -583,7 +583,7 @@ const submitEditForm = (): void => {
                         </label>
                         <label class="flex items-center gap-3">
                             <input v-model="editForm.remove_app_branding" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >
-                            <span class="text-sm font-medium text-[#171411]">Hide QR Events branding</span>
+                            <span class="text-sm font-medium text-[#171411]">Hide EventSmart branding</span>
                         </label>
                         <label class="flex items-center gap-3">
                             <input v-model="editForm.is_default" type="checkbox" class="size-4 rounded border-black/20 text-[#8b5f3d] focus:ring-[#c79a5b]" >

@@ -1110,7 +1110,7 @@ class EventController extends Controller
                     'unit_amount' => (int) $event->plan->price_cents,
                     'product_data' => [
                         'name' => "{$event->plan->name} - {$event->name}",
-                        'description' => 'QR Events event hosting and storage plan',
+                        'description' => 'EventSmart event hosting and storage plan',
                     ],
                 ],
             ]],

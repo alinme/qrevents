@@ -46,7 +46,7 @@ const previewTiles = [
                 </div>
                 <div>
                     <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                        QR Events
+                        EventSmart
                     </div>
                     <div class="text-xl font-extrabold tracking-[-0.04em] text-promo-ink">
                         Friendly event sharing

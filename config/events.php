@@ -14,7 +14,7 @@ return [
         'watermarked_download_max_pixels' => (int) env('EVENTS_IMAGE_WATERMARKED_DOWNLOAD_MAX_PIXELS', 2400),
         'quality' => (int) env('EVENTS_IMAGE_VARIANT_QUALITY', 82),
         'format' => env('EVENTS_IMAGE_VARIANT_FORMAT', 'jpg'),
-        'watermark_text' => env('EVENTS_IMAGE_WATERMARK_TEXT', 'QR Events Preview'),
+        'watermark_text' => env('EVENTS_IMAGE_WATERMARK_TEXT', 'EventSmart Preview'),
         'watermark_font' => env('EVENTS_IMAGE_WATERMARK_FONT'),
     ],
     'video_variants' => [

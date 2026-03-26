@@ -10,6 +10,7 @@ it('uses the site locale cookie on the marketing home page', function () {
             ->component('Welcome')
             ->where('pwaLaunch', false)
             ->where('locale.current', 'ro')
+            ->where('translations.marketing.brand.subtitle', 'Partajare smart pentru evenimente')
             ->where('translations.marketing.nav.pricing', 'Preturi')
             ->where('translations.marketing.home.hero.title', 'Colecteaza usor fotografii de la fiecare invitat la evenimentul tau')
             ->where('translations.marketing.pricing.hero.title', 'Alege planul care se potriveste cel mai bine evenimentului tau')

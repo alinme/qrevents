@@ -90,7 +90,7 @@ const props = defineProps<{
 
 const page = usePage();
 const { locale, t } = useTranslations();
-const appName = computed(() => page.props.name ?? 'QR Events');
+const appName = computed(() => page.props.name ?? 'EventSmart');
 const inertiaVersion = computed(() => page.version ?? null);
 
 const activeIndex = ref(0);

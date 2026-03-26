@@ -34,7 +34,7 @@ class EventCollaboratorInviteNotification extends Notification
             ->subject($subject)
             ->view('emails.collaborator-invite', [
                 'subject' => $subject,
-                'headerTitle' => config('app.name', 'QR Events'),
+                'headerTitle' => config('app.name', 'EventSmart'),
                 'headerSubtitle' => 'Event collaborator invitation',
                 'footerText' => 'If you were not expecting this invitation, you can ignore this email.',
                 'eventName' => $this->eventName,
