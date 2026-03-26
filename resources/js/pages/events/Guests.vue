@@ -51,6 +51,10 @@ import {
     invitationTemplateDefinitions,
     type InvitationTemplateId,
 } from '@/lib/invitation-templates';
+import {
+    composeInvitationPaperPresentation,
+    type InvitationWeddingDetails,
+} from '@/lib/invitation-presentation';
 import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -58,6 +62,7 @@ import type { BreadcrumbItem } from '@/types';
 type EventPayload = {
     id: number;
     name: string;
+    type: string;
     retentionEndsAt?: string | null;
 };
 
@@ -135,6 +140,7 @@ type InvitationPreviewPayload = {
     eventDetails: {
         dateLabel: string;
         venueAddress: string | null;
+        weddingDetails: InvitationWeddingDetails;
     };
     branding: {
         logoUrl: string | null;
@@ -147,6 +153,7 @@ type InvitationTemplatePreviewContent = {
     headline: string;
     message: string;
     closing: string;
+    detailLines: string[];
     dateLabel: string | null;
     venueAddress: string | null;
 };
@@ -376,27 +383,60 @@ const previewingInvitationTemplateCard = computed(() => {
 
 const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): InvitationTemplatePreviewContent => {
     if (templateId === 'canva_cream') {
+        const samplePresentation = composeInvitationPaperPresentation({
+            eventName: 'You are invited to',
+            eventType: 'wedding',
+            headline: 'You are invited to',
+            weddingDetails: {
+                partnerOneName: 'Luca',
+                partnerTwoName: 'Danielle',
+                familyName: '',
+                showFamilyName: false,
+                brideParents: 'Maria and Daniel',
+                groomParents: 'Elena and Victor',
+                godparents: 'Bianca and Stefan',
+            },
+        });
+
         return {
-            eventName: 'You’re invited to',
+            eventName: samplePresentation.leadIn,
             guestLabel: null,
-            headline: 'Luca\n&\nDanielle',
+            headline: samplePresentation.title,
             message: 'We are getting married!',
             closing: 'See you there',
+            detailLines: samplePresentation.detailLines,
             dateLabel: 'Saturday • 15 November 2023 • 6 PM',
             venueAddress: '123 Anywhere St., Any City',
         };
     }
 
-    return {
+    const presentation = composeInvitationPaperPresentation({
         eventName: currentEvent.name,
-        guestLabel: 'Invitation preview',
+        eventType: currentEvent.type,
         headline: invitationSettingsForm.headline || currentEvent.name,
+        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+    });
+
+    return {
+        eventName: presentation.leadIn,
+        guestLabel: 'Invitation preview',
+        headline: presentation.title,
         message: invitationSettingsForm.message || 'Add the main invitation message here.',
         closing: invitationSettingsForm.closing || 'A short RSVP reminder.',
+        detailLines: presentation.detailLines,
         dateLabel: props.invitationPreview.eventDetails.dateLabel,
         venueAddress: props.invitationPreview.eventDetails.venueAddress,
     };
 };
+
+const activeInvitationPresentation = computed(() =>
+    composeInvitationPaperPresentation({
+        eventName: currentEvent.name,
+        eventType: currentEvent.type,
+        headline: invitationSettingsForm.headline || currentEvent.name,
+        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+    }),
+);
 
 const invitationSummaryCards = computed(() => [
     {
@@ -1508,6 +1548,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                                     :headline="invitationTemplatePreviewContent(template.id).headline"
                                                     :message="invitationTemplatePreviewContent(template.id).message"
                                                     :closing="invitationTemplatePreviewContent(template.id).closing"
+                                                    :detail-lines="invitationTemplatePreviewContent(template.id).detailLines"
                                                     :date-label="invitationTemplatePreviewContent(template.id).dateLabel"
                                                     :venue-address="invitationTemplatePreviewContent(template.id).venueAddress"
                                                     mode="preview"
@@ -1604,11 +1645,12 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
                         <InvitationPaper
                             :template="invitationSettingsForm.template"
-                            :event-name="currentEvent.name"
+                            :event-name="activeInvitationPresentation.leadIn"
                             guest-label="Invitation preview"
-                            :headline="invitationSettingsForm.headline || currentEvent.name"
+                            :headline="activeInvitationPresentation.title"
                             :message="invitationSettingsForm.message || 'Add the main invitation message here.'"
                             :closing="invitationSettingsForm.closing || 'A short RSVP reminder.'"
+                            :detail-lines="activeInvitationPresentation.detailLines"
                             :contact-phone="showInvitationAdvanced ? invitationSettingsForm.contact_phone : null"
                             :date-label="props.invitationPreview.eventDetails.dateLabel"
                             :venue-address="props.invitationPreview.eventDetails.venueAddress"
@@ -2122,6 +2164,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         :headline="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).headline"
                         :message="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).message"
                         :closing="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).closing"
+                        :detail-lines="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).detailLines"
                         :date-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).dateLabel"
                         :venue-address="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).venueAddress"
                         mode="preview"

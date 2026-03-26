@@ -2,6 +2,7 @@
 import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
+    type InvitationTemplateDetailsConfig,
     invitationTemplateMap,
     type InvitationTemplateTextBlockConfig,
     type InvitationTemplateId,
@@ -14,6 +15,7 @@ const props = withDefaults(defineProps<{
     headline: string;
     message: string;
     closing: string;
+    detailLines?: string[];
     contactPhone?: string | null;
     dateLabel?: string | null;
     venueAddress?: string | null;
@@ -23,6 +25,7 @@ const props = withDefaults(defineProps<{
     dateLabel: null,
     venueAddress: null,
     guestLabel: null,
+    detailLines: () => [],
     mode: 'live',
 });
 
@@ -179,6 +182,21 @@ const footerStyle = computed<Record<string, string>>(() => ({
     gap: templateLayout.value.footer.gap,
 }));
 
+const detailsBlock = computed<InvitationTemplateDetailsConfig | null>(() => {
+    return templateLayout.value.details ?? null;
+});
+
+const detailsStyle = computed<Record<string, string> | null>(() => {
+    if (detailsBlock.value === null) {
+        return null;
+    }
+
+    return {
+        ...blockStyle(detailsBlock.value),
+        gap: detailsBlock.value.gap,
+    };
+});
+
 const footerMetaStyle = computed<Record<string, string>>(() => {
     const footer = templateLayout.value.footer;
 
@@ -301,6 +319,21 @@ onBeforeUnmount(() => {
                 </p>
             </div>
 
+            <div
+                v-if="detailLines.length > 0 && detailsStyle"
+                class="absolute flex flex-col items-center"
+                :class="mutedTextClass"
+                :style="detailsStyle"
+            >
+                <p
+                    v-for="(detailLine, index) in detailLines"
+                    :key="`${detailLine}-${index}`"
+                    class="text-center"
+                >
+                    {{ detailLine }}
+                </p>
+            </div>
+
             <div class="absolute flex flex-col items-center" :style="footerStyle">
                 <div
                     v-if="dateLabel || venueAddress || contactPhone"
@@ -338,6 +371,12 @@ onBeforeUnmount(() => {
                 </p>
                 <p>
                         {{ message }}
+                </p>
+                <p
+                    v-for="(detailLine, index) in detailLines"
+                    :key="`sr-${detailLine}-${index}`"
+                >
+                    {{ detailLine }}
                 </p>
                 <p v-if="dateLabel">
                     {{ dateLabel }}

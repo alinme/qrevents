@@ -54,8 +54,20 @@
     "fontWeight": "400",
     "fontFamily": "sans"
   },
+  "details": {
+    "top": "57%",
+    "left": "15%",
+    "width": "70%",
+    "align": "center",
+    "fontSizeLive": "0.74rem",
+    "fontSizePreview": "0.68rem",
+    "lineHeight": "1.45",
+    "fontWeight": "500",
+    "fontFamily": "sans",
+    "gap": "0.22rem"
+  },
   "footer": {
-    "top": "72%",
+    "top": "76%",
     "left": "14%",
     "width": "72%",
     "align": "center",

@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, Download, Minus, Plus } from 'lucide-vue-next';
+import { CheckCircle2, Download, ExternalLink, Minus, Plus } from 'lucide-vue-next';
 import { computed, onMounted } from 'vue';
 import InputError from '@/components/InputError.vue';
 import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { type InvitationTemplateId } from '@/lib/invitation-templates';
+import {
+    composeInvitationPaperPresentation,
+    type InvitationWeddingDetails,
+} from '@/lib/invitation-presentation';
 import {
     NativeSelect,
     NativeSelectOption,
@@ -36,12 +40,14 @@ type InvitationCopy = {
 type EventDetails = {
     dateLabel: string;
     venueAddress: string | null;
+    weddingDetails: InvitationWeddingDetails;
     timezone: string;
     moments: Array<{
         label: string;
         date: string;
         time: string;
         address: string;
+        mapsUrl: string | null;
     }>;
 };
 
@@ -140,6 +146,17 @@ const invitationSurfaceStyle = computed(() => ({
     backgroundPosition: 'center',
 }));
 
+const invitationPresentation = computed(() =>
+    composeInvitationPaperPresentation({
+        eventName: props.eventName,
+        eventType: props.eventType,
+        headline: props.invitation.headline,
+        weddingDetails: props.eventDetails.weddingDetails,
+    }),
+);
+
+const visibleMoments = computed(() => props.eventDetails.moments);
+
 const submit = (): void => {
     form.post(props.links.respond, {
         preserveScroll: true,
@@ -179,11 +196,12 @@ onMounted(() => {
             <div class="w-full space-y-5">
                 <InvitationPaper
                     :template="invitation.template"
-                    :event-name="eventName"
+                    :event-name="invitationPresentation.leadIn"
                     :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
-                    :headline="invitation.headline"
+                    :headline="invitationPresentation.title"
                     :message="invitation.message"
                     :closing="invitation.closing"
+                    :detail-lines="invitationPresentation.detailLines"
                     :contact-phone="invitation.contactPhone"
                     :date-label="eventDetails.dateLabel"
                     :venue-address="eventDetails.venueAddress || t('invitations.venue_pending')"
@@ -196,6 +214,53 @@ onMounted(() => {
                         Save or print invitation
                     </Button>
                 </div>
+
+                <section
+                    v-if="visibleMoments.length > 0"
+                    class="rounded-[30px] border border-neutral-200 bg-white/92 p-4 shadow-lg backdrop-blur sm:p-5"
+                >
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
+                            {{ t('invitations.moments_title') }}
+                        </p>
+                        <p class="text-sm text-neutral-600">
+                            {{ t('invitations.moments_description') }}
+                        </p>
+                    </div>
+
+                    <div class="mt-4 grid gap-3">
+                        <div
+                            v-for="moment in visibleMoments"
+                            :key="`${moment.label}-${moment.date}-${moment.time}`"
+                            class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3"
+                        >
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="space-y-1">
+                                    <p class="text-sm font-semibold text-neutral-900">
+                                        {{ moment.label }}
+                                    </p>
+                                    <p class="text-sm text-neutral-600">
+                                        {{ moment.date }} · {{ moment.time }}
+                                    </p>
+                                    <p class="text-sm text-neutral-600">
+                                        {{ moment.address }}
+                                    </p>
+                                </div>
+
+                                <a
+                                    v-if="moment.mapsUrl"
+                                    :href="moment.mapsUrl"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:text-neutral-950"
+                                >
+                                    <ExternalLink class="size-4" />
+                                    {{ t('invitations.open_maps') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <section class="rounded-[30px] border border-neutral-200 bg-white/92 p-5 shadow-xl backdrop-blur sm:p-6">
                     <div>

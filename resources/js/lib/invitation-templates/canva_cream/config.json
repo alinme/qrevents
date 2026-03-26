@@ -58,8 +58,21 @@
     "fontFamily": "Montserrat",
     "color": "#5e564f"
   },
+  "details": {
+    "top": "57.8%",
+    "left": "15%",
+    "width": "70%",
+    "align": "center",
+    "fontSizeLive": "0.72rem",
+    "fontSizePreview": "0.66rem",
+    "lineHeight": "1.45",
+    "fontWeight": "500",
+    "fontFamily": "Montserrat",
+    "color": "#6b6158",
+    "gap": "0.22rem"
+  },
   "footer": {
-    "top": "73%",
+    "top": "77%",
     "left": "14%",
     "width": "72%",
     "align": "center",

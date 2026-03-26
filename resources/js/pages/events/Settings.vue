@@ -423,9 +423,18 @@ const canEditLogo = computed(() => planFeatures.value.allowsBetterCustomization)
 const canEditAdvancedAppearance = computed(() => planFeatures.value.allowsAdvancedCustomization);
 const canUseModeration = computed(() => planFeatures.value.allowsModerationTools);
 const isWeddingEventType = computed(() => form.type === 'wedding');
-const hasWeddingDetails = computed(() =>
-    Object.values(form.wedding_details).some((value) => value.trim().length > 0),
-);
+const hasWeddingDetails = computed(() => {
+    const details = form.wedding_details;
+
+    return [
+        details.partner_one_name,
+        details.partner_two_name,
+        details.family_name,
+        details.bride_parents,
+        details.groom_parents,
+        details.godparents,
+    ].some((value) => value.trim().length > 0);
+});
 const visibleTabItems = computed(() =>
     allTabItems.filter(
         (tab) => tab.id !== 'moderation' || canUseModeration.value,

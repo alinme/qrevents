@@ -43,6 +43,10 @@ export type InvitationTemplateFooterConfig = {
     };
 };
 
+export type InvitationTemplateDetailsConfig = InvitationTemplateTextBlockConfig & {
+    gap: string;
+};
+
 export type InvitationTemplatePaperConfig = {
     aspectRatio: string;
     innerRadius: string;
@@ -54,6 +58,7 @@ export type InvitationTemplateLayoutConfig = {
     header: InvitationTemplateHeaderConfig;
     headline: InvitationTemplateTextBlockConfig;
     message: InvitationTemplateTextBlockConfig;
+    details?: InvitationTemplateDetailsConfig;
     footer: InvitationTemplateFooterConfig;
 };
 

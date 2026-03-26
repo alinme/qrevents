@@ -2945,12 +2945,34 @@ class EventController extends Controller
     private function invitationVenueAddress(Event $event): ?string
     {
         $venueAddress = is_string($event->venue_address ?? null) ? trim((string) $event->venue_address) : '';
+        $subEvents = collect(is_array($event->sub_events) ? $event->sub_events : [])
+            ->filter(fn (mixed $subEvent): bool => is_array($subEvent));
+
+        if ($event->type === 'wedding' && $subEvents->isNotEmpty()) {
+            $receptionAddress = $subEvents
+                ->first(function (array $subEvent): bool {
+                    $key = Str::lower((string) ($subEvent['key'] ?? ''));
+                    $label = Str::lower((string) ($subEvent['label'] ?? ''));
+
+                    return in_array($key, ['reception', 'party'], true)
+                        || str_contains($label, 'reception')
+                        || $label === 'party';
+                });
+
+            if (
+                is_array($receptionAddress)
+                && is_string($receptionAddress['address'] ?? null)
+                && trim((string) $receptionAddress['address']) !== ''
+            ) {
+                return trim((string) $receptionAddress['address']);
+            }
+        }
 
         if ($venueAddress !== '') {
             return $venueAddress;
         }
 
-        return collect($event->sub_events ?? [])
+        return $subEvents
             ->map(fn (mixed $subEvent): ?string => is_array($subEvent) && is_string($subEvent['address'] ?? null)
                 ? trim((string) $subEvent['address'])
                 : null)
@@ -2959,7 +2981,7 @@ class EventController extends Controller
     }
 
     /**
-     * @return array<int, array{label: string, date: string, time: string, address: string}>
+     * @return array<int, array{label: string, date: string, time: string, address: string, mapsUrl: string|null}>
      */
     private function invitationMoments(Event $event): array
     {
@@ -2972,9 +2994,10 @@ class EventController extends Controller
                 ->map(function (array $subEvent) use ($timezone): array {
                     $date = is_string($subEvent['date'] ?? null) ? $subEvent['date'] : null;
                     $startTime = is_string($subEvent['start_time'] ?? null) ? $subEvent['start_time'] : null;
-                    $address = is_string($subEvent['address'] ?? null) && trim((string) $subEvent['address']) !== ''
+                    $normalizedAddress = is_string($subEvent['address'] ?? null) && trim((string) $subEvent['address']) !== ''
                         ? trim((string) $subEvent['address'])
-                        : 'Address not needed';
+                        : null;
+                    $address = $normalizedAddress ?? 'Address not needed';
 
                     $dateLabel = $date !== null
                         ? CarbonImmutable::parse($date, $timezone)->isoFormat('ddd, D MMM')
@@ -2985,6 +3008,7 @@ class EventController extends Controller
                         'date' => $dateLabel,
                         'time' => $startTime !== null && trim($startTime) !== '' ? $startTime : 'Time pending',
                         'address' => $address,
+                        'mapsUrl' => $normalizedAddress !== null ? $this->mapsSearchUrl($normalizedAddress) : null,
                     ];
                 })
                 ->values()
@@ -2996,7 +3020,15 @@ class EventController extends Controller
             'date' => $this->invitationPrimaryDateLabel($event),
             'time' => 'Time pending',
             'address' => $this->invitationVenueAddress($event) ?? 'Address pending',
+            'mapsUrl' => $this->invitationVenueAddress($event) !== null
+                ? $this->mapsSearchUrl((string) $this->invitationVenueAddress($event))
+                : null,
         ]];
+    }
+
+    private function mapsSearchUrl(string $address): string
+    {
+        return 'https://www.google.com/maps/search/?api=1&query='.urlencode($address);
     }
 
     /**

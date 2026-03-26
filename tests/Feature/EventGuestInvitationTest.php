@@ -40,11 +40,39 @@ it('allows an event owner to update invitation settings', function () {
 
 it('shows a guest invitation page and records the open', function () {
     $event = Event::factory()->create([
+        'type' => 'wedding',
         'invitation_settings' => [
             'template' => 'canva_cream',
         ],
         'branding' => [
             'display_language' => 'en',
+            'wedding_details' => [
+                'partner_one_name' => 'Jessica',
+                'partner_two_name' => 'Simon',
+                'family_name' => 'Miller',
+                'show_family_name' => true,
+                'bride_parents' => 'Mary and John Miller',
+                'groom_parents' => 'Laura and David Webb',
+                'godparents' => 'Bianca and Stefan',
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'civil-ceremony',
+                'label' => 'Civil union',
+                'date' => '2026-06-10',
+                'start_time' => '13:00',
+                'address' => 'City Hall, Bucharest',
+                'no_address' => false,
+            ],
+            [
+                'key' => 'reception',
+                'label' => 'Reception',
+                'date' => '2026-06-10',
+                'start_time' => '18:00',
+                'address' => 'Sun Garden Resort, Bucharest',
+                'no_address' => false,
+            ],
         ],
     ]);
     $guestParty = EventGuestParty::factory()->for($event)->create([
@@ -61,6 +89,12 @@ it('shows a guest invitation page and records the open', function () {
             ->where('isPublicInvite', false)
             ->where('invitation.template', 'canva_cream')
             ->where('invitation.headline', $event->name)
+            ->where('eventDetails.venueAddress', 'Sun Garden Resort, Bucharest')
+            ->where('eventDetails.weddingDetails.partnerOneName', 'Jessica')
+            ->where('eventDetails.weddingDetails.familyName', 'Miller')
+            ->where('eventDetails.weddingDetails.showFamilyName', true)
+            ->where('eventDetails.moments.0.mapsUrl', 'https://www.google.com/maps/search/?api=1&query=City+Hall%2C+Bucharest')
+            ->where('eventDetails.moments.1.mapsUrl', 'https://www.google.com/maps/search/?api=1&query=Sun+Garden+Resort%2C+Bucharest')
         );
 
     $guestParty->refresh();
