@@ -679,11 +679,10 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="steps" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section id="steps" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
             <MarketingSectionHeading
                 :eyebrow="t('marketing.home.steps.eyebrow')"
                 :title="t('marketing.home.steps.title')"
-                :description="t('marketing.home.steps.description')"
                 centered
             />
 
@@ -701,12 +700,11 @@ onMounted(() => {
             </div>
         </section>
 
-        <section class="bg-promo-surface/55">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section class="bg-promo-surface/45">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.value.eyebrow')"
                     :title="t('marketing.home.value.title')"
-                    :description="t('marketing.home.value.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -721,32 +719,31 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="how-it-works" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section id="how-it-works" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.flow.eyebrow')"
                     :title="t('marketing.home.flow.title')"
-                    :description="t('marketing.home.flow.description')"
                 />
 
-            <div class="mt-16 space-y-8">
+            <div class="mt-14 space-y-6">
                 <article
                     v-for="(item, index) in howItWorks"
                     :key="item.step"
-                    class="grid items-center gap-8 rounded-[30px] border border-promo-line bg-white p-6 shadow-[0_18px_55px_rgba(120,86,255,0.08)] lg:grid-cols-[1fr_1fr] lg:p-8"
+                    class="grid items-center gap-7 rounded-[24px] border border-promo-line/80 bg-white p-5 lg:grid-cols-[1fr_1fr] lg:p-6"
                 >
                     <div :class="index % 2 === 1 ? 'lg:order-2' : ''">
                         <div class="inline-flex items-center gap-3 rounded-full bg-promo-surface px-4 py-2">
-                            <span class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            <span class="text-[11px] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                                 Step {{ item.step }}
                             </span>
                         </div>
-                        <h3 class="mt-5 text-lg font-extrabold tracking-[-0.015em] text-promo-ink sm:text-[1.3rem]">
+                        <h3 class="mt-4 text-lg font-extrabold tracking-[-0.015em] text-promo-ink sm:text-[1.2rem]">
                             {{ item.title }}
                         </h3>
-                        <p class="mt-4 text-sm leading-7 text-promo-muted sm:text-base">
+                        <p class="mt-3 text-sm leading-6 text-promo-muted sm:text-[0.95rem]">
                             {{ item.description }}
                         </p>
-                        <ul class="mt-6 grid gap-3 text-sm text-promo-ink/84">
+                        <ul class="mt-5 grid gap-2 text-sm text-promo-ink/84">
                             <li
                                 v-for="highlight in item.highlights"
                                 :key="highlight"
@@ -760,14 +757,11 @@ onMounted(() => {
                         </ul>
                     </div>
 
-                    <div
-                        class="rounded-[26px] border border-promo-line bg-linear-to-br from-promo-surface to-white p-4"
-                        :class="index % 2 === 1 ? 'lg:order-1' : ''"
-                    >
+                    <div class="rounded-[22px] bg-promo-surface/55 p-3" :class="index % 2 === 1 ? 'lg:order-1' : ''">
                         <img
                             :src="item.image"
                             :alt="item.imageAlt"
-                            class="aspect-[5/4] w-full rounded-[22px] object-cover"
+                            class="aspect-[5/4] w-full rounded-[18px] object-cover"
                             loading="lazy"
                             decoding="async"
                         />
@@ -777,11 +771,10 @@ onMounted(() => {
         </section>
 
         <section id="capabilities" class="bg-white">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.capabilities.eyebrow')"
                     :title="t('marketing.home.capabilities.title')"
-                    :description="t('marketing.home.capabilities.description')"
                     centered
                 />
 
@@ -789,17 +782,17 @@ onMounted(() => {
                     <article
                         v-for="feature in capabilities"
                         :key="feature.title"
-                        class="group relative overflow-hidden rounded-[28px] border border-promo-primary/20 bg-white/95 px-6 py-8 text-center shadow-[0_18px_50px_rgba(232,79,154,0.08)] transition duration-300 hover:-translate-y-1 hover:border-promo-primary/35 hover:shadow-[0_24px_65px_rgba(232,79,154,0.14)]"
+                        class="group relative overflow-hidden rounded-[24px] border border-promo-line/80 bg-white px-5 py-7 text-center transition duration-300 hover:border-promo-primary/20 hover:bg-promo-surface/30"
                     >
-                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center text-promo-primary/10 transition duration-300 group-hover:scale-105 group-hover:text-promo-primary/14">
-                            <component :is="feature.icon" class="size-32 sm:size-36" />
+                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center text-promo-primary/8 transition duration-300 group-hover:text-promo-primary/12">
+                            <component :is="feature.icon" class="size-28 sm:size-32" />
                         </div>
 
                         <div class="relative z-10 flex min-h-[12rem] flex-col items-center justify-center">
-                            <h3 class="max-w-[12rem] text-base font-bold text-promo-ink sm:text-lg">
+                            <h3 class="max-w-[12rem] text-[0.98rem] font-bold text-promo-ink sm:text-base">
                                 {{ feature.title }}
                             </h3>
-                            <p class="mt-3 max-w-[16rem] text-sm leading-6 text-promo-muted">
+                            <p class="mt-2 max-w-[16rem] text-sm leading-6 text-promo-muted">
                                 {{ feature.description }}
                             </p>
                         </div>
@@ -808,12 +801,11 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="use-cases" class="bg-promo-surface/55">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section id="use-cases" class="bg-promo-surface/45">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.use_cases.eyebrow')"
                     :title="t('marketing.home.use_cases.title')"
-                    :description="t('marketing.home.use_cases.description')"
                 />
 
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -821,21 +813,21 @@ onMounted(() => {
                         v-for="item in useCases"
                         :key="item.title"
                         :href="item.href"
-                        class="group rounded-[26px] border border-promo-line bg-white p-6 shadow-[0_16px_46px_rgba(232,79,154,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(232,79,154,0.12)]"
+                        class="group rounded-[22px] border border-promo-line/80 bg-white p-5 transition duration-300 hover:border-promo-primary/20 hover:bg-promo-surface/30"
                     >
-                        <div class="flex size-12 items-center justify-center rounded-[18px] bg-linear-to-br from-promo-surface to-promo-purple text-promo-primary">
+                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
                             <component :is="item.icon" class="size-5" />
                         </div>
-                        <p class="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                        <p class="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                             {{ item.label }}
                         </p>
-                        <h3 class="mt-3 text-base font-bold tracking-[-0.015em] text-promo-ink sm:text-lg">
+                        <h3 class="mt-2 text-[0.98rem] font-bold tracking-[-0.015em] text-promo-ink sm:text-base">
                             {{ item.title }}
                         </h3>
-                        <p class="mt-3 text-sm leading-7 text-promo-muted">
+                        <p class="mt-2 text-sm leading-6 text-promo-muted">
                             {{ item.description }}
                         </p>
-                        <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
+                        <div class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
                             {{ t('marketing.shared.learn_more') }}
                             <ArrowRight class="size-4 transition group-hover:translate-x-1" />
                         </div>
@@ -872,7 +864,7 @@ onMounted(() => {
                         </div>
                     </dl>
 
-                    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <div class="mt-7 flex flex-col gap-3 sm:flex-row">
                         <Link
                             :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
@@ -904,11 +896,10 @@ onMounted(() => {
         </section>
 
         <section id="reviews" class="bg-white">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.reviews.eyebrow')"
                     :title="t('marketing.home.reviews.title')"
-                    :description="t('marketing.home.reviews.description')"
                 />
 
                 <div class="mt-6 inline-flex items-center gap-3 rounded-full bg-promo-surface px-4 py-2 text-sm font-semibold text-promo-ink">
@@ -931,33 +922,32 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="comparison" class="bg-promo-surface/55">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section id="comparison" class="bg-promo-surface/45">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.comparison.eyebrow')"
                     :title="t('marketing.home.comparison.title')"
-                    :description="t('marketing.home.comparison.description')"
                     centered
                 />
 
                 <div class="mt-14 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-                    <div class="rounded-[30px] border border-promo-primary/20 bg-white p-6 shadow-[0_18px_60px_rgba(232,79,154,0.12)]">
-                        <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                    <div class="rounded-[24px] border border-promo-line/80 bg-white p-5">
+                        <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                             {{ t('marketing.shared.our_product') }}
                         </div>
-                        <div class="mt-6 space-y-4">
+                        <div class="mt-5 space-y-3">
                             <div
                                 v-for="row in comparisonRows"
                                 :key="`ours-${row.label}`"
-                                class="rounded-[22px] border border-promo-line bg-promo-surface/60 p-4"
+                                class="border-b border-promo-line/70 pb-3 last:border-b-0 last:pb-0"
                             >
                                 <div class="flex items-start gap-3">
-                                    <div class="mt-1 flex size-8 items-center justify-center rounded-full bg-promo-primary text-white">
+                                    <div class="mt-1 flex size-8 items-center justify-center rounded-full bg-promo-surface text-promo-primary">
                                         <ShieldCheck class="size-4" />
                                     </div>
                                     <div>
                                         <p class="font-semibold text-promo-ink">{{ row.label }}</p>
-                                        <p class="mt-2 text-sm leading-7 text-promo-muted">
+                                        <p class="mt-1.5 text-sm leading-6 text-promo-muted">
                                             {{ row.ours }}
                                         </p>
                                     </div>
@@ -966,15 +956,15 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="rounded-[30px] border border-promo-line bg-white p-6">
-                        <div class="inline-flex items-center gap-2 rounded-full bg-promo-warm px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-ink">
+                    <div class="rounded-[24px] border border-promo-line/80 bg-white p-5">
+                        <div class="inline-flex items-center gap-2 rounded-full bg-promo-warm px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-promo-ink">
                             {{ t('marketing.shared.other_apps') }}
                         </div>
-                        <div class="mt-6 space-y-4">
+                        <div class="mt-5 space-y-3">
                             <div
                                 v-for="row in comparisonRows"
                                 :key="`other-${row.label}`"
-                                class="rounded-[22px] border border-promo-line bg-white p-4"
+                                class="border-b border-promo-line/70 pb-3 last:border-b-0 last:pb-0"
                             >
                                 <div class="flex items-start gap-3">
                                     <div class="mt-1 flex size-8 items-center justify-center rounded-full bg-promo-surface text-promo-muted">
@@ -982,7 +972,7 @@ onMounted(() => {
                                     </div>
                                     <div>
                                         <p class="font-semibold text-promo-ink">{{ row.label }}</p>
-                                        <p class="mt-2 text-sm leading-7 text-promo-muted">
+                                        <p class="mt-1.5 text-sm leading-6 text-promo-muted">
                                             {{ row.others }}
                                         </p>
                                     </div>
@@ -994,29 +984,28 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="blog" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <section id="blog" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
             <MarketingSectionHeading
                 :eyebrow="t('marketing.home.blog.eyebrow')"
                 :title="t('marketing.home.blog.title')"
-                :description="t('marketing.home.blog.description')"
             />
 
             <div class="mt-14 grid gap-6 md:grid-cols-3">
                 <article
                     v-for="post in blogPosts"
                     :key="post.title"
-                    class="rounded-[26px] border border-promo-line bg-white p-6 shadow-[0_16px_45px_rgba(120,86,255,0.08)]"
+                    class="rounded-[22px] border border-promo-line/80 bg-white p-5"
                 >
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                         {{ post.category }}
                     </p>
-                    <h3 class="mt-4 text-base font-bold tracking-[-0.015em] text-promo-ink sm:text-lg">
+                    <h3 class="mt-3 text-[0.98rem] font-bold tracking-[-0.015em] text-promo-ink sm:text-base">
                         {{ post.title }}
                     </h3>
-                    <p class="mt-4 text-sm leading-7 text-promo-muted">
+                    <p class="mt-3 text-sm leading-6 text-promo-muted">
                         {{ post.body }}
                     </p>
-                    <a href="#" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
+                    <a href="#" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-promo-ink">
                         {{ t('marketing.shared.read_article') }}
                         <ArrowRight class="size-4" />
                     </a>
@@ -1025,15 +1014,14 @@ onMounted(() => {
         </section>
 
         <section id="faq" class="bg-white">
-            <div class="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.home.faq.eyebrow')"
                     :title="t('marketing.home.faq.title')"
-                    :description="t('marketing.home.faq.description')"
                     centered
                 />
 
-                <div class="mt-12 rounded-[28px] border border-promo-line bg-promo-bg px-6 py-2 shadow-[0_14px_40px_rgba(232,79,154,0.08)]">
+                <div class="mt-10 rounded-[24px] border border-promo-line/80 bg-promo-bg px-5 py-1">
                     <Accordion type="single" collapsible class="w-full">
                         <AccordionItem
                             v-for="item in faqs"
@@ -1053,20 +1041,20 @@ onMounted(() => {
             </div>
         </section>
 
-        <section id="cta" class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-            <div class="overflow-hidden rounded-[36px] border border-promo-line bg-linear-to-br from-promo-surface via-white to-promo-purple p-8 shadow-[0_24px_70px_rgba(232,79,154,0.14)] lg:p-12">
+        <section id="cta" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+            <div class="overflow-hidden rounded-[28px] border border-promo-line/80 bg-linear-to-br from-promo-surface via-white to-promo-purple/55 p-7 lg:p-10">
                 <div class="mx-auto max-w-3xl text-center">
-                    <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                         {{ t('marketing.home.cta.eyebrow') }}
                     </p>
-                    <h2 class="mt-4 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.5rem]">
+                    <h2 class="mt-3 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.4rem]">
                         {{ t('marketing.home.cta.title') }}
                     </h2>
-                    <p class="mt-5 text-sm leading-7 text-promo-muted sm:text-base">
+                    <p class="mt-3 text-sm leading-6 text-promo-muted sm:text-[0.95rem]">
                         {{ t('marketing.home.cta.description') }}
                     </p>
 
-                    <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+                    <div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
                         <Link
                             :href="onboardingCreate({ query: { plan: 'free' } })"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"

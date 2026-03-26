@@ -21,13 +21,13 @@ withDefaults(
                 : 'max-w-2xl'
         "
     >
-        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-promo-primary">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
             {{ eyebrow }}
         </p>
-        <h2 class="mt-4 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.45rem] lg:text-[1.7rem]">
+        <h2 class="mt-3 text-xl font-extrabold tracking-[-0.02em] text-promo-ink sm:text-[1.35rem] lg:text-[1.55rem]">
             {{ title }}
         </h2>
-        <p v-if="description" class="mt-4 text-sm leading-7 text-promo-muted sm:text-base">
+        <p v-if="description" class="mt-3 max-w-[42rem] text-sm leading-6 text-promo-muted sm:text-[0.95rem]">
             {{ description }}
         </p>
     </div>

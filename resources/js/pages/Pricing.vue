@@ -113,7 +113,7 @@ const openFeatureHelp = (label: string, help: string): void => {
         :description="pageDescription"
         :can-register="canRegister"
     >
-        <section class="mx-auto max-w-5xl px-4 pb-14 pt-12 text-center sm:px-6 lg:px-8 lg:pb-18 lg:pt-16">
+        <section class="mx-auto max-w-5xl px-4 pb-12 pt-12 text-center sm:px-6 lg:px-8 lg:pb-16 lg:pt-16">
             <div class="mx-auto max-w-3xl">
                 <p class="inline-flex items-center gap-2 rounded-full border border-promo-primary/18 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.06)]">
                         <Sparkles class="size-3.5" />
@@ -122,13 +122,13 @@ const openFeatureHelp = (label: string, help: string): void => {
                 <h1 class="mt-6 text-[1.85rem] font-extrabold leading-tight tracking-[-0.03em] text-promo-ink sm:text-[2.15rem]">
                     {{ t('marketing.pricing.hero.title') }}
                 </h1>
-                <p class="mt-3 text-sm leading-7 text-promo-muted sm:text-base">
+                <p class="mt-3 text-sm leading-6 text-promo-muted sm:text-[0.95rem]">
                     {{ t('marketing.pricing.hero.description') }}
                 </p>
             </div>
 
-            <div class="mx-auto mt-8 max-w-4xl rounded-[26px] border-2 border-promo-primary/30 bg-white px-5 py-5 text-left shadow-[0_16px_44px_rgba(232,79,154,0.08)] sm:px-6">
-                <p class="text-sm leading-7 text-promo-ink sm:text-[0.97rem]">
+            <div class="mx-auto mt-8 max-w-4xl rounded-[24px] border border-promo-primary/25 bg-white px-5 py-5 text-left sm:px-6">
+                <p class="text-sm leading-6 text-promo-ink sm:text-[0.95rem]">
                     <span class="font-semibold text-promo-primary">{{ t('marketing.pricing.guarantee.title') }}</span>
                     {{ ' ' }}{{ t('marketing.pricing.guarantee.description', { appName }) }}
                     <button
@@ -142,15 +142,15 @@ const openFeatureHelp = (label: string, help: string): void => {
             </div>
         </section>
 
-        <section class="mx-auto max-w-7xl px-4 pb-18 sm:px-6 lg:px-8 lg:pb-22">
+        <section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
             <div
                 v-if="plans.length > 0"
-                class="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]"
+                class="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]"
             >
                 <article
                     v-for="plan in plans"
                     :key="plan.id"
-                    class="flex h-full flex-col rounded-[26px] border bg-white px-5 py-6 shadow-[0_12px_30px_rgba(232,79,154,0.04)] sm:px-6"
+                    class="flex h-full flex-col rounded-[24px] border bg-white px-5 py-5 sm:px-6"
                     :class="plan.isHighlighted ? 'border-promo-primary/45' : 'border-promo-line'"
                 >
                     <div class="flex items-start justify-between gap-4">
@@ -158,7 +158,7 @@ const openFeatureHelp = (label: string, help: string): void => {
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                                 {{ plan.name }}
                             </p>
-                            <h2 class="mt-3 text-[1.7rem] font-extrabold tracking-[-0.03em] text-promo-ink">
+                            <h2 class="mt-3 text-[1.55rem] font-extrabold tracking-[-0.03em] text-promo-ink">
                                 {{ plan.priceLabel }}
                             </h2>
                             <p class="mt-2 text-sm text-promo-muted">
@@ -174,18 +174,18 @@ const openFeatureHelp = (label: string, help: string): void => {
                         </div>
                     </div>
 
-                    <p class="mt-5 text-sm font-semibold text-promo-ink">
+                    <p class="mt-4 text-sm font-semibold text-promo-ink">
                         {{ plan.summary }}
                     </p>
-                    <p class="mt-2 text-sm leading-7 text-promo-muted">
+                    <p class="mt-2 text-sm leading-6 text-promo-muted">
                         {{ plan.description || t('marketing.pricing.plan.description_fallback') }}
                     </p>
 
-                    <div class="mt-6 flex-1 border-t border-promo-line/80 pt-5">
+                    <div class="mt-5 flex-1 border-t border-promo-line/80 pt-4">
                         <div
                             v-for="feature in plan.featureItems"
                             :key="`${plan.id}-${feature.label}`"
-                            class="flex items-start gap-3 py-2.5"
+                            class="flex items-start gap-3 py-2"
                         >
                             <div class="min-w-0 flex-1 text-sm leading-6 text-promo-ink">
                                 <strong class="font-semibold" :class="feature.available === false ? 'text-promo-muted' : 'text-promo-ink'">
@@ -202,7 +202,7 @@ const openFeatureHelp = (label: string, help: string): void => {
                         </div>
                     </div>
 
-                    <div class="mt-5 border-t border-promo-line/80 pt-5 text-sm text-promo-muted">
+                    <div class="mt-4 border-t border-promo-line/80 pt-4 text-sm leading-6 text-promo-muted">
                         {{ plan.customizationLabel }}
                         <div
                             v-if="plan.isDefault"
@@ -214,7 +214,7 @@ const openFeatureHelp = (label: string, help: string): void => {
 
                     <Link
                         :href="plan.ctaHref"
-                        class="mt-7 inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition"
+                        class="mt-6 inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition"
                         :class="
                             plan.isHighlighted
                                 ? 'border-promo-primary bg-promo-primary text-white hover:bg-promo-primary-strong'
@@ -235,7 +235,7 @@ const openFeatureHelp = (label: string, help: string): void => {
         </section>
 
         <section class="bg-white">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
                     :eyebrow="t('marketing.pricing.compare.eyebrow')"
                     :title="t('marketing.pricing.compare.title')"
@@ -243,23 +243,23 @@ const openFeatureHelp = (label: string, help: string): void => {
                     centered
                 />
 
-                <div v-if="plans.length > 0" class="mt-12 grid gap-4 lg:hidden">
+                <div v-if="plans.length > 0" class="mt-10 grid gap-4 lg:hidden">
                     <article
                         v-for="plan in compareColumns"
                         :key="plan.id"
-                        class="rounded-[26px] border border-promo-line bg-promo-bg p-5"
+                        class="rounded-[22px] border border-promo-line/80 bg-promo-bg p-5"
                     >
                         <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ plan.name }}</h3>
-                        <div class="mt-4 grid gap-3">
+                        <div class="mt-4">
                             <div
                                 v-for="row in plan.rows"
                                 :key="`${plan.id}-${row.label}`"
-                                class="rounded-[18px] bg-white px-4 py-3"
+                                class="border-b border-promo-line/70 px-1 py-3 last:border-b-0"
                             >
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                     {{ row.label }}
                                 </p>
-                                <p class="mt-2 text-sm font-medium leading-6 text-promo-ink">
+                                <p class="mt-1.5 text-sm font-medium leading-6 text-promo-ink">
                                     {{ row.value }}
                                 </p>
                             </div>
@@ -269,7 +269,7 @@ const openFeatureHelp = (label: string, help: string): void => {
 
                 <div
                     v-if="plans.length > 0"
-                    class="mt-12 hidden overflow-hidden rounded-[28px] border border-promo-line bg-white lg:block"
+                    class="mt-10 hidden overflow-hidden rounded-[24px] border border-promo-line/80 bg-white lg:block"
                 >
                     <div
                         class="grid border-b border-promo-line bg-promo-surface px-6 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-promo-muted"
@@ -293,7 +293,7 @@ const openFeatureHelp = (label: string, help: string): void => {
         </section>
 
         <section class="bg-promo-surface/38">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
                     <p class="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-promo-primary">
                         {{ t('marketing.pricing.common_features.eyebrow') }}
@@ -303,22 +303,22 @@ const openFeatureHelp = (label: string, help: string): void => {
                     </h2>
                 </div>
 
-                <div class="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    <article class="rounded-[26px] border border-promo-line bg-white px-6 py-7">
+                <div class="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <article class="rounded-[22px] border border-promo-line/80 bg-white px-5 py-5">
                         <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.common_features.live_wall.title') }}</h3>
-                        <p class="mt-4 text-sm leading-7 text-promo-muted">
+                        <p class="mt-3 text-sm leading-6 text-promo-muted">
                             {{ t('marketing.pricing.common_features.live_wall.description') }}
                         </p>
                     </article>
-                    <article class="rounded-[26px] border border-promo-line bg-white px-6 py-7">
+                    <article class="rounded-[22px] border border-promo-line/80 bg-white px-5 py-5">
                         <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.common_features.digital_album.title') }}</h3>
-                        <p class="mt-4 text-sm leading-7 text-promo-muted">
+                        <p class="mt-3 text-sm leading-6 text-promo-muted">
                             {{ t('marketing.pricing.common_features.digital_album.description') }}
                         </p>
                     </article>
-                    <article class="rounded-[26px] border border-promo-line bg-white px-6 py-7">
+                    <article class="rounded-[22px] border border-promo-line/80 bg-white px-5 py-5">
                         <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ t('marketing.pricing.common_features.no_app.title') }}</h3>
-                        <p class="mt-4 text-sm leading-7 text-promo-muted">
+                        <p class="mt-3 text-sm leading-6 text-promo-muted">
                             {{ t('marketing.pricing.common_features.no_app.description') }}
                         </p>
                     </article>
@@ -326,26 +326,22 @@ const openFeatureHelp = (label: string, help: string): void => {
                     <article
                         v-for="feature in commonFeatures.slice(3)"
                         :key="feature.title"
-                        class="rounded-[26px] border border-promo-line bg-white px-6 py-7"
+                        class="rounded-[22px] border border-promo-line/80 bg-white px-5 py-5"
                     >
                         <h3 class="text-base font-bold text-promo-ink sm:text-lg">{{ feature.title }}</h3>
-                        <p class="mt-4 text-sm leading-7 text-promo-muted">
+                        <p class="mt-3 text-sm leading-6 text-promo-muted">
                             {{ feature.description }}
                         </p>
                     </article>
                 </div>
 
-                <div class="mt-10 text-center text-sm text-promo-muted">
-                    {{ t('marketing.pricing.footer_note') }}
-                </div>
-
-                <div class="mt-12 text-center">
-                    <p class="mb-4 text-sm text-promo-muted">
+                <div class="mt-10 text-center">
+                    <p class="mx-auto max-w-2xl text-sm leading-6 text-promo-muted">
                         {{ t('marketing.pricing.professionals.description') }}
                     </p>
                     <Link
                         :href="onboardingCreate({ query: { plan: 'free' } })"
-                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                        class="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
                         {{ t('marketing.actions.create_event') }}
                         <ArrowRight class="size-4" />

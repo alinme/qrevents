@@ -131,9 +131,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     </div>
                 </Link>
 
-                <nav class="hidden items-center gap-7 lg:flex">
+                <nav class="hidden items-center gap-6 lg:flex">
                     <div class="group relative">
-                        <button class="inline-flex items-center gap-2 text-sm font-semibold text-promo-ink/82 transition hover:text-promo-ink">
+                        <button class="inline-flex items-center gap-2 text-sm font-medium text-promo-ink/82 transition hover:text-promo-ink">
                             {{ t('marketing.nav.use_cases') }}
                             <ChevronDown class="size-4 transition group-hover:rotate-180" />
                         </button>
@@ -143,7 +143,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 v-for="item in useCaseLinks"
                                 :key="item.label"
                                 :href="item.href"
-                                class="block rounded-[16px] px-4 py-3 text-sm font-medium text-promo-ink/82 transition hover:bg-promo-surface hover:text-promo-ink"
+                                class="block rounded-[16px] px-4 py-3 text-sm text-promo-ink/82 transition hover:bg-promo-surface hover:text-promo-ink"
                             >
                                 {{ item.label }}
                             </Link>
@@ -154,7 +154,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         v-for="item in primaryNavItems"
                         :key="item.label"
                         :href="item.href"
-                        class="text-sm font-semibold text-promo-ink/82 transition hover:text-promo-ink"
+                        class="text-sm font-medium text-promo-ink/82 transition hover:text-promo-ink"
                     >
                         {{ item.label }}
                     </Link>
@@ -165,7 +165,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         <DropdownMenuTrigger as-child>
                             <button
                                 type="button"
-                                class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                                class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
                             >
                                 <span class="text-base leading-none">{{ selectedLocaleOption.flag }}</span>
                                 <span class="hidden min-w-0 text-left xl:block">
@@ -212,7 +212,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     <Link
                         v-if="!authedUser"
                         :href="login()"
-                        class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-promo-ink/78 transition hover:bg-white hover:text-promo-ink"
+                        class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium text-promo-ink/78 transition hover:bg-white hover:text-promo-ink"
                     >
                         {{ t('marketing.actions.log_in') }}
                     </Link>
@@ -255,7 +255,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         </SheetHeader>
 
                         <div class="flex flex-col gap-6 px-6 py-6">
-                            <div class="rounded-[22px] border border-promo-line bg-white p-4 shadow-[0_14px_32px_rgba(120,86,255,0.08)]">
+                            <div class="rounded-[20px] border border-promo-line/80 bg-white p-4">
                                 <div class="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                                     {{ t('marketing.language.label') }}
                                 </div>
@@ -299,7 +299,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                     v-for="item in useCaseLinks"
                                     :key="`mobile-${item.label}`"
                                     :href="item.href"
-                                    class="rounded-[18px] border border-promo-line bg-white px-4 py-3 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
+                                    class="rounded-[16px] border border-promo-line/80 bg-white px-4 py-3 text-sm text-promo-ink transition hover:bg-promo-surface"
                                 >
                                     {{ item.label }}
                                 </Link>
@@ -310,7 +310,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                     v-for="item in primaryNavItems"
                                     :key="`primary-${item.label}`"
                                     :href="item.href"
-                                    class="rounded-[18px] border border-promo-line bg-white px-4 py-3 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
+                                    class="rounded-[16px] border border-promo-line/80 bg-white px-4 py-3 text-sm text-promo-ink transition hover:bg-promo-surface"
                                 >
                                     {{ item.label }}
                                 </Link>
@@ -320,7 +320,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 <Link
                                     v-if="!authedUser"
                                     :href="login()"
-                                    class="inline-flex items-center justify-center rounded-full border border-promo-line bg-white px-4 py-3 text-sm font-semibold text-promo-ink"
+                                    class="inline-flex items-center justify-center rounded-full border border-promo-line bg-white px-4 py-3 text-sm font-medium text-promo-ink"
                                 >
                                     {{ t('marketing.actions.log_in') }}
                                 </Link>
@@ -366,26 +366,26 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             </div>
                         </div>
 
-                        <p class="mt-5 max-w-sm text-sm leading-7 text-promo-muted">
+                        <p class="mt-5 max-w-sm text-sm leading-6 text-promo-muted">
                             {{ t('marketing.footer.description') }}
                         </p>
 
                         <div class="mt-6 flex items-center gap-3">
                             <a
                                 href="#"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-promo-purple"
+                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
                                 <Instagram class="size-4" />
                             </a>
                             <a
                                 href="#faq"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-promo-purple"
+                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
                                 <CircleHelp class="size-4" />
                             </a>
                             <a
                                 href="#blog"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-promo-purple"
+                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
                                 <Newspaper class="size-4" />
                             </a>
