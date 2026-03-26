@@ -217,22 +217,23 @@ onMounted(() => {
 
 <template>
     <div
-        class="relative min-h-screen overflow-hidden px-4 py-6 text-neutral-950 sm:px-6 lg:px-8"
+        class="relative min-h-screen overflow-hidden px-4 py-6 text-neutral-950 print:min-h-0 print:bg-white print:px-0 print:py-0 sm:px-6 lg:px-8"
         :style="invitationSurfaceStyle"
     >
         <Head :title="`${eventName} Invitation`" />
 
-        <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 overflow-hidden print:hidden">
             <div class="absolute -left-24 top-8 h-72 w-72 rounded-full bg-[var(--invite-accent)]/18 blur-3xl" />
             <div class="absolute right-[-5rem] top-20 h-80 w-80 rounded-full bg-[var(--invite-primary)]/14 blur-3xl" />
             <div class="absolute bottom-[-7rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-white/28 blur-3xl" />
         </div>
 
-        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center">
-            <div class="w-full space-y-5">
+        <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center print:min-h-0 print:max-w-none">
+            <div class="w-full space-y-5 print:space-y-0">
                 <InvitationPaper
                     :template="invitation.template"
                     :event-name="invitationPresentation.leadIn"
+                    :logo-url="branding.logoUrl"
                     :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
                     :headline="invitationPresentation.title"
                     :message="invitation.message"
@@ -244,7 +245,7 @@ onMounted(() => {
                     mode="live"
                 />
 
-                <section class="rounded-[30px] border border-neutral-200 bg-white/92 p-5 shadow-xl backdrop-blur sm:p-6">
+                <section class="rounded-[30px] border border-neutral-200 bg-white/92 p-5 shadow-xl backdrop-blur print:hidden sm:p-6">
                     <div
                         v-if="submitted"
                         class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
@@ -306,7 +307,7 @@ onMounted(() => {
 
                 <section
                     v-if="visibleMoments.length > 0"
-                    class="rounded-[30px] border border-neutral-200 bg-white/92 p-4 shadow-lg backdrop-blur sm:p-5"
+                    class="rounded-[30px] border border-neutral-200 bg-white/92 p-4 shadow-lg backdrop-blur print:hidden sm:p-5"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
@@ -351,7 +352,7 @@ onMounted(() => {
                     </div>
                 </section>
 
-                <div class="flex flex-col items-center gap-3 text-center">
+                <div class="flex flex-col items-center gap-3 text-center print:hidden">
                     <Button variant="outline" class="rounded-full px-5" @click="printInvitation">
                         <Download class="mr-2 size-4" />
                         Save or print invitation

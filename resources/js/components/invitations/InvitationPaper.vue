@@ -11,6 +11,7 @@ import {
 const props = withDefaults(defineProps<{
     template: InvitationTemplateId;
     eventName: string;
+    logoUrl?: string | null;
     guestLabel?: string | null;
     headline: string;
     message: string;
@@ -24,6 +25,7 @@ const props = withDefaults(defineProps<{
     contactPhone: null,
     dateLabel: null,
     venueAddress: null,
+    logoUrl: null,
     guestLabel: null,
     detailLines: () => [],
     mode: 'live',
@@ -256,6 +258,19 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
     return style;
 });
 
+const logoStyle = computed<Record<string, string>>(() => {
+    const dimension = isPreviewMode.value ? 44 : 72;
+    const scaledDimension = Math.max(isPreviewMode.value ? 36 : 56, Math.round(dimension * paperScale.value));
+
+    return {
+        top: isPreviewMode.value ? '3.4%' : '3.2%',
+        left: '50%',
+        width: `${scaledDimension}px`,
+        height: `${scaledDimension}px`,
+        transform: 'translateX(-50%)',
+    };
+});
+
 const updatePaperWidth = (): void => {
     paperWidth.value = paperContainer.value?.clientWidth ?? null;
 };
@@ -286,7 +301,7 @@ onBeforeUnmount(() => {
         :class="[
             'relative overflow-hidden rounded-[30px] border p-3 shadow-sm sm:p-4',
             invitationTemplateVisuals.surfaceClass,
-            isPreviewMode ? 'shadow-sm' : 'shadow-xl',
+            isPreviewMode ? 'shadow-sm' : 'shadow-xl print:border-0 print:p-0 print:shadow-none',
         ]"
         :style="invitationPaperStyle"
     >
@@ -305,6 +320,18 @@ onBeforeUnmount(() => {
             }"
         >
             <div class="absolute inset-0" :style="{ backgroundColor: `rgba(255,255,255,${templateLayout.paper.overlayOpacity})` }" />
+
+            <div
+                v-if="logoUrl"
+                class="absolute z-[2] overflow-hidden rounded-full border border-white/70 bg-white/80 shadow-lg backdrop-blur-sm"
+                :style="logoStyle"
+            >
+                <img
+                    :src="logoUrl"
+                    alt="Invitation logo"
+                    class="h-full w-full object-cover"
+                >
+            </div>
 
             <div v-if="templateLayout.header.enabled" class="absolute inset-0">
                 <p

@@ -1600,6 +1600,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                                 <InvitationPaper
                                                     :template="template.id"
                                                     :event-name="invitationTemplatePreviewContent(template.id).eventName"
+                                                    :logo-url="props.invitationPreview.branding.logoUrl"
                                                     :guest-label="invitationTemplatePreviewContent(template.id).guestLabel"
                                                     :headline="invitationTemplatePreviewContent(template.id).headline"
                                                     :message="invitationTemplatePreviewContent(template.id).message"
@@ -1702,6 +1703,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <InvitationPaper
                             :template="invitationSettingsForm.template"
                             :event-name="activeInvitationPresentation.leadIn"
+                            :logo-url="props.invitationPreview.branding.logoUrl"
                             guest-label="Invitation preview"
                             :headline="activeInvitationPresentation.title"
                             :message="invitationSettingsForm.message || 'Add the main invitation message here.'"
@@ -2216,6 +2218,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         v-if="previewingInvitationTemplateCard"
                         :template="previewingInvitationTemplateCard.id"
                         :event-name="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).eventName"
+                        :logo-url="props.invitationPreview.branding.logoUrl"
                         :guest-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).guestLabel"
                         :headline="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).headline"
                         :message="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).message"
