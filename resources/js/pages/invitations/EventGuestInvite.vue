@@ -90,8 +90,8 @@ const maybeModalOpen = ref(false);
 const declineModalOpen = ref(false);
 const maybeMemeImageVisible = ref(true);
 const declineMemeImageVisible = ref(true);
-const maybeMemeImageUrl = '/invitation-memes/maybe.png';
-const declineMemeImageUrl = '/invitation-memes/decline.png';
+const maybeMemeImageUrl = '/invitation-memes/angry.png';
+const declineMemeImageUrl = '/invitation-memes/sad.png';
 
 const form = useForm({
     name: props.guestParty?.name ?? '',
