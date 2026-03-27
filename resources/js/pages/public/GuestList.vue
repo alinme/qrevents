@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { CheckCircle2, Clock3, Eye, Search, Table2, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, Clock3, Eye, Search, XCircle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import {
     Dialog,
@@ -75,10 +75,6 @@ const openDetails = (party: GuestListParty): void => {
     detailsParty.value = party;
     selectedTableId.value = party.eventTableId?.toString() ?? '';
     detailsDialogOpen.value = true;
-};
-
-const openTableAssignment = (party: GuestListParty): void => {
-    openDetails(party);
 };
 
 const selectableTables = computed(() => props.eventTables.map((table) => ({
@@ -179,49 +175,57 @@ const saveTableAssignment = (): void => {
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div class="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 p-1">
                             <Button
-                                variant="outline"
-                                class="rounded-full px-4"
-                                @click="openTableAssignment(party)"
-                            >
-                                <Table2 class="mr-2 size-4" />
-                                {{ party.tableName ? 'Change table' : 'Assign table' }}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                class="rounded-full px-4"
+                                variant="ghost"
+                                size="icon"
+                                class="size-9 rounded-full text-stone-600 hover:bg-white hover:text-stone-950"
+                                title="Details and table"
+                                aria-label="Details and table"
                                 @click="openDetails(party)"
                             >
-                                <Eye class="mr-2 size-4" />
-                                Details
-                            </Button>
-                            <Button
-                                :variant="party.actualAttendanceStatus === 'present' ? 'default' : 'outline'"
-                                :class="party.actualAttendanceStatus === 'present' ? 'rounded-full bg-emerald-600 px-4 text-white hover:bg-emerald-700' : 'rounded-full px-4'"
-                                :disabled="quickSavingGuestId === party.id"
-                                @click="updateAttendance(party, 'present')"
-                            >
-                                <CheckCircle2 class="mr-2 size-4" />
-                                Came
-                            </Button>
-                            <Button
-                                :variant="party.actualAttendanceStatus === 'absent' ? 'default' : 'outline'"
-                                :class="party.actualAttendanceStatus === 'absent' ? 'rounded-full bg-rose-600 px-4 text-white hover:bg-rose-700' : 'rounded-full px-4'"
-                                :disabled="quickSavingGuestId === party.id"
-                                @click="updateAttendance(party, 'absent')"
-                            >
-                                <XCircle class="mr-2 size-4" />
-                                No show
+                                <Eye class="size-4" />
+                                <span class="sr-only">Details and table</span>
                             </Button>
                             <Button
                                 variant="ghost"
-                                class="rounded-full px-4"
+                                size="icon"
+                                :class="party.actualAttendanceStatus === 'present'
+                                    ? 'size-9 rounded-full bg-emerald-600 text-white hover:bg-emerald-700'
+                                    : 'size-9 rounded-full text-stone-600 hover:bg-white hover:text-emerald-700'"
                                 :disabled="quickSavingGuestId === party.id"
+                                title="Mark as came"
+                                aria-label="Mark as came"
+                                @click="updateAttendance(party, 'present')"
+                            >
+                                <CheckCircle2 class="size-4" />
+                                <span class="sr-only">Came</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                :class="party.actualAttendanceStatus === 'absent'
+                                    ? 'size-9 rounded-full bg-rose-600 text-white hover:bg-rose-700'
+                                    : 'size-9 rounded-full text-stone-600 hover:bg-white hover:text-rose-700'"
+                                :disabled="quickSavingGuestId === party.id"
+                                title="Mark as no show"
+                                aria-label="Mark as no show"
+                                @click="updateAttendance(party, 'absent')"
+                            >
+                                <XCircle class="size-4" />
+                                <span class="sr-only">No show</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="size-9 rounded-full text-stone-600 hover:bg-white hover:text-stone-950"
+                                :disabled="quickSavingGuestId === party.id"
+                                title="Reset status"
+                                aria-label="Reset status"
                                 @click="updateAttendance(party, 'unknown')"
                             >
-                                <Clock3 class="mr-2 size-4" />
-                                Reset
+                                <Clock3 class="size-4" />
+                                <span class="sr-only">Reset</span>
                             </Button>
                         </div>
                     </div>
@@ -278,9 +282,12 @@ const saveTableAssignment = (): void => {
                             </div>
                         </div>
 
-                        <div v-if="props.eventTables.length > 0" class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                            <div class="space-y-2">
-                                <NativeSelect v-model="selectedTableId">
+                        <div v-if="props.eventTables.length > 0" class="space-y-2">
+                            <div class="grid gap-0 sm:grid-cols-[minmax(0,1fr)_auto]">
+                                <NativeSelect
+                                    v-model="selectedTableId"
+                                    class="h-11 rounded-b-none rounded-t-2xl border-b-0 sm:rounded-l-2xl sm:rounded-r-none sm:rounded-t-none sm:border-b sm:border-r-0"
+                                >
                                     <NativeSelectOption value="">No table yet</NativeSelectOption>
                                     <NativeSelectOption
                                         v-for="table in selectableTables"
@@ -291,16 +298,17 @@ const saveTableAssignment = (): void => {
                                         {{ table.name }} · {{ table.remainingSeats }} seats left
                                     </NativeSelectOption>
                                 </NativeSelect>
-                                <p class="text-xs text-stone-500">
-                                    Full tables stay locked until seats open up.
-                                </p>
-                            </div>
-
-                            <div class="flex items-end">
-                                <Button class="rounded-full px-4" :disabled="quickSavingGuestId === detailsParty.id" @click="saveTableAssignment">
+                                <Button
+                                    class="h-11 rounded-t-none rounded-b-2xl px-4 sm:rounded-l-none sm:rounded-r-2xl sm:rounded-t-none"
+                                    :disabled="quickSavingGuestId === detailsParty.id"
+                                    @click="saveTableAssignment"
+                                >
                                     Save table
                                 </Button>
                             </div>
+                            <p class="text-xs text-stone-500">
+                                Full tables stay locked until seats open up.
+                            </p>
                         </div>
 
                         <div v-else class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

@@ -665,8 +665,10 @@ const saveTable = (): void => {
         tableForm.patch(editingTable.value.updateUrl, {
             preserveScroll: true,
             onSuccess: () => {
-                tablesDialogOpen.value = false;
                 editingTableId.value = null;
+                tableForm.reset();
+                tableForm.clearErrors();
+                tableForm.seats_count = 8;
             },
         });
 
@@ -676,8 +678,8 @@ const saveTable = (): void => {
     tableForm.post(props.eventLinks.tablesStore, {
         preserveScroll: true,
         onSuccess: () => {
-            tablesDialogOpen.value = false;
             tableForm.reset();
+            tableForm.clearErrors();
             tableForm.seats_count = 8;
         },
     });
@@ -2716,9 +2718,12 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             </Button>
                         </div>
 
-                        <div v-if="props.eventTables.length > 0" class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                            <div class="space-y-2">
-                                <NativeSelect v-model="guestListTableForm.event_table_id">
+                        <div v-if="props.eventTables.length > 0" class="space-y-2">
+                            <div class="grid gap-0 sm:grid-cols-[minmax(0,1fr)_auto]">
+                                <NativeSelect
+                                    v-model="guestListTableForm.event_table_id"
+                                    class="h-11 rounded-b-none rounded-t-2xl border-b-0 sm:rounded-l-2xl sm:rounded-r-none sm:rounded-t-none sm:border-b sm:border-r-0"
+                                >
                                     <NativeSelectOption value="">No table yet</NativeSelectOption>
                                     <NativeSelectOption
                                         v-for="table in guestListSelectableTables"
@@ -2729,18 +2734,20 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         {{ table.name }} · {{ table.remainingSeats }} seats left
                                     </NativeSelectOption>
                                 </NativeSelect>
-                                <p class="text-xs text-neutral-500">
-                                    Full tables stay locked until seats open up.
-                                </p>
-                                <p v-if="guestListTableForm.errors.event_table_id" class="text-sm text-rose-600">
-                                    {{ guestListTableForm.errors.event_table_id }}
-                                </p>
-                            </div>
-                            <div class="flex items-end">
-                                <Button class="rounded-full px-4" :disabled="quickSavingGuestId === guestListInfoParty.id" @click="saveGuestListTableAssignment">
+                                <Button
+                                    class="h-11 rounded-t-none rounded-b-2xl px-4 sm:rounded-l-none sm:rounded-r-2xl sm:rounded-t-none"
+                                    :disabled="quickSavingGuestId === guestListInfoParty.id"
+                                    @click="saveGuestListTableAssignment"
+                                >
                                     Save table
                                 </Button>
                             </div>
+                            <p class="text-xs text-neutral-500">
+                                Full tables stay locked until seats open up.
+                            </p>
+                            <p v-if="guestListTableForm.errors.event_table_id" class="text-sm text-rose-600">
+                                {{ guestListTableForm.errors.event_table_id }}
+                            </p>
                         </div>
                     </div>
 
