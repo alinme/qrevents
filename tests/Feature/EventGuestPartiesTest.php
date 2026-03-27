@@ -136,6 +136,7 @@ it('allows an event owner to add an invitee with only the required defaults', fu
         ->and($party?->actual_attendance_status)->toBe('unknown')
         ->and($party?->actual_attendees_count)->toBeNull()
         ->and($party?->invitation_status)->toBe('draft')
+        ->and($party?->invitation_delivery_channel)->toBe('public_link')
         ->and($party?->gift_type)->toBeNull()
         ->and($party?->gift_currency)->toBeNull()
         ->and($party?->gift_amount)->toBeNull()
@@ -358,10 +359,13 @@ it('lets the public guest list assign a table while checking in a guest', functi
     $this->patch(route('events.guests.public-list.update', [$event->share_token, $guestParty]), [
         'actual_attendance_status' => 'present',
         'event_table_id' => $table->id,
+        'confirmed_attendees_count' => 3,
     ])->assertRedirect();
 
     expect($guestParty->fresh()->actual_attendance_status)->toBe('present')
-        ->and($guestParty->fresh()->actual_attendees_count)->toBe(2)
+        ->and($guestParty->fresh()->attendance_status)->toBe('accepted')
+        ->and($guestParty->fresh()->confirmed_attendees_count)->toBe(3)
+        ->and($guestParty->fresh()->actual_attendees_count)->toBe(3)
         ->and($guestParty->fresh()->event_table_id)->toBe($table->id)
         ->and($guestParty->fresh()->table_name)->toBe('Table 8');
 });

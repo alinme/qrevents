@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { CheckCircle2, Clock3, Eye, Search, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, Clock3, Minus, Plus, Search, XCircle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import {
     Dialog,
@@ -53,6 +53,8 @@ const quickSavingGuestId = ref<number | null>(null);
 const detailsDialogOpen = ref(false);
 const detailsParty = ref<GuestListParty | null>(null);
 const selectedTableId = ref('');
+const detailsMode = ref<'details' | 'check_in'>('details');
+const checkInCount = ref(1);
 
 const filteredGuestParties = computed(() => {
     const needle = search.value.trim().toLowerCase();
@@ -71,9 +73,15 @@ const attendanceLabel = (status: GuestListParty['actualAttendanceStatus']): stri
     }[status];
 };
 
+const startingGuestCount = (party: GuestListParty): number => {
+    return Math.max(1, party.actualAttendeesCount ?? party.confirmedAttendeesCount ?? party.invitedAttendeesCount ?? 1);
+};
+
 const openDetails = (party: GuestListParty): void => {
     detailsParty.value = party;
     selectedTableId.value = party.eventTableId?.toString() ?? '';
+    checkInCount.value = startingGuestCount(party);
+    detailsMode.value = 'details';
     detailsDialogOpen.value = true;
 };
 
@@ -81,6 +89,10 @@ const selectableTables = computed(() => props.eventTables.map((table) => ({
     ...table,
     selectable: !table.isFull || table.id === Number(selectedTableId.value || 0),
 })));
+
+const adjustCheckInCount = (delta: number): void => {
+    checkInCount.value = Math.min(1000, Math.max(1, checkInCount.value + delta));
+};
 
 const updateAttendance = (
     party: GuestListParty,
@@ -107,18 +119,28 @@ const updateAttendance = (
     );
 };
 
-const saveTableAssignment = (): void => {
+const openCheckIn = (party: GuestListParty): void => {
+    detailsParty.value = party;
+    selectedTableId.value = party.eventTableId?.toString() ?? '';
+    checkInCount.value = startingGuestCount(party);
+    detailsMode.value = 'check_in';
+    detailsDialogOpen.value = true;
+};
+
+const saveGuestDetails = (): void => {
     if (!detailsParty.value || quickSavingGuestId.value !== null) {
         return;
     }
 
     quickSavingGuestId.value = detailsParty.value.id;
+    const shouldCheckIn = detailsMode.value === 'check_in' || selectedTableId.value !== '';
 
     router.patch(
         detailsParty.value.updateUrl,
         {
-            actual_attendance_status: detailsParty.value.actualAttendanceStatus,
+            actual_attendance_status: shouldCheckIn ? 'present' : detailsParty.value.actualAttendanceStatus,
             event_table_id: selectedTableId.value === '' ? null : Number(selectedTableId.value),
+            confirmed_attendees_count: checkInCount.value,
         },
         {
             preserveScroll: true,
@@ -134,8 +156,8 @@ const saveTableAssignment = (): void => {
 <template>
     <Head :title="`${currentEvent.name} guest list`" />
 
-    <main class="min-h-dvh bg-stone-50 px-4 py-6 text-stone-900 md:px-6">
-        <div class="mx-auto max-w-5xl space-y-5">
+    <main class="min-h-dvh bg-stone-50 px-3 py-5 text-stone-900 md:px-5 md:py-6">
+        <div class="mx-auto max-w-5xl space-y-4">
             <section class="space-y-2">
                 <p class="text-xs font-medium uppercase tracking-[0.24em] text-stone-500">
                     Entrance list
@@ -148,7 +170,7 @@ const saveTableAssignment = (): void => {
                 </p>
             </section>
 
-            <section class="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
+            <section class="space-y-4">
                 <div class="relative">
                     <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
                     <Input
@@ -158,13 +180,17 @@ const saveTableAssignment = (): void => {
                     />
                 </div>
 
-                <div class="mt-4 divide-y divide-stone-200 border-t border-stone-200">
+                <div class="divide-y divide-stone-200 border-t border-stone-200 bg-transparent">
                     <div
                         v-for="party in filteredGuestParties"
                         :key="party.id"
-                        class="flex flex-col gap-3 px-1 py-3 transition-colors md:flex-row md:items-center md:justify-between"
+                        class="flex flex-col gap-3 py-3 transition-colors md:flex-row md:items-center md:justify-between"
                     >
-                        <div class="min-w-0 space-y-1">
+                        <button
+                            type="button"
+                            class="min-w-0 flex-1 space-y-1 text-left"
+                            @click="openDetails(party)"
+                        >
                             <p class="truncate text-base font-semibold text-stone-950">
                                 {{ party.name }}
                             </p>
@@ -172,65 +198,49 @@ const saveTableAssignment = (): void => {
                                 <span>{{ party.phone || 'No phone saved' }}</span>
                                 <span>{{ party.tableName || 'No table yet' }}</span>
                                 <span>{{ attendanceLabel(party.actualAttendanceStatus) }}</span>
+                                <span v-if="party.confirmedAttendeesCount !== null">Expected {{ party.confirmedAttendeesCount }}</span>
+                                <span v-if="party.actualAttendeesCount !== null">Arrived {{ party.actualAttendeesCount }}</span>
                             </div>
-                        </div>
+                        </button>
 
-                        <div class="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 p-1">
+                        <div class="inline-flex w-full items-center rounded-full border border-stone-200 bg-white p-1 md:w-auto">
                             <Button
                                 variant="ghost"
-                                size="icon"
-                                class="size-9 rounded-full text-stone-600 hover:bg-white hover:text-stone-950"
-                                title="Details and table"
-                                aria-label="Details and table"
-                                @click="openDetails(party)"
-                            >
-                                <Eye class="size-4" />
-                                <span class="sr-only">Details and table</span>
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
+                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
                                 :class="party.actualAttendanceStatus === 'present'
-                                    ? 'size-9 rounded-full bg-emerald-600 text-white hover:bg-emerald-700'
-                                    : 'size-9 rounded-full text-stone-600 hover:bg-white hover:text-emerald-700'"
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white'
+                                    : ''"
                                 :disabled="quickSavingGuestId === party.id"
-                                title="Mark as came"
-                                aria-label="Mark as came"
-                                @click="updateAttendance(party, 'present')"
+                                @click="openCheckIn(party)"
                             >
-                                <CheckCircle2 class="size-4" />
-                                <span class="sr-only">Came</span>
+                                <CheckCircle2 class="mr-1.5 size-4" />
+                                Came
                             </Button>
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
                                 :class="party.actualAttendanceStatus === 'absent'
-                                    ? 'size-9 rounded-full bg-rose-600 text-white hover:bg-rose-700'
-                                    : 'size-9 rounded-full text-stone-600 hover:bg-white hover:text-rose-700'"
+                                    ? 'bg-rose-600 text-white hover:bg-rose-700 hover:text-white'
+                                    : ''"
                                 :disabled="quickSavingGuestId === party.id"
-                                title="Mark as no show"
-                                aria-label="Mark as no show"
                                 @click="updateAttendance(party, 'absent')"
                             >
-                                <XCircle class="size-4" />
-                                <span class="sr-only">No show</span>
+                                <XCircle class="mr-1.5 size-4" />
+                                No show
                             </Button>
                             <Button
                                 variant="ghost"
-                                size="icon"
-                                class="size-9 rounded-full text-stone-600 hover:bg-white hover:text-stone-950"
+                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
                                 :disabled="quickSavingGuestId === party.id"
-                                title="Reset status"
-                                aria-label="Reset status"
                                 @click="updateAttendance(party, 'unknown')"
                             >
-                                <Clock3 class="size-4" />
-                                <span class="sr-only">Reset</span>
+                                <Clock3 class="mr-1.5 size-4" />
+                                Reset
                             </Button>
                         </div>
                     </div>
 
-                    <div v-if="filteredGuestParties.length === 0" class="px-4 py-10 text-center text-sm text-stone-500">
+                    <div v-if="filteredGuestParties.length === 0" class="py-10 text-center text-sm text-stone-500">
                         No invitees match this search.
                     </div>
                 </div>
@@ -241,10 +251,10 @@ const saveTableAssignment = (): void => {
             <DialogContent class="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>
-                        {{ detailsParty?.name ?? 'Invitee details' }}
+                        {{ detailsMode === 'check_in' ? 'Check in invitee' : (detailsParty?.name ?? 'Invitee details') }}
                     </DialogTitle>
                     <DialogDescription>
-                        Quick details for the entrance team.
+                        {{ detailsMode === 'check_in' ? 'Choose the table and how many people are actually here now.' : 'Quick details for the entrance team.' }}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -273,6 +283,48 @@ const saveTableAssignment = (): void => {
                     </div>
 
                     <div class="space-y-2 border-t border-stone-200 pt-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Confirmed attendees</p>
+                                    <p class="mt-1 text-sm text-stone-600">
+                                        Use this to tell the host how many people are actually here with this party tonight.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mx-auto flex w-full max-w-xs flex-col items-center space-y-2 text-center">
+                                <div class="w-full rounded-2xl border border-stone-200 bg-white px-3 py-2 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                            :disabled="checkInCount <= 1"
+                                            @click="adjustCheckInCount(-1)"
+                                        >
+                                            <Minus class="size-4" />
+                                        </button>
+
+                                        <Input
+                                            :model-value="String(checkInCount)"
+                                            readonly
+                                            inputmode="none"
+                                            class="h-10 border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                            :disabled="checkInCount >= 1000"
+                                            @click="adjustCheckInCount(1)"
+                                        >
+                                            <Plus class="size-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Seat them at</p>
@@ -301,9 +353,9 @@ const saveTableAssignment = (): void => {
                                 <Button
                                     class="h-11 rounded-t-none rounded-b-2xl px-4 sm:rounded-l-none sm:rounded-r-2xl sm:rounded-t-none"
                                     :disabled="quickSavingGuestId === detailsParty.id"
-                                    @click="saveTableAssignment"
+                                    @click="saveGuestDetails"
                                 >
-                                    Save table
+                                    {{ detailsMode === 'check_in' ? 'Check in guest' : 'Save details' }}
                                 </Button>
                             </div>
                             <p class="text-xs text-stone-500">
@@ -311,8 +363,17 @@ const saveTableAssignment = (): void => {
                             </p>
                         </div>
 
-                        <div v-else class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                            No tables have been created by the host yet, so the entrance team cannot assign seating from this page yet.
+                        <div v-else class="space-y-3">
+                            <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                                No tables have been created by the host yet, so the entrance team cannot assign seating from this page yet.
+                            </div>
+                            <Button
+                                class="w-full rounded-full px-4"
+                                :disabled="quickSavingGuestId === detailsParty.id"
+                                @click="saveGuestDetails"
+                            >
+                                {{ detailsMode === 'check_in' ? 'Check in guest' : 'Save details' }}
+                            </Button>
                         </div>
                     </div>
                 </div>

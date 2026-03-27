@@ -129,6 +129,7 @@ class EventController extends Controller
         $this->assertCanManageEvent($request, $event);
 
         $payload = $request->payload();
+        $payload['invitation_delivery_channel'] ??= 'public_link';
         $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
         $this->assertTableHasRoomForGuestParty($eventTable, $payload);
 
@@ -239,21 +240,23 @@ class EventController extends Controller
         abort_unless($guestParty->event_id === $event->id, 404);
 
         $payload = $request->payload();
-        $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
-        $this->assertTableHasRoomForGuestParty(
-            $eventTable,
-            [
-                'invited_attendees_count' => $guestParty->invited_attendees_count,
-                'confirmed_attendees_count' => $guestParty->confirmed_attendees_count,
-            ],
-            $guestParty,
-        );
-
         if (($payload['actual_attendance_status'] ?? null) === 'present') {
-            $payload['actual_attendees_count'] = $guestParty->confirmed_attendees_count
+            $confirmedAttendeesCount = max(1, (int) ($payload['confirmed_attendees_count']
+                ?? $guestParty->confirmed_attendees_count
                 ?? $guestParty->invited_attendees_count
-                ?? 1;
+                ?? 1));
+            $payload['confirmed_attendees_count'] = $confirmedAttendeesCount;
+            $payload['actual_attendees_count'] = $confirmedAttendeesCount;
+            $payload['attendance_status'] = 'accepted';
         }
+
+        $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
+        $this->assertTableHasRoomForGuestParty($eventTable, [
+            'invited_attendees_count' => $guestParty->invited_attendees_count,
+            'confirmed_attendees_count' => $payload['confirmed_attendees_count'] ?? $guestParty->confirmed_attendees_count,
+            'actual_attendance_status' => $payload['actual_attendance_status'] ?? $guestParty->actual_attendance_status,
+            'actual_attendees_count' => $payload['actual_attendees_count'] ?? $guestParty->actual_attendees_count,
+        ], $guestParty);
 
         $guestParty->update([
             ...$payload,
@@ -306,6 +309,7 @@ class EventController extends Controller
                 ...$row,
                 'attendance_status' => 'pending',
                 'invitation_status' => 'draft',
+                'invitation_delivery_channel' => 'public_link',
                 'invitation_token' => (string) Str::lower((string) Str::uuid()),
             ]);
 
@@ -3038,6 +3042,17 @@ class EventController extends Controller
             ?? $payload['invited_attendees_count']
             ?? 1));
 
+        if (($payload['actual_attendance_status'] ?? null) === 'present') {
+            $requestedSeats = max(1, (int) ($payload['actual_attendees_count']
+                ?? $payload['confirmed_attendees_count']
+                ?? $payload['invited_attendees_count']
+                ?? 1));
+        }
+
+        if (($payload['actual_attendance_status'] ?? null) === 'absent') {
+            $requestedSeats = 0;
+        }
+
         $occupiedSeats = $this->eventTableOccupiedSeats($eventTable, $existingGuestParty);
 
         if (($occupiedSeats + $requestedSeats) > $eventTable->seats_count) {
@@ -3057,10 +3072,26 @@ class EventController extends Controller
                 fn ($query) => $query->whereKeyNot($excludingGuestParty->id),
             )
             ->get()
-            ->sum(fn (EventGuestParty $guestParty): int => max(
-                1,
-                (int) ($guestParty->confirmed_attendees_count ?? $guestParty->invited_attendees_count ?? 1),
-            ));
+            ->sum(function (EventGuestParty $guestParty): int {
+                if ($guestParty->actual_attendance_status === 'present') {
+                    return max(
+                        1,
+                        (int) ($guestParty->actual_attendees_count
+                            ?? $guestParty->confirmed_attendees_count
+                            ?? $guestParty->invited_attendees_count
+                            ?? 1),
+                    );
+                }
+
+                if ($guestParty->actual_attendance_status === 'absent') {
+                    return 0;
+                }
+
+                return max(
+                    1,
+                    (int) ($guestParty->confirmed_attendees_count ?? $guestParty->invited_attendees_count ?? 1),
+                );
+            });
     }
 
     /**

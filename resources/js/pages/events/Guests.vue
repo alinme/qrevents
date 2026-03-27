@@ -239,7 +239,7 @@ const guestForm = useForm({
     actual_attendance_status: 'unknown',
     notes: '',
     invitation_status: 'draft',
-    invitation_delivery_channel: '',
+    invitation_delivery_channel: 'public_link',
     gift_type: '',
     gift_currency: 'EUR',
     gift_amount: '',
@@ -603,6 +603,7 @@ const openCreateDialog = (): void => {
     guestForm.event_table_id = '';
     guestForm.attendance_status = 'pending';
     guestForm.invitation_status = 'draft';
+    guestForm.invitation_delivery_channel = 'public_link';
     guestForm.invited_attendees_count = 1;
     guestForm.gift_currency = 'EUR';
     guestForm.actual_attendance_status = 'unknown';
@@ -733,6 +734,7 @@ const saveGuestParty = (): void => {
             guestForm.event_table_id = '';
             guestForm.actual_attendance_status = 'unknown';
             guestForm.invitation_status = 'draft';
+            guestForm.invitation_delivery_channel = 'public_link';
             guestForm.invited_attendees_count = 1;
             showGuestAdvanced.value = false;
         },
@@ -2375,11 +2377,11 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
-                                Party size
+                                Invited attendees
                             </label>
                             <Input v-model="guestForm.invited_attendees_count" type="number" min="1" max="1000" />
                             <p class="text-xs text-neutral-500">
-                                Defaults to 1. Change it only if you already know this group will come together.
+                                How many seats you are reserving for this invitee or family before they respond. If you are not sure yet, leave it at 1 and adjust it later.
                             </p>
                         </div>
 
