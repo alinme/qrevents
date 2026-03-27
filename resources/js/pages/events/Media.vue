@@ -1805,236 +1805,229 @@ const statCards = computed(() => [
         >
             <DialogContent
                 :show-close-button="false"
-                class="max-w-[min(96rem,calc(100vw-1rem))] overflow-hidden rounded-[2rem] border border-[#e7dccb] bg-[#fbf7f1] p-0 shadow-[0_30px_80px_rgba(91,64,34,0.18)]"
+                class="max-w-[min(108rem,calc(100vw-0.5rem))] overflow-hidden border-0 bg-transparent p-0 shadow-none"
             >
                 <div
                     v-if="activeAsset"
-                    class="overflow-hidden"
+                    class="overflow-hidden rounded-[1.75rem] bg-black"
                 >
-                    <div class="flex items-center justify-between gap-4 border-b border-[#e7dccb] bg-[#fffaf3] px-5 py-4">
-                        <div class="flex min-w-0 items-center gap-3">
-                            <Avatar class="size-10 border border-[#e7dccb]">
-                                <AvatarFallback
-                                    :class="avatarFallbackClass(activeAsset.guestName)"
-                                >
-                                    {{ guestInitials(activeAsset.guestName) }}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900">
-                                    {{ activeAsset.guestName }}
-                                </p>
-                                <p class="truncate text-xs text-slate-500">
-                                    {{ formatDateTime(activeAsset.createdAt) }}
-                                </p>
-                            </div>
-                        </div>
+                    <div
+                        class="relative flex h-[min(92vh,calc(100vh-0.75rem))] touch-pan-y items-center justify-center overflow-hidden"
+                        @touchstart="onPreviewTouchStart"
+                        @touchmove="onPreviewTouchMove"
+                        @touchend="onPreviewTouchEnd"
+                    >
+                        <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black/74 via-black/36 to-transparent sm:h-36" />
+                        <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-black/78 via-black/38 to-transparent sm:h-48" />
 
-                        <div class="flex items-center gap-2">
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                class="rounded-full text-slate-600 hover:bg-[#efe7db] hover:text-slate-900"
-                                title="Open upload info"
-                                @click="openAssetInfo(activeAsset)"
-                            >
-                                <Info class="size-4" />
-                            </Button>
-                            <button
-                                type="button"
-                                class="inline-flex size-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-[#efe7db] hover:text-slate-900"
-                                aria-label="Close preview"
-                                @click="activeAssetId = null"
-                            >
-                                <X class="size-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-[#faf5ed] via-[#f3ebdf] to-[#e8dcc9] p-4 sm:p-6">
-                        <div
-                            class="relative flex h-[min(78vh,calc(100vh-12rem))] touch-pan-y items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
-                            @touchstart="onPreviewTouchStart"
-                            @touchmove="onPreviewTouchMove"
-                            @touchend="onPreviewTouchEnd"
-                        >
-                            <div class="pointer-events-none absolute left-4 top-4 z-10 inline-flex rounded-full bg-white/88 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur">
-                                {{ formatBytes(activeAsset.sizeBytes) }}
-                            </div>
-                            <div class="pointer-events-none absolute right-4 top-4 z-10 inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur">
-                                <component :is="kindIcon(activeAsset.kind)" class="size-4" />
-                            </div>
-                            <div
-                                v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl && !isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
-                                class="absolute inset-0 m-3 animate-pulse rounded-[1.5rem] bg-white/55 sm:m-5"
-                            />
-                            <img
-                                v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl"
-                                :src="activeAsset.previewUrl"
-                                alt="Selected event upload"
-                                class="block h-full w-full object-contain p-3 sm:p-5"
-                                :class="isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview')) ? 'opacity-100' : 'opacity-0'"
-                                @load="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
-                                @error="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
-                            />
-                            <video
-                                v-else-if="activeAsset.kind === 'video' && activeAsset.previewUrl"
-                                :src="activeAsset.previewUrl"
-                                :poster="activeAsset.thumbnailUrl ?? undefined"
-                                class="block h-full w-full object-contain p-3 sm:p-5"
-                                controls
-                                autoplay
-                                playsinline
-                            />
-                            <div
-                                v-else-if="
-                                    activeAsset.kind === 'video' &&
-                                    activeAsset.videoProcessing
-                                "
-                                class="flex h-full w-full flex-col items-center justify-center gap-4 p-6 text-center text-slate-600"
-                            >
-                                <LoaderCircle class="size-10 animate-spin text-slate-400" />
-                                <div class="space-y-1">
-                                    <p class="text-base font-semibold text-slate-900">
-                                        Processing video
-                                    </p>
-                                    <p class="text-sm text-slate-500">
-                                        Preview is still being generated.
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="flex h-full w-full items-center justify-center p-6 sm:p-10"
-                            >
-                                <div
-                                    class="flex aspect-square w-full max-w-[min(72vh,42rem)] items-center justify-center rounded-[1.75rem] border border-white/50 px-8 py-10 shadow-lg"
-                                    :style="textPostSurfaceStyle(activeAsset)"
-                                >
-                                    <p
-                                        class="max-w-[78%] whitespace-pre-wrap text-center text-xl font-semibold leading-relaxed sm:text-2xl"
-                                        :style="textPostTextStyle(activeAsset)"
+                        <div class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <Avatar class="size-10 border border-white/18 shadow-sm">
+                                    <AvatarFallback
+                                        :class="avatarFallbackClass(activeAsset.guestName)"
                                     >
-                                        {{ activeAsset.text ?? 'Text post' }}
+                                        {{ guestInitials(activeAsset.guestName) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div class="min-w-0 text-white">
+                                    <p class="truncate text-sm font-medium tracking-[0.01em]">
+                                        {{ activeAsset.guestName }}
                                     </p>
+                                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/72 sm:text-xs">
+                                        <span class="truncate">{{ formatDateTime(activeAsset.createdAt) }}</span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <component :is="kindIcon(activeAsset.kind)" class="size-3.5" />
+                                            {{ formatBytes(activeAsset.sizeBytes) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                class="absolute left-4 top-1/2 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                :disabled="!hasPreviousAsset"
-                                aria-label="Previous upload"
-                                @click="goToPreviousAsset"
-                            >
-                                <ChevronLeft class="size-5" />
-                            </button>
-                            <button
-                                type="button"
-                                class="absolute right-4 top-1/2 z-10 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                :disabled="!hasNextAsset"
-                                aria-label="Next upload"
-                                @click="goToNextAsset"
-                            >
-                                <ChevronRight class="size-5" />
-                            </button>
-                            <div class="absolute inset-x-0 bottom-4 z-10 flex flex-wrap items-center justify-center gap-2 px-4">
+
+                            <div class="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
-                                    title="Upload info"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                    title="Open upload info"
                                     @click="openAssetInfo(activeAsset)"
                                 >
                                     <Info class="size-4" />
                                 </button>
                                 <button
-                                    v-if="activeAsset.previewUrl"
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
-                                    title="Copy file link"
-                                    @click="copyAssetLink(activeAsset)"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                    aria-label="Close preview"
+                                    @click="activeAssetId = null"
                                 >
-                                    <Copy class="size-4" />
-                                </button>
-                                <a
-                                    v-if="activeAsset.previewUrl"
-                                    :href="activeAsset.previewUrl"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
-                                    title="Download or open file"
-                                >
-                                    <Download class="size-4" />
-                                </a>
-                                <button
-                                    v-if="canManageMedia"
-                                    type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                    :disabled="
-                                        wallVisibilityAssetId === activeAsset.id ||
-                                        activeAsset.wallVisibility === 'approved'
-                                    "
-                                    title="Show on photo wall"
-                                    @click="updateWallVisibility(activeAsset, 'approved')"
-                                >
-                                    <ThumbsUp class="size-4" />
-                                </button>
-                                <button
-                                    v-if="canManageMedia"
-                                    type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                    :disabled="
-                                        wallVisibilityAssetId === activeAsset.id ||
-                                        activeAsset.wallVisibility === 'rejected'
-                                    "
-                                    title="Hide from photo wall"
-                                    @click="updateWallVisibility(activeAsset, 'rejected')"
-                                >
-                                    <ThumbsDown class="size-4" />
-                                </button>
-                                <button
-                                    v-if="canManageMedia"
-                                    type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                    :disabled="
-                                        moderationAssetId === activeAsset.id ||
-                                        activeAsset.moderationStatus === 'approved'
-                                    "
-                                    title="Approve"
-                                    @click="updateModeration(activeAsset, 'approved')"
-                                >
-                                    <Check class="size-4" />
-                                </button>
-                                <button
-                                    v-if="canManageMedia"
-                                    type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-white/88 text-slate-700 shadow-sm backdrop-blur transition hover:bg-white disabled:pointer-events-none disabled:opacity-35"
-                                    :disabled="
-                                        moderationAssetId === activeAsset.id ||
-                                        activeAsset.moderationStatus === 'rejected'
-                                    "
-                                    title="Reject"
-                                    @click="updateModeration(activeAsset, 'rejected')"
-                                >
-                                    <X class="size-4" />
-                                </button>
-                                <button
-                                    v-if="canManageMedia"
-                                    type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/88 text-white shadow-sm backdrop-blur transition hover:bg-rose-500"
-                                    title="Delete"
-                                    @click="requestDeleteAsset(activeAsset)"
-                                >
-                                    <Trash2 class="size-4" />
+                                    <X class="size-5" />
                                 </button>
                             </div>
                         </div>
+
                         <div
-                            v-if="activeAsset.kind !== 'text' && activeAsset.message"
-                            class="mt-4 rounded-[1.5rem] border border-white/70 bg-white/70 px-4 py-3 shadow-sm"
+                            v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl && !isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
+                            class="absolute inset-0 animate-pulse bg-white/8"
+                        />
+                        <img
+                            v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl"
+                            :src="activeAsset.previewUrl"
+                            alt="Selected event upload"
+                            class="block h-full w-full object-contain px-2 py-3 sm:px-4 sm:py-4"
+                            :class="isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview')) ? 'opacity-100' : 'opacity-0'"
+                            @load="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
+                            @error="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
+                        />
+                        <video
+                            v-else-if="activeAsset.kind === 'video' && activeAsset.previewUrl"
+                            :src="activeAsset.previewUrl"
+                            :poster="activeAsset.thumbnailUrl ?? undefined"
+                            class="block h-full w-full object-contain px-2 py-3 sm:px-4 sm:py-4"
+                            controls
+                            autoplay
+                            playsinline
+                        />
+                        <div
+                            v-else-if="
+                                activeAsset.kind === 'video' &&
+                                activeAsset.videoProcessing
+                            "
+                            class="flex h-full w-full flex-col items-center justify-center gap-4 p-6 text-center text-white/78"
                         >
-                            <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-                                {{ activeAsset.message }}
-                            </p>
+                            <LoaderCircle class="size-10 animate-spin text-white/55" />
+                            <div class="space-y-1">
+                                <p class="text-base font-semibold text-white">
+                                    Processing video
+                                </p>
+                                <p class="text-sm text-white/68">
+                                    Preview is still being generated.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="flex h-full w-full items-center justify-center p-6 sm:p-10"
+                        >
+                            <div
+                                class="flex aspect-square w-full max-w-[min(78vh,46rem)] items-center justify-center px-8 py-10 shadow-lg"
+                                :style="textPostSurfaceStyle(activeAsset)"
+                            >
+                                <p
+                                    class="max-w-[78%] whitespace-pre-wrap text-center text-xl font-semibold leading-relaxed sm:text-2xl"
+                                    :style="textPostTextStyle(activeAsset)"
+                                >
+                                    {{ activeAsset.text ?? 'Text post' }}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="absolute left-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
+                            :disabled="!hasPreviousAsset"
+                            aria-label="Previous upload"
+                            @click="goToPreviousAsset"
+                        >
+                            <ChevronLeft class="size-5" />
+                        </button>
+                        <button
+                            type="button"
+                            class="absolute right-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
+                            :disabled="!hasNextAsset"
+                            aria-label="Next upload"
+                            @click="goToNextAsset"
+                        >
+                            <ChevronRight class="size-5" />
+                        </button>
+
+                        <div class="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-12 sm:px-6 sm:pb-5">
+                            <div class="flex flex-col gap-3">
+                                <p
+                                    v-if="activeAsset.kind !== 'text' && activeAsset.message"
+                                    class="max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-white/88"
+                                >
+                                    {{ activeAsset.message }}
+                                </p>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button
+                                        v-if="activeAsset.previewUrl"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                        title="Copy file link"
+                                        @click="copyAssetLink(activeAsset)"
+                                    >
+                                        <Copy class="size-4" />
+                                    </button>
+                                    <a
+                                        v-if="activeAsset.previewUrl"
+                                        :href="activeAsset.previewUrl"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                        title="Download or open file"
+                                    >
+                                        <Download class="size-4" />
+                                    </a>
+                                    <button
+                                        v-if="canManageMedia"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        :disabled="
+                                            wallVisibilityAssetId === activeAsset.id ||
+                                            activeAsset.wallVisibility === 'approved'
+                                        "
+                                        title="Show on photo wall"
+                                        @click="updateWallVisibility(activeAsset, 'approved')"
+                                    >
+                                        <ThumbsUp class="size-4" />
+                                    </button>
+                                    <button
+                                        v-if="canManageMedia"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        :disabled="
+                                            wallVisibilityAssetId === activeAsset.id ||
+                                            activeAsset.wallVisibility === 'rejected'
+                                        "
+                                        title="Hide from photo wall"
+                                        @click="updateWallVisibility(activeAsset, 'rejected')"
+                                    >
+                                        <ThumbsDown class="size-4" />
+                                    </button>
+                                    <button
+                                        v-if="canManageMedia"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        :disabled="
+                                            moderationAssetId === activeAsset.id ||
+                                            activeAsset.moderationStatus === 'approved'
+                                        "
+                                        title="Approve"
+                                        @click="updateModeration(activeAsset, 'approved')"
+                                    >
+                                        <Check class="size-4" />
+                                    </button>
+                                    <button
+                                        v-if="canManageMedia"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        :disabled="
+                                            moderationAssetId === activeAsset.id ||
+                                            activeAsset.moderationStatus === 'rejected'
+                                        "
+                                        title="Reject"
+                                        @click="updateModeration(activeAsset, 'rejected')"
+                                    >
+                                        <X class="size-4" />
+                                    </button>
+                                    <button
+                                        v-if="canManageMedia"
+                                        type="button"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/70 text-white ring-1 ring-rose-200/20 backdrop-blur transition hover:bg-rose-500/84"
+                                        title="Delete"
+                                        @click="requestDeleteAsset(activeAsset)"
+                                    >
+                                        <Trash2 class="size-4" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2046,16 +2039,16 @@ const statCards = computed(() => [
             :open="assetInfoAsset !== null"
             @update:open="(open) => { if (!open) assetInfoId = null; }"
         >
-            <DrawerContent class="w-full max-w-xl overflow-hidden border-l border-[#e7dccb] bg-[#f8f3eb]">
+            <DrawerContent class="w-full max-w-xl overflow-hidden border-l border-[#e7dccb] bg-[#f6efe5]">
                 <div
                     v-if="assetInfoAsset"
                     class="flex h-full max-h-screen flex-col"
                 >
                     <DrawerHeader class="relative border-b border-[#e7dccb] px-6 py-5 pr-16 text-left">
-                        <DrawerTitle class="text-xl font-semibold text-slate-900">
+                        <DrawerTitle class="text-lg font-semibold text-slate-900">
                             Upload info
                         </DrawerTitle>
-                        <DrawerDescription class="text-sm text-slate-600">
+                        <DrawerDescription class="text-xs text-slate-600">
                             Attendee details, file metadata, and quick actions for this upload.
                         </DrawerDescription>
                         <button
@@ -2068,8 +2061,8 @@ const statCards = computed(() => [
                         </button>
                     </DrawerHeader>
 
-                    <div class="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                        <div class="flex items-center gap-3 rounded-[1.5rem] border border-white/70 bg-white/70 p-4 shadow-sm">
+                    <div class="flex-1 overflow-y-auto px-6 py-6">
+                        <div class="flex items-center gap-3 border-b border-[#e7dccb] pb-5">
                             <Avatar class="size-12 border border-[#e7dccb]">
                                 <AvatarFallback
                                     :class="avatarFallbackClass(assetInfoAsset.guestName)"
@@ -2078,101 +2071,101 @@ const statCards = computed(() => [
                                 </AvatarFallback>
                             </Avatar>
                             <div class="min-w-0">
-                                <p class="truncate text-base font-semibold text-slate-900">
+                                <p class="truncate text-sm font-semibold text-slate-900">
                                     {{ assetInfoAsset.guestName }}
                                 </p>
-                                <p class="truncate text-sm text-slate-500">
+                                <p class="truncate text-[11px] text-slate-500">
                                     {{ formatDateTime(assetInfoAsset.createdAt) }}
                                 </p>
                             </div>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        <div class="grid gap-x-6 gap-y-4 border-b border-[#e7dccb] py-5 sm:grid-cols-2">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     File
                                 </p>
-                                <p class="mt-2 break-words text-sm font-medium text-slate-900">
+                                <p class="break-words text-xs text-slate-700">
                                     {{ displayAssetFilename(assetInfoAsset) }}
                                 </p>
                             </div>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Size
                                 </p>
-                                <p class="mt-2 text-sm font-medium text-slate-900">
+                                <p class="text-xs text-slate-700">
                                     {{ formatBytes(assetInfoAsset.sizeBytes) }}
                                 </p>
                             </div>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Type
                                 </p>
-                                <p class="mt-2 text-sm font-medium capitalize text-slate-900">
+                                <p class="text-xs capitalize text-slate-700">
                                     {{ assetInfoAsset.kind }}
                                 </p>
                             </div>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Status
                                 </p>
-                                <p class="mt-2 text-sm font-medium capitalize text-slate-900">
+                                <p class="text-xs capitalize text-slate-700">
                                     {{ assetInfoAsset.moderationStatus }}
                                 </p>
                             </div>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Pipeline
                                 </p>
-                                <p class="mt-2 text-sm font-medium text-slate-900">
+                                <p class="text-xs text-slate-700">
                                     {{ moderationPipelineLabel(assetInfoAsset.moderationPipeline) }}
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.moderationScore !== null"
-                                class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm"
+                                class="space-y-1"
                             >
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Score
                                 </p>
-                                <p class="mt-2 text-sm font-medium text-slate-900">
+                                <p class="text-xs text-slate-700">
                                     {{ assetInfoAsset.moderationScore }}/100
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.reviewedAt"
-                                class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm"
+                                class="space-y-1"
                             >
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Reviewed
                                 </p>
-                                <p class="mt-2 text-sm font-medium text-slate-900">
+                                <p class="text-xs text-slate-700">
                                     {{ formatDateTime(assetInfoAsset.reviewedAt) }}
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.mimeType"
-                                class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm sm:col-span-2"
+                                class="space-y-1 sm:col-span-2"
                             >
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Format
                                 </p>
-                                <p class="mt-2 break-all text-sm font-medium text-slate-900">
+                                <p class="break-all text-xs text-slate-700">
                                     {{ assetInfoAsset.mimeType }}
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.moderationMatches.length > 0"
-                                class="rounded-[1.35rem] border border-white/70 bg-white/70 p-4 shadow-sm sm:col-span-2"
+                                class="space-y-2 sm:col-span-2"
                             >
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                     Matched rules
                                 </p>
-                                <div class="mt-3 flex flex-wrap gap-2">
+                                <div class="flex flex-wrap gap-2">
                                     <span
                                         v-for="match in assetInfoAsset.moderationMatches"
                                         :key="`${match.category}-${match.keyword}`"
-                                        class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800"
+                                        class="inline-flex items-center rounded-full border border-amber-300/70 bg-amber-100/60 px-2 py-0.5 text-[11px] text-amber-900"
                                     >
                                         {{ moderationMatchLabel(match) }}
                                     </span>
@@ -2182,27 +2175,27 @@ const statCards = computed(() => [
 
                         <div
                             v-if="assetInfoAsset.guestEmail || assetInfoAsset.guestPhone"
-                            class="space-y-3"
+                            class="space-y-3 border-b border-[#e7dccb] py-5"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                 Contact
                             </p>
-                            <div class="space-y-3">
+                            <div class="space-y-2">
                                 <div
                                     v-if="assetInfoAsset.guestEmail"
-                                    class="flex items-center gap-3 rounded-[1.25rem] border border-white/70 bg-white/70 p-4 shadow-sm"
+                                    class="flex items-center gap-3"
                                 >
                                     <Mail class="size-4 text-slate-500" />
-                                    <span class="break-all text-sm font-medium text-slate-900">
+                                    <span class="break-all text-xs text-slate-700">
                                         {{ assetInfoAsset.guestEmail }}
                                     </span>
                                 </div>
                                 <div
                                     v-if="assetInfoAsset.guestPhone"
-                                    class="flex items-center gap-3 rounded-[1.25rem] border border-white/70 bg-white/70 p-4 shadow-sm"
+                                    class="flex items-center gap-3"
                                 >
                                     <Phone class="size-4 text-slate-500" />
-                                    <span class="text-sm font-medium text-slate-900">
+                                    <span class="text-xs text-slate-700">
                                         {{ assetInfoAsset.guestPhone }}
                                     </span>
                                 </div>
@@ -2211,33 +2204,29 @@ const statCards = computed(() => [
 
                         <div
                             v-if="assetInfoAsset.kind !== 'text' && assetInfoAsset.message"
-                            class="space-y-3"
+                            class="space-y-2 border-b border-[#e7dccb] py-5"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                 Guest message
                             </p>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-5 shadow-sm">
-                                <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-                                    {{ assetInfoAsset.message }}
-                                </p>
-                            </div>
+                            <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+                                {{ assetInfoAsset.message }}
+                            </p>
                         </div>
 
                         <div
                             v-if="assetInfoAsset.kind === 'text' && assetInfoAsset.text"
-                            class="space-y-3"
+                            class="space-y-2 border-b border-[#e7dccb] py-5"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                                 Text post
                             </p>
-                            <div class="rounded-[1.35rem] border border-white/70 bg-white/70 p-5 shadow-sm">
-                                <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-                                    {{ assetInfoAsset.text }}
-                                </p>
-                            </div>
+                            <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+                                {{ assetInfoAsset.text }}
+                            </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 py-5">
                             <Button
                                 v-if="assetInfoAsset.previewUrl"
                                 size="icon"
