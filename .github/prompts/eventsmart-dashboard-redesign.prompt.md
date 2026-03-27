@@ -44,6 +44,12 @@ It must not feel:
 10. Do not use full-width sections for small content blocks that can live in a tighter column or split layout.
 11. Never use a big empty section just to hold a QR code, a short list, or a few buttons.
 12. If content is small, make it compact and place it in an aside, strip, or split column instead of stretching it wide.
+13. Prefer one main surface per screen, not a screen full of equally loud boxes.
+14. Use compact section switches, segmented controls, or pill nav for sibling work areas instead of card-like tabs.
+15. Bulk actions should stay hidden until they are needed.
+16. Row-based lists should feel like clean working lists, not stacks of mini dashboards.
+17. Secondary tracking details should be collapsed or moved below the main action path.
+18. When a preview exists, keep it visually consistent with the live result and do not wrap it in decorative chrome.
 
 ## Information architecture goals
 
@@ -80,6 +86,7 @@ For the event workspace:
 - Replace bulky event cards with clean list rows and clear action buttons
 - Keep badges small and useful
 - Avoid more than one level of visual nesting
+- Use dividers, spacing, and quiet background shifts before introducing another border box
 - If a section holds only small content, do not stretch it across the full page just to fill space
 - Solve hierarchy with spacing, columns, dividers, and type, not with boxes inside boxes
 

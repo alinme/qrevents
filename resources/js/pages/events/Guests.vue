@@ -1134,7 +1134,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-5 p-4 md:p-6">
-            <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <section class="space-y-4">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center gap-2">
@@ -1170,71 +1170,58 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </div>
                 </div>
 
-                <div class="mt-4 grid gap-2 sm:grid-cols-3">
+                <div class="flex flex-wrap gap-2">
                     <button
                         type="button"
                         :class="[
-                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
-                            activeSection === 'families' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                            'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition',
+                            activeSection === 'families' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
                         ]"
                         @click="activeSection = 'families'"
                     >
-                        <div>
-                            <p class="text-sm font-semibold">Families</p>
-                            <p :class="activeSection === 'families' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
-                                Main working list
-                            </p>
-                        </div>
                         <Users class="size-4" />
+                        <span>Families</span>
                     </button>
                     <button
                         type="button"
                         :class="[
-                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
-                            activeSection === 'invitation' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                            'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition',
+                            activeSection === 'invitation' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
                         ]"
                         @click="activeSection = 'invitation'"
                     >
-                        <div>
-                            <p class="text-sm font-semibold">Invitation</p>
-                            <p :class="activeSection === 'invitation' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
-                                Message and public link
-                            </p>
-                        </div>
                         <ScrollText class="size-4" />
+                        <span>Invitation</span>
                     </button>
                     <button
                         type="button"
                         :class="[
-                            'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition',
-                            activeSection === 'ledger' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700',
+                            'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition',
+                            activeSection === 'ledger' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
                         ]"
                         @click="activeSection = 'ledger'"
                     >
-                        <div>
-                            <p class="text-sm font-semibold">Ledger</p>
-                            <p :class="activeSection === 'ledger' ? 'text-xs text-white/70' : 'text-xs text-neutral-500'">
-                                Gifts, attendance, export
-                            </p>
-                        </div>
                         <Wallet class="size-4" />
+                        <span>Ledger</span>
                     </button>
                 </div>
             </section>
 
             <section v-if="activeSection === 'families'" class="space-y-4">
-                <div class="grid gap-3 sm:grid-cols-3">
-                    <div
-                        v-for="item in familyOverview"
-                        :key="item.label"
-                        class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm"
-                    >
-                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-                            {{ item.label }}
-                        </p>
-                        <p class="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                            {{ item.value }}
-                        </p>
+                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+                    <div class="grid gap-px bg-neutral-200 sm:grid-cols-3">
+                        <div
+                            v-for="item in familyOverview"
+                            :key="item.label"
+                            class="bg-white px-4 py-3"
+                        >
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                {{ item.label }}
+                            </p>
+                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ item.value }}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -1301,7 +1288,10 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </div>
 
                     <div v-else class="divide-y divide-neutral-200">
-                        <div class="flex flex-wrap gap-2 px-5 py-4">
+                        <div v-if="selectedGuestIds.length > 0" class="flex flex-wrap items-center gap-2 border-b border-neutral-200 bg-neutral-50/70 px-5 py-3">
+                            <span class="mr-1 text-sm font-medium text-neutral-700">
+                                {{ selectedGuestIds.length }} selected
+                            </span>
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
@@ -1446,8 +1436,9 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
 
                             <div
                                 v-if="expandedGuestPartyId === party.id"
-                                class="mt-4 grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4 md:grid-cols-2"
+                                class="mt-4 space-y-4 border-t border-neutral-200 pt-4"
                             >
+                                <div class="grid gap-4 md:grid-cols-2">
                                 <div class="space-y-2 text-sm text-neutral-600">
                                     <p><span class="font-medium text-neutral-900">Opens:</span> {{ party.invitationOpenCount }}</p>
                                     <p><span class="font-medium text-neutral-900">First open:</span> {{ formatDateTime(party.invitationFirstOpenedAt) }}</p>
@@ -1467,16 +1458,17 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     <p v-if="mealPreferenceLabel(party.mealPreference)"><span class="font-medium text-neutral-900">Meal:</span> {{ mealPreferenceLabel(party.mealPreference) }}</p>
                                     <p v-if="party.responseNotes"><span class="font-medium text-neutral-900">RSVP note:</span> {{ party.responseNotes }}</p>
                                 </div>
+                                </div>
 
-                                <div class="rounded-2xl border border-neutral-200 bg-white/70 p-3 md:col-span-2">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                                <div class="space-y-2">
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
                                         Invitation history
                                     </p>
-                                    <div v-if="party.invitationHistory.length > 0" class="mt-3 space-y-2">
+                                    <div v-if="party.invitationHistory.length > 0" class="divide-y divide-neutral-200 rounded-2xl border border-neutral-200">
                                         <div
                                             v-for="activity in party.invitationHistory"
                                             :key="`${activity.type}-${activity.createdAt}-${activity.deliveryChannel}`"
-                                            class="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+                                            class="flex items-start justify-between gap-3 px-3 py-2.5 text-sm"
                                         >
                                             <div>
                                                 <p class="font-medium text-neutral-900">
@@ -1496,7 +1488,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     </p>
                                 </div>
 
-                                <div class="flex flex-wrap gap-2 md:col-span-2">
+                                <div class="flex flex-wrap gap-2">
                                     <Button
                                         variant="outline"
                                         class="rounded-full px-4"
@@ -1684,7 +1676,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </div>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="space-y-4 border-t border-neutral-200 pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <Button class="rounded-full px-5" @click="openInvite(publicInvitationUrl)">
                                 <ExternalLink class="mr-2 size-4" />
@@ -1715,15 +1707,15 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             mode="preview"
                         />
 
-                        <div class="rounded-2xl border border-neutral-200 bg-white p-4">
+                        <div class="space-y-4 border-t border-neutral-200 pt-4">
                             <p class="text-sm font-semibold text-neutral-950">
                                 Invitation campaign
                             </p>
-                            <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-200">
                                 <div
                                     v-for="item in invitationSummaryCards"
                                     :key="item.label"
-                                    class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3"
+                                    class="bg-white px-4 py-3"
                                 >
                                     <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
                                         {{ item.label }}
@@ -1734,7 +1726,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 </div>
                             </div>
 
-                            <div class="mt-4 flex flex-col gap-2">
+                            <div class="flex flex-col gap-2">
                                 <Button class="rounded-full px-5" @click="sharePendingInvites">
                                     <SendHorizontal class="mr-2 size-4" />
                                     Share pending
@@ -1750,7 +1742,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             </div>
                         </div>
 
-                        <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                        <div class="space-y-4 border-t border-neutral-200 pt-4">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
                                     <p class="text-sm font-semibold text-neutral-950">
@@ -1772,11 +1764,11 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 </span>
                             </div>
 
-                            <div class="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-600 break-all">
+                            <div class="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 break-all">
                                 {{ publicInvitationUrl }}
                             </div>
 
-                            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+                            <div class="flex flex-col gap-2 sm:flex-row">
                                 <Button class="rounded-full px-5" @click="copyLink(publicInvitationUrl, 'Public RSVP link')">
                                     <Copy class="mr-2 size-4" />
                                     Copy link
@@ -1788,16 +1780,16 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             </div>
                         </div>
 
-                        <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                        <div class="space-y-3 border-t border-neutral-200 pt-4">
                             <p class="text-sm font-semibold text-neutral-950">
                                 Recent activity
                             </p>
 
-                            <div v-if="invitationRecentActivity.length > 0" class="mt-4 space-y-2">
+                            <div v-if="invitationRecentActivity.length > 0" class="divide-y divide-neutral-200 rounded-2xl border border-neutral-200">
                                 <div
                                     v-for="activity in invitationRecentActivity"
                                     :key="`${activity.guestName}-${activity.type}-${activity.createdAt}`"
-                                    class="flex items-start justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3"
+                                    class="flex items-start justify-between gap-3 px-4 py-3"
                                 >
                                     <div>
                                         <p class="text-sm font-medium text-neutral-950">
@@ -1813,7 +1805,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 </div>
                             </div>
 
-                            <p v-else class="mt-4 text-sm text-neutral-500">
+                            <p v-else class="text-sm text-neutral-500">
                                 Invitation activity will appear here after you start sharing links.
                             </p>
                         </div>
@@ -1833,27 +1825,22 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
             </section>
 
             <section v-else class="space-y-4">
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                    <div
-                        v-for="stat in statCards"
-                        :key="stat.label"
-                        class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm"
-                    >
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-                                    {{ stat.label }}
-                                </p>
-                                <p class="mt-2 text-xl font-semibold tracking-tight text-neutral-950">
-                                    {{ stat.value }}
-                                </p>
-                                <p class="mt-1 text-xs text-neutral-500">
-                                    {{ stat.detail }}
-                                </p>
-                            </div>
-                            <div class="rounded-full bg-neutral-100 p-2 text-neutral-700">
-                                <component :is="stat.icon" class="size-4" />
-                            </div>
+                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+                    <div class="grid gap-px bg-neutral-200 sm:grid-cols-2 xl:grid-cols-5">
+                        <div
+                            v-for="stat in statCards"
+                            :key="stat.label"
+                            class="bg-white px-4 py-3"
+                        >
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                {{ stat.label }}
+                            </p>
+                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ stat.value }}
+                            </p>
+                            <p class="mt-1 text-xs text-neutral-500">
+                                {{ stat.detail }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1888,11 +1875,11 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         Retention ends on {{ retentionReminder.dateLabel }}.
                     </div>
 
-                    <div class="mt-5 space-y-3">
+                    <div class="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-2xl border border-neutral-200">
                         <div
                             v-for="party in ledgerGuestParties"
                             :key="party.id"
-                            class="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4"
+                            class="bg-white p-4"
                         >
                             <div class="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] xl:items-center">
                                 <div class="space-y-2">
