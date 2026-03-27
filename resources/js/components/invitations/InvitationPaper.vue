@@ -259,8 +259,8 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
 });
 
 const logoStyle = computed<Record<string, string>>(() => {
-    const dimension = isPreviewMode.value ? 44 : 72;
-    const scaledDimension = Math.max(isPreviewMode.value ? 36 : 56, Math.round(dimension * paperScale.value));
+    const dimension = isPreviewMode.value ? 88 : 144;
+    const scaledDimension = Math.max(isPreviewMode.value ? 72 : 112, Math.round(dimension * paperScale.value));
 
     return {
         top: isPreviewMode.value ? '3.4%' : '3.2%',

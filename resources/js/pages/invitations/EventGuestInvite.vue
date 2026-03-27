@@ -273,30 +273,33 @@ onMounted(() => {
                         <div class="grid gap-3 sm:grid-cols-3">
                             <button
                                 type="button"
-                                class="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-4 text-center text-emerald-950 transition hover:border-emerald-400 hover:bg-emerald-100"
+                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
                                 @click="openAcceptModal"
                             >
-                                <p class="text-sm font-semibold uppercase tracking-[0.16em]">
+                                <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-emerald-400/80 transition group-hover:bg-emerald-500/90" />
+                                <p class="text-base font-semibold tracking-[0.04em]">
                                     {{ t('invitations.accept') }}
                                 </p>
                             </button>
 
                             <button
                                 type="button"
-                                class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 text-center text-amber-950 transition hover:border-amber-400 hover:bg-amber-100"
+                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
                                 @click="openMaybeModal"
                             >
-                                <p class="text-sm font-semibold uppercase tracking-[0.16em]">
+                                <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-amber-400/80 transition group-hover:bg-amber-500/90" />
+                                <p class="text-base font-semibold tracking-[0.04em]">
                                     {{ t('invitations.maybe') }}
                                 </p>
                             </button>
 
                             <button
                                 type="button"
-                                class="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-4 text-center text-rose-950 transition hover:border-rose-400 hover:bg-rose-100"
+                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
                                 @click="openDeclineModal"
                             >
-                                <p class="text-sm font-semibold uppercase tracking-[0.16em]">
+                                <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-rose-400/80 transition group-hover:bg-rose-500/90" />
+                                <p class="text-base font-semibold tracking-[0.04em]">
                                     {{ t('invitations.decline') }}
                                 </p>
                             </button>
@@ -310,7 +313,7 @@ onMounted(() => {
                     v-if="visibleMoments.length > 0"
                     class="rounded-[30px] border border-neutral-200 bg-white/92 p-4 shadow-lg backdrop-blur print:hidden sm:p-5"
                 >
-                    <div class="space-y-1">
+                    <div class="space-y-1 text-center">
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
                             {{ t('invitations.moments_title') }}
                         </p>
@@ -325,7 +328,7 @@ onMounted(() => {
                             :key="`${moment.label}-${moment.date}-${moment.time}`"
                             class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3"
                         >
-                            <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="flex flex-col items-center gap-3 text-center">
                                 <div class="space-y-1">
                                     <p class="text-sm font-semibold text-neutral-900">
                                         {{ moment.label }}
