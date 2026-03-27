@@ -274,14 +274,14 @@ const wallVisibilityLabel = (visibility: MediaAsset['wallVisibility']): string =
     }
 };
 
-const wallVisibilityToneClass = (visibility: MediaAsset['wallVisibility']): string => {
+const wallVisibilityMetaText = (visibility: MediaAsset['wallVisibility']): string => {
     switch (visibility) {
         case 'approved':
-            return 'bg-emerald-100/92 text-emerald-700';
+            return 'Shown on wall';
         case 'rejected':
-            return 'bg-rose-100/92 text-rose-700';
+            return 'Hidden from wall';
         default:
-            return 'bg-amber-100/92 text-amber-700';
+            return 'Waiting for wall review';
     }
 };
 
@@ -290,6 +290,8 @@ const showsWallDecisionOverlay = (asset: MediaAsset): boolean =>
 
 const showsGridAssetChrome = (asset: MediaAsset): boolean =>
     !showsWallDecisionOverlay(asset);
+
+const showsGridAssetAvatar = (): boolean => mediaView.value === 'relaxed';
 
 const moderationMatchLabel = (match: MediaAsset['moderationMatches'][number]): string =>
     `${match.category}: ${match.keyword}`;
@@ -1475,8 +1477,14 @@ const statCards = computed(() => [
                                 v-if="showsGridAssetChrome(asset)"
                                 class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
                             >
-                                <div class="min-w-0 flex items-center gap-2">
-                                    <Avatar class="size-9 border border-white/20 shadow-sm">
+                                <div
+                                    class="min-w-0 flex items-center"
+                                    :class="showsGridAssetAvatar() ? 'gap-2' : 'gap-0'"
+                                >
+                                    <Avatar
+                                        v-if="showsGridAssetAvatar()"
+                                        class="size-9 border border-white/20 shadow-sm"
+                                    >
                                         <AvatarFallback
                                             :class="avatarFallbackClass(asset.guestName)"
                                         >
@@ -1487,11 +1495,8 @@ const statCards = computed(() => [
                                         <p class="truncate text-sm font-semibold text-white">
                                             {{ asset.guestName }}
                                         </p>
-                                        <p
-                                            class="mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                                            :class="wallVisibilityToneClass(asset.wallVisibility)"
-                                        >
-                                            {{ wallVisibilityLabel(asset.wallVisibility) }}
+                                        <p class="mt-0.5 truncate text-[11px] text-white/70">
+                                            {{ wallVisibilityMetaText(asset.wallVisibility) }}
                                         </p>
                                     </div>
                                 </div>
