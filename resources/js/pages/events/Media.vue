@@ -1812,7 +1812,6 @@ const statCards = computed(() => [
                         @touchmove="onPreviewTouchMove"
                         @touchend="onPreviewTouchEnd"
                     >
-                        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,242,220,0.18),transparent_40%),linear-gradient(180deg,rgba(53,37,26,0.92),rgba(28,20,15,0.96))]" />
                         <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-[#2f2219]/78 via-[#2f2219]/30 to-transparent sm:h-36" />
                         <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#241912]/82 via-[#241912]/34 to-transparent sm:h-48" />
 
