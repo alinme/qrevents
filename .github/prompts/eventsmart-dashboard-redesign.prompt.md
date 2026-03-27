@@ -52,6 +52,7 @@ It must not feel:
 18. When a preview exists, keep it visually consistent with the live result and do not wrap it in decorative chrome.
 19. Redesign hidden layers too, not only the visible page shell: dialogs, sidebars, drawers, confirm surfaces, and preview panels must follow the same simplicity rules.
 20. Creation flows must start with the minimum required inputs. Push the rest into advanced details, defaults, or later editing.
+21. When a screen is operational, design it for the real job it serves. A public guest list is an entrance desk tool, not a passive report.
 
 ## Information architecture goals
 
@@ -70,6 +71,12 @@ For the event workspace:
   - share links
 - show status in a compact way
 - avoid turning the page into a reporting console
+
+For operational public pages:
+- design around the live task, not the data model
+- example: the public guest list is for greeting guests, checking them in, assigning tables, and telling them where to sit
+- rows should support quick action under pressure
+- details modals should help finish the job, not just show metadata
 
 ## Visual direction
 
@@ -92,6 +99,7 @@ For the event workspace:
 - If a section holds only small content, do not stretch it across the full page just to fill space
 - Solve hierarchy with spacing, columns, dividers, and type, not with boxes inside boxes
 - In create and edit dialogs, start with the one or two fields a normal person can fill fast; anything technical or edge-case belongs under advanced details
+- On entrance-desk screens, actions like `Came`, `No show`, `Details`, and `Assign table` should be immediately understandable and close to the guest row
 
 ## Output expectations
 

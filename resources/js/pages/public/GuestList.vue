@@ -11,11 +11,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
 
 type GuestListParty = {
     id: number;
     name: string;
     phone: string | null;
+    eventTableId: number | null;
     tableName: string | null;
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number | null;
@@ -34,6 +39,12 @@ const props = defineProps<{
         searchPlaceholder: string;
         publicUrl: string;
     };
+    eventTables: Array<{
+        id: number;
+        name: string;
+        remainingSeats: number;
+        isFull: boolean;
+    }>;
     guestParties: GuestListParty[];
 }>();
 
@@ -41,6 +52,7 @@ const search = ref('');
 const quickSavingGuestId = ref<number | null>(null);
 const detailsDialogOpen = ref(false);
 const detailsParty = ref<GuestListParty | null>(null);
+const selectedTableId = ref('');
 
 const filteredGuestParties = computed(() => {
     const needle = search.value.trim().toLowerCase();
@@ -73,8 +85,14 @@ const actualAttendanceRowClass = (status: GuestListParty['actualAttendanceStatus
 
 const openDetails = (party: GuestListParty): void => {
     detailsParty.value = party;
+    selectedTableId.value = party.eventTableId?.toString() ?? '';
     detailsDialogOpen.value = true;
 };
+
+const selectableTables = computed(() => props.eventTables.map((table) => ({
+    ...table,
+    selectable: !table.isFull || table.id === Number(selectedTableId.value || 0),
+})));
 
 const updateAttendance = (
     party: GuestListParty,
@@ -90,6 +108,29 @@ const updateAttendance = (
         party.updateUrl,
         {
             actual_attendance_status: status,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onFinish: () => {
+                quickSavingGuestId.value = null;
+            },
+        },
+    );
+};
+
+const saveTableAssignment = (): void => {
+    if (!detailsParty.value || quickSavingGuestId.value !== null) {
+        return;
+    }
+
+    quickSavingGuestId.value = detailsParty.value.id;
+
+    router.patch(
+        detailsParty.value.updateUrl,
+        {
+            actual_attendance_status: detailsParty.value.actualAttendanceStatus,
+            event_table_id: selectedTableId.value === '' ? null : Number(selectedTableId.value),
         },
         {
             preserveScroll: true,
@@ -228,6 +269,46 @@ const updateAttendance = (
                             <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Notes</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.notes || 'No notes added' }}</p>
                         </div>
+                    </div>
+
+                    <div class="space-y-2 border-t border-stone-200 pt-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Seat them at</p>
+                                <p class="mt-1 text-sm text-stone-600">
+                                    Choose a table here so the entrance team can greet them and tell them where to sit.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div v-if="props.eventTables.length > 0" class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                            <div class="space-y-2">
+                                <NativeSelect v-model="selectedTableId">
+                                    <NativeSelectOption value="">No table yet</NativeSelectOption>
+                                    <NativeSelectOption
+                                        v-for="table in selectableTables"
+                                        :key="table.id"
+                                        :value="String(table.id)"
+                                        :disabled="!table.selectable"
+                                    >
+                                        {{ table.name }} · {{ table.remainingSeats }} seats left
+                                    </NativeSelectOption>
+                                </NativeSelect>
+                                <p class="text-xs text-stone-500">
+                                    Full tables stay locked until seats open up.
+                                </p>
+                            </div>
+
+                            <div class="flex items-end">
+                                <Button class="rounded-full px-4" :disabled="quickSavingGuestId === detailsParty.id" @click="saveTableAssignment">
+                                    Save table
+                                </Button>
+                            </div>
+                        </div>
+
+                        <p v-else class="text-sm text-stone-500">
+                            No tables have been added yet by the host.
+                        </p>
                     </div>
                 </div>
             </DialogContent>

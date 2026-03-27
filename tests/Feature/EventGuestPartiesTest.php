@@ -306,9 +306,14 @@ it('shows the public guest list and lets staff mark an invitee as present', func
     $event = Event::factory()->create([
         'name' => 'Jessica & Simon Wedding',
     ]);
+    $table = EventTable::factory()->for($event)->create([
+        'name' => 'Table 5',
+        'seats_count' => 8,
+    ]);
 
     $guestParty = EventGuestParty::factory()->for($event)->create([
         'name' => 'Familia Popescu',
+        'event_table_id' => $table->id,
         'table_name' => 'Table 5',
         'actual_attendance_status' => 'unknown',
         'confirmed_attendees_count' => 3,
@@ -320,7 +325,9 @@ it('shows the public guest list and lets staff mark an invitee as present', func
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/GuestList')
             ->where('currentEvent.name', 'Jessica & Simon Wedding')
+            ->where('eventTables.0.name', 'Table 5')
             ->where('guestParties.0.name', 'Familia Popescu')
+            ->where('guestParties.0.eventTableId', $table->id)
             ->where('guestParties.0.tableName', 'Table 5')
         );
 
@@ -330,6 +337,33 @@ it('shows the public guest list and lets staff mark an invitee as present', func
 
     expect($guestParty->fresh()->actual_attendance_status)->toBe('present')
         ->and($guestParty->fresh()->actual_attendees_count)->toBe(3);
+});
+
+it('lets the public guest list assign a table while checking in a guest', function () {
+    $event = Event::factory()->create([
+        'name' => 'Jessica & Simon Wedding',
+    ]);
+    $table = EventTable::factory()->for($event)->create([
+        'name' => 'Table 8',
+        'seats_count' => 10,
+    ]);
+
+    $guestParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Ionescu',
+        'actual_attendance_status' => 'unknown',
+        'confirmed_attendees_count' => 2,
+        'invited_attendees_count' => 2,
+    ]);
+
+    $this->patch(route('events.guests.public-list.update', [$event->share_token, $guestParty]), [
+        'actual_attendance_status' => 'present',
+        'event_table_id' => $table->id,
+    ])->assertRedirect();
+
+    expect($guestParty->fresh()->actual_attendance_status)->toBe('present')
+        ->and($guestParty->fresh()->actual_attendees_count)->toBe(2)
+        ->and($guestParty->fresh()->event_table_id)->toBe($table->id)
+        ->and($guestParty->fresh()->table_name)->toBe('Table 8');
 });
 
 it('allows an event owner to mark pending invitations as reminded', function () {

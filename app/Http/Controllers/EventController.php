@@ -239,13 +239,27 @@ class EventController extends Controller
         abort_unless($guestParty->event_id === $event->id, 404);
 
         $payload = $request->payload();
+        $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
+        $this->assertTableHasRoomForGuestParty(
+            $eventTable,
+            [
+                'invited_attendees_count' => $guestParty->invited_attendees_count,
+                'confirmed_attendees_count' => $guestParty->confirmed_attendees_count,
+            ],
+            $guestParty,
+        );
+
         if (($payload['actual_attendance_status'] ?? null) === 'present') {
             $payload['actual_attendees_count'] = $guestParty->confirmed_attendees_count
                 ?? $guestParty->invited_attendees_count
                 ?? 1;
         }
 
-        $guestParty->update($payload);
+        $guestParty->update([
+            ...$payload,
+            'event_table_id' => $eventTable?->id,
+            'table_name' => $eventTable?->name,
+        ]);
 
         return back()->with('success', 'Guest list updated.');
     }
@@ -3057,6 +3071,9 @@ class EventController extends Controller
         $guestParties = $event->guestParties()
             ->orderBy('name')
             ->get();
+        $eventTables = $event->tables()
+            ->with('guestParties')
+            ->get();
 
         return [
             'currentEvent' => [
@@ -3067,11 +3084,21 @@ class EventController extends Controller
                 'searchPlaceholder' => 'Search invitee, phone, or table',
                 'publicUrl' => route('events.guests.public-list.show', $event->share_token),
             ],
+            'eventTables' => $eventTables
+                ->map(fn (EventTable $eventTable): array => [
+                    'id' => $eventTable->id,
+                    'name' => $eventTable->name,
+                    'remainingSeats' => max(0, $eventTable->seats_count - $this->eventTableOccupiedSeats($eventTable)),
+                    'isFull' => $this->eventTableOccupiedSeats($eventTable) >= $eventTable->seats_count,
+                ])
+                ->values()
+                ->all(),
             'guestParties' => $guestParties
                 ->map(fn (EventGuestParty $party): array => [
                     'id' => $party->id,
                     'name' => $party->name,
                     'phone' => $party->phone,
+                    'eventTableId' => $party->event_table_id,
                     'tableName' => $party->table_name,
                     'invitedAttendeesCount' => $party->invited_attendees_count,
                     'confirmedAttendeesCount' => $party->confirmed_attendees_count,

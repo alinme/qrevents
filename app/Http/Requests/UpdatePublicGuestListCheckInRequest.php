@@ -16,11 +16,12 @@ class UpdatePublicGuestListCheckInRequest extends FormRequest
     {
         return [
             'actual_attendance_status' => ['required', 'string', Rule::in(['unknown', 'present', 'absent'])],
+            'event_table_id' => ['nullable', 'integer'],
         ];
     }
 
     /**
-     * @return array{actual_attendance_status: string, actual_attendees_count: int|null, actual_attendance_recorded_at: \Illuminate\Support\Carbon|null}
+     * @return array{actual_attendance_status: string, actual_attendees_count: int|null, actual_attendance_recorded_at: \Illuminate\Support\Carbon|null, event_table_id: int|null}
      */
     public function payload(): array
     {
@@ -34,6 +35,9 @@ class UpdatePublicGuestListCheckInRequest extends FormRequest
                 default => null,
             },
             'actual_attendance_recorded_at' => $status === 'unknown' ? null : now(),
+            'event_table_id' => $this->input('event_table_id') === null || $this->input('event_table_id') === ''
+                ? null
+                : (int) $this->input('event_table_id'),
         ];
     }
 }
