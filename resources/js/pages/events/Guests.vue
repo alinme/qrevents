@@ -258,6 +258,10 @@ const tableForm = useForm({
     seats_count: 8,
 });
 
+const guestListTableForm = useForm({
+    event_table_id: '',
+});
+
 const invitationSettingsForm = useForm({
     template: props.eventInvitationSettings.template,
     headline: props.eventInvitationSettings.headline,
@@ -281,6 +285,10 @@ const editingTable = computed(() => props.eventTables.find((table) => table.id =
 const selectableTables = computed(() => props.eventTables.map((table) => ({
     ...table,
     selectable: !table.isFull || table.id === Number(guestForm.event_table_id || 0),
+})));
+const guestListSelectableTables = computed(() => props.eventTables.map((table) => ({
+    ...table,
+    selectable: !table.isFull || table.id === Number(guestListTableForm.event_table_id || 0),
 })));
 const filteredGuestParties = computed(() => {
     const search = guestSearch.value.trim().toLowerCase();
@@ -631,6 +639,8 @@ const confirmDelete = (party: GuestParty): void => {
 
 const openGuestListInfo = (party: GuestParty): void => {
     guestListInfoParty.value = party;
+    guestListTableForm.event_table_id = party.eventTableId?.toString() ?? '';
+    guestListTableForm.clearErrors();
     guestListInfoDialogOpen.value = true;
 };
 
@@ -777,6 +787,7 @@ const openGuestReport = (): void => {
 const guestPartyUpdatePayload = (
     party: GuestParty,
     overrides: Partial<{
+        event_table_id: number | null;
         invited_attendees_count: number;
         confirmed_attendees_count: number | null;
         attendance_status: GuestParty['attendanceStatus'];
@@ -795,7 +806,7 @@ const guestPartyUpdatePayload = (
         name: party.name,
         phone: party.phone ?? '',
         table_name: party.tableName ?? '',
-        event_table_id: party.eventTableId,
+        event_table_id: overrides.event_table_id ?? party.eventTableId,
         invited_attendees_count: overrides.invited_attendees_count ?? party.invitedAttendeesCount,
         confirmed_attendees_count: overrides.confirmed_attendees_count ?? party.confirmedAttendeesCount,
         attendance_status: overrides.attendance_status ?? party.attendanceStatus,
@@ -1117,6 +1128,33 @@ const saveQuickGift = (party: GuestParty): void => {
     );
 };
 
+const saveGuestListTableAssignment = (): void => {
+    if (!guestListInfoParty.value) {
+        return;
+    }
+
+    guestListTableForm.clearErrors();
+    quickSavingGuestId.value = guestListInfoParty.value.id;
+
+    router.patch(guestListInfoParty.value.updateUrl, guestPartyUpdatePayload(guestListInfoParty.value, {
+        event_table_id: guestListTableForm.event_table_id === '' ? null : Number(guestListTableForm.event_table_id),
+    }), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            toast.success(`${guestListInfoParty.value?.name ?? 'Invitee'} table updated.`);
+        },
+        onError: (errors) => {
+            if (errors.event_table_id) {
+                guestListTableForm.setError('event_table_id', errors.event_table_id);
+            }
+        },
+        onFinish: () => {
+            quickSavingGuestId.value = null;
+        },
+    });
+};
+
 const copyPendingInvites = async (): Promise<void> => {
     if (pendingInvitationParties.value.length === 0) {
         toast.error('There are no pending invitees to copy right now.');
@@ -1201,6 +1239,18 @@ const actualAttendanceLabel = (status: GuestParty['actualAttendanceStatus']): st
         present: 'Came to the event',
         absent: 'Did not come',
     }[status];
+};
+
+const actualAttendanceRowClass = (status: GuestParty['actualAttendanceStatus']): string => {
+    if (status === 'present') {
+        return 'bg-emerald-50/80';
+    }
+
+    if (status === 'absent') {
+        return 'bg-rose-50/70';
+    }
+
+    return '';
 };
 
 const invitationLabel = (status: GuestParty['invitationStatus']): string => {
@@ -2187,18 +2237,21 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </div>
                     </div>
 
-                    <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+                    <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
                         <div class="space-y-3">
                             <div class="relative">
                                 <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
                                 <Input v-model="guestListSearch" class="pl-9" placeholder="Search invitee, phone, or table" />
                             </div>
 
-                            <div class="divide-y divide-neutral-200 overflow-hidden rounded-2xl border border-neutral-200">
+                            <div class="divide-y divide-neutral-200 border-t border-neutral-200">
                                 <div
                                     v-for="party in guestListParties"
                                     :key="party.id"
-                                    class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                                    :class="[
+                                        'flex flex-col gap-3 py-3 transition-colors lg:flex-row lg:items-center lg:justify-between',
+                                        actualAttendanceRowClass(party.actualAttendanceStatus),
+                                    ]"
                                 >
                                     <div class="min-w-0 space-y-1">
                                         <p class="truncate text-sm font-semibold text-neutral-950">
@@ -2206,19 +2259,39 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         </p>
                                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
                                             <span>{{ party.phone || 'No phone saved' }}</span>
-                                            <span>{{ party.tableName || 'No table set' }}</span>
+                                            <span>{{ party.tableName || 'No table yet' }}</span>
                                             <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button variant="ghost" size="icon" class="rounded-full" @click="openGuestListInfo(party)">
-                                            <Eye class="size-4" />
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <Button variant="outline" class="rounded-full px-4" @click="openGuestListInfo(party)">
+                                            <Eye class="mr-2 size-4" />
+                                            Details
                                         </Button>
-                                        <Button variant="outline" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="markGuestPartyPresent(party)">
+                                        <Button
+                                            v-if="!party.tableName && props.eventTables.length === 0"
+                                            variant="ghost"
+                                            class="rounded-full px-4"
+                                            @click="openCreateTableDialog"
+                                        >
+                                            <Table2 class="mr-2 size-4" />
+                                            Add tables
+                                        </Button>
+                                        <Button
+                                            :variant="party.actualAttendanceStatus === 'present' ? 'default' : 'outline'"
+                                            :class="party.actualAttendanceStatus === 'present' ? 'rounded-full bg-emerald-600 px-4 text-white hover:bg-emerald-700' : 'rounded-full px-4'"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="markGuestPartyPresent(party)"
+                                        >
                                             Came
                                         </Button>
-                                        <Button variant="outline" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="markGuestPartyAbsent(party)">
+                                        <Button
+                                            :variant="party.actualAttendanceStatus === 'absent' ? 'default' : 'outline'"
+                                            :class="party.actualAttendanceStatus === 'absent' ? 'rounded-full bg-rose-600 px-4 text-white hover:bg-rose-700' : 'rounded-full px-4'"
+                                            :disabled="quickSavingGuestId === party.id"
+                                            @click="markGuestPartyAbsent(party)"
+                                        >
                                             No show
                                         </Button>
                                         <Button variant="ghost" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="resetGuestPartyAttendance(party)">
@@ -2227,7 +2300,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     </div>
                                 </div>
 
-                                <div v-if="guestListParties.length === 0" class="px-4 py-8 text-sm text-neutral-500">
+                                <div v-if="guestListParties.length === 0" class="py-8 text-sm text-neutral-500">
                                     No invitees match this search.
                                 </div>
                             </div>
@@ -2240,7 +2313,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             <p class="text-sm text-neutral-600">
                                 Share this with the people at the entrance so they can search the list and mark arrivals.
                             </p>
-                            <div class="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 break-all">
+                            <div class="text-sm text-neutral-600 break-all">
                                 {{ publicGuestListUrl }}
                             </div>
                         </div>
@@ -2611,20 +2684,82 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </DialogDescription>
                 </DialogHeader>
 
-                <div v-if="guestListInfoParty" class="space-y-3 py-2">
-                    <div class="space-y-1">
-                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Phone</p>
-                        <p class="text-sm text-neutral-800">{{ guestListInfoParty.phone || 'No phone saved' }}</p>
+                <div v-if="guestListInfoParty" class="space-y-4 py-2">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Phone</p>
+                            <p class="text-sm text-neutral-800">{{ guestListInfoParty.phone || 'No phone saved' }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">RSVP</p>
+                            <p class="text-sm text-neutral-800">{{ attendanceLabel(guestListInfoParty.attendanceStatus) }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Invited</p>
+                            <p class="text-sm text-neutral-800">{{ guestListInfoParty.invitedAttendeesCount }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Confirmed</p>
+                            <p class="text-sm text-neutral-800">{{ guestListInfoParty.confirmedAttendeesCount ?? 'Not answered yet' }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Event day</p>
+                            <p class="text-sm text-neutral-800">{{ actualAttendanceLabel(guestListInfoParty.actualAttendanceStatus) }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Gift</p>
+                            <p class="text-sm text-neutral-800">{{ giftLabel(guestListInfoParty) }}</p>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Table</p>
-                        <p class="text-sm text-neutral-800">{{ guestListInfoParty.tableName || 'No table set' }}</p>
+
+                    <div class="space-y-2 border-t border-neutral-200 pt-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Table</p>
+                                <p class="mt-1 text-sm text-neutral-800">
+                                    {{ guestListInfoParty.tableName || 'No table assigned yet' }}
+                                </p>
+                            </div>
+                            <Button
+                                v-if="props.eventTables.length === 0"
+                                variant="outline"
+                                class="rounded-full px-4"
+                                @click="guestListInfoDialogOpen = false; openCreateTableDialog();"
+                            >
+                                <Table2 class="mr-2 size-4" />
+                                Add tables
+                            </Button>
+                        </div>
+
+                        <div v-if="props.eventTables.length > 0" class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                            <div class="space-y-2">
+                                <NativeSelect v-model="guestListTableForm.event_table_id">
+                                    <NativeSelectOption value="">No table yet</NativeSelectOption>
+                                    <NativeSelectOption
+                                        v-for="table in guestListSelectableTables"
+                                        :key="table.id"
+                                        :value="String(table.id)"
+                                        :disabled="!table.selectable"
+                                    >
+                                        {{ table.name }} · {{ table.remainingSeats }} seats left
+                                    </NativeSelectOption>
+                                </NativeSelect>
+                                <p class="text-xs text-neutral-500">
+                                    Full tables stay locked until seats open up.
+                                </p>
+                                <p v-if="guestListTableForm.errors.event_table_id" class="text-sm text-rose-600">
+                                    {{ guestListTableForm.errors.event_table_id }}
+                                </p>
+                            </div>
+                            <div class="flex items-end">
+                                <Button class="rounded-full px-4" :disabled="quickSavingGuestId === guestListInfoParty.id" @click="saveGuestListTableAssignment">
+                                    Save table
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Status</p>
-                        <p class="text-sm text-neutral-800">{{ actualAttendanceLabel(guestListInfoParty.actualAttendanceStatus) }}</p>
-                    </div>
-                    <div class="space-y-1">
+
+                    <div class="space-y-1 border-t border-neutral-200 pt-4">
                         <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Notes</p>
                         <p class="text-sm text-neutral-800">{{ guestListInfoParty.notes || 'No notes added' }}</p>
                     </div>
