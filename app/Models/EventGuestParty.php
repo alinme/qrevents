@@ -18,6 +18,7 @@ class EventGuestParty extends Model
         'name',
         'phone',
         'table_name',
+        'event_table_id',
         'invited_attendees_count',
         'confirmed_attendees_count',
         'actual_attendees_count',
@@ -67,6 +68,11 @@ class EventGuestParty extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function table(): BelongsTo
+    {
+        return $this->belongsTo(EventTable::class, 'event_table_id');
     }
 
     public function invitationViews(): HasMany

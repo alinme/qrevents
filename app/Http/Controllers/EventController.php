@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateEventBillingRequest;
 use App\Http\Requests\UpdateEventInvitationSettingsRequest;
 use App\Http\Requests\UpdatePublicGuestListCheckInRequest;
 use App\Http\Requests\UpsertEventGuestPartyRequest;
+use App\Http\Requests\UpsertEventTableRequest;
 use App\Jobs\GenerateEventAssetImageVariants;
 use App\Jobs\GenerateEventAssetVideoThumbnails;
 use App\Jobs\GenerateEventMediaExport;
@@ -23,6 +24,7 @@ use App\Models\EventGuest;
 use App\Models\EventGuestParty;
 use App\Models\EventGuestPartyInvitationActivity;
 use App\Models\EventGuestPartyInvitationView;
+use App\Models\EventTable;
 use App\Models\Plan;
 use App\Models\TextPostTheme;
 use App\Models\User;
@@ -126,8 +128,14 @@ class EventController extends Controller
     {
         $this->assertCanManageEvent($request, $event);
 
+        $payload = $request->payload();
+        $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
+        $this->assertTableHasRoomForGuestParty($eventTable, $payload);
+
         $event->guestParties()->create([
-            ...$request->payload(),
+            ...$payload,
+            'event_table_id' => $eventTable?->id,
+            'table_name' => $eventTable?->name,
             'invitation_token' => (string) Str::lower((string) Str::uuid()),
         ]);
 
@@ -142,9 +150,67 @@ class EventController extends Controller
         $this->assertCanManageEvent($request, $event);
         abort_unless($guestParty->event_id === $event->id, 404);
 
-        $guestParty->update($request->payload());
+        $payload = $request->payload();
+        $eventTable = $this->resolveEventTableForGuestParty($event, $payload['event_table_id'] ?? null);
+        $this->assertTableHasRoomForGuestParty($eventTable, $payload, $guestParty);
+
+        $guestParty->update([
+            ...$payload,
+            'event_table_id' => $eventTable?->id,
+            'table_name' => $eventTable?->name,
+        ]);
 
         return back()->with('success', 'Guest party updated.');
+    }
+
+    public function storeEventTable(UpsertEventTableRequest $request, Event $event): RedirectResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        $event->tables()->create([
+            ...$request->payload(),
+            'sort_order' => (int) $event->tables()->count() + 1,
+        ]);
+
+        return back()->with('success', 'Table added.');
+    }
+
+    public function updateEventTable(
+        UpsertEventTableRequest $request,
+        Event $event,
+        EventTable $eventTable,
+    ): RedirectResponse {
+        $this->assertCanManageEvent($request, $event);
+        abort_unless($eventTable->event_id === $event->id, 404);
+
+        $payload = $request->payload();
+        if ($this->eventTableOccupiedSeats($eventTable) > $payload['seats_count']) {
+            throw ValidationException::withMessages([
+                'seats_count' => 'This table already has more people assigned than that.',
+            ]);
+        }
+
+        $eventTable->update($payload);
+
+        $eventTable->guestParties()->update([
+            'table_name' => $eventTable->name,
+        ]);
+
+        return back()->with('success', 'Table updated.');
+    }
+
+    public function destroyEventTable(Request $request, Event $event, EventTable $eventTable): RedirectResponse
+    {
+        $this->assertCanManageEvent($request, $event);
+        abort_unless($eventTable->event_id === $event->id, 404);
+
+        if ($eventTable->guestParties()->exists()) {
+            return back()->with('error', 'Move the assigned invitees before deleting this table.');
+        }
+
+        $eventTable->delete();
+
+        return back()->with('success', 'Table deleted.');
     }
 
     public function publicGuestList(Request $request, string $shareToken): Response
@@ -2385,6 +2451,7 @@ class EventController extends Controller
                 'guestPartiesImport' => route('events.guests.import', $event),
                 'guestInvitationsBulkUpdate' => route('events.guests.invitations.bulk-update', $event),
                 'invitationSettingsUpdate' => route('events.guests.invitation-settings.update', $event),
+                'tablesStore' => route('events.tables.store', $event),
                 'publicGuestList' => route('events.guests.public-list.show', $event->share_token),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
@@ -2472,7 +2539,11 @@ class EventController extends Controller
         $invitationSettings = $this->eventInvitationSettings($event);
         $branding = $this->resolvedEventBranding($event);
         $guestParties = $event->guestParties()
+            ->with(['invitationActivities', 'table'])
             ->orderBy('name')
+            ->get();
+        $eventTables = $event->tables()
+            ->with('guestParties')
             ->get();
         $stats = $this->guestPartyStatsPayload($event, $guestParties);
         $report = $this->guestPartyReportPayload($guestParties);
@@ -2482,6 +2553,19 @@ class EventController extends Controller
             'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
             'publicGuestListUrl' => route('events.guests.public-list.show', $event->share_token),
             'guestLedgerExportUrl' => route('events.guests.export', $event),
+            'eventTables' => $eventTables
+                ->map(fn (EventTable $eventTable): array => [
+                    'id' => $eventTable->id,
+                    'name' => $eventTable->name,
+                    'seatsCount' => $eventTable->seats_count,
+                    'occupiedSeats' => $this->eventTableOccupiedSeats($eventTable),
+                    'remainingSeats' => max(0, $eventTable->seats_count - $this->eventTableOccupiedSeats($eventTable)),
+                    'isFull' => $this->eventTableOccupiedSeats($eventTable) >= $eventTable->seats_count,
+                    'updateUrl' => route('events.tables.update', [$event, $eventTable]),
+                    'deleteUrl' => route('events.tables.destroy', [$event, $eventTable]),
+                ])
+                ->values()
+                ->all(),
             'invitationPreview' => [
                 'eventDetails' => [
                     'dateLabel' => $this->invitationPrimaryDateLabel($event),
@@ -2499,6 +2583,7 @@ class EventController extends Controller
                     'id' => $party->id,
                     'name' => $party->name,
                     'phone' => $party->phone,
+                    'eventTableId' => $party->event_table_id,
                     'tableName' => $party->table_name,
                     'invitedAttendeesCount' => $party->invited_attendees_count,
                     'confirmedAttendeesCount' => $party->confirmed_attendees_count,
@@ -2905,6 +2990,63 @@ class EventController extends Controller
             'responseNotes' => $guestParty->response_notes,
             'guestListUrl' => route('events.guests', $event),
         ]));
+    }
+
+    private function resolveEventTableForGuestParty(Event $event, mixed $eventTableId): ?EventTable
+    {
+        if (! is_int($eventTableId) || $eventTableId <= 0) {
+            return null;
+        }
+
+        $eventTable = $event->tables()->whereKey($eventTableId)->first();
+        if (! $eventTable instanceof EventTable) {
+            throw ValidationException::withMessages([
+                'event_table_id' => 'Choose a valid table for this event.',
+            ]);
+        }
+
+        return $eventTable;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function assertTableHasRoomForGuestParty(
+        ?EventTable $eventTable,
+        array $payload,
+        ?EventGuestParty $existingGuestParty = null,
+    ): void {
+        if (! $eventTable instanceof EventTable) {
+            return;
+        }
+
+        $requestedSeats = max(1, (int) ($payload['confirmed_attendees_count']
+            ?? $payload['invited_attendees_count']
+            ?? 1));
+
+        $occupiedSeats = $this->eventTableOccupiedSeats($eventTable, $existingGuestParty);
+
+        if (($occupiedSeats + $requestedSeats) > $eventTable->seats_count) {
+            throw ValidationException::withMessages([
+                'event_table_id' => 'This table is already full.',
+            ]);
+        }
+    }
+
+    private function eventTableOccupiedSeats(
+        EventTable $eventTable,
+        ?EventGuestParty $excludingGuestParty = null,
+    ): int {
+        return (int) $eventTable->guestParties()
+            ->when(
+                $excludingGuestParty instanceof EventGuestParty,
+                fn ($query) => $query->whereKeyNot($excludingGuestParty->id),
+            )
+            ->get()
+            ->sum(fn (EventGuestParty $guestParty): int => max(
+                1,
+                (int) ($guestParty->confirmed_attendees_count ?? $guestParty->invited_attendees_count ?? 1),
+            ));
     }
 
     /**

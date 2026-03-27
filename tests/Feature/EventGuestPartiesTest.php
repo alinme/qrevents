@@ -3,6 +3,7 @@
 use App\Models\Event;
 use App\Models\EventGuestParty;
 use App\Models\EventGuestPartyInvitationActivity;
+use App\Models\EventTable;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -11,10 +12,15 @@ it('shows the guest parties page for an event owner', function () {
     $event = Event::factory()->for($owner)->create([
         'currency' => 'EUR',
     ]);
+    $table = EventTable::factory()->for($event)->create([
+        'name' => 'Table 7',
+        'seats_count' => 8,
+    ]);
 
     $guestParty = EventGuestParty::factory()->for($event)->create([
         'name' => 'Familia Popescu',
-        'table_name' => 'Table 7',
+        'event_table_id' => $table->id,
+        'table_name' => $table->name,
         'invited_attendees_count' => 4,
         'attendance_status' => 'accepted',
         'confirmed_attendees_count' => 4,
@@ -43,6 +49,8 @@ it('shows the guest parties page for an event owner', function () {
             ->where('guestPartyStats.actualAttendeesCount', 4)
             ->where('guestPartyStats.moneyGiftTotal', 300)
             ->where('publicGuestListUrl', route('events.guests.public-list.show', $event->share_token))
+            ->where('eventTables.0.name', 'Table 7')
+            ->where('eventTables.0.remainingSeats', 4)
             ->has('guestParties', 1)
             ->where('guestParties.0.name', 'Familia Popescu')
             ->where('guestParties.0.tableName', 'Table 7')
@@ -133,6 +141,61 @@ it('allows an event owner to add an invitee with only the required defaults', fu
         ->and($party?->gift_amount)->toBeNull()
         ->and($party?->invitation_token)->not->toBeNull()
         ->and($party?->invitation_delivered_at)->toBeNull();
+});
+
+it('allows an event owner to manage event tables', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+    $table = EventTable::factory()->for($event)->create([
+        'name' => 'Table 3',
+        'seats_count' => 8,
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.tables.store', $event), [
+            'name' => 'Table 9',
+            'seats_count' => 10,
+        ])
+        ->assertRedirect();
+
+    expect($event->tables()->where('name', 'Table 9')->exists())->toBeTrue();
+
+    $this->actingAs($owner)
+        ->patch(route('events.tables.update', [$event, $table]), [
+            'name' => 'Table 3A',
+            'seats_count' => 9,
+        ])
+        ->assertRedirect();
+
+    expect($table->fresh()->name)->toBe('Table 3A')
+        ->and($table->fresh()->seats_count)->toBe(9);
+});
+
+it('does not allow assigning an invitee to a full table', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+    $table = EventTable::factory()->for($event)->create([
+        'name' => 'Table 6',
+        'seats_count' => 2,
+    ]);
+
+    EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'event_table_id' => $table->id,
+        'table_name' => $table->name,
+        'invited_attendees_count' => 2,
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('events.guests.store', $event), [
+            'name' => 'Familia Ionescu',
+            'event_table_id' => $table->id,
+            'invited_attendees_count' => 1,
+            'attendance_status' => 'pending',
+            'actual_attendance_status' => 'unknown',
+            'invitation_status' => 'draft',
+        ])
+        ->assertSessionHasErrors('event_table_id');
 });
 
 it('imports guest parties from messy pasted text and skips duplicates', function () {

@@ -50,6 +50,8 @@ It must not feel:
 16. Row-based lists should feel like clean working lists, not stacks of mini dashboards.
 17. Secondary tracking details should be collapsed or moved below the main action path.
 18. When a preview exists, keep it visually consistent with the live result and do not wrap it in decorative chrome.
+19. Redesign hidden layers too, not only the visible page shell: dialogs, sidebars, drawers, confirm surfaces, and preview panels must follow the same simplicity rules.
+20. Creation flows must start with the minimum required inputs. Push the rest into advanced details, defaults, or later editing.
 
 ## Information architecture goals
 
@@ -89,6 +91,7 @@ For the event workspace:
 - Use dividers, spacing, and quiet background shifts before introducing another border box
 - If a section holds only small content, do not stretch it across the full page just to fill space
 - Solve hierarchy with spacing, columns, dividers, and type, not with boxes inside boxes
+- In create and edit dialogs, start with the one or two fields a normal person can fill fast; anything technical or edge-case belongs under advanced details
 
 ## Output expectations
 

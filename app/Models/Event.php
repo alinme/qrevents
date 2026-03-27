@@ -156,6 +156,11 @@ class Event extends Model
         return $this->hasMany(EventGuestParty::class);
     }
 
+    public function tables(): HasMany
+    {
+        return $this->hasMany(EventTable::class)->orderBy('sort_order')->orderBy('name');
+    }
+
     public function guestLedgerReminderLogs(): HasMany
     {
         return $this->hasMany(EventGuestLedgerReminderLog::class);

@@ -18,6 +18,7 @@ class UpsertEventGuestPartyRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'phone' => ['nullable', 'string', 'max:40'],
             'table_name' => ['nullable', 'string', 'max:120'],
+            'event_table_id' => ['nullable', 'integer'],
             'invited_attendees_count' => ['required', 'integer', 'min:1', 'max:1000'],
             'confirmed_attendees_count' => ['nullable', 'integer', 'min:0', 'max:1000'],
             'actual_attendees_count' => ['nullable', 'integer', 'min:0', 'max:1000'],
@@ -49,6 +50,9 @@ class UpsertEventGuestPartyRequest extends FormRequest
             'name' => trim((string) $this->input('name')),
             'phone' => $this->normalizeNullableString($this->input('phone')),
             'table_name' => $this->normalizeNullableString($this->input('table_name')),
+            'event_table_id' => $this->input('event_table_id') === null || $this->input('event_table_id') === ''
+                ? null
+                : (int) $this->input('event_table_id'),
             'notes' => $this->normalizeNullableString($this->input('notes')),
             'gift_type' => $this->normalizeNullableString($giftType),
             'gift_currency' => $giftType === 'money'

@@ -5,6 +5,7 @@ import {
     Clock3,
     Copy,
     Download,
+    Eye,
     ExternalLink,
     Import,
     ListChecks,
@@ -14,6 +15,7 @@ import {
     Search,
     ScrollText,
     SendHorizontal,
+    Table2,
     Trash2,
     UserPlus,
     Users,
@@ -74,7 +76,19 @@ type EventLinks = {
     guestPartiesImport: string;
     guestInvitationsBulkUpdate: string;
     invitationSettingsUpdate: string;
+    tablesStore: string;
     publicGuestList: string;
+};
+
+type EventTable = {
+    id: number;
+    name: string;
+    seatsCount: number;
+    occupiedSeats: number;
+    remainingSeats: number;
+    isFull: boolean;
+    updateUrl: string;
+    deleteUrl: string;
 };
 
 type EventInvitationSettings = {
@@ -90,6 +104,7 @@ type GuestParty = {
     id: number;
     name: string;
     phone: string | null;
+    eventTableId: number | null;
     tableName: string | null;
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number | null;
@@ -171,6 +186,7 @@ const props = defineProps<{
     invitationPreview: InvitationPreviewPayload;
     guestLedgerExportUrl: string;
     guestPartyStats: GuestPartyStats;
+    eventTables: EventTable[];
     guestParties: GuestParty[];
 }>();
 
@@ -191,12 +207,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const guestDialogOpen = ref(false);
 const importDialogOpen = ref(false);
+const tablesDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
+const guestListInfoDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
+const guestListInfoParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
 const showInvitationAdvanced = ref(false);
 const showGuestAdvanced = ref(false);
 const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
+const editingTableId = ref<number | null>(null);
 const activeSection = ref<'invitees' | 'invitation' | 'ledger' | 'guest_list'>('invitees');
 const expandedGuestPartyId = ref<number | null>(null);
 const quickSavingGuestId = ref<number | null>(null);
@@ -211,6 +231,7 @@ const guestForm = useForm({
     name: '',
     phone: '',
     table_name: '',
+    event_table_id: '',
     invited_attendees_count: 1,
     confirmed_attendees_count: '',
     attendance_status: 'pending',
@@ -232,6 +253,11 @@ const importForm = useForm<{
     import_file: null,
 });
 
+const tableForm = useForm({
+    name: '',
+    seats_count: 8,
+});
+
 const invitationSettingsForm = useForm({
     template: props.eventInvitationSettings.template,
     headline: props.eventInvitationSettings.headline,
@@ -251,6 +277,11 @@ const isEditing = computed(() => activeGuestParty.value !== null);
 const showGiftAmount = computed(() => guestForm.gift_type === 'money');
 const showConfirmedCount = computed(() => guestForm.attendance_status === 'accepted');
 const showActualCount = computed(() => guestForm.actual_attendance_status === 'present');
+const editingTable = computed(() => props.eventTables.find((table) => table.id === editingTableId.value) ?? null);
+const selectableTables = computed(() => props.eventTables.map((table) => ({
+    ...table,
+    selectable: !table.isFull || table.id === Number(guestForm.event_table_id || 0),
+})));
 const filteredGuestParties = computed(() => {
     const search = guestSearch.value.trim().toLowerCase();
 
@@ -561,6 +592,7 @@ const openCreateDialog = (): void => {
     guestForm.reset();
     guestForm.clearErrors();
     guestForm.table_name = '';
+    guestForm.event_table_id = '';
     guestForm.attendance_status = 'pending';
     guestForm.invitation_status = 'draft';
     guestForm.invited_attendees_count = 1;
@@ -576,6 +608,7 @@ const openEditDialog = (party: GuestParty): void => {
     guestForm.name = party.name;
     guestForm.phone = party.phone ?? '';
     guestForm.table_name = party.tableName ?? '';
+    guestForm.event_table_id = party.eventTableId?.toString() ?? '';
     guestForm.invited_attendees_count = party.invitedAttendeesCount;
     guestForm.confirmed_attendees_count = party.confirmedAttendeesCount?.toString() ?? '';
     guestForm.attendance_status = party.attendanceStatus;
@@ -596,9 +629,64 @@ const confirmDelete = (party: GuestParty): void => {
     deleteDialogOpen.value = true;
 };
 
+const openGuestListInfo = (party: GuestParty): void => {
+    guestListInfoParty.value = party;
+    guestListInfoDialogOpen.value = true;
+};
+
+const openCreateTableDialog = (): void => {
+    editingTableId.value = null;
+    tableForm.reset();
+    tableForm.clearErrors();
+    tableForm.seats_count = 8;
+    tablesDialogOpen.value = true;
+};
+
+const openEditTableDialog = (table: EventTable): void => {
+    editingTableId.value = table.id;
+    tableForm.clearErrors();
+    tableForm.name = table.name;
+    tableForm.seats_count = table.seatsCount;
+    tablesDialogOpen.value = true;
+};
+
+const saveTable = (): void => {
+    if (editingTable.value) {
+        tableForm.patch(editingTable.value.updateUrl, {
+            preserveScroll: true,
+            onSuccess: () => {
+                tablesDialogOpen.value = false;
+                editingTableId.value = null;
+            },
+        });
+
+        return;
+    }
+
+    tableForm.post(props.eventLinks.tablesStore, {
+        preserveScroll: true,
+        onSuccess: () => {
+            tablesDialogOpen.value = false;
+            tableForm.reset();
+            tableForm.seats_count = 8;
+        },
+    });
+};
+
+const deleteTable = (table: EventTable): void => {
+    if (!window.confirm(`Delete ${table.name}?`)) {
+        return;
+    }
+
+    router.delete(table.deleteUrl, {
+        preserveScroll: true,
+    });
+};
+
 const saveGuestParty = (): void => {
     const payload = {
         ...guestForm.data(),
+        event_table_id: guestForm.event_table_id === '' ? null : Number(guestForm.event_table_id),
         confirmed_attendees_count: guestForm.confirmed_attendees_count === ''
             ? null
             : Number(guestForm.confirmed_attendees_count),
@@ -630,6 +718,7 @@ const saveGuestParty = (): void => {
             guestDialogOpen.value = false;
             guestForm.reset();
             guestForm.table_name = '';
+            guestForm.event_table_id = '';
             guestForm.actual_attendance_status = 'unknown';
             guestForm.invitation_status = 'draft';
             guestForm.invited_attendees_count = 1;
@@ -706,6 +795,7 @@ const guestPartyUpdatePayload = (
         name: party.name,
         phone: party.phone ?? '',
         table_name: party.tableName ?? '',
+        event_table_id: party.eventTableId,
         invited_attendees_count: overrides.invited_attendees_count ?? party.invitedAttendeesCount,
         confirmed_attendees_count: overrides.confirmed_attendees_count ?? party.confirmedAttendeesCount,
         attendance_status: overrides.attendance_status ?? party.attendanceStatus,
@@ -1191,6 +1281,10 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <Button v-if="activeSection === 'invitees'" variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
                             <Import class="mr-2 size-4" />
                             Import
+                        </Button>
+                        <Button v-if="activeSection === 'invitees'" variant="outline" class="h-10 rounded-full px-4" @click="openCreateTableDialog">
+                            <Table2 class="mr-2 size-4" />
+                            Tables
                         </Button>
                         <Button v-if="activeSection === 'invitees'" class="h-10 rounded-full px-4" @click="openCreateDialog">
                             <UserPlus class="mr-2 size-4" />
@@ -2118,6 +2212,9 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
+                                        <Button variant="ghost" size="icon" class="rounded-full" @click="openGuestListInfo(party)">
+                                            <Eye class="size-4" />
+                                        </Button>
                                         <Button variant="outline" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="markGuestPartyPresent(party)">
                                             Came
                                         </Button>
@@ -2174,7 +2271,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </p>
                     </div>
 
-                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                    <div class="flex items-center justify-between gap-3 border-y border-neutral-200 py-3">
                         <div>
                             <p class="text-sm font-medium text-neutral-900">
                                 Advanced details
@@ -2200,7 +2297,20 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             <label class="text-sm font-medium text-neutral-700">
                                 Table
                             </label>
-                            <Input v-model="guestForm.table_name" placeholder="Table 8" />
+                            <NativeSelect v-model="guestForm.event_table_id">
+                                <NativeSelectOption value="">No table yet</NativeSelectOption>
+                                <NativeSelectOption
+                                    v-for="table in selectableTables"
+                                    :key="table.id"
+                                    :value="String(table.id)"
+                                    :disabled="!table.selectable"
+                                >
+                                    {{ table.name }} · {{ table.remainingSeats }} seats left
+                                </NativeSelectOption>
+                            </NativeSelect>
+                            <p class="text-xs text-neutral-500">
+                                Full tables are locked until seats open up.
+                            </p>
                         </div>
 
                         <div class="space-y-2">
@@ -2383,6 +2493,83 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
             </DialogContent>
         </Dialog>
 
+        <Dialog :open="tablesDialogOpen" @update:open="tablesDialogOpen = $event">
+            <DialogContent class="sm:max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ editingTable ? 'Edit table' : 'Manage tables' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Add the tables and seat counts here, then assign invitees to them from advanced details.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4 py-2">
+                    <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_160px_auto]">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Table name
+                            </label>
+                            <Input v-model="tableForm.name" placeholder="Table 8" />
+                            <p v-if="tableForm.errors.name" class="text-sm text-rose-600">
+                                {{ tableForm.errors.name }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Seats
+                            </label>
+                            <Input v-model="tableForm.seats_count" type="number" min="1" max="1000" />
+                            <p v-if="tableForm.errors.seats_count" class="text-sm text-rose-600">
+                                {{ tableForm.errors.seats_count }}
+                            </p>
+                        </div>
+
+                        <div class="flex items-end">
+                            <Button class="w-full rounded-full px-5" :disabled="tableForm.processing" @click="saveTable">
+                                {{ editingTable ? 'Save table' : 'Add table' }}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-neutral-200 border-t border-neutral-200">
+                        <div
+                            v-for="table in props.eventTables"
+                            :key="table.id"
+                            class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between"
+                        >
+                            <div class="space-y-1">
+                                <p class="text-sm font-semibold text-neutral-950">
+                                    {{ table.name }}
+                                </p>
+                                <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
+                                    <span>{{ table.seatsCount }} seats</span>
+                                    <span>{{ table.occupiedSeats }} used</span>
+                                    <span>{{ table.remainingSeats }} left</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button variant="outline" class="rounded-full px-4" @click="openEditTableDialog(table)">
+                                    <Pencil class="mr-2 size-4" />
+                                    Edit
+                                </Button>
+                                <Button variant="ghost" class="rounded-full px-4 text-rose-600 hover:text-rose-700" @click="deleteTable(table)">
+                                    <Trash2 class="mr-2 size-4" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div v-if="props.eventTables.length === 0" class="py-8 text-sm text-neutral-500">
+                            No tables yet. Add the first one above.
+                        </div>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+
         <Dialog :open="previewingInvitationTemplateCard !== null" @update:open="handleInvitationTemplatePreviewOpenChange">
             <DialogContent class="max-w-[min(96vw,46rem)] p-4 sm:p-5">
                 <DialogHeader>
@@ -2409,6 +2596,38 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         :venue-address="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).venueAddress"
                         mode="preview"
                     />
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog :open="guestListInfoDialogOpen" @update:open="guestListInfoDialogOpen = $event">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ guestListInfoParty?.name ?? 'Invitee details' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Quick details for the entrance team.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div v-if="guestListInfoParty" class="space-y-3 py-2">
+                    <div class="space-y-1">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Phone</p>
+                        <p class="text-sm text-neutral-800">{{ guestListInfoParty.phone || 'No phone saved' }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Table</p>
+                        <p class="text-sm text-neutral-800">{{ guestListInfoParty.tableName || 'No table set' }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Status</p>
+                        <p class="text-sm text-neutral-800">{{ actualAttendanceLabel(guestListInfoParty.actualAttendanceStatus) }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Notes</p>
+                        <p class="text-sm text-neutral-800">{{ guestListInfoParty.notes || 'No notes added' }}</p>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
