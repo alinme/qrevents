@@ -1333,7 +1333,7 @@ const statCards = computed(() => [
                     <article
                         v-for="asset in visibleAssets"
                         :key="asset.id"
-                        class="group relative overflow-hidden rounded-[1rem] bg-slate-100"
+                        class="group relative overflow-hidden rounded-none bg-slate-100"
                     >
                         <div class="relative aspect-[3/4] w-full overflow-hidden">
                             <div
@@ -1355,7 +1355,7 @@ const statCards = computed(() => [
                                 "
                                 :src="assetThumbnailSource(asset) ?? undefined"
                                 alt="Uploaded event asset"
-                                class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
                                 :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
                                 @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
                                 @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
@@ -1364,7 +1364,7 @@ const statCards = computed(() => [
                                 v-else-if="asset.kind === 'video' && asset.thumbnailUrl"
                                 :src="asset.thumbnailUrl"
                                 alt="Uploaded event video"
-                                class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
                                 :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
                                 @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
                                 @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
@@ -1372,7 +1372,7 @@ const statCards = computed(() => [
                             <video
                                 v-else-if="asset.kind === 'video' && asset.previewUrl"
                                 :src="asset.previewUrl"
-                                class="h-full w-full object-cover"
+                                class="h-full w-full rounded-none object-cover"
                                 preload="metadata"
                                 playsinline
                             />
@@ -1686,7 +1686,7 @@ const statCards = computed(() => [
                         <article
                             v-for="asset in selectedAttendeeAssets"
                             :key="`attendee-asset-${asset.id}`"
-                            class="group relative overflow-hidden rounded-[1rem] bg-slate-100"
+                            class="group relative overflow-hidden rounded-none bg-slate-100"
                         >
                             <div class="relative aspect-[3/4] w-full overflow-hidden">
                                 <div
@@ -1708,7 +1708,7 @@ const statCards = computed(() => [
                                     "
                                     :src="assetThumbnailSource(asset) ?? undefined"
                                     alt="Attendee upload"
-                                    class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                    class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
                                     :class="isMediaLoaded(mediaLoadKey(asset.id, 'attendee')) ? 'opacity-100' : 'opacity-0'"
                                     @load="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
                                     @error="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
@@ -1717,7 +1717,7 @@ const statCards = computed(() => [
                                     v-else-if="asset.kind === 'video' && asset.thumbnailUrl"
                                     :src="asset.thumbnailUrl"
                                     alt="Attendee video upload"
-                                    class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                    class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
                                     :class="isMediaLoaded(mediaLoadKey(asset.id, 'attendee')) ? 'opacity-100' : 'opacity-0'"
                                     @load="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
                                     @error="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
@@ -1725,7 +1725,7 @@ const statCards = computed(() => [
                                 <video
                                     v-else-if="asset.kind === 'video' && asset.previewUrl"
                                     :src="asset.previewUrl"
-                                    class="h-full w-full object-cover"
+                                    class="h-full w-full rounded-none object-cover"
                                     preload="metadata"
                                     playsinline
                                 />
