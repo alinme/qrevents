@@ -1807,7 +1807,7 @@ const statCards = computed(() => [
             >
                 <div
                     v-if="activeAsset"
-                    class="overflow-hidden rounded-[1.75rem] bg-black"
+                    class="overflow-hidden rounded-[1.75rem] bg-[#1f1711]"
                 >
                     <div
                         class="relative flex h-[min(92vh,calc(100vh-0.75rem))] touch-pan-y items-center justify-center overflow-hidden"
@@ -1815,8 +1815,9 @@ const statCards = computed(() => [
                         @touchmove="onPreviewTouchMove"
                         @touchend="onPreviewTouchEnd"
                     >
-                        <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black/74 via-black/36 to-transparent sm:h-36" />
-                        <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-black/78 via-black/38 to-transparent sm:h-48" />
+                        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,242,220,0.18),transparent_40%),linear-gradient(180deg,rgba(53,37,26,0.92),rgba(28,20,15,0.96))]" />
+                        <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-[#2f2219]/78 via-[#2f2219]/30 to-transparent sm:h-36" />
+                        <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#241912]/82 via-[#241912]/34 to-transparent sm:h-48" />
 
                         <div class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
                             <div class="flex min-w-0 items-center gap-3">
@@ -1844,7 +1845,7 @@ const statCards = computed(() => [
                             <div class="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                     title="Open upload info"
                                     @click="openAssetInfo(activeAsset)"
                                 >
@@ -1852,7 +1853,7 @@ const statCards = computed(() => [
                                 </button>
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                     aria-label="Close preview"
                                     @click="activeAssetId = null"
                                 >
@@ -1918,7 +1919,7 @@ const statCards = computed(() => [
                         </div>
                         <button
                             type="button"
-                            class="absolute left-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
+                            class="absolute left-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
                             :disabled="!hasPreviousAsset"
                             aria-label="Previous upload"
                             @click="goToPreviousAsset"
@@ -1927,7 +1928,7 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="absolute right-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
+                            class="absolute right-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
                             :disabled="!hasNextAsset"
                             aria-label="Next upload"
                             @click="goToNextAsset"
@@ -1947,7 +1948,7 @@ const statCards = computed(() => [
                                     <button
                                         v-if="activeAsset.previewUrl"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                         title="Copy file link"
                                         @click="copyAssetLink(activeAsset)"
                                     >
@@ -1958,7 +1959,7 @@ const statCards = computed(() => [
                                         :href="activeAsset.previewUrl"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                         title="Download or open file"
                                     >
                                         <Download class="size-4" />
@@ -1966,7 +1967,7 @@ const statCards = computed(() => [
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
                                             wallVisibilityAssetId === activeAsset.id ||
                                             activeAsset.wallVisibility === 'approved'
@@ -1979,7 +1980,7 @@ const statCards = computed(() => [
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
                                             wallVisibilityAssetId === activeAsset.id ||
                                             activeAsset.wallVisibility === 'rejected'
@@ -1992,7 +1993,7 @@ const statCards = computed(() => [
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
                                             moderationAssetId === activeAsset.id ||
                                             activeAsset.moderationStatus === 'approved'
@@ -2005,7 +2006,7 @@ const statCards = computed(() => [
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-black/36 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-black/52 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
                                             moderationAssetId === activeAsset.id ||
                                             activeAsset.moderationStatus === 'rejected'
