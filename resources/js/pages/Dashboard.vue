@@ -106,48 +106,41 @@ const workspaceLabel = (event: DashboardEvent): string =>
         <div class="min-h-full bg-[#faf7f2]">
             <div class="mx-auto max-w-6xl space-y-5 p-4 md:p-6">
                 <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                                Events
+                                Your space
                             </p>
                             <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
-                                Events
+                                Open the event you need
                             </h1>
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
-                                {{ ownerName }}, open the event you need and jump straight to workspace, media, or settings.
+                                {{ ownerName }}, everything starts here. Pick your event, then go straight to workspace, media, or settings.
                             </p>
                         </div>
-                    </div>
-
-                    <div class="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                        <article
-                            v-for="card in compactStats"
-                            :key="card.label"
-                            class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-3.5 py-3"
-                        >
-                            <div class="flex items-start gap-3">
-                                <div class="rounded-full bg-white p-2 text-[#171411] shadow-sm">
-                                    <component :is="card.icon" class="size-4" />
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                        {{ card.label }}
-                                    </p>
-                                    <p class="mt-1 text-lg font-semibold text-[#171411]">
-                                        {{ card.value }}
-                                    </p>
-                                    <p class="mt-1 text-xs leading-5 text-zinc-500">
-                                        {{ card.detail }}
-                                    </p>
-                                </div>
+                        <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div
+                                v-for="card in compactStats"
+                                :key="card.label"
+                                class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-4 py-3"
+                            >
+                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                    <component :is="card.icon" class="size-3.5 text-zinc-400" />
+                                    {{ card.label }}
+                                </dt>
+                                <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                                    {{ card.value }}
+                                </dd>
+                                <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                    {{ card.detail }}
+                                </p>
                             </div>
-                        </article>
+                        </dl>
                     </div>
 
                     <div
                         v-if="continueSetupEvent"
-                        class="mt-4 rounded-[1.25rem] border border-amber-200 bg-amber-50/80 px-4 py-3"
+                        class="mt-4 rounded-[1.1rem] border border-amber-200 bg-amber-50/80 px-4 py-3"
                     >
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -175,7 +168,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 Events
                             </h2>
                             <p class="mt-1 text-sm text-zinc-600">
-                                Pick an event, then open workspace, media, or settings directly.
+                                Pick one and continue where you left off.
                             </p>
                         </div>
                         <p class="text-sm text-zinc-500">
@@ -199,7 +192,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                             <article
                                 v-for="event in ownedEvents"
                                 :key="`owner-${event.id}`"
-                                class="rounded-[1.25rem] border border-black/6 bg-[#fcfbf8] px-4 py-4"
+                                class="border-b border-black/5 py-4 last:border-b-0"
                             >
                                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                     <div class="min-w-0 space-y-2">
@@ -274,7 +267,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                             <article
                                 v-for="event in collaboratorEvents"
                                 :key="`collab-${event.id}`"
-                                class="rounded-[1.25rem] border border-black/6 bg-[#fcfbf8] px-4 py-4"
+                                class="border-b border-black/5 py-4 last:border-b-0"
                             >
                                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                     <div class="min-w-0 space-y-2">
@@ -335,7 +328,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 Recent activity
                             </h2>
                             <p class="mt-1 text-sm text-zinc-600">
-                                One line per upload, so you can scan what changed fast.
+                                Quick updates from your guest uploads.
                             </p>
                         </div>
                         <p class="text-sm text-zinc-500">

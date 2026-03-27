@@ -525,7 +525,7 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
                             <Button v-if="eventLinks.accountDashboard" as-child size="sm" variant="outline">
                                 <Link :href="eventLinks.accountDashboard">
                                     Events
@@ -557,30 +557,24 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <div class="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                        <article
+                    <dl class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div
                             v-for="item in summaryItems"
                             :key="item.label"
-                            class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-3.5 py-3"
+                            class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-4 py-3"
                         >
-                            <div class="flex items-start gap-3">
-                                <div class="rounded-full bg-white p-2 text-[#171411] shadow-sm">
-                                    <component :is="item.icon" class="size-4" />
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                        {{ item.label }}
-                                    </p>
-                                    <p class="mt-1 text-sm font-semibold text-[#171411] sm:text-base">
-                                        {{ item.value }}
-                                    </p>
-                                    <p class="mt-1 text-xs leading-5 text-zinc-500">
-                                        {{ item.detail }}
-                                    </p>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
+                            <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                <component :is="item.icon" class="size-3.5 text-zinc-400" />
+                                {{ item.label }}
+                            </dt>
+                            <dd class="mt-2 text-sm font-semibold text-[#171411] sm:text-base">
+                                {{ item.value }}
+                            </dd>
+                            <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                {{ item.detail }}
+                            </p>
+                        </div>
+                    </dl>
                 </section>
 
                 <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
@@ -589,7 +583,7 @@ onUnmounted(() => {
                             Share links
                         </h2>
                         <p class="mt-1 text-sm text-zinc-600">
-                            Open, copy, or download the guest-facing album and wall.
+                            Album and wall links for your guests.
                         </p>
                     </div>
 
@@ -602,9 +596,9 @@ onUnmounted(() => {
                                     class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
                                 />
                                 <div>
-                            <h3 class="text-sm font-semibold text-[#171411]">
-                                Digital album
-                            </h3>
+                                    <h3 class="text-sm font-semibold text-[#171411]">
+                                        Digital album
+                                    </h3>
                                     <p class="mt-1 text-sm text-zinc-600">
                                         Guests upload and browse from here.
                                     </p>
@@ -638,9 +632,9 @@ onUnmounted(() => {
                                     class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
                                 />
                                 <div>
-                            <h3 class="text-sm font-semibold text-[#171411]">
-                                Photo wall
-                            </h3>
+                                    <h3 class="text-sm font-semibold text-[#171411]">
+                                        Photo wall
+                                    </h3>
                                     <p class="mt-1 text-sm text-zinc-600">
                                         Open this on a screen during the event.
                                     </p>
@@ -675,7 +669,7 @@ onUnmounted(() => {
                                 Recent uploads
                             </h2>
                             <p class="mt-1 text-sm text-zinc-600">
-                                Short, scannable updates from the guest album.
+                                Short updates from the guest album.
                             </p>
                         </div>
                         <Button as-child size="sm" variant="outline">
