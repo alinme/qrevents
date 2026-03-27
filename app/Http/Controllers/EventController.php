@@ -2359,8 +2359,8 @@ class EventController extends Controller
             'eventNavigation' => array_values(array_filter([
                 $showEventOverviewLink ? ['title' => 'Events', 'href' => route('dashboard.account')] : null,
                 ['title' => 'Workspace', 'href' => route('events.show', $event)],
-                ['title' => 'Guests', 'href' => route('events.guests', $event)],
                 ['title' => 'Media', 'href' => route('events.media', $event)],
+                ['title' => 'Guests', 'href' => route('events.guests', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
             ])),
         ];

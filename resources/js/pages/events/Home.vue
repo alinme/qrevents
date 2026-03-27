@@ -9,7 +9,6 @@ import {
     Image as ImageIcon,
     LoaderCircle,
     MessageSquareText,
-    Settings,
     Users,
     Video,
 } from 'lucide-vue-next';
@@ -122,6 +121,7 @@ const modalOpen = ref(props.showDashboardModal);
 const exportSubmitting = ref(false);
 const latestKnownUploadId = ref(props.dashboardRecentUploads[0]?.id ?? 0);
 const isRefreshingWorkspace = ref(false);
+const qrPreview = ref<'album' | 'wall' | null>(null);
 let workspacePollId: number | null = null;
 
 const formatDateTime = (value: string | null, fallback = 'Unknown'): string => {
@@ -296,6 +296,26 @@ const moderationToneClass = (status: RecentUpload['moderationStatus']): string =
             return 'bg-amber-100 text-amber-700';
     }
 };
+
+const qrPreviewData = computed(() => {
+    if (qrPreview.value === 'album') {
+        return {
+            title: 'Digital album QR code',
+            image: props.eventLinks.albumQrDataUrl,
+            alt: 'Digital album QR code',
+        };
+    }
+
+    if (qrPreview.value === 'wall') {
+        return {
+            title: 'Photo wall QR code',
+            image: props.eventLinks.wallQrDataUrl,
+            alt: 'Photo wall QR code',
+        };
+    }
+
+    return null;
+});
 
 const copyText = async (value: string, successMessage: string): Promise<void> => {
     if (
@@ -531,18 +551,6 @@ onUnmounted(() => {
                                     Events
                                 </Link>
                             </Button>
-                            <Button as-child size="sm" variant="outline">
-                                <Link :href="eventLinks.media">
-                                    <ImageIcon class="mr-2 size-4" />
-                                    Media
-                                </Link>
-                            </Button>
-                            <Button as-child size="sm" variant="outline">
-                                <Link :href="eventLinks.settings">
-                                    <Settings class="mr-2 size-4" />
-                                    Settings
-                                </Link>
-                            </Button>
                             <Button
                                 size="sm"
                                 class="bg-[#171411] text-white hover:bg-[#2b2621]"
@@ -578,7 +586,7 @@ onUnmounted(() => {
                 </section>
 
                 <div class="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
-                    <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <section class="flex min-h-0 flex-col rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
                         <div class="flex items-end justify-between gap-4 border-b border-black/5 pb-4">
                             <div>
                                 <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
@@ -599,7 +607,8 @@ onUnmounted(() => {
                             No uploads yet.
                         </div>
 
-                        <div v-else class="divide-y divide-black/5 pt-2">
+                        <div v-else class="min-h-0 max-h-[30rem] flex-1 overflow-y-auto pt-2">
+                            <div class="divide-y divide-black/5">
                             <div
                                 v-for="upload in dashboardRecentUploads"
                                 :key="upload.id"
@@ -628,6 +637,7 @@ onUnmounted(() => {
                                     {{ upload.moderationStatus }}
                                 </span>
                             </div>
+                            </div>
                         </div>
                     </section>
 
@@ -644,11 +654,17 @@ onUnmounted(() => {
                         <div class="space-y-5 pt-5">
                             <div class="space-y-3">
                                 <div class="flex items-start gap-4">
-                                    <img
-                                        :src="eventLinks.albumQrDataUrl"
-                                        alt="Digital album QR code"
-                                        class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
-                                    />
+                                    <button
+                                        type="button"
+                                        class="shrink-0 rounded-[1rem] border border-slate-200 bg-white p-2 transition hover:border-slate-300"
+                                        @click="qrPreview = 'album'"
+                                    >
+                                        <img
+                                            :src="eventLinks.albumQrDataUrl"
+                                            alt="Digital album QR code"
+                                            class="size-20 rounded-[0.8rem]"
+                                        />
+                                    </button>
                                     <div class="min-w-0 flex-1">
                                         <h3 class="text-sm font-semibold text-[#171411]">
                                             Digital album
@@ -656,35 +672,40 @@ onUnmounted(() => {
                                         <p class="mt-1 text-sm text-zinc-600">
                                             Guests upload and browse from here.
                                         </p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <Button as-child size="sm" variant="outline">
+                                                <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
+                                                    Open
+                                                </a>
+                                            </Button>
+                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.album, 'Album link copied.')">
+                                                <Copy class="mr-2 size-4" />
+                                                Copy
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <a :href="eventLinks.albumQrDataUrl" download="digital-album-qr.svg">
+                                                    <Download class="mr-2 size-4" />
+                                                    QR
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    <Button as-child size="sm" variant="outline">
-                                        <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
-                                            Open
-                                        </a>
-                                    </Button>
-                                    <Button size="sm" variant="outline" @click="copyText(eventLinks.album, 'Album link copied.')">
-                                        <Copy class="mr-2 size-4" />
-                                        Copy
-                                    </Button>
-                                    <Button as-child size="sm" variant="outline">
-                                        <a :href="eventLinks.albumQrDataUrl" download="digital-album-qr.svg">
-                                            <Download class="mr-2 size-4" />
-                                            QR
-                                        </a>
-                                    </Button>
                                 </div>
                             </div>
 
                             <div class="border-t border-black/5 pt-5">
                                 <div class="flex items-start gap-4">
-                                    <img
-                                        :src="eventLinks.wallQrDataUrl"
-                                        alt="Photo wall QR code"
-                                        class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
-                                    />
+                                    <button
+                                        type="button"
+                                        class="shrink-0 rounded-[1rem] border border-slate-200 bg-white p-2 transition hover:border-slate-300"
+                                        @click="qrPreview = 'wall'"
+                                    >
+                                        <img
+                                            :src="eventLinks.wallQrDataUrl"
+                                            alt="Photo wall QR code"
+                                            class="size-20 rounded-[0.8rem]"
+                                        />
+                                    </button>
                                     <div class="min-w-0 flex-1">
                                         <h3 class="text-sm font-semibold text-[#171411]">
                                             Photo wall
@@ -692,25 +713,24 @@ onUnmounted(() => {
                                         <p class="mt-1 text-sm text-zinc-600">
                                             Open this on a screen during the event.
                                         </p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <Button as-child size="sm" variant="outline">
+                                                <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
+                                                    Open
+                                                </a>
+                                            </Button>
+                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
+                                                <Copy class="mr-2 size-4" />
+                                                Copy
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">
+                                                    <Download class="mr-2 size-4" />
+                                                    QR
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="mt-3 flex flex-wrap gap-2">
-                                    <Button as-child size="sm" variant="outline">
-                                        <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
-                                            Open
-                                        </a>
-                                    </Button>
-                                    <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
-                                        <Copy class="mr-2 size-4" />
-                                        Copy
-                                    </Button>
-                                    <Button as-child size="sm" variant="outline">
-                                        <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">
-                                            <Download class="mr-2 size-4" />
-                                            QR
-                                        </a>
-                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -728,6 +748,19 @@ onUnmounted(() => {
                     This page is now the compact event workspace. Use media and settings from here whenever you need them.
                 </DialogDescription>
             </DialogHeader>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="qrPreview !== null" @update:open="(open) => { if (!open) qrPreview = null; }">
+        <DialogContent
+            class="max-w-fit border-0 bg-transparent p-0 shadow-none"
+        >
+            <img
+                v-if="qrPreviewData"
+                :src="qrPreviewData.image"
+                :alt="qrPreviewData.alt"
+                class="w-[min(88vw,30rem)] rounded-[1.75rem] bg-white p-3 shadow-2xl"
+            />
         </DialogContent>
     </Dialog>
 </template>

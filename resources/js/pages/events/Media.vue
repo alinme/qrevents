@@ -67,13 +67,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import {
-    Item,
-    ItemContent,
-    ItemDescription,
-    ItemMedia,
-    ItemTitle,
-} from '@/components/ui/item';
-import {
     Table,
     TableBody,
     TableCell,
@@ -1089,56 +1082,37 @@ const statCards = computed(() => [
     <Head title="Media" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full space-y-6 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.14),_transparent_32%),radial-gradient(circle_at_85%_10%,_rgba(251,191,36,0.16),_transparent_22%)] p-4">
-            <section class="grid gap-4 md:grid-cols-4">
-                <Item
-                    v-for="card in statCards"
-                    :key="card.key"
-                    variant="outline"
-                    class="rounded-2xl border-black/6 bg-white"
-                >
-                    <ItemMedia variant="icon">
-                        <component :is="card.icon" class="size-4" />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle class="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                            {{ card.title }}
-                        </ItemTitle>
-                        <ItemDescription class="line-clamp-none text-3xl font-semibold text-slate-900">
-                            {{ card.value }}
-                        </ItemDescription>
-                    </ItemContent>
-                </Item>
-            </section>
-
-            <section class="space-y-4">
-                <div class="flex flex-wrap items-start justify-between gap-4 rounded-[2rem] border border-black/5 bg-[linear-gradient(135deg,#171411_0%,#2d251f_46%,#5f533f_100%)] px-6 py-5 text-white shadow-sm">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-white/62">
+        <div class="min-h-full space-y-5 bg-[#faf7f2] p-4 md:p-6">
+            <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="max-w-3xl">
+                        <div class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                             Event workspace
                         </div>
-                        <h1 class="mt-2 text-2xl font-semibold">Media</h1>
-                        <p class="mt-1 text-sm text-white/68">
-                            Filter, moderate, and delete uploads from one place.
+                        <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                            Media
+                        </h1>
+                        <p class="mt-2 text-sm text-zinc-600">
+                            Review uploads, filter fast, and take action without digging through a heavy dashboard.
                         </p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <Button
                             v-if="eventLinks.accountDashboard"
                             as-child
+                            size="sm"
                             variant="outline"
-                            class="border-white/14 bg-white/8 text-white hover:bg-white/14 hover:text-white"
                         >
                             <a :href="eventLinks.accountDashboard">
                                 <ExternalLink class="mr-2 size-4" />
-                                Dashboard
+                                Events
                             </a>
                         </Button>
-                        <div class="inline-flex items-center gap-1 rounded-full border border-white/14 bg-white/8 p-1 shadow-sm">
+                        <div class="inline-flex items-center gap-1 rounded-full border border-black/8 bg-[#fcfbf8] p-1">
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-white/72 transition hover:bg-white/12 hover:text-white"
-                            :class="mediaView === 'relaxed' ? 'bg-amber-200 text-[#171411] shadow-sm hover:bg-amber-200 hover:text-[#171411]' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                            :class="mediaView === 'relaxed' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
                             title="Relaxed gallery view"
                             @click="mediaView = 'relaxed'"
                         >
@@ -1147,8 +1121,8 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-white/72 transition hover:bg-white/12 hover:text-white"
-                            :class="mediaView === 'balanced' ? 'bg-amber-200 text-[#171411] shadow-sm hover:bg-amber-200 hover:text-[#171411]' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                            :class="mediaView === 'balanced' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
                             title="Balanced gallery view"
                             @click="mediaView = 'balanced'"
                         >
@@ -1157,8 +1131,8 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-white/72 transition hover:bg-white/12 hover:text-white"
-                            :class="mediaView === 'dense' ? 'bg-amber-200 text-[#171411] shadow-sm hover:bg-amber-200 hover:text-[#171411]' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                            :class="mediaView === 'dense' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
                             title="Dense gallery view"
                             @click="mediaView = 'dense'"
                         >
@@ -1169,74 +1143,94 @@ const statCards = computed(() => [
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        placeholder="Search attendee or filename..."
-                        class="h-9 min-w-64 rounded-md border bg-white px-3 text-sm"
-                    />
-                    <Button
-                        size="sm"
-                        :variant="kindFilter === 'all' ? 'default' : 'outline'"
-                        @click="kindFilter = 'all'"
+                <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div
+                        v-for="card in statCards"
+                        :key="card.key"
+                        class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
                     >
-                        All
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="kindFilter === 'photo' ? 'default' : 'outline'"
-                        @click="kindFilter = 'photo'"
-                    >
-                        Photos
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="kindFilter === 'video' ? 'default' : 'outline'"
-                        @click="kindFilter = 'video'"
-                    >
-                        Videos
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="kindFilter === 'text' ? 'default' : 'outline'"
-                        @click="kindFilter = 'text'"
-                    >
-                        Text
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="moderationFilter === 'all' ? 'secondary' : 'outline'"
-                        @click="moderationFilter = 'all'"
-                    >
-                        Any status
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="moderationFilter === 'approved' ? 'secondary' : 'outline'"
-                        @click="moderationFilter = 'approved'"
-                    >
-                        Approved
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="moderationFilter === 'processing' ? 'secondary' : 'outline'"
-                        @click="moderationFilter = 'processing'"
-                    >
-                        Processing
-                    </Button>
-                    <Button
-                        size="sm"
-                        :variant="moderationFilter === 'rejected' ? 'secondary' : 'outline'"
-                        @click="moderationFilter = 'rejected'"
-                    >
-                        Rejected
-                    </Button>
+                        <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            <component :is="card.icon" class="size-3.5 text-zinc-400" />
+                            {{ card.title }}
+                        </dt>
+                        <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                            {{ card.value }}
+                        </dd>
+                    </div>
+                </dl>
+
+                <div class="mt-5 flex flex-col gap-3 border-t border-black/5 pt-4">
+                    <div class="flex flex-wrap gap-2">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Search attendee or filename..."
+                            class="h-10 min-w-[16rem] flex-1 rounded-xl border border-black/8 bg-[#fcfbf8] px-3 text-sm"
+                        />
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            size="sm"
+                            :variant="kindFilter === 'all' ? 'default' : 'outline'"
+                            @click="kindFilter = 'all'"
+                        >
+                            All
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="kindFilter === 'photo' ? 'default' : 'outline'"
+                            @click="kindFilter = 'photo'"
+                        >
+                            Photos
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="kindFilter === 'video' ? 'default' : 'outline'"
+                            @click="kindFilter = 'video'"
+                        >
+                            Videos
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="kindFilter === 'text' ? 'default' : 'outline'"
+                            @click="kindFilter = 'text'"
+                        >
+                            Text
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="moderationFilter === 'all' ? 'secondary' : 'outline'"
+                            @click="moderationFilter = 'all'"
+                        >
+                            Any status
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="moderationFilter === 'approved' ? 'secondary' : 'outline'"
+                            @click="moderationFilter = 'approved'"
+                        >
+                            Approved
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="moderationFilter === 'processing' ? 'secondary' : 'outline'"
+                            @click="moderationFilter = 'processing'"
+                        >
+                            Processing
+                        </Button>
+                        <Button
+                            size="sm"
+                            :variant="moderationFilter === 'rejected' ? 'secondary' : 'outline'"
+                            @click="moderationFilter = 'rejected'"
+                        >
+                            Rejected
+                        </Button>
+                    </div>
                 </div>
 
                 <div
                     v-if="canManageMedia && selectedCount > 0"
-                    class="flex flex-wrap items-center gap-2 rounded-2xl border bg-white p-3"
+                    class="flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
                 >
                     <p class="text-sm text-slate-700">
                         {{ selectedCount }} selected
