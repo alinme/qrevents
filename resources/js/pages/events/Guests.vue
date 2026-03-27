@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
+    ChevronLeft,
+    ChevronRight,
     CheckCircle2,
     Clock3,
     Copy,
@@ -216,16 +218,22 @@ const savingInvitationSettings = ref(false);
 const showInvitationAdvanced = ref(false);
 const showGuestAdvanced = ref(false);
 const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
+const invitationCarousel = ref<HTMLElement | null>(null);
 const editingTableId = ref<number | null>(null);
+const ledgerEntryDialogOpen = ref(false);
+const activeLedgerParty = ref<GuestParty | null>(null);
+const ledgerGiftMode = ref<'money' | 'gift' | 'both'>('money');
 const activeSection = ref<'invitees' | 'invitation' | 'ledger' | 'guest_list'>('invitees');
 const expandedGuestPartyId = ref<number | null>(null);
 const quickSavingGuestId = ref<number | null>(null);
 const selectedGuestIds = ref<number[]>([]);
 const guestSearch = ref('');
 const guestFilter = ref<'all' | 'needing_reply' | 'accepted' | 'declined' | 'present' | 'absent' | 'not_sent' | 'responded' | 'no_gift'>('all');
-const quickGiftTypes = ref<Record<number, '' | 'gift' | 'money'>>({});
-const quickGiftCurrencies = ref<Record<number, 'EUR' | 'GBP' | 'RON'>>({});
-const quickGiftAmounts = ref<Record<number, string>>({});
+const ledgerEntryForm = useForm({
+    gift_currency: 'EUR' as 'EUR' | 'GBP' | 'RON',
+    gift_amount: '',
+    note: '',
+});
 
 const guestForm = useForm({
     name: '',
@@ -373,29 +381,23 @@ const statCards = computed(() => [
     {
         label: 'Parties',
         value: props.guestPartyStats.partyCount,
-        detail: 'Invitees on the list',
+        detail: `${props.guestParties.filter((party) => party.giftType !== null || (party.notes ?? '').trim() !== '').length} recorded`,
         icon: Users,
     },
     {
-        label: 'Invited',
-        value: props.guestPartyStats.invitedAttendeesCount,
-        detail: 'Expected attendees',
+        label: 'Accepted',
+        value: props.guestPartyStats.acceptedPartyCount,
+        detail: `${props.guestPartyStats.confirmedAttendeesCount} seats confirmed`,
         icon: UserPlus,
     },
     {
-        label: 'Confirmed',
-        value: props.guestPartyStats.confirmedAttendeesCount,
-        detail: `${props.guestPartyStats.acceptedPartyCount} accepted`,
+        label: 'Arrived',
+        value: props.guestPartyStats.presentPartyCount,
+        detail: `${props.guestPartyStats.actualAttendeesCount} seats recorded`,
         icon: CheckCircle2,
     },
     {
-        label: 'Present',
-        value: props.guestPartyStats.actualAttendeesCount,
-        detail: `${props.guestPartyStats.presentPartyCount} marked present`,
-        icon: Clock3,
-    },
-    {
-        label: 'Ledger',
+        label: 'Money total',
         value: formatMoney(
             props.guestPartyStats.moneyGiftTotal,
             props.guestPartyStats.moneyGiftCurrency,
@@ -422,13 +424,6 @@ const familyOverview = computed(() => [
 
 const ledgerGuestParties = computed(() => {
     return [...props.guestParties].sort((left, right) => {
-        const leftNeedsAttendance = left.actualAttendanceStatus === 'unknown' ? 1 : 0;
-        const rightNeedsAttendance = right.actualAttendanceStatus === 'unknown' ? 1 : 0;
-
-        if (leftNeedsAttendance !== rightNeedsAttendance) {
-            return rightNeedsAttendance - leftNeedsAttendance;
-        }
-
         const leftNeedsGift = left.giftType === null ? 1 : 0;
         const rightNeedsGift = right.giftType === null ? 1 : 0;
 
@@ -797,6 +792,7 @@ const guestPartyUpdatePayload = (
         attendance_status: GuestParty['attendanceStatus'];
         actual_attendees_count: number | null;
         actual_attendance_status: GuestParty['actualAttendanceStatus'];
+        notes: string | null;
         invitation_status: GuestParty['invitationStatus'];
         invitation_delivery_channel: GuestParty['invitationDeliveryChannel'];
         gift_type: '' | 'gift' | 'money' | null;
@@ -816,7 +812,7 @@ const guestPartyUpdatePayload = (
         attendance_status: overrides.attendance_status ?? party.attendanceStatus,
         actual_attendees_count: overrides.actual_attendees_count ?? party.actualAttendeesCount,
         actual_attendance_status: overrides.actual_attendance_status ?? party.actualAttendanceStatus,
-        notes: party.notes ?? '',
+        notes: overrides.notes ?? party.notes ?? '',
         invitation_status: overrides.invitation_status ?? party.invitationStatus,
         invitation_delivery_channel: overrides.invitation_delivery_channel ?? party.invitationDeliveryChannel ?? '',
         gift_type: giftType,
@@ -848,51 +844,6 @@ const patchGuestPartyQuickly = (
     });
 };
 
-const quickGiftTypeFor = (party: GuestParty): '' | 'gift' | 'money' => {
-    return quickGiftTypes.value[party.id] ?? party.giftType ?? '';
-};
-
-const quickGiftCurrencyFor = (party: GuestParty): 'EUR' | 'GBP' | 'RON' => {
-    return quickGiftCurrencies.value[party.id] ?? party.giftCurrency ?? 'EUR';
-};
-
-const quickGiftAmountFor = (party: GuestParty): string => {
-    return quickGiftAmounts.value[party.id] ?? party.giftAmount ?? '';
-};
-
-const setQuickGiftType = (party: GuestParty, value: '' | 'gift' | 'money'): void => {
-    quickGiftTypes.value = {
-        ...quickGiftTypes.value,
-        [party.id]: value,
-    };
-};
-
-const setQuickGiftCurrency = (party: GuestParty, value: 'EUR' | 'GBP' | 'RON'): void => {
-    quickGiftCurrencies.value = {
-        ...quickGiftCurrencies.value,
-        [party.id]: value,
-    };
-};
-
-const setQuickGiftAmount = (party: GuestParty, value: string): void => {
-    quickGiftAmounts.value = {
-        ...quickGiftAmounts.value,
-        [party.id]: value,
-    };
-};
-
-const updateQuickGiftType = (party: GuestParty, value: unknown): void => {
-    if (value === '' || value === 'gift' || value === 'money') {
-        setQuickGiftType(party, value);
-    }
-};
-
-const updateQuickGiftCurrency = (party: GuestParty, value: unknown): void => {
-    if (value === 'EUR' || value === 'GBP' || value === 'RON') {
-        setQuickGiftCurrency(party, value);
-    }
-};
-
 const closeInvitationTemplatePreview = (): void => {
     previewingInvitationTemplateId.value = null;
 };
@@ -901,6 +852,13 @@ const handleInvitationTemplatePreviewOpenChange = (open: boolean): void => {
     if (!open) {
         closeInvitationTemplatePreview();
     }
+};
+
+const scrollInvitationTemplates = (direction: 'prev' | 'next'): void => {
+    invitationCarousel.value?.scrollBy({
+        left: direction === 'next' ? 320 : -320,
+        behavior: 'smooth',
+    });
 };
 
 const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
@@ -1118,18 +1076,61 @@ const resetGuestPartyAttendance = (party: GuestParty): void => {
     );
 };
 
-const saveQuickGift = (party: GuestParty): void => {
-    const giftType = quickGiftTypeFor(party);
+const ledgerGiftLabel = (party: GuestParty): string => {
+    if (party.giftType === 'money' && party.giftAmount !== null && party.giftCurrency !== null && party.notes) {
+        return `${formatMoney(Number(party.giftAmount), party.giftCurrency)} + note`;
+    }
+
+    if (party.giftType === 'money' && party.giftAmount !== null && party.giftCurrency !== null) {
+        return formatMoney(Number(party.giftAmount), party.giftCurrency);
+    }
+
+    if (party.giftType === 'gift' && party.notes) {
+        return 'Gift + note';
+    }
+
+    if (party.giftType === 'gift') {
+        return 'Gift recorded';
+    }
+
+    if (party.notes) {
+        return 'Note recorded';
+    }
+
+    return 'No gift yet';
+};
+
+const openLedgerEntry = (party: GuestParty, mode: 'money' | 'gift' | 'both'): void => {
+    activeLedgerParty.value = party;
+    ledgerGiftMode.value = mode;
+    ledgerEntryForm.clearErrors();
+    ledgerEntryForm.gift_currency = party.giftCurrency ?? 'EUR';
+    ledgerEntryForm.gift_amount = party.giftAmount ?? '';
+    ledgerEntryForm.note = party.notes ?? '';
+    ledgerEntryDialogOpen.value = true;
+};
+
+const saveLedgerEntry = (): void => {
+    if (!activeLedgerParty.value) {
+        return;
+    }
+
+    const party = activeLedgerParty.value;
+    const nextGiftType = ledgerGiftMode.value === 'gift' ? 'gift' : 'money';
 
     patchGuestPartyQuickly(
         party,
         {
-            gift_type: giftType === '' ? null : giftType,
-            gift_currency: giftType === 'money' ? quickGiftCurrencyFor(party) : null,
-            gift_amount: giftType === 'money' ? quickGiftAmountFor(party) : null,
+            gift_type: nextGiftType,
+            gift_currency: ledgerGiftMode.value === 'gift' ? null : ledgerEntryForm.gift_currency,
+            gift_amount: ledgerGiftMode.value === 'gift' ? null : ledgerEntryForm.gift_amount,
+            notes: ledgerGiftMode.value === 'money' ? (party.notes ?? '') : ledgerEntryForm.note,
         },
         `${party.name} ledger updated.`,
     );
+
+    ledgerEntryDialogOpen.value = false;
+    activeLedgerParty.value = null;
 };
 
 const saveGuestListTableAssignment = (): void => {
@@ -1338,7 +1339,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </Button>
                         <Button v-if="activeSection === 'ledger'" class="h-10 rounded-full px-4" @click="openGuestReport">
                             <Printer class="mr-2 size-4" />
-                            Report
+                            Ledger page
                         </Button>
                         <Button v-if="activeSection === 'guest_list'" variant="outline" class="h-10 rounded-full px-4" @click="copyLink(publicGuestListUrl, 'Guest list link')">
                             <Copy class="mr-2 size-4" />
@@ -1758,15 +1759,28 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-neutral-700">
-                                Template
-                            </label>
-                            <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Template
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <Button variant="outline" size="icon" class="rounded-full" @click="scrollInvitationTemplates('prev')">
+                                        <ChevronLeft class="size-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon" class="rounded-full" @click="scrollInvitationTemplates('next')">
+                                        <ChevronRight class="size-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div
+                                ref="invitationCarousel"
+                                class="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            >
                                 <div
                                     v-for="template in invitationTemplateCards"
                                     :key="template.id"
                                     :class="[
-                                        'rounded-2xl border p-2.5 transition',
+                                        'w-[220px] shrink-0 snap-start rounded-2xl border p-2.5 transition',
                                         template.artClass,
                                         invitationSettingsForm.template === template.id
                                             ? 'ring-2 ring-neutral-950 shadow-sm'
@@ -2018,41 +2032,21 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
             </section>
 
             <section v-else-if="activeSection === 'ledger'" class="space-y-4">
-                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-                    <div class="grid gap-px bg-neutral-200 sm:grid-cols-2 xl:grid-cols-5">
-                        <div
-                            v-for="stat in statCards"
-                            :key="stat.label"
-                            class="bg-white px-4 py-3"
-                        >
-                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
-                                {{ stat.label }}
-                            </p>
-                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
-                                {{ stat.value }}
-                            </p>
-                            <p class="mt-1 text-xs text-neutral-500">
-                                {{ stat.detail }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
+                        <div class="space-y-1">
                             <h2 class="text-base font-semibold text-neutral-950">
-                                Event day ledger
+                                Gift ledger
                             </h2>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                Mark who came, then record the gift or money right here.
+                            <p class="text-sm text-neutral-600">
+                                Keep the money, gifts, notes, and totals here. Check-in and seating already live in Guest list.
                             </p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <Button class="rounded-full px-5" @click="openGuestReport">
                                 <Printer class="mr-2 size-4" />
-                                Open report
+                                Open ledger page
                             </Button>
                             <Button variant="outline" class="rounded-full px-5" @click="exportGuestLedger">
                                 <Download class="mr-2 size-4" />
@@ -2061,20 +2055,38 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </div>
                     </div>
 
-                    <div
+                    <p
                         v-if="retentionReminder"
-                        class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                        class="mt-4 text-sm text-amber-800"
                     >
-                        Retention ends on {{ retentionReminder.dateLabel }}.
+                        Export before {{ retentionReminder.dateLabel }}.
+                    </p>
+
+                    <div class="mt-5 grid gap-4 border-y border-neutral-200 py-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div
+                            v-for="stat in statCards"
+                            :key="stat.label"
+                            class="space-y-1"
+                        >
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                {{ stat.label }}
+                            </p>
+                            <p class="text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ stat.value }}
+                            </p>
+                            <p class="text-xs text-neutral-500">
+                                {{ stat.detail }}
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-2xl border border-neutral-200">
+                    <div class="mt-2 divide-y divide-neutral-200">
                         <div
                             v-for="party in ledgerGuestParties"
                             :key="party.id"
-                            class="bg-white p-4"
+                            class="py-4"
                         >
-                            <div class="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] xl:items-center">
+                            <div class="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)_auto] xl:items-center">
                                 <div class="space-y-2">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <p class="text-sm font-semibold text-neutral-950">
@@ -2085,92 +2097,57 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         </Badge>
                                     </div>
                                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
-                                        <span>Invited {{ party.invitedAttendeesCount }}</span>
+                                        <span>{{ party.tableName || 'No table yet' }}</span>
+                                        <span>Reserved {{ party.invitedAttendeesCount }}</span>
                                         <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
                                         <span>{{ actualAttendanceLabel(party.actualAttendanceStatus) }}</span>
-                                        <span>{{ giftLabel(party) }}</span>
                                     </div>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-                                        Attendance
+                                <div class="space-y-1.5">
+                                    <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                        Ledger
                                     </p>
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button
-                                            variant="outline"
-                                            class="rounded-full px-4"
-                                            :disabled="quickSavingGuestId === party.id"
-                                            @click="markGuestPartyPresent(party)"
-                                        >
-                                            <CheckCircle2 class="mr-2 size-4" />
-                                            Came
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            class="rounded-full px-4"
-                                            :disabled="quickSavingGuestId === party.id"
-                                            @click="markGuestPartyAbsent(party)"
-                                        >
-                                            <Trash2 class="mr-2 size-4" />
-                                            Did not come
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            class="rounded-full px-4"
-                                            :disabled="quickSavingGuestId === party.id"
-                                            @click="resetGuestPartyAttendance(party)"
-                                        >
-                                            <Clock3 class="mr-2 size-4" />
-                                            Reset
-                                        </Button>
-                                    </div>
+                                    <p class="text-sm font-medium text-neutral-950">
+                                        {{ ledgerGiftLabel(party) }}
+                                    </p>
+                                    <p class="text-sm leading-6 text-neutral-600">
+                                        {{ party.notes || 'No note added yet.' }}
+                                    </p>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-                                        Gift / Money
-                                    </p>
-                                    <div class="grid gap-2 sm:grid-cols-[120px_minmax(0,120px)_minmax(0,1fr)_auto]">
-                                        <NativeSelect
-                                            :model-value="quickGiftTypeFor(party)"
-                                            @update:model-value="updateQuickGiftType(party, $event)"
+                                <div class="xl:justify-self-end">
+                                    <div class="inline-flex items-center overflow-hidden rounded-full border border-neutral-200 bg-white">
+                                        <button
+                                            type="button"
+                                            class="px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 hover:text-neutral-950"
+                                            @click="openLedgerEntry(party, 'money')"
                                         >
-                                            <NativeSelectOption value="">None</NativeSelectOption>
-                                            <NativeSelectOption value="gift">Gift</NativeSelectOption>
-                                            <NativeSelectOption value="money">Money</NativeSelectOption>
-                                        </NativeSelect>
-
-                                        <NativeSelect
-                                            v-if="quickGiftTypeFor(party) === 'money'"
-                                            :model-value="quickGiftCurrencyFor(party)"
-                                            @update:model-value="updateQuickGiftCurrency(party, $event)"
+                                            Money
+                                        </button>
+                                        <span class="h-6 w-px bg-neutral-200" />
+                                        <button
+                                            type="button"
+                                            class="px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 hover:text-neutral-950"
+                                            @click="openLedgerEntry(party, 'gift')"
                                         >
-                                            <NativeSelectOption value="EUR">EUR</NativeSelectOption>
-                                            <NativeSelectOption value="GBP">GBP</NativeSelectOption>
-                                            <NativeSelectOption value="RON">RON</NativeSelectOption>
-                                        </NativeSelect>
-
-                                        <Input
-                                            v-if="quickGiftTypeFor(party) === 'money'"
-                                            :model-value="quickGiftAmountFor(party)"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            placeholder="Amount"
-                                            @update:model-value="setQuickGiftAmount(party, String($event))"
-                                        />
-
-                                        <Button
-                                            class="rounded-full px-4"
-                                            :disabled="quickSavingGuestId === party.id"
-                                            @click="saveQuickGift(party)"
+                                            Gift
+                                        </button>
+                                        <span class="h-6 w-px bg-neutral-200" />
+                                        <button
+                                            type="button"
+                                            class="px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 hover:text-neutral-950"
+                                            @click="openLedgerEntry(party, 'both')"
                                         >
-                                            Save
-                                        </Button>
+                                            Both
+                                        </button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div v-if="ledgerGuestParties.length === 0" class="py-10 text-sm text-neutral-500">
+                            Ledger entries will appear here after you add invitees.
                         </div>
                     </div>
                 </section>
@@ -2758,6 +2735,102 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <p class="text-sm text-neutral-800">{{ guestListInfoParty.notes || 'No notes added' }}</p>
                     </div>
                 </div>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog :open="ledgerEntryDialogOpen" @update:open="ledgerEntryDialogOpen = $event">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{
+                            ledgerGiftMode === 'money'
+                                ? 'Record money'
+                                : ledgerGiftMode === 'gift'
+                                    ? 'Record gift'
+                                    : 'Record money and gift'
+                        }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ activeLedgerParty?.name ?? 'Invitee' }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4 py-2">
+                    <div class="inline-flex items-center overflow-hidden rounded-full border border-neutral-200 bg-white">
+                        <button
+                            type="button"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium transition',
+                                ledgerGiftMode === 'money' ? 'bg-neutral-950 text-white' : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950',
+                            ]"
+                            @click="ledgerGiftMode = 'money'"
+                        >
+                            Money
+                        </button>
+                        <span class="h-6 w-px bg-neutral-200" />
+                        <button
+                            type="button"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium transition',
+                                ledgerGiftMode === 'gift' ? 'bg-neutral-950 text-white' : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950',
+                            ]"
+                            @click="ledgerGiftMode = 'gift'"
+                        >
+                            Gift
+                        </button>
+                        <span class="h-6 w-px bg-neutral-200" />
+                        <button
+                            type="button"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium transition',
+                                ledgerGiftMode === 'both' ? 'bg-neutral-950 text-white' : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950',
+                            ]"
+                            @click="ledgerGiftMode = 'both'"
+                        >
+                            Both
+                        </button>
+                    </div>
+
+                    <div v-if="ledgerGiftMode !== 'gift'" class="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Currency
+                            </label>
+                            <NativeSelect v-model="ledgerEntryForm.gift_currency">
+                                <NativeSelectOption value="EUR">EUR</NativeSelectOption>
+                                <NativeSelectOption value="GBP">GBP</NativeSelectOption>
+                                <NativeSelectOption value="RON">RON</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Value
+                            </label>
+                            <Input v-model="ledgerEntryForm.gift_amount" type="number" min="0" step="0.01" placeholder="0.00" />
+                        </div>
+                    </div>
+
+                    <div v-if="ledgerGiftMode !== 'money'" class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700">
+                            Gift note
+                        </label>
+                        <Textarea
+                            v-model="ledgerEntryForm.note"
+                            rows="4"
+                            placeholder="Flowers, jewelry, kitchen set, envelope note, or anything else you want to remember."
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter class="gap-2">
+                    <Button variant="outline" class="rounded-full px-5" @click="ledgerEntryDialogOpen = false">
+                        Cancel
+                    </Button>
+                    <Button class="rounded-full px-5" :disabled="quickSavingGuestId !== null" @click="saveLedgerEntry">
+                        Save ledger entry
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
 

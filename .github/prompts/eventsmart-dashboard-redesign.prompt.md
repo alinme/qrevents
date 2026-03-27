@@ -53,6 +53,8 @@ It must not feel:
 19. Redesign hidden layers too, not only the visible page shell: dialogs, sidebars, drawers, confirm surfaces, and preview panels must follow the same simplicity rules.
 20. Creation flows must start with the minimum required inputs. Push the rest into advanced details, defaults, or later editing.
 21. When a screen is operational, design it for the real job it serves. A public guest list is an entrance desk tool, not a passive report.
+22. Ledger screens are bookkeeping tools, not attendance consoles. Attendance actions belong in the guest list or entrance flow, while ledger screens focus on gifts, money, notes, totals, export, and print.
+23. When a standalone owner page exists, make it slimmer than the dashboard version. It should feel printable, calm, and archival.
 
 ## Information architecture goals
 
@@ -77,6 +79,11 @@ For operational public pages:
 - example: the public guest list is for greeting guests, checking them in, assigning tables, and telling them where to sit
 - rows should support quick action under pressure
 - details modals should help finish the job, not just show metadata
+
+For owner ledger pages:
+- focus on bookkeeping, money, gifts, notes, totals, export, and print
+- remove duplicated attendance actions if those already exist elsewhere
+- prefer one slim table and compact text summaries over multiple reporting panels
 
 ## Visual direction
 
