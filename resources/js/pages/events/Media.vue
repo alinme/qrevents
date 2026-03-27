@@ -174,7 +174,6 @@ const assetItems = ref<MediaAsset[]>([...props.mediaAssets]);
 const selectedAttendeeKey = ref<string | null>(null);
 const activeAssetId = ref<number | null>(props.initialActiveAssetId);
 const assetInfoId = ref<number | null>(null);
-const deleteAssetId = ref<number | null>(null);
 const bulkDeleteOpen = ref(false);
 const deletingAssetId = ref<number | null>(null);
 const moderationAssetId = ref<number | null>(null);
@@ -567,14 +566,6 @@ const stats = computed(() => ({
     attendees: groupedAttendees.value.length,
 }));
 
-const assetPendingDelete = computed<MediaAsset | null>(() => {
-    if (deleteAssetId.value === null) {
-        return null;
-    }
-
-    return assetItems.value.find((asset) => asset.id === deleteAssetId.value) ?? null;
-});
-
 const selectedCount = computed(() => selectedAssetIds.value.length);
 const allVisibleSelected = computed(
     () =>
@@ -773,9 +764,8 @@ const removeAssetLocally = (assetId: number): void => {
     }
 };
 
-const deleteAsset = (): void => {
-    const asset = assetPendingDelete.value;
-    if (!asset || deletingAssetId.value !== null) {
+const deleteAsset = (asset: MediaAsset): void => {
+    if (deletingAssetId.value !== null) {
         return;
     }
 
@@ -796,7 +786,6 @@ const deleteAsset = (): void => {
             }
 
             removeAssetLocally(asset.id);
-            deleteAssetId.value = null;
             toast.success('Media deleted.');
         })
         .catch(() => {
@@ -808,7 +797,15 @@ const deleteAsset = (): void => {
 };
 
 const requestDeleteAsset = (asset: MediaAsset): void => {
-    deleteAssetId.value = asset.id;
+    if (deletingAssetId.value !== null) {
+        return;
+    }
+
+    if (! window.confirm('Delete this upload? This cannot be undone.')) {
+        return;
+    }
+
+    deleteAsset(asset);
 };
 
 const bulkDeleteAssets = (): void => {
@@ -2321,31 +2318,6 @@ const statCards = computed(() => [
                 </div>
             </DrawerContent>
         </Drawer>
-
-        <AlertDialog
-            v-if="canManageMedia"
-            :open="assetPendingDelete !== null"
-            @update:open="(open) => { if (!open) deleteAssetId = null; }"
-        >
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Delete media?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This removes the selected upload from the event and updates storage counts immediately.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                        class="bg-destructive text-white hover:bg-destructive/90"
-                        :disabled="deletingAssetId !== null"
-                        @click="deleteAsset"
-                    >
-                        {{ deletingAssetId !== null ? 'Deleting...' : 'Delete' }}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
 
         <AlertDialog
             v-if="canManageMedia"
