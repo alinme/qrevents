@@ -809,8 +809,6 @@ const deleteAsset = (): void => {
 
 const requestDeleteAsset = (asset: MediaAsset): void => {
     deleteAssetId.value = asset.id;
-    activeAssetId.value = null;
-    assetInfoId.value = null;
 };
 
 const bulkDeleteAssets = (): void => {
