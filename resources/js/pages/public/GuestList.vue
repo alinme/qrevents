@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { CheckCircle2, Clock3, Search, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, Clock3, Eye, Search, XCircle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -32,6 +39,8 @@ const props = defineProps<{
 
 const search = ref('');
 const quickSavingGuestId = ref<number | null>(null);
+const detailsDialogOpen = ref(false);
+const detailsParty = ref<GuestListParty | null>(null);
 
 const filteredGuestParties = computed(() => {
     const needle = search.value.trim().toLowerCase();
@@ -48,6 +57,23 @@ const attendanceLabel = (status: GuestListParty['actualAttendanceStatus']): stri
         present: 'Checked in',
         absent: 'Marked absent',
     }[status];
+};
+
+const actualAttendanceRowClass = (status: GuestListParty['actualAttendanceStatus']): string => {
+    if (status === 'present') {
+        return 'bg-emerald-50/80';
+    }
+
+    if (status === 'absent') {
+        return 'bg-rose-50/70';
+    }
+
+    return '';
+};
+
+const openDetails = (party: GuestListParty): void => {
+    detailsParty.value = party;
+    detailsDialogOpen.value = true;
 };
 
 const updateAttendance = (
@@ -103,11 +129,14 @@ const updateAttendance = (
                     />
                 </div>
 
-                <div class="mt-4 divide-y divide-stone-200 overflow-hidden rounded-2xl border border-stone-200">
+                <div class="mt-4 divide-y divide-stone-200 border-t border-stone-200">
                     <div
                         v-for="party in filteredGuestParties"
                         :key="party.id"
-                        class="flex flex-col gap-3 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between"
+                        :class="[
+                            'flex flex-col gap-3 px-1 py-3 transition-colors md:flex-row md:items-center md:justify-between',
+                            actualAttendanceRowClass(party.actualAttendanceStatus),
+                        ]"
                     >
                         <div class="min-w-0 space-y-1">
                             <p class="truncate text-base font-semibold text-stone-950">
@@ -115,15 +144,23 @@ const updateAttendance = (
                             </p>
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
                                 <span>{{ party.phone || 'No phone saved' }}</span>
-                                <span>{{ party.tableName || 'No table set' }}</span>
+                                <span>{{ party.tableName || 'No table yet' }}</span>
                                 <span>{{ attendanceLabel(party.actualAttendanceStatus) }}</span>
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
+                                @click="openDetails(party)"
+                            >
+                                <Eye class="mr-2 size-4" />
+                                Details
+                            </Button>
+                            <Button
+                                :variant="party.actualAttendanceStatus === 'present' ? 'default' : 'outline'"
+                                :class="party.actualAttendanceStatus === 'present' ? 'rounded-full bg-emerald-600 px-4 text-white hover:bg-emerald-700' : 'rounded-full px-4'"
                                 :disabled="quickSavingGuestId === party.id"
                                 @click="updateAttendance(party, 'present')"
                             >
@@ -131,8 +168,8 @@ const updateAttendance = (
                                 Came
                             </Button>
                             <Button
-                                variant="outline"
-                                class="rounded-full px-4"
+                                :variant="party.actualAttendanceStatus === 'absent' ? 'default' : 'outline'"
+                                :class="party.actualAttendanceStatus === 'absent' ? 'rounded-full bg-rose-600 px-4 text-white hover:bg-rose-700' : 'rounded-full px-4'"
                                 :disabled="quickSavingGuestId === party.id"
                                 @click="updateAttendance(party, 'absent')"
                             >
@@ -157,5 +194,43 @@ const updateAttendance = (
                 </div>
             </section>
         </div>
+
+        <Dialog :open="detailsDialogOpen" @update:open="detailsDialogOpen = $event">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ detailsParty?.name ?? 'Invitee details' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        Quick details for the entrance team.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div v-if="detailsParty" class="space-y-4 py-2">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Phone</p>
+                            <p class="text-sm text-stone-800">{{ detailsParty.phone || 'No phone saved' }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Table</p>
+                            <p class="text-sm text-stone-800">{{ detailsParty.tableName || 'No table yet' }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Invited</p>
+                            <p class="text-sm text-stone-800">{{ detailsParty.invitedAttendeesCount }}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Confirmed</p>
+                            <p class="text-sm text-stone-800">{{ detailsParty.confirmedAttendeesCount ?? 'Not answered yet' }}</p>
+                        </div>
+                        <div class="space-y-1 sm:col-span-2">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Notes</p>
+                            <p class="text-sm text-stone-800">{{ detailsParty.notes || 'No notes added' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
     </main>
 </template>
