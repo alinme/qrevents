@@ -590,11 +590,11 @@ const canLoadMore = computed(
 const mediaGridClass = computed(() => {
     switch (mediaView.value) {
         case 'relaxed':
-            return 'grid grid-cols-2 gap-1.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3';
+            return 'grid grid-cols-2 gap-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3';
         case 'dense':
-            return 'grid grid-cols-2 gap-1.5 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6';
+            return 'grid grid-cols-2 gap-1 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6';
         default:
-            return 'grid grid-cols-2 gap-1.5 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4';
+            return 'grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4';
     }
 });
 
@@ -805,6 +805,12 @@ const deleteAsset = (): void => {
         .finally(() => {
             deletingAssetId.value = null;
         });
+};
+
+const requestDeleteAsset = (asset: MediaAsset): void => {
+    deleteAssetId.value = asset.id;
+    activeAssetId.value = null;
+    assetInfoId.value = null;
 };
 
 const bulkDeleteAssets = (): void => {
@@ -1160,43 +1166,57 @@ const statCards = computed(() => [
                 </dl>
 
                 <div class="mt-5 flex flex-col gap-3 border-t border-black/5 pt-4">
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <input
                             v-model="searchQuery"
                             type="text"
                             placeholder="Search attendee or filename..."
                             class="h-10 min-w-[16rem] flex-1 rounded-xl border border-black/8 bg-[#fcfbf8] px-3 text-sm"
                         />
+                        <div class="inline-flex items-center gap-1 rounded-full border border-black/8 bg-[#fcfbf8] p-1">
+                            <button
+                                type="button"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                                :class="kindFilter === 'all' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                title="All uploads"
+                                @click="kindFilter = 'all'"
+                            >
+                                <Grid2x2 class="size-4" />
+                                <span class="sr-only">All uploads</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                                :class="kindFilter === 'photo' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                title="Photos"
+                                @click="kindFilter = 'photo'"
+                            >
+                                <IconPhoto class="size-4" />
+                                <span class="sr-only">Photos</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                                :class="kindFilter === 'video' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                title="Videos"
+                                @click="kindFilter = 'video'"
+                            >
+                                <IconVideo class="size-4" />
+                                <span class="sr-only">Videos</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
+                                :class="kindFilter === 'text' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                title="Text posts"
+                                @click="kindFilter = 'text'"
+                            >
+                                <IconFileText class="size-4" />
+                                <span class="sr-only">Text posts</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <Button
-                            size="sm"
-                            :variant="kindFilter === 'all' ? 'default' : 'outline'"
-                            @click="kindFilter = 'all'"
-                        >
-                            All
-                        </Button>
-                        <Button
-                            size="sm"
-                            :variant="kindFilter === 'photo' ? 'default' : 'outline'"
-                            @click="kindFilter = 'photo'"
-                        >
-                            Photos
-                        </Button>
-                        <Button
-                            size="sm"
-                            :variant="kindFilter === 'video' ? 'default' : 'outline'"
-                            @click="kindFilter = 'video'"
-                        >
-                            Videos
-                        </Button>
-                        <Button
-                            size="sm"
-                            :variant="kindFilter === 'text' ? 'default' : 'outline'"
-                            @click="kindFilter = 'text'"
-                        >
-                            Text
-                        </Button>
                         <Button
                             size="sm"
                             :variant="moderationFilter === 'all' ? 'secondary' : 'outline'"
@@ -1230,7 +1250,7 @@ const statCards = computed(() => [
 
                 <div
                     v-if="canManageMedia && selectedCount > 0"
-                    class="flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
+                    class="mt-1 flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
                 >
                     <p class="text-sm text-slate-700">
                         {{ selectedCount }} selected
@@ -1272,7 +1292,7 @@ const statCards = computed(() => [
 
                 <Empty
                     v-if="!hasAnyUploads"
-                    class="rounded-2xl border bg-white py-14"
+                    class="mt-4 rounded-2xl border bg-white py-14"
                 >
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -1287,7 +1307,7 @@ const statCards = computed(() => [
 
                 <Empty
                     v-else-if="filteredAssets.length === 0"
-                    class="rounded-2xl border bg-white py-14"
+                    class="mt-4 rounded-2xl border bg-white py-14"
                 >
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -1307,14 +1327,15 @@ const statCards = computed(() => [
 
                 <div
                     v-else
+                    class="mt-4"
                     :class="mediaGridClass"
                 >
                     <article
                         v-for="asset in visibleAssets"
                         :key="asset.id"
-                        class="group relative overflow-hidden rounded-[1.35rem] bg-slate-100"
+                        class="group relative overflow-hidden rounded-[1rem] bg-slate-100"
                     >
-                        <div class="relative aspect-square w-full overflow-hidden">
+                        <div class="relative aspect-[3/4] w-full overflow-hidden">
                             <div
                                 v-if="
                                     ((asset.kind === 'photo' || asset.kind === 'video') && assetThumbnailSource(asset))
@@ -1436,7 +1457,7 @@ const statCards = computed(() => [
                             >
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-rose-500/74 text-white transition hover:bg-rose-500/84 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-rose-500/52 text-white transition hover:bg-rose-500/62 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Hide ${asset.guestName} upload from photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'rejected')"
@@ -1446,7 +1467,7 @@ const statCards = computed(() => [
 
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-emerald-500/76 text-white transition hover:bg-emerald-500/86 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-emerald-500/54 text-white transition hover:bg-emerald-500/64 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Show ${asset.guestName} upload on photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'approved')"
@@ -1665,9 +1686,9 @@ const statCards = computed(() => [
                         <article
                             v-for="asset in selectedAttendeeAssets"
                             :key="`attendee-asset-${asset.id}`"
-                            class="group relative overflow-hidden rounded-[1.35rem] bg-slate-100"
+                            class="group relative overflow-hidden rounded-[1rem] bg-slate-100"
                         >
-                            <div class="relative aspect-square w-full overflow-hidden">
+                            <div class="relative aspect-[3/4] w-full overflow-hidden">
                                 <div
                                     v-if="
                                         ((asset.kind === 'photo' || asset.kind === 'video') && assetThumbnailSource(asset))
@@ -2001,7 +2022,7 @@ const statCards = computed(() => [
                                     type="button"
                                     class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/88 text-white shadow-sm backdrop-blur transition hover:bg-rose-500"
                                     title="Delete"
-                                    @click="deleteAssetId = activeAsset.id"
+                                    @click="requestDeleteAsset(activeAsset)"
                                 >
                                     <Trash2 class="size-4" />
                                 </button>
@@ -2302,7 +2323,7 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="destructive"
                                     title="Delete"
-                                    @click="deleteAssetId = assetInfoAsset.id"
+                                    @click="requestDeleteAsset(assetInfoAsset)"
                                 >
                                     <Trash2 class="size-4" />
                                 </Button>
