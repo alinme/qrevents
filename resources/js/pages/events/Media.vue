@@ -1452,7 +1452,7 @@ const statCards = computed(() => [
                             >
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-rose-500/52 text-white transition hover:bg-rose-500/62 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-rose-500/24 text-white transition hover:bg-rose-500/34 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Hide ${asset.guestName} upload from photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'rejected')"
@@ -1462,7 +1462,7 @@ const statCards = computed(() => [
 
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-emerald-500/54 text-white transition hover:bg-emerald-500/64 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-emerald-500/26 text-white transition hover:bg-emerald-500/36 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Show ${asset.guestName} upload on photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'approved')"
