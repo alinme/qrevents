@@ -22,6 +22,7 @@ class EventGuestPartyFactory extends Factory
                 'Maria si Andrei',
             ]),
             'phone' => '07'.$this->faker->numerify('########'),
+            'table_name' => $this->faker->optional()->randomElement(['Table 1', 'Table 4', 'Table 8']),
             'invited_attendees_count' => $this->faker->numberBetween(1, 6),
             'confirmed_attendees_count' => null,
             'actual_attendees_count' => null,

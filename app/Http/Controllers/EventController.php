@@ -8,6 +8,7 @@ use App\Http\Requests\ImportEventGuestPartiesRequest;
 use App\Http\Requests\RespondEventGuestInvitationRequest;
 use App\Http\Requests\UpdateEventBillingRequest;
 use App\Http\Requests\UpdateEventInvitationSettingsRequest;
+use App\Http\Requests\UpdatePublicGuestListCheckInRequest;
 use App\Http\Requests\UpsertEventGuestPartyRequest;
 use App\Jobs\GenerateEventAssetImageVariants;
 use App\Jobs\GenerateEventAssetVideoThumbnails;
@@ -144,6 +145,43 @@ class EventController extends Controller
         $guestParty->update($request->payload());
 
         return back()->with('success', 'Guest party updated.');
+    }
+
+    public function publicGuestList(Request $request, string $shareToken): Response
+    {
+        $event = Event::query()
+            ->where('share_token', $shareToken)
+            ->firstOrFail();
+
+        app()->setLocale(FrontendLocalization::resolveEventLocale(
+            $request,
+            $this->resolvedEventBranding($event),
+        ));
+
+        return Inertia::render('public/GuestList', $this->publicGuestListProps($event));
+    }
+
+    public function updatePublicGuestListAttendance(
+        UpdatePublicGuestListCheckInRequest $request,
+        string $shareToken,
+        EventGuestParty $guestParty,
+    ): RedirectResponse {
+        $event = Event::query()
+            ->where('share_token', $shareToken)
+            ->firstOrFail();
+
+        abort_unless($guestParty->event_id === $event->id, 404);
+
+        $payload = $request->payload();
+        if (($payload['actual_attendance_status'] ?? null) === 'present') {
+            $payload['actual_attendees_count'] = $guestParty->confirmed_attendees_count
+                ?? $guestParty->invited_attendees_count
+                ?? 1;
+        }
+
+        $guestParty->update($payload);
+
+        return back()->with('success', 'Guest list updated.');
     }
 
     public function destroyGuestParty(Request $request, Event $event, EventGuestParty $guestParty): RedirectResponse
@@ -2347,6 +2385,7 @@ class EventController extends Controller
                 'guestPartiesImport' => route('events.guests.import', $event),
                 'guestInvitationsBulkUpdate' => route('events.guests.invitations.bulk-update', $event),
                 'invitationSettingsUpdate' => route('events.guests.invitation-settings.update', $event),
+                'publicGuestList' => route('events.guests.public-list.show', $event->share_token),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
@@ -2441,6 +2480,7 @@ class EventController extends Controller
         return [
             'eventInvitationSettings' => $invitationSettings,
             'publicInvitationUrl' => route('events.guests.public-invitation.show', $publicInvitationToken),
+            'publicGuestListUrl' => route('events.guests.public-list.show', $event->share_token),
             'guestLedgerExportUrl' => route('events.guests.export', $event),
             'invitationPreview' => [
                 'eventDetails' => [
@@ -2459,6 +2499,7 @@ class EventController extends Controller
                     'id' => $party->id,
                     'name' => $party->name,
                     'phone' => $party->phone,
+                    'tableName' => $party->table_name,
                     'invitedAttendeesCount' => $party->invited_attendees_count,
                     'confirmedAttendeesCount' => $party->confirmed_attendees_count,
                     'attendanceStatus' => $party->attendance_status,
@@ -2496,6 +2537,7 @@ class EventController extends Controller
                     'mealPreference' => $party->meal_preference,
                     'responseNotes' => $party->response_notes,
                     'inviteUrl' => route('events.guests.invitation.show', $this->ensureGuestPartyInvitationToken($party)),
+                    'publicCheckInUrl' => route('events.guests.public-list.update', [$event->share_token, $party]),
                     'updateUrl' => route('events.guests.update', [$event, $party]),
                     'deleteUrl' => route('events.guests.destroy', [$event, $party]),
                 ])
@@ -2863,6 +2905,42 @@ class EventController extends Controller
             'responseNotes' => $guestParty->response_notes,
             'guestListUrl' => route('events.guests', $event),
         ]));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function publicGuestListProps(Event $event): array
+    {
+        $guestParties = $event->guestParties()
+            ->orderBy('name')
+            ->get();
+
+        return [
+            'currentEvent' => [
+                'id' => $event->id,
+                'name' => $event->name,
+            ],
+            'guestList' => [
+                'searchPlaceholder' => 'Search invitee, phone, or table',
+                'publicUrl' => route('events.guests.public-list.show', $event->share_token),
+            ],
+            'guestParties' => $guestParties
+                ->map(fn (EventGuestParty $party): array => [
+                    'id' => $party->id,
+                    'name' => $party->name,
+                    'phone' => $party->phone,
+                    'tableName' => $party->table_name,
+                    'invitedAttendeesCount' => $party->invited_attendees_count,
+                    'confirmedAttendeesCount' => $party->confirmed_attendees_count,
+                    'actualAttendanceStatus' => $party->actual_attendance_status,
+                    'actualAttendeesCount' => $party->actual_attendees_count,
+                    'notes' => $party->notes,
+                    'updateUrl' => route('events.guests.public-list.update', [$event->share_token, $party]),
+                ])
+                ->values()
+                ->all(),
+        ];
     }
 
     /**

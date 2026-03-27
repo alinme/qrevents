@@ -110,6 +110,12 @@ Route::get('invite/public/{token}', [EventController::class, 'publicInvitation']
 Route::post('invite/public/{token}', [EventController::class, 'respondToPublicInvitation'])
     ->middleware('throttle:public-album-write')
     ->name('events.guests.public-invitation.respond');
+Route::get('guest-list/{shareToken}', [EventController::class, 'publicGuestList'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.guests.public-list.show');
+Route::patch('guest-list/{shareToken}/{guestParty}', [EventController::class, 'updatePublicGuestListAttendance'])
+    ->middleware('throttle:public-album-write')
+    ->name('events.guests.public-list.update');
 
 Route::get('a/{shareToken}', [EventController::class, 'album'])->name('events.album');
 Route::get('a/{shareToken}/assets', [EventController::class, 'albumAssets'])

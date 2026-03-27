@@ -14,6 +14,7 @@ it('shows the guest parties page for an event owner', function () {
 
     $guestParty = EventGuestParty::factory()->for($event)->create([
         'name' => 'Familia Popescu',
+        'table_name' => 'Table 7',
         'invited_attendees_count' => 4,
         'attendance_status' => 'accepted',
         'confirmed_attendees_count' => 4,
@@ -41,10 +42,13 @@ it('shows the guest parties page for an event owner', function () {
             ->where('guestPartyStats.confirmedAttendeesCount', 4)
             ->where('guestPartyStats.actualAttendeesCount', 4)
             ->where('guestPartyStats.moneyGiftTotal', 300)
+            ->where('publicGuestListUrl', route('events.guests.public-list.show', $event->share_token))
             ->has('guestParties', 1)
             ->where('guestParties.0.name', 'Familia Popescu')
+            ->where('guestParties.0.tableName', 'Table 7')
             ->where('guestParties.0.actualAttendanceStatus', 'present')
             ->where('guestParties.0.giftType', 'money')
+            ->where('guestParties.0.publicCheckInUrl', route('events.guests.public-list.update', [$event->share_token, $guestParty]))
             ->where('guestParties.0.updateUrl', route('events.guests.update', [$event, $guestParty]))
             ->where('guestParties.0.reminderCount', 1)
             ->where('guestParties.0.invitationHistory.0.type', 'reminded')
@@ -98,25 +102,17 @@ it('shows the printable guest report for an event owner', function () {
         );
 });
 
-it('allows an event owner to add a guest party with ledger details', function () {
+it('allows an event owner to add an invitee with only the required defaults', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create();
 
     $this->actingAs($owner)
         ->post(route('events.guests.store', $event), [
             'name' => 'Familia Ionescu',
-            'phone' => '0722123456',
-            'invited_attendees_count' => 3,
-            'confirmed_attendees_count' => 3,
-            'attendance_status' => 'accepted',
-            'actual_attendance_status' => 'present',
-            'actual_attendees_count' => 3,
-            'notes' => 'Close family friends',
-            'invitation_status' => 'delivered_in_person',
-            'invitation_delivery_channel' => 'in_person',
-            'gift_type' => 'money',
-            'gift_currency' => 'EUR',
-            'gift_amount' => '400',
+            'invited_attendees_count' => 1,
+            'attendance_status' => 'pending',
+            'actual_attendance_status' => 'unknown',
+            'invitation_status' => 'draft',
         ])
         ->assertRedirect();
 
@@ -124,18 +120,19 @@ it('allows an event owner to add a guest party with ledger details', function ()
 
     expect($party)->not->toBeNull()
         ->and($party?->name)->toBe('Familia Ionescu')
-        ->and($party?->phone)->toBe('0722123456')
-        ->and($party?->invited_attendees_count)->toBe(3)
-        ->and($party?->confirmed_attendees_count)->toBe(3)
-        ->and($party?->attendance_status)->toBe('accepted')
-        ->and($party?->actual_attendance_status)->toBe('present')
-        ->and($party?->actual_attendees_count)->toBe(3)
-        ->and($party?->invitation_status)->toBe('delivered_in_person')
-        ->and($party?->gift_type)->toBe('money')
-        ->and($party?->gift_currency)->toBe('EUR')
-        ->and((string) $party?->gift_amount)->toBe('400.00')
+        ->and($party?->phone)->toBeNull()
+        ->and($party?->table_name)->toBeNull()
+        ->and($party?->invited_attendees_count)->toBe(1)
+        ->and($party?->confirmed_attendees_count)->toBeNull()
+        ->and($party?->attendance_status)->toBe('pending')
+        ->and($party?->actual_attendance_status)->toBe('unknown')
+        ->and($party?->actual_attendees_count)->toBeNull()
+        ->and($party?->invitation_status)->toBe('draft')
+        ->and($party?->gift_type)->toBeNull()
+        ->and($party?->gift_currency)->toBeNull()
+        ->and($party?->gift_amount)->toBeNull()
         ->and($party?->invitation_token)->not->toBeNull()
-        ->and($party?->invitation_delivered_at)->not->toBeNull();
+        ->and($party?->invitation_delivered_at)->toBeNull();
 });
 
 it('imports guest parties from messy pasted text and skips duplicates', function () {
@@ -240,6 +237,36 @@ it('allows an event owner to bulk mark invitations as delivered or sent', functi
         ->and($secondParty->invitation_delivery_channel)->toBe('in_person')
         ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $firstParty->id)->where('activity_type', 'delivered_in_person')->exists())->toBeTrue()
         ->and(EventGuestPartyInvitationActivity::query()->where('event_guest_party_id', $secondParty->id)->where('activity_type', 'delivered_in_person')->exists())->toBeTrue();
+});
+
+it('shows the public guest list and lets staff mark an invitee as present', function () {
+    $event = Event::factory()->create([
+        'name' => 'Jessica & Simon Wedding',
+    ]);
+
+    $guestParty = EventGuestParty::factory()->for($event)->create([
+        'name' => 'Familia Popescu',
+        'table_name' => 'Table 5',
+        'actual_attendance_status' => 'unknown',
+        'confirmed_attendees_count' => 3,
+        'invited_attendees_count' => 3,
+    ]);
+
+    $this->get(route('events.guests.public-list.show', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/GuestList')
+            ->where('currentEvent.name', 'Jessica & Simon Wedding')
+            ->where('guestParties.0.name', 'Familia Popescu')
+            ->where('guestParties.0.tableName', 'Table 5')
+        );
+
+    $this->patch(route('events.guests.public-list.update', [$event->share_token, $guestParty]), [
+        'actual_attendance_status' => 'present',
+    ])->assertRedirect();
+
+    expect($guestParty->fresh()->actual_attendance_status)->toBe('present')
+        ->and($guestParty->fresh()->actual_attendees_count)->toBe(3);
 });
 
 it('allows an event owner to mark pending invitations as reminded', function () {

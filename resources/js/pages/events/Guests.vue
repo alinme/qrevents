@@ -7,6 +7,7 @@ import {
     Download,
     ExternalLink,
     Import,
+    ListChecks,
     Pencil,
     Phone,
     Printer,
@@ -73,6 +74,7 @@ type EventLinks = {
     guestPartiesImport: string;
     guestInvitationsBulkUpdate: string;
     invitationSettingsUpdate: string;
+    publicGuestList: string;
 };
 
 type EventInvitationSettings = {
@@ -88,6 +90,7 @@ type GuestParty = {
     id: number;
     name: string;
     phone: string | null;
+    tableName: string | null;
     invitedAttendeesCount: number;
     confirmedAttendeesCount: number | null;
     attendanceStatus: 'pending' | 'accepted' | 'declined';
@@ -118,6 +121,7 @@ type GuestParty = {
     mealPreference: 'standard' | 'vegetarian' | 'vegan' | 'halal' | 'other' | null;
     responseNotes: string | null;
     inviteUrl: string;
+    publicCheckInUrl: string;
     updateUrl: string;
     deleteUrl: string;
 };
@@ -163,6 +167,7 @@ const props = defineProps<{
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
+    publicGuestListUrl: string;
     invitationPreview: InvitationPreviewPayload;
     guestLedgerExportUrl: string;
     guestPartyStats: GuestPartyStats;
@@ -171,6 +176,7 @@ const props = defineProps<{
 
 const currentEvent = props.currentEvent;
 const publicInvitationUrl = props.publicInvitationUrl;
+const publicGuestListUrl = props.publicGuestListUrl;
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -189,8 +195,9 @@ const deleteDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
 const showInvitationAdvanced = ref(false);
+const showGuestAdvanced = ref(false);
 const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
-const activeSection = ref<'families' | 'invitation' | 'ledger'>('families');
+const activeSection = ref<'invitees' | 'invitation' | 'ledger' | 'guest_list'>('invitees');
 const expandedGuestPartyId = ref<number | null>(null);
 const quickSavingGuestId = ref<number | null>(null);
 const selectedGuestIds = ref<number[]>([]);
@@ -203,6 +210,7 @@ const quickGiftAmounts = ref<Record<number, string>>({});
 const guestForm = useForm({
     name: '',
     phone: '',
+    table_name: '',
     invited_attendees_count: 1,
     confirmed_attendees_count: '',
     attendance_status: 'pending',
@@ -282,6 +290,26 @@ const selectedGuestParties = computed(() => props.guestParties.filter((party) =>
 const selectedPendingGuestParties = computed(() => selectedGuestParties.value.filter((party) => party.attendanceStatus === 'pending'));
 const pendingInvitationParties = computed(() => props.guestParties.filter((party) => party.attendanceStatus === 'pending'));
 const allGuestsSelected = computed(() => filteredGuestParties.value.length > 0 && filteredGuestParties.value.every((party) => selectedGuestIds.value.includes(party.id)));
+const guestListSearch = ref('');
+const guestListParties = computed(() => {
+    const search = guestListSearch.value.trim().toLowerCase();
+
+    return [...props.guestParties]
+        .filter((party) => search === ''
+            || party.name.toLowerCase().includes(search)
+            || (party.phone ?? '').toLowerCase().includes(search)
+            || (party.tableName ?? '').toLowerCase().includes(search))
+        .sort((left, right) => {
+            const leftPending = left.actualAttendanceStatus === 'unknown' ? 1 : 0;
+            const rightPending = right.actualAttendanceStatus === 'unknown' ? 1 : 0;
+
+            if (leftPending !== rightPending) {
+                return rightPending - leftPending;
+            }
+
+            return left.name.localeCompare(right.name);
+        });
+});
 const retentionReminder = computed(() => {
     if (!props.currentEvent.retentionEndsAt) {
         return null;
@@ -306,7 +334,7 @@ const statCards = computed(() => [
     {
         label: 'Parties',
         value: props.guestPartyStats.partyCount,
-        detail: 'Families on the list',
+        detail: 'Invitees on the list',
         icon: Users,
     },
     {
@@ -340,7 +368,7 @@ const statCards = computed(() => [
 
 const familyOverview = computed(() => [
     {
-        label: 'Families',
+        label: 'Invitees',
         value: props.guestPartyStats.partyCount,
     },
     {
@@ -532,11 +560,13 @@ const openCreateDialog = (): void => {
     activeGuestParty.value = null;
     guestForm.reset();
     guestForm.clearErrors();
+    guestForm.table_name = '';
     guestForm.attendance_status = 'pending';
     guestForm.invitation_status = 'draft';
     guestForm.invited_attendees_count = 1;
     guestForm.gift_currency = 'EUR';
     guestForm.actual_attendance_status = 'unknown';
+    showGuestAdvanced.value = false;
     guestDialogOpen.value = true;
 };
 
@@ -545,6 +575,7 @@ const openEditDialog = (party: GuestParty): void => {
     guestForm.clearErrors();
     guestForm.name = party.name;
     guestForm.phone = party.phone ?? '';
+    guestForm.table_name = party.tableName ?? '';
     guestForm.invited_attendees_count = party.invitedAttendeesCount;
     guestForm.confirmed_attendees_count = party.confirmedAttendeesCount?.toString() ?? '';
     guestForm.attendance_status = party.attendanceStatus;
@@ -556,6 +587,7 @@ const openEditDialog = (party: GuestParty): void => {
     guestForm.gift_type = party.giftType ?? '';
     guestForm.gift_currency = party.giftCurrency ?? 'EUR';
     guestForm.gift_amount = party.giftAmount ?? '';
+    showGuestAdvanced.value = true;
     guestDialogOpen.value = true;
 };
 
@@ -597,7 +629,11 @@ const saveGuestParty = (): void => {
         onSuccess: () => {
             guestDialogOpen.value = false;
             guestForm.reset();
+            guestForm.table_name = '';
             guestForm.actual_attendance_status = 'unknown';
+            guestForm.invitation_status = 'draft';
+            guestForm.invited_attendees_count = 1;
+            showGuestAdvanced.value = false;
         },
     });
 };
@@ -669,6 +705,7 @@ const guestPartyUpdatePayload = (
     return {
         name: party.name,
         phone: party.phone ?? '',
+        table_name: party.tableName ?? '',
         invited_attendees_count: overrides.invited_attendees_count ?? party.invitedAttendeesCount,
         confirmed_attendees_count: overrides.confirmed_attendees_count ?? party.confirmedAttendeesCount,
         attendance_status: overrides.attendance_status ?? party.attendanceStatus,
@@ -878,7 +915,7 @@ const shareGuestPartyBundle = async (
     mode: 'invite' | 'reminder',
 ): Promise<void> => {
     if (parties.length === 0) {
-        toast.error(mode === 'reminder' ? 'No pending guest parties to remind.' : 'Select at least one guest party first.');
+        toast.error(mode === 'reminder' ? 'No pending invitees to remind.' : 'Select at least one invitee first.');
 
         return;
     }
@@ -992,7 +1029,7 @@ const saveQuickGift = (party: GuestParty): void => {
 
 const copyPendingInvites = async (): Promise<void> => {
     if (pendingInvitationParties.value.length === 0) {
-        toast.error('There are no pending families to copy right now.');
+        toast.error('There are no pending invitees to copy right now.');
 
         return;
     }
@@ -1007,7 +1044,7 @@ const copyPendingInvites = async (): Promise<void> => {
 
 const copySelectedInvites = async (): Promise<void> => {
     if (selectedGuestParties.value.length === 0) {
-        toast.error('Select at least one guest party first.');
+        toast.error('Select at least one invitee first.');
 
         return;
     }
@@ -1146,18 +1183,18 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             </span>
                         </div>
                         <p class="max-w-2xl text-sm text-neutral-600">
-                            Work on one thing at a time: families, invitation, or ledger.
+                            Work on one thing at a time: invitees, invitation, ledger, or guest list.
                         </p>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                        <Button v-if="activeSection === 'families'" variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
+                        <Button v-if="activeSection === 'invitees'" variant="outline" class="h-10 rounded-full px-4" @click="importDialogOpen = true">
                             <Import class="mr-2 size-4" />
                             Import
                         </Button>
-                        <Button v-if="activeSection === 'families'" class="h-10 rounded-full px-4" @click="openCreateDialog">
+                        <Button v-if="activeSection === 'invitees'" class="h-10 rounded-full px-4" @click="openCreateDialog">
                             <UserPlus class="mr-2 size-4" />
-                            Add family
+                            Add invitee
                         </Button>
                         <Button v-if="activeSection === 'ledger'" variant="outline" class="h-10 rounded-full px-4" @click="exportGuestLedger">
                             <Download class="mr-2 size-4" />
@@ -1167,6 +1204,14 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             <Printer class="mr-2 size-4" />
                             Report
                         </Button>
+                        <Button v-if="activeSection === 'guest_list'" variant="outline" class="h-10 rounded-full px-4" @click="copyLink(publicGuestListUrl, 'Guest list link')">
+                            <Copy class="mr-2 size-4" />
+                            Copy guest list
+                        </Button>
+                        <Button v-if="activeSection === 'guest_list'" class="h-10 rounded-full px-4" @click="openInvite(publicGuestListUrl)">
+                            <ExternalLink class="mr-2 size-4" />
+                            Open guest list
+                        </Button>
                     </div>
                 </div>
 
@@ -1175,12 +1220,12 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         type="button"
                         :class="[
                             'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition',
-                            activeSection === 'families' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
+                            activeSection === 'invitees' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
                         ]"
-                        @click="activeSection = 'families'"
+                        @click="activeSection = 'invitees'"
                     >
                         <Users class="size-4" />
-                        <span>Families</span>
+                        <span>Invitees</span>
                     </button>
                     <button
                         type="button"
@@ -1204,10 +1249,21 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <Wallet class="size-4" />
                         <span>Ledger</span>
                     </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition',
+                            activeSection === 'guest_list' ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300',
+                        ]"
+                        @click="activeSection = 'guest_list'"
+                    >
+                        <ListChecks class="size-4" />
+                        <span>Guest list</span>
+                    </button>
                 </div>
             </section>
 
-            <section v-if="activeSection === 'families'" class="space-y-4">
+            <section v-if="activeSection === 'invitees'" class="space-y-4">
                 <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
                     <div class="grid gap-px bg-neutral-200 sm:grid-cols-3">
                         <div
@@ -1229,10 +1285,10 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     <div class="flex flex-col gap-3 border-b border-neutral-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h2 class="text-base font-semibold text-neutral-950">
-                                Families
+                                Invitees
                             </h2>
                             <p class="text-sm text-neutral-600">
-                                {{ guestParties.length }} total records
+                                {{ guestParties.length }} people or families on the list
                             </p>
                         </div>
 
@@ -1252,10 +1308,10 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
                             <div class="relative">
                                 <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-                                <Input v-model="guestSearch" class="pl-9" placeholder="Search family, phone, or notes" />
+                                <Input v-model="guestSearch" class="pl-9" placeholder="Search invitee, phone, or notes" />
                             </div>
                             <NativeSelect v-model="guestFilter">
-                                <NativeSelectOption value="all">All guest parties</NativeSelectOption>
+                                <NativeSelectOption value="all">All invitees</NativeSelectOption>
                                 <NativeSelectOption value="needing_reply">Need reply</NativeSelectOption>
                                 <NativeSelectOption value="accepted">Accepted RSVP</NativeSelectOption>
                                 <NativeSelectOption value="declined">Declined RSVP</NativeSelectOption>
@@ -1272,14 +1328,14 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     <div v-if="guestParties.length === 0" class="px-5 py-12 text-center">
                         <Users class="mx-auto size-10 text-neutral-300" />
                         <h3 class="mt-4 text-lg font-semibold text-neutral-950">
-                            No guest parties yet
+                            No invitees yet
                         </h3>
                         <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
-                            Start with one family manually or paste a list like <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span>.
+                            Start with one name and add the rest later, or paste a list like <span class="font-medium text-neutral-900">Familia Popescu - 0722...</span>.
                         </p>
                         <div class="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
                             <Button class="rounded-full px-5" @click="openCreateDialog">
-                                Add first guest party
+                                Add first invitee
                             </Button>
                             <Button variant="outline" class="rounded-full px-5" @click="importDialogOpen = true">
                                 Paste or upload a list
@@ -1353,7 +1409,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         >
                             <Users class="mx-auto size-10 text-neutral-300" />
                             <h3 class="mt-4 text-lg font-semibold text-neutral-950">
-                                No guest parties match this filter
+                                No invitees match this filter
                             </h3>
                             <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-600">
                                 Try a different filter or clear the search.
@@ -1390,6 +1446,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         <Phone class="size-4" />
                                         {{ party.phone || 'No phone saved' }}
                                     </span>
+                                    <span>{{ party.tableName || 'No table set' }}</span>
                                     <span>Invited {{ party.invitedAttendeesCount }}</span>
                                     <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
                                     <span v-if="party.actualAttendeesCount !== null">Came {{ party.actualAttendeesCount }}</span>
@@ -1749,7 +1806,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                         Public RSVP link
                                     </p>
                                     <p class="mt-1 text-sm text-neutral-600">
-                                        Share this if a family is not already on the list.
+                                        Share this if someone is not already on the list.
                                     </p>
                                 </div>
                                 <span
@@ -1824,7 +1881,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 </div>
             </section>
 
-            <section v-else class="space-y-4">
+            <section v-else-if="activeSection === 'ledger'" class="space-y-4">
                 <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
                     <div class="grid gap-px bg-neutral-200 sm:grid-cols-2 xl:grid-cols-5">
                         <div
@@ -1852,7 +1909,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 Event day ledger
                             </h2>
                             <p class="mt-1 text-sm text-neutral-600">
-                                Mark who came, then record the family gift right here.
+                                Mark who came, then record the gift or money right here.
                             </p>
                         </div>
 
@@ -1982,21 +2039,132 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                     </div>
                 </section>
             </section>
+
+            <section v-else class="space-y-4">
+                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+                    <div class="grid gap-px bg-neutral-200 sm:grid-cols-3">
+                        <div class="bg-white px-4 py-3">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                Invitees
+                            </p>
+                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ props.guestPartyStats.partyCount }}
+                            </p>
+                        </div>
+                        <div class="bg-white px-4 py-3">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                Marked present
+                            </p>
+                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ props.guestPartyStats.presentPartyCount }}
+                            </p>
+                        </div>
+                        <div class="bg-white px-4 py-3">
+                            <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                                Not recorded
+                            </p>
+                            <p class="mt-1.5 text-xl font-semibold tracking-tight text-neutral-950">
+                                {{ props.guestPartyStats.partyCount - props.guestPartyStats.presentPartyCount - props.guestPartyStats.absentPartyCount }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-neutral-950">
+                                Entrance guest list
+                            </h2>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                Search fast, check who arrived, and see their table.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Button variant="outline" class="rounded-full px-5" @click="copyLink(publicGuestListUrl, 'Guest list link')">
+                                <Copy class="mr-2 size-4" />
+                                Copy link
+                            </Button>
+                            <Button class="rounded-full px-5" @click="openInvite(publicGuestListUrl)">
+                                <ExternalLink class="mr-2 size-4" />
+                                Open public page
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+                        <div class="space-y-3">
+                            <div class="relative">
+                                <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+                                <Input v-model="guestListSearch" class="pl-9" placeholder="Search invitee, phone, or table" />
+                            </div>
+
+                            <div class="divide-y divide-neutral-200 overflow-hidden rounded-2xl border border-neutral-200">
+                                <div
+                                    v-for="party in guestListParties"
+                                    :key="party.id"
+                                    class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                                >
+                                    <div class="min-w-0 space-y-1">
+                                        <p class="truncate text-sm font-semibold text-neutral-950">
+                                            {{ party.name }}
+                                        </p>
+                                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
+                                            <span>{{ party.phone || 'No phone saved' }}</span>
+                                            <span>{{ party.tableName || 'No table set' }}</span>
+                                            <span v-if="party.confirmedAttendeesCount !== null">Confirmed {{ party.confirmedAttendeesCount }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button variant="outline" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="markGuestPartyPresent(party)">
+                                            Came
+                                        </Button>
+                                        <Button variant="outline" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="markGuestPartyAbsent(party)">
+                                            No show
+                                        </Button>
+                                        <Button variant="ghost" class="rounded-full px-4" :disabled="quickSavingGuestId === party.id" @click="resetGuestPartyAttendance(party)">
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div v-if="guestListParties.length === 0" class="px-4 py-8 text-sm text-neutral-500">
+                                    No invitees match this search.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 border-t border-neutral-200 pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                            <p class="text-sm font-semibold text-neutral-950">
+                                Public entrance page
+                            </p>
+                            <p class="text-sm text-neutral-600">
+                                Share this with the people at the entrance so they can search the list and mark arrivals.
+                            </p>
+                            <div class="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 break-all">
+                                {{ publicGuestListUrl }}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
         </div>
 
         <Dialog :open="guestDialogOpen" @update:open="guestDialogOpen = $event">
             <DialogContent class="sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>
-                        {{ isEditing ? 'Edit guest party' : 'Add guest party' }}
+                        {{ isEditing ? 'Edit invitee' : 'Add invitee' }}
                     </DialogTitle>
                     <DialogDescription>
-                        Track the family name, attendance, invitation status, and gift notes in one record.
+                        Start with the name. Everything else can stay on the default settings until you need it.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="grid gap-4 py-2 md:grid-cols-2">
-                    <div class="space-y-2 md:col-span-2">
+                <div class="space-y-4 py-2">
+                    <div class="space-y-2">
                         <label class="text-sm font-medium text-neutral-700">
                             Family / Name
                         </label>
@@ -2006,97 +2174,122 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         </p>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Phone
-                        </label>
-                        <Input v-model="guestForm.phone" placeholder="07..." />
+                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900">
+                                Advanced details
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                Use this only when you want to adjust attendance, invitation, table, or ledger details by hand.
+                            </p>
+                        </div>
+                        <Button variant="outline" class="rounded-full px-4" @click="showGuestAdvanced = !showGuestAdvanced">
+                            {{ showGuestAdvanced ? 'Hide advanced' : 'Show advanced' }}
+                        </Button>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Invited attendees
-                        </label>
-                        <Input v-model="guestForm.invited_attendees_count" type="number" min="1" max="1000" />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Attendance status
-                        </label>
-                        <NativeSelect v-model="guestForm.attendance_status">
-                            <NativeSelectOption value="pending">Waiting</NativeSelectOption>
-                            <NativeSelectOption value="accepted">Accepted</NativeSelectOption>
-                            <NativeSelectOption value="declined">Declined</NativeSelectOption>
-                        </NativeSelect>
-                    </div>
-
-                    <div v-if="showConfirmedCount" class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Confirmed attendees
-                        </label>
-                        <Input v-model="guestForm.confirmed_attendees_count" type="number" min="0" max="1000" />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Actually attended
-                        </label>
-                        <NativeSelect v-model="guestForm.actual_attendance_status">
-                            <NativeSelectOption value="unknown">Not recorded yet</NativeSelectOption>
-                            <NativeSelectOption value="present">Came to the event</NativeSelectOption>
-                            <NativeSelectOption value="absent">Did not come</NativeSelectOption>
-                        </NativeSelect>
-                    </div>
-
-                    <div v-if="showActualCount" class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Attended count
-                        </label>
-                        <Input v-model="guestForm.actual_attendees_count" type="number" min="0" max="1000" />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Invitation status
-                        </label>
-                        <NativeSelect v-model="guestForm.invitation_status">
-                            <NativeSelectOption value="draft">Draft</NativeSelectOption>
-                            <NativeSelectOption value="delivered_in_person">Delivered in person</NativeSelectOption>
-                            <NativeSelectOption value="sent">Sent online</NativeSelectOption>
-                            <NativeSelectOption value="opened">Opened</NativeSelectOption>
-                            <NativeSelectOption value="responded">Responded</NativeSelectOption>
-                        </NativeSelect>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Delivery channel
-                        </label>
-                        <NativeSelect v-model="guestForm.invitation_delivery_channel">
-                            <NativeSelectOption value="">Not set</NativeSelectOption>
-                            <NativeSelectOption value="in_person">In person</NativeSelectOption>
-                            <NativeSelectOption value="phone">Phone</NativeSelectOption>
-                            <NativeSelectOption value="whatsapp">WhatsApp</NativeSelectOption>
-                            <NativeSelectOption value="facebook">Facebook</NativeSelectOption>
-                            <NativeSelectOption value="public_link">Public link</NativeSelectOption>
-                            <NativeSelectOption value="other">Other</NativeSelectOption>
-                        </NativeSelect>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Gift type
-                        </label>
-                        <NativeSelect v-model="guestForm.gift_type">
-                            <NativeSelectOption value="">Not set</NativeSelectOption>
-                            <NativeSelectOption value="money">Money</NativeSelectOption>
-                            <NativeSelectOption value="gift">Gift</NativeSelectOption>
-                        </NativeSelect>
-                    </div>
-
-                    <template v-if="showGiftAmount">
+                    <div v-if="showGuestAdvanced" class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Phone
+                            </label>
+                            <Input v-model="guestForm.phone" placeholder="07..." />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Table
+                            </label>
+                            <Input v-model="guestForm.table_name" placeholder="Table 8" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Party size
+                            </label>
+                            <Input v-model="guestForm.invited_attendees_count" type="number" min="1" max="1000" />
+                            <p class="text-xs text-neutral-500">
+                                Defaults to 1. Change it only if you already know this group will come together.
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                RSVP status
+                            </label>
+                            <NativeSelect v-model="guestForm.attendance_status">
+                                <NativeSelectOption value="pending">Waiting</NativeSelectOption>
+                                <NativeSelectOption value="accepted">Accepted</NativeSelectOption>
+                                <NativeSelectOption value="declined">Declined</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div v-if="showConfirmedCount" class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Confirmed attendees
+                            </label>
+                            <Input v-model="guestForm.confirmed_attendees_count" type="number" min="0" max="1000" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Actually attended
+                            </label>
+                            <NativeSelect v-model="guestForm.actual_attendance_status">
+                                <NativeSelectOption value="unknown">Not recorded yet</NativeSelectOption>
+                                <NativeSelectOption value="present">Came to the event</NativeSelectOption>
+                                <NativeSelectOption value="absent">Did not come</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div v-if="showActualCount" class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Attended count
+                            </label>
+                            <Input v-model="guestForm.actual_attendees_count" type="number" min="0" max="1000" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Invitation status
+                            </label>
+                            <NativeSelect v-model="guestForm.invitation_status">
+                                <NativeSelectOption value="draft">Draft</NativeSelectOption>
+                                <NativeSelectOption value="delivered_in_person">Delivered in person</NativeSelectOption>
+                                <NativeSelectOption value="sent">Sent online</NativeSelectOption>
+                                <NativeSelectOption value="opened">Opened</NativeSelectOption>
+                                <NativeSelectOption value="responded">Responded</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Delivery channel
+                            </label>
+                            <NativeSelect v-model="guestForm.invitation_delivery_channel">
+                                <NativeSelectOption value="">Not set</NativeSelectOption>
+                                <NativeSelectOption value="in_person">In person</NativeSelectOption>
+                                <NativeSelectOption value="phone">Phone</NativeSelectOption>
+                                <NativeSelectOption value="whatsapp">WhatsApp</NativeSelectOption>
+                                <NativeSelectOption value="facebook">Facebook</NativeSelectOption>
+                                <NativeSelectOption value="public_link">Public link</NativeSelectOption>
+                                <NativeSelectOption value="other">Other</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700">
+                                Gift type
+                            </label>
+                            <NativeSelect v-model="guestForm.gift_type">
+                                <NativeSelectOption value="">Not set</NativeSelectOption>
+                                <NativeSelectOption value="money">Money</NativeSelectOption>
+                                <NativeSelectOption value="gift">Gift</NativeSelectOption>
+                            </NativeSelect>
+                        </div>
+
+                        <template v-if="showGiftAmount">
+                            <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700">
                                 Currency
                             </label>
@@ -2105,25 +2298,26 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 <NativeSelectOption value="GBP">GBP</NativeSelectOption>
                                 <NativeSelectOption value="RON">RON</NativeSelectOption>
                             </NativeSelect>
-                        </div>
+                            </div>
 
-                        <div class="space-y-2">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-700">
+                                    Amount
+                                </label>
+                                <Input v-model="guestForm.gift_amount" type="number" min="0" step="0.01" />
+                            </div>
+                        </template>
+
+                        <div class="space-y-2 md:col-span-2">
                             <label class="text-sm font-medium text-neutral-700">
-                                Amount
+                                Notes
                             </label>
-                            <Input v-model="guestForm.gift_amount" type="number" min="0" step="0.01" />
+                            <Textarea
+                                v-model="guestForm.notes"
+                                rows="4"
+                                placeholder="Example: Marcel + wife + 2 kids, close family friends, table near band."
+                            />
                         </div>
-                    </template>
-
-                    <div class="space-y-2 md:col-span-2">
-                        <label class="text-sm font-medium text-neutral-700">
-                            Notes
-                        </label>
-                        <Textarea
-                            v-model="guestForm.notes"
-                            rows="4"
-                            placeholder="Example: Marcel + wife + 2 kids, close family friends, table near band."
-                        />
                     </div>
                 </div>
 
@@ -2132,7 +2326,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                         Cancel
                     </Button>
                     <Button class="rounded-full px-5" :disabled="guestForm.processing" @click="saveGuestParty">
-                        {{ isEditing ? 'Save changes' : 'Add guest party' }}
+                        {{ isEditing ? 'Save changes' : 'Add invitee' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -2222,9 +2416,9 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
         <AlertDialog :open="deleteDialogOpen" @update:open="deleteDialogOpen = $event">
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete guest party?</AlertDialogTitle>
+                    <AlertDialogTitle>Delete invitee?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This removes the guest party record and its ledger details from this event.
+                        This removes the invitee record and its ledger details from this event.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

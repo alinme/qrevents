@@ -17,6 +17,7 @@ class EventGuestParty extends Model
         'event_id',
         'name',
         'phone',
+        'table_name',
         'invited_attendees_count',
         'confirmed_attendees_count',
         'actual_attendees_count',
