@@ -1241,18 +1241,6 @@ const actualAttendanceLabel = (status: GuestParty['actualAttendanceStatus']): st
     }[status];
 };
 
-const actualAttendanceRowClass = (status: GuestParty['actualAttendanceStatus']): string => {
-    if (status === 'present') {
-        return 'bg-emerald-50/80';
-    }
-
-    if (status === 'absent') {
-        return 'bg-rose-50/70';
-    }
-
-    return '';
-};
-
 const invitationLabel = (status: GuestParty['invitationStatus']): string => {
     return {
         draft: 'Draft',
@@ -2248,10 +2236,7 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                                 <div
                                     v-for="party in guestListParties"
                                     :key="party.id"
-                                    :class="[
-                                        'flex flex-col gap-3 py-3 transition-colors lg:flex-row lg:items-center lg:justify-between',
-                                        actualAttendanceRowClass(party.actualAttendanceStatus),
-                                    ]"
+                                    class="flex flex-col gap-3 py-3 transition-colors lg:flex-row lg:items-center lg:justify-between"
                                 >
                                     <div class="min-w-0 space-y-1">
                                         <p class="truncate text-sm font-semibold text-neutral-950">

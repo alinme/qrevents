@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { CheckCircle2, Clock3, Eye, Search, XCircle } from 'lucide-vue-next';
+import { CheckCircle2, Clock3, Eye, Search, Table2, XCircle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import {
     Dialog,
@@ -71,22 +71,14 @@ const attendanceLabel = (status: GuestListParty['actualAttendanceStatus']): stri
     }[status];
 };
 
-const actualAttendanceRowClass = (status: GuestListParty['actualAttendanceStatus']): string => {
-    if (status === 'present') {
-        return 'bg-emerald-50/80';
-    }
-
-    if (status === 'absent') {
-        return 'bg-rose-50/70';
-    }
-
-    return '';
-};
-
 const openDetails = (party: GuestListParty): void => {
     detailsParty.value = party;
     selectedTableId.value = party.eventTableId?.toString() ?? '';
     detailsDialogOpen.value = true;
+};
+
+const openTableAssignment = (party: GuestListParty): void => {
+    openDetails(party);
 };
 
 const selectableTables = computed(() => props.eventTables.map((table) => ({
@@ -156,7 +148,7 @@ const saveTableAssignment = (): void => {
                     {{ currentEvent.name }}
                 </h1>
                 <p class="max-w-2xl text-sm text-stone-600 md:text-base">
-                    Search an invitee, check where they are seated, and mark them as arrived.
+                    Search an invitee, greet them, check them in, and tell them where to sit.
                 </p>
             </section>
 
@@ -174,10 +166,7 @@ const saveTableAssignment = (): void => {
                     <div
                         v-for="party in filteredGuestParties"
                         :key="party.id"
-                        :class="[
-                            'flex flex-col gap-3 px-1 py-3 transition-colors md:flex-row md:items-center md:justify-between',
-                            actualAttendanceRowClass(party.actualAttendanceStatus),
-                        ]"
+                        class="flex flex-col gap-3 px-1 py-3 transition-colors md:flex-row md:items-center md:justify-between"
                     >
                         <div class="min-w-0 space-y-1">
                             <p class="truncate text-base font-semibold text-stone-950">
@@ -191,6 +180,14 @@ const saveTableAssignment = (): void => {
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
+                            <Button
+                                variant="outline"
+                                class="rounded-full px-4"
+                                @click="openTableAssignment(party)"
+                            >
+                                <Table2 class="mr-2 size-4" />
+                                {{ party.tableName ? 'Change table' : 'Assign table' }}
+                            </Button>
                             <Button
                                 variant="outline"
                                 class="rounded-full px-4"
@@ -306,9 +303,9 @@ const saveTableAssignment = (): void => {
                             </div>
                         </div>
 
-                        <p v-else class="text-sm text-stone-500">
-                            No tables have been added yet by the host.
-                        </p>
+                        <div v-else class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                            No tables have been created by the host yet, so the entrance team cannot assign seating from this page yet.
+                        </div>
                     </div>
                 </div>
             </DialogContent>
