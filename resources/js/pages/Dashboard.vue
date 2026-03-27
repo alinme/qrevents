@@ -118,11 +118,11 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 {{ ownerName }}, everything starts here. Pick your event, then go straight to workspace, media, or settings.
                             </p>
                         </div>
-                        <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
                             <div
                                 v-for="card in compactStats"
                                 :key="card.label"
-                                class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-4 py-3"
+                                class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
                             >
                                 <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                                     <component :is="card.icon" class="size-3.5 text-zinc-400" />
@@ -140,238 +140,234 @@ const workspaceLabel = (event: DashboardEvent): string =>
 
                     <div
                         v-if="continueSetupEvent"
-                        class="mt-4 rounded-[1.1rem] border border-amber-200 bg-amber-50/80 px-4 py-3"
+                        class="mt-5 flex flex-col gap-3 border-t border-amber-200/80 pt-4 sm:flex-row sm:items-center sm:justify-between"
                     >
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-amber-950">
+                                {{ continueSetupEvent.name }} still needs setup.
+                            </p>
+                            <p class="text-sm text-amber-800">
+                                Finish onboarding, then manage it here with the rest of your events.
+                            </p>
+                        </div>
+                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                            <Link :href="continueSetupEvent.primaryAction.url">
+                                Continue setup
+                            </Link>
+                        </Button>
+                    </div>
+
+                </section>
+
+                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.9fr)]">
+                    <section id="events" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                        <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
                             <div>
-                                <p class="text-sm font-semibold text-amber-950">
-                                    {{ continueSetupEvent.name }} still needs setup.
-                                </p>
-                                <p class="text-sm text-amber-800">
-                                    Finish onboarding, then manage it here with the rest of your events.
+                                <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                    Events
+                                </h2>
+                                <p class="mt-1 text-sm text-zinc-600">
+                                    Pick one and continue where you left off.
                                 </p>
                             </div>
-                            <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                <Link :href="continueSetupEvent.primaryAction.url">
-                                    Continue setup
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-
-                </section>
-
-                <section id="events" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                Events
-                            </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
-                                Pick one and continue where you left off.
+                            <p class="text-sm text-zinc-500">
+                                {{ totalAccessibleEvents }} total
                             </p>
                         </div>
-                        <p class="text-sm text-zinc-500">
-                            {{ totalAccessibleEvents }} total
-                        </p>
-                    </div>
 
-                    <div
-                        v-if="ownedEvents.length === 0 && collaboratorEvents.length === 0"
-                        class="py-10 text-sm leading-6 text-zinc-600"
-                    >
-                        No events are linked to this account yet.
-                    </div>
-
-                    <div v-else class="space-y-5 pt-5">
-                        <div v-if="ownedEvents.length > 0" class="space-y-3">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                Your events
-                            </p>
-
-                            <article
-                                v-for="event in ownedEvents"
-                                :key="`owner-${event.id}`"
-                                class="border-b border-black/5 py-4 last:border-b-0"
-                            >
-                                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                    <div class="min-w-0 space-y-2">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span
-                                                class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                                :class="badgeClass(event.statusTone)"
-                                            >
-                                                {{ event.statusLabel }}
-                                            </span>
-                                            <span
-                                                class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                                :class="badgeClass(event.billingTone)"
-                                            >
-                                                {{ event.billingLabel }}
-                                            </span>
-                                            <span class="text-xs text-zinc-500">
-                                                {{ event.plan }}
-                                            </span>
-                                        </div>
-
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
-                                                {{ event.name }}
-                                            </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                {{ formatDateOnly(event.eventDate) }} ·
-                                                {{ event.guestCount }} guests ·
-                                                {{ event.assetCount }} uploads ·
-                                                {{ event.processingCount }} pending
-                                            </p>
-                                            <p class="mt-1 text-xs text-zinc-500">
-                                                {{
-                                                    event.lastUploadAt
-                                                        ? `Last upload ${formatDateTime(event.lastUploadAt)}`
-                                                        : 'No guest uploads yet'
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button
-                                            as-child
-                                            size="sm"
-                                            class="bg-[#171411] text-white hover:bg-[#2b2621]"
-                                        >
-                                            <Link :href="event.primaryAction.url">
-                                                {{ workspaceLabel(event) }}
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.media">
-                                                Media
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.settings">
-                                                Settings
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </article>
+                        <div
+                            v-if="ownedEvents.length === 0 && collaboratorEvents.length === 0"
+                            class="py-10 text-sm leading-6 text-zinc-600"
+                        >
+                            No events are linked to this account yet.
                         </div>
 
-                        <div v-if="collaboratorEvents.length > 0" class="space-y-3">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                Shared with you
-                            </p>
+                        <div v-else class="space-y-5 pt-5">
+                            <div v-if="ownedEvents.length > 0" class="space-y-3">
+                                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                    Your events
+                                </p>
 
-                            <article
-                                v-for="event in collaboratorEvents"
-                                :key="`collab-${event.id}`"
-                                class="border-b border-black/5 py-4 last:border-b-0"
-                            >
-                                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                    <div class="min-w-0 space-y-2">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span
-                                                class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                                :class="badgeClass(event.roleTone)"
-                                            >
-                                                {{ event.roleLabel }}
-                                            </span>
-                                            <span
-                                                class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                                :class="badgeClass(event.statusTone)"
-                                            >
-                                                {{ event.statusLabel }}
-                                            </span>
+                                <article
+                                    v-for="event in ownedEvents"
+                                    :key="`owner-${event.id}`"
+                                    class="border-b border-black/5 py-4 last:border-b-0"
+                                >
+                                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div class="min-w-0 space-y-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    :class="badgeClass(event.statusTone)"
+                                                >
+                                                    {{ event.statusLabel }}
+                                                </span>
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    :class="badgeClass(event.billingTone)"
+                                                >
+                                                    {{ event.billingLabel }}
+                                                </span>
+                                                <span class="text-xs text-zinc-500">
+                                                    {{ event.plan }}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
+                                                    {{ event.name }}
+                                                </h3>
+                                                <p class="mt-1 text-sm text-zinc-600">
+                                                    {{ formatDateOnly(event.eventDate) }} ·
+                                                    {{ event.guestCount }} guests ·
+                                                    {{ event.assetCount }} uploads ·
+                                                    {{ event.processingCount }} pending
+                                                </p>
+                                                <p class="mt-1 text-xs text-zinc-500">
+                                                    {{
+                                                        event.lastUploadAt
+                                                            ? `Last upload ${formatDateTime(event.lastUploadAt)}`
+                                                            : 'No guest uploads yet'
+                                                    }}
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
-                                                {{ event.name }}
-                                            </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                {{ formatDateOnly(event.eventDate) }} ·
-                                                {{ event.assetCount }} uploads ·
-                                                {{ event.processingCount }} pending
-                                            </p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <Button
+                                                as-child
+                                                size="sm"
+                                                class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                            >
+                                                <Link :href="event.primaryAction.url">
+                                                    {{ workspaceLabel(event) }}
+                                                </Link>
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <Link :href="event.links.media">
+                                                    Media
+                                                </Link>
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <Link :href="event.links.settings">
+                                                    Settings
+                                                </Link>
+                                            </Button>
                                         </div>
                                     </div>
+                                </article>
+                            </div>
 
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                            <Link :href="event.links.dashboard">
-                                                Workspace
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.media">
-                                                Media
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.settings">
-                                                Settings
-                                            </Link>
-                                        </Button>
+                            <div v-if="collaboratorEvents.length > 0" class="space-y-3">
+                                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                    Shared with you
+                                </p>
+
+                                <article
+                                    v-for="event in collaboratorEvents"
+                                    :key="`collab-${event.id}`"
+                                    class="border-b border-black/5 py-4 last:border-b-0"
+                                >
+                                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div class="min-w-0 space-y-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    :class="badgeClass(event.roleTone)"
+                                                >
+                                                    {{ event.roleLabel }}
+                                                </span>
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    :class="badgeClass(event.statusTone)"
+                                                >
+                                                    {{ event.statusLabel }}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
+                                                    {{ event.name }}
+                                                </h3>
+                                                <p class="mt-1 text-sm text-zinc-600">
+                                                    {{ formatDateOnly(event.eventDate) }} ·
+                                                    {{ event.assetCount }} uploads ·
+                                                    {{ event.processingCount }} pending
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-wrap gap-2">
+                                            <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                                <Link :href="event.links.dashboard">
+                                                    Workspace
+                                                </Link>
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <Link :href="event.links.media">
+                                                    Media
+                                                </Link>
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <Link :href="event.links.settings">
+                                                    Settings
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </article>
+                                </article>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section id="activity" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
+                    <aside id="activity" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                        <div class="flex flex-col gap-2 border-b border-black/5 pb-4">
                             <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
                                 Recent activity
                             </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
+                            <p class="text-sm text-zinc-600">
                                 Quick updates from your guest uploads.
                             </p>
                         </div>
-                        <p class="text-sm text-zinc-500">
-                            {{ recentActivity.length }} shown
-                        </p>
-                    </div>
 
-                    <div v-if="recentActivity.length === 0" class="py-8 text-sm text-zinc-600">
-                        No recent uploads yet.
-                    </div>
+                        <div v-if="recentActivity.length === 0" class="py-8 text-sm text-zinc-600">
+                            No recent uploads yet.
+                        </div>
 
-                    <div v-else class="divide-y divide-black/5">
-                        <Link
-                            v-for="activity in recentActivity"
-                            :key="activity.id"
-                            :href="activity.activityUrl"
-                            class="flex flex-col gap-2 py-3 transition hover:bg-black/[0.015] sm:flex-row sm:items-center sm:justify-between"
-                        >
-                            <div class="min-w-0">
-                                <p class="truncate text-sm text-[#171411]">
-                                    <span class="font-semibold">{{ activity.guestName }}</span>
-                                    in
-                                    <span class="font-medium">{{ activity.eventName }}</span>
-                                    ·
-                                    <span class="text-zinc-600">{{ activity.summary }}</span>
-                                </p>
-                                <p class="mt-1 text-xs text-zinc-500">
-                                    {{ formatDateTime(activity.createdAt) }}
-                                </p>
-                            </div>
+                        <div v-else class="divide-y divide-black/5 pt-2">
+                            <Link
+                                v-for="activity in recentActivity"
+                                :key="activity.id"
+                                :href="activity.activityUrl"
+                                class="flex flex-col gap-2 rounded-[1rem] px-1 py-3 transition hover:bg-black/[0.015]"
+                            >
+                                <div class="min-w-0">
+                                    <p class="text-sm text-[#171411]">
+                                        <span class="font-semibold">{{ activity.guestName }}</span>
+                                        in
+                                        <span class="font-medium">{{ activity.eventName }}</span>
+                                    </p>
+                                    <p class="mt-1 text-sm text-zinc-600">
+                                        {{ activity.summary }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-zinc-500">
+                                        {{ formatDateTime(activity.createdAt) }}
+                                    </p>
+                                </div>
 
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
-                                    :class="moderationBadgeClass(activity.moderationStatus)"
-                                >
-                                    {{ activity.moderationStatus }}
-                                </span>
-                                <ExternalLink class="size-4 text-zinc-400" />
-                            </div>
-                        </Link>
-                    </div>
-                </section>
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
+                                        :class="moderationBadgeClass(activity.moderationStatus)"
+                                    >
+                                        {{ activity.moderationStatus }}
+                                    </span>
+                                    <ExternalLink class="size-4 text-zinc-400" />
+                                </div>
+                            </Link>
+                        </div>
+                    </aside>
+                </div>
             </div>
 
             <Dialog :open="modalOpen" @update:open="modalOpen = $event">

@@ -557,11 +557,11 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <dl class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
                         <div
                             v-for="item in summaryItems"
                             :key="item.label"
-                            class="rounded-[1rem] border border-black/6 bg-[#fcfbf8] px-4 py-3"
+                            class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
                         >
                             <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                                 <component :is="item.icon" class="size-3.5 text-zinc-400" />
@@ -577,143 +577,145 @@ onUnmounted(() => {
                     </dl>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="border-b border-black/5 pb-4">
-                        <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                            Share links
-                        </h2>
-                        <p class="mt-1 text-sm text-zinc-600">
-                            Album and wall links for your guests.
-                        </p>
-                    </div>
-
-                    <div class="divide-y divide-black/5">
-                        <div class="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div class="flex items-start gap-4">
-                                <img
-                                    :src="eventLinks.albumQrDataUrl"
-                                    alt="Digital album QR code"
-                                    class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
-                                />
-                                <div>
-                                    <h3 class="text-sm font-semibold text-[#171411]">
-                                        Digital album
-                                    </h3>
-                                    <p class="mt-1 text-sm text-zinc-600">
-                                        Guests upload and browse from here.
-                                    </p>
-                                </div>
+                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+                    <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                        <div class="flex items-end justify-between gap-4 border-b border-black/5 pb-4">
+                            <div>
+                                <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                    Recent uploads
+                                </h2>
+                                <p class="mt-1 text-sm text-zinc-600">
+                                    Short updates from the guest album.
+                                </p>
                             </div>
-
-                            <div class="flex flex-wrap gap-2">
-                                <Button as-child size="sm" variant="outline">
-                                    <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
-                                        Open
-                                    </a>
-                                </Button>
-                                <Button size="sm" variant="outline" @click="copyText(eventLinks.album, 'Album link copied.')">
-                                    <Copy class="mr-2 size-4" />
-                                    Copy
-                                </Button>
-                                <Button as-child size="sm" variant="outline">
-                                    <a :href="eventLinks.albumQrDataUrl" download="digital-album-qr.svg">
-                                        <Download class="mr-2 size-4" />
-                                        QR
-                                    </a>
-                                </Button>
-                            </div>
+                            <Button as-child size="sm" variant="outline">
+                                <Link :href="eventLinks.media">
+                                    Open media
+                                </Link>
+                            </Button>
                         </div>
 
-                        <div class="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div class="flex items-start gap-4">
-                                <img
-                                    :src="eventLinks.wallQrDataUrl"
-                                    alt="Photo wall QR code"
-                                    class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
-                                />
-                                <div>
-                                    <h3 class="text-sm font-semibold text-[#171411]">
-                                        Photo wall
-                                    </h3>
-                                    <p class="mt-1 text-sm text-zinc-600">
-                                        Open this on a screen during the event.
-                                    </p>
-                                </div>
-                            </div>
+                        <div v-if="dashboardRecentUploads.length === 0" class="py-8 text-sm text-zinc-600">
+                            No uploads yet.
+                        </div>
 
-                            <div class="flex flex-wrap gap-2">
-                                <Button as-child size="sm" variant="outline">
-                                    <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
-                                        Open
-                                    </a>
-                                </Button>
-                                <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
-                                    <Copy class="mr-2 size-4" />
-                                    Copy
-                                </Button>
-                                <Button as-child size="sm" variant="outline">
-                                    <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">
-                                        <Download class="mr-2 size-4" />
-                                        QR
-                                    </a>
-                                </Button>
+                        <div v-else class="divide-y divide-black/5 pt-2">
+                            <div
+                                v-for="upload in dashboardRecentUploads"
+                                :key="upload.id"
+                                class="flex flex-col gap-2 rounded-[1rem] px-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm text-[#171411]">
+                                        <span class="font-semibold">{{ upload.guestName }}</span>
+                                        ·
+                                        <span class="text-zinc-600">{{ recentUploadSummary(upload) }}</span>
+                                    </p>
+                                    <div class="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+                                        <ImageIcon v-if="upload.kind === 'photo'" class="size-4" />
+                                        <Video v-else-if="upload.kind === 'video'" class="size-4" />
+                                        <MessageSquareText v-else class="size-4" />
+                                        <span class="capitalize">{{ upload.kind }}</span>
+                                        <span>·</span>
+                                        <span>{{ formatDateTime(upload.createdAt) }}</span>
+                                    </div>
+                                </div>
+
+                                <span
+                                    class="inline-flex w-fit rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
+                                    :class="moderationToneClass(upload.moderationStatus)"
+                                >
+                                    {{ upload.moderationStatus }}
+                                </span>
                             </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex items-end justify-between gap-4 border-b border-black/5 pb-4">
-                        <div>
+                    <aside class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                        <div class="border-b border-black/5 pb-4">
                             <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                Recent uploads
+                                Share links
                             </h2>
                             <p class="mt-1 text-sm text-zinc-600">
-                                Short updates from the guest album.
+                                Album and wall links for your guests.
                             </p>
                         </div>
-                        <Button as-child size="sm" variant="outline">
-                            <Link :href="eventLinks.media">
-                                Open media
-                            </Link>
-                        </Button>
-                    </div>
 
-                    <div v-if="dashboardRecentUploads.length === 0" class="py-8 text-sm text-zinc-600">
-                        No uploads yet.
-                    </div>
+                        <div class="space-y-5 pt-5">
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-4">
+                                    <img
+                                        :src="eventLinks.albumQrDataUrl"
+                                        alt="Digital album QR code"
+                                        class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="text-sm font-semibold text-[#171411]">
+                                            Digital album
+                                        </h3>
+                                        <p class="mt-1 text-sm text-zinc-600">
+                                            Guests upload and browse from here.
+                                        </p>
+                                    </div>
+                                </div>
 
-                    <div v-else class="divide-y divide-black/5">
-                        <div
-                            v-for="upload in dashboardRecentUploads"
-                            :key="upload.id"
-                            class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                            <div class="min-w-0">
-                                <p class="truncate text-sm text-[#171411]">
-                                    <span class="font-semibold">{{ upload.guestName }}</span>
-                                    ·
-                                    <span class="text-zinc-600">{{ recentUploadSummary(upload) }}</span>
-                                </p>
-                                <div class="mt-1 flex items-center gap-2 text-xs text-zinc-500">
-                                    <ImageIcon v-if="upload.kind === 'photo'" class="size-4" />
-                                    <Video v-else-if="upload.kind === 'video'" class="size-4" />
-                                    <MessageSquareText v-else class="size-4" />
-                                    <span class="capitalize">{{ upload.kind }}</span>
-                                    <span>·</span>
-                                    <span>{{ formatDateTime(upload.createdAt) }}</span>
+                                <div class="flex flex-wrap gap-2">
+                                    <Button as-child size="sm" variant="outline">
+                                        <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
+                                            Open
+                                        </a>
+                                    </Button>
+                                    <Button size="sm" variant="outline" @click="copyText(eventLinks.album, 'Album link copied.')">
+                                        <Copy class="mr-2 size-4" />
+                                        Copy
+                                    </Button>
+                                    <Button as-child size="sm" variant="outline">
+                                        <a :href="eventLinks.albumQrDataUrl" download="digital-album-qr.svg">
+                                            <Download class="mr-2 size-4" />
+                                            QR
+                                        </a>
+                                    </Button>
                                 </div>
                             </div>
 
-                            <span
-                                class="inline-flex w-fit rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
-                                :class="moderationToneClass(upload.moderationStatus)"
-                            >
-                                {{ upload.moderationStatus }}
-                            </span>
+                            <div class="border-t border-black/5 pt-5">
+                                <div class="flex items-start gap-4">
+                                    <img
+                                        :src="eventLinks.wallQrDataUrl"
+                                        alt="Photo wall QR code"
+                                        class="size-20 rounded-[1rem] border border-slate-200 bg-white p-2"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="text-sm font-semibold text-[#171411]">
+                                            Photo wall
+                                        </h3>
+                                        <p class="mt-1 text-sm text-zinc-600">
+                                            Open this on a screen during the event.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <Button as-child size="sm" variant="outline">
+                                        <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
+                                            Open
+                                        </a>
+                                    </Button>
+                                    <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
+                                        <Copy class="mr-2 size-4" />
+                                        Copy
+                                    </Button>
+                                    <Button as-child size="sm" variant="outline">
+                                        <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">
+                                            <Download class="mr-2 size-4" />
+                                            QR
+                                        </a>
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </aside>
+                </div>
             </div>
         </div>
     </AppLayout>

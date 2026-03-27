@@ -40,6 +40,10 @@ It must not feel:
 6. Keep one strong primary action per section.
 7. Use soft, warm surfaces and quiet borders instead of loud admin chrome.
 8. Make mobile usage a first-class experience.
+9. Never place a card inside another card.
+10. Do not use full-width sections for small content blocks that can live in a tighter column or split layout.
+11. Never use a big empty section just to hold a QR code, a short list, or a few buttons.
+12. If content is small, make it compact and place it in an aside, strip, or split column instead of stretching it wide.
 
 ## Information architecture goals
 
@@ -76,6 +80,8 @@ For the event workspace:
 - Replace bulky event cards with clean list rows and clear action buttons
 - Keep badges small and useful
 - Avoid more than one level of visual nesting
+- If a section holds only small content, do not stretch it across the full page just to fill space
+- Solve hierarchy with spacing, columns, dividers, and type, not with boxes inside boxes
 
 ## Output expectations
 
