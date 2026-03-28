@@ -64,21 +64,20 @@ defineProps<{
 
                     <div class="px-6 py-8 sm:px-8">
                         <div class="space-y-6">
-                            <div
-                                v-if="businessMode"
-                                class="rounded-[1.5rem] border border-brand-border/70 bg-brand-panel-strong/15 px-5 py-5"
-                            >
+                            <div v-if="businessMode" class="border-b border-brand-border/70 pb-6">
                                 <p class="dashboard-eyebrow">Ready to work</p>
-                                <h2 class="mt-2 text-lg font-semibold text-brand-ink">
-                                    Your event is ready
-                                </h2>
-                                <p class="mt-2 text-sm leading-6 text-brand-muted">
-                                    You can test the upload flow from here, or jump
-                                    straight into the business dashboard and keep
-                                    setting everything up there.
-                                </p>
+                                <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="max-w-xl">
+                                        <h2 class="text-lg font-semibold text-brand-ink">
+                                            Your event is ready
+                                        </h2>
+                                        <p class="mt-2 text-sm leading-6 text-brand-muted">
+                                            Test the upload flow here, or move straight
+                                            into the business dashboard and keep the rest
+                                            of the setup there.
+                                        </p>
+                                    </div>
 
-                                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
                                     <Button
                                         v-if="dashboardUrl"
                                         as-child
@@ -88,50 +87,52 @@ defineProps<{
                                             Go to business dashboard
                                         </Link>
                                     </Button>
-
-                                    <Button
-                                        as-child
-                                        variant="ghost"
-                                        class="rounded-full px-0 text-brand-muted hover:text-brand-ink"
-                                    >
-                                        <Link :href="albumUrl">Test the album first</Link>
-                                    </Button>
                                 </div>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-3">
-                                <div class="rounded-[1.4rem] border border-brand-border/70 bg-brand-inverse px-4 py-4">
-                                    <ScanLine class="size-5 text-brand-accent" />
-                                    <p class="mt-3 text-sm font-semibold text-brand-ink">
-                                        Scan
-                                    </p>
-                                    <p class="mt-1 text-sm leading-6 text-brand-muted">
-                                        Open the album from the QR code once.
-                                    </p>
-                                </div>
+                            <div>
+                                <p class="dashboard-eyebrow">What to do here</p>
+                                <div class="mt-4 divide-y divide-brand-border/70 border-y border-brand-border/70">
+                                    <div class="flex gap-4 py-4">
+                                        <ScanLine class="mt-0.5 size-5 shrink-0 text-brand-accent" />
+                                        <div>
+                                            <p class="text-sm font-semibold text-brand-ink">
+                                                Scan
+                                            </p>
+                                            <p class="mt-1 text-sm leading-6 text-brand-muted">
+                                                Open the album from the QR code once.
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                <div class="rounded-[1.4rem] border border-brand-border/70 bg-brand-inverse px-4 py-4">
-                                    <Images class="size-5 text-brand-accent" />
-                                    <p class="mt-3 text-sm font-semibold text-brand-ink">
-                                        Upload
-                                    </p>
-                                    <p class="mt-1 text-sm leading-6 text-brand-muted">
-                                        Add a few photos so the wall comes to life.
-                                    </p>
-                                </div>
+                                    <div class="flex gap-4 py-4">
+                                        <Images class="mt-0.5 size-5 shrink-0 text-brand-accent" />
+                                        <div>
+                                            <p class="text-sm font-semibold text-brand-ink">
+                                                Upload
+                                            </p>
+                                            <p class="mt-1 text-sm leading-6 text-brand-muted">
+                                                Add a few photos so the wall comes to life.
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                <div class="rounded-[1.4rem] border border-brand-border/70 bg-brand-inverse px-4 py-4">
-                                    <ExternalLink class="size-5 text-brand-accent" />
-                                    <p class="mt-3 text-sm font-semibold text-brand-ink">
-                                        Share
-                                    </p>
-                                    <p class="mt-1 text-sm leading-6 text-brand-muted">
-                                        Keep the album and wall links close by.
-                                    </p>
+                                    <div class="flex gap-4 py-4">
+                                        <ExternalLink class="mt-0.5 size-5 shrink-0 text-brand-accent" />
+                                        <div>
+                                            <p class="text-sm font-semibold text-brand-ink">
+                                                Share
+                                            </p>
+                                            <p class="mt-1 text-sm leading-6 text-brand-muted">
+                                                Keep the album and wall links close by for
+                                                guests and for your own checks.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="rounded-[1.5rem] border border-brand-border/70 bg-brand-inverse px-5 py-5">
+                            <div>
                                 <p class="dashboard-eyebrow">Quick links</p>
                                 <p class="mt-2 text-sm leading-6 text-brand-muted">
                                     Everything below opens in a new tab, so you can
