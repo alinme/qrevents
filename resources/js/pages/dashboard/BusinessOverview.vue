@@ -112,7 +112,14 @@ const businessHealthCards = computed(() => [
     },
 ]);
 
-const primaryActions = computed(() => props.quickActions.slice(0, 4));
+const primaryActions = computed(() =>
+    props.quickActions.filter(
+        (action) =>
+            action.label !== 'Create event' &&
+            action.label !== 'Top up wallet' &&
+            action.label !== 'Open latest workspace',
+    ),
+);
 
 type RowActionLink = {
     label: string;
@@ -640,7 +647,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                 </section>
 
                 <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+                    <div class="grid gap-6 xl:items-start xl:grid-cols-[minmax(0,1fr)_320px]">
                         <div class="min-w-0">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
@@ -743,7 +750,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </div>
                         </div>
 
-                        <div class="min-w-0 border-t border-black/5 pt-5 xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
+                        <div class="min-w-0 border-t border-black/5 pt-5 xl:flex xl:min-h-0 xl:flex-col xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
                                     <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -767,7 +774,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 No credit activity yet.
                             </div>
 
-                            <div v-else class="max-h-[24rem] overflow-y-auto pt-2 xl:pr-1">
+                            <div v-else class="min-h-0 max-h-[18rem] overflow-y-auto pt-2 xl:pr-1">
                                 <div class="divide-y divide-black/5">
                                     <article
                                         v-for="item in walletActivity"
