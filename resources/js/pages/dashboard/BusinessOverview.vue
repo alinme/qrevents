@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, type Component } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -8,6 +8,7 @@ import {
     CreditCard,
     Download,
     FolderKanban,
+    MoreHorizontal,
     Search,
     Settings,
     Square,
@@ -17,6 +18,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     badgeClass,
     formatBytes,
@@ -106,6 +113,12 @@ const businessHealthCards = computed(() => [
 ]);
 
 const primaryActions = computed(() => props.quickActions.slice(0, 4));
+
+type RowActionLink = {
+    label: string;
+    url: string;
+    icon: Component;
+};
 
 const actionButtonClass = (tone: QuickAction['tone']): string => {
     if (tone === 'dark') {
@@ -289,6 +302,10 @@ const resetFilters = (): void => {
 };
 
 const startBulkExports = (): void => {
+    if (!hasSelection.value) {
+        return;
+    }
+
     router.post(
         props.businessActionLinks.startExports,
         {
@@ -326,17 +343,121 @@ const allVisibleSelected = computed(
         ),
 );
 
+const hasSelection = computed(
+    () => allFilteredSelected.value || selectedEventIds.value.length > 0,
+);
+
 const selectionLabel = computed(() => {
     if (allFilteredSelected.value) {
         return `All ${props.filters.ownedEventCount} filtered workspaces selected`;
     }
 
-    if (selectedEventIds.value.length === 0) {
-        return `All ${props.filters.ownedEventCount} filtered workspaces (default)`;
-    }
-
     return `${selectedEventIds.value.length} selected across pages`;
 });
+
+const eventSecondaryAction = (event: DashboardEvent): RowActionLink => {
+    if (!event.isPaid) {
+        return {
+            label: 'Billing',
+            url: event.links.billing,
+            icon: CreditCard,
+        };
+    }
+
+    if (event.canManage && event.mediaExportStatus === 'ready') {
+        return {
+            label: 'Export',
+            url: event.links.mediaExportDownload,
+            icon: Download,
+        };
+    }
+
+    return {
+        label: 'Media',
+        url: event.links.media,
+        icon: Camera,
+    };
+};
+
+const eventOverflowActions = (event: DashboardEvent): RowActionLink[] => {
+    const secondaryAction = eventSecondaryAction(event);
+    const actions: RowActionLink[] = [
+        {
+            label: 'Media',
+            url: event.links.media,
+            icon: Camera,
+        },
+        {
+            label: 'Settings',
+            url: event.links.settings,
+            icon: Settings,
+        },
+    ];
+
+    if (!event.isPaid) {
+        actions.splice(1, 0, {
+            label: 'Billing',
+            url: event.links.billing,
+            icon: CreditCard,
+        });
+    }
+
+    if (event.canManage && event.mediaExportStatus === 'ready') {
+        actions.splice(actions.length - 1, 0, {
+            label: 'Export',
+            url: event.links.mediaExportDownload,
+            icon: Download,
+        });
+    }
+
+    return actions.filter((action) => action.url !== secondaryAction.url);
+};
+
+const attentionSecondaryAction = (
+    event: BusinessAttentionEvent,
+): RowActionLink => {
+    if (event.billingTone !== 'emerald') {
+        return {
+            label: 'Billing',
+            url: event.links.billing,
+            icon: CreditCard,
+        };
+    }
+
+    return {
+        label: 'Media',
+        url: event.links.media,
+        icon: Camera,
+    };
+};
+
+const attentionOverflowActions = (
+    event: BusinessAttentionEvent,
+): RowActionLink[] => {
+    const secondaryAction = attentionSecondaryAction(event);
+    const actions: RowActionLink[] = [
+        {
+            label: 'Media',
+            url: event.links.media,
+            icon: Camera,
+        },
+        {
+            label: 'Settings',
+            url: event.links.settings,
+            icon: Settings,
+        },
+    ];
+
+    if (event.billingTone !== 'emerald') {
+        actions.splice(1, 0, {
+            label: 'Billing',
+            url: event.links.billing,
+            icon: CreditCard,
+        });
+    }
+
+    return actions.filter((action) => action.url !== secondaryAction.url);
+};
 
 const toggleEventSelection = (eventId: number): void => {
     if (allFilteredSelected.value) {
@@ -486,7 +607,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
                 </section>
 
-                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)]">
+                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_320px] xl:items-start">
                     <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
                         <div class="flex flex-col gap-3 border-b border-black/5 pb-4 md:flex-row md:items-end md:justify-between">
                             <div>
@@ -558,10 +679,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </Link>
                             </div>
 
-                            <div class="flex flex-col gap-3 border-t border-black/5 pt-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div
+                                v-if="hasSelection"
+                                class="flex flex-col gap-3 border-t border-black/5 pt-4 lg:flex-row lg:items-center lg:justify-between"
+                            >
                                 <div>
-                                    <p class="text-sm text-zinc-600">
-                                        Batch actions target
+                                    <p class="text-sm font-medium text-zinc-600">
+                                        Bulk actions
                                         <span class="font-semibold text-[#171411]">{{ selectionLabel }}</span>
                                     </p>
                                     <p v-if="allFilteredSelected" class="mt-1 text-xs text-zinc-500">
@@ -589,7 +713,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         {{ allVisibleSelected ? 'Clear page' : 'Select page' }}
                                     </Button>
                                     <Button
-                                        v-if="allFilteredSelected || selectedEventIds.length > 0"
+                                        v-if="hasSelection"
                                         type="button"
                                         variant="outline"
                                         @click="clearSelection"
@@ -598,7 +722,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         Clear selection
                                     </Button>
                                     <Button
-                                        v-if="filters.ownedEventCount > 0"
+                                        v-if="hasSelection"
                                         type="button"
                                         class="bg-[#171411] text-white hover:bg-[#2b2621]"
                                         @click="startBulkExports"
@@ -607,7 +731,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         Start exports
                                     </Button>
                                     <Button
-                                        v-if="filters.ownedEventCount > 0"
+                                        v-if="hasSelection"
                                         as-child
                                         variant="outline"
                                     >
@@ -682,28 +806,34 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             </Link>
                                         </Button>
                                         <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.media">
-                                                <Camera class="size-4" />
-                                                Media
+                                            <Link :href="eventSecondaryAction(event).url">
+                                                <component :is="eventSecondaryAction(event).icon" class="size-4" />
+                                                {{ eventSecondaryAction(event).label }}
                                             </Link>
                                         </Button>
-                                        <Button v-if="!event.isPaid" as-child size="sm" variant="outline">
-                                            <Link :href="event.links.billing">
-                                                <CreditCard class="size-4" />
-                                                Billing
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            v-if="event.canManage && event.mediaExportStatus === 'ready'"
-                                            as-child
-                                            size="sm"
-                                            variant="outline"
-                                        >
-                                            <Link :href="event.links.mediaExportDownload">
-                                                <Download class="size-4" />
-                                                Export
-                                            </Link>
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger as-child>
+                                                <button
+                                                    type="button"
+                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                    aria-label="More workspace actions"
+                                                >
+                                                    <MoreHorizontal class="size-4" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" class="w-44">
+                                                <DropdownMenuItem
+                                                    v-for="action in eventOverflowActions(event)"
+                                                    :key="`${event.id}-${action.label}`"
+                                                    as-child
+                                                >
+                                                    <Link :href="action.url">
+                                                        <component :is="action.icon" class="size-4" />
+                                                        {{ action.label }}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
                             </article>
@@ -741,15 +871,15 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </div>
                     </section>
 
-                    <div class="space-y-5">
-                        <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <aside class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6 xl:sticky xl:top-6 xl:max-h-[calc(100vh-7rem)]">
+                        <div class="flex min-h-0 w-full flex-col">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
                                     <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                        Needs attention
+                                        Support rail
                                     </h2>
                                     <p class="mt-1 text-sm text-zinc-600">
-                                        The workspaces that need action first.
+                                        Urgent workspaces first, then recent wallet movement.
                                     </p>
                                 </div>
                                 <span class="inline-flex rounded-full bg-[#fbfaf7] px-2.5 py-1 text-xs font-semibold text-zinc-600">
@@ -757,136 +887,160 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </span>
                             </div>
 
-                            <div v-if="businessAttentionEvents.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
-                                Nothing urgent right now.
-                            </div>
-
-                            <div v-else class="divide-y divide-black/5 pt-2">
-                                <article
-                                    v-for="event in businessAttentionEvents"
-                                    :key="event.id"
-                                    class="py-4"
-                                >
-                                    <div class="flex flex-col gap-3">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
-                                                {{ event.statusLabel }}
-                                            </span>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
-                                                {{ event.billingLabel }}
-                                            </span>
-                                            <span class="inline-flex rounded-full bg-[#171411] px-2.5 py-1 text-[0.68rem] font-semibold text-white">
-                                                {{ event.attentionLabel }}
-                                            </span>
-                                        </div>
-
+                            <div class="flex min-h-0 flex-1 flex-col pt-4">
+                                <section>
+                                    <div class="flex items-start justify-between gap-3">
                                         <div>
-                                            <h3 class="text-base font-semibold text-[#171411]">
-                                                {{ event.name }}
+                                            <h3 class="text-sm font-semibold text-[#171411]">
+                                                Needs attention
                                             </h3>
                                             <p class="mt-1 text-sm text-zinc-600">
-                                                {{ event.plan }} · {{ event.attentionDetail }}
-                                            </p>
-                                            <p class="mt-1 text-xs text-zinc-500">
-                                                {{
-                                                    event.paymentDueAt
-                                                        ? `Due ${formatDateOnly(event.paymentDueAt)}`
-                                                        : 'No due date set'
-                                                }}
-                                                · {{ event.assetCount }} uploads
-                                                · {{ formatBytes(event.storageUsedBytes) }} of {{ formatBytes(event.storageLimitBytes) }}
+                                                The workspaces that need action first.
                                             </p>
                                         </div>
-
-                                        <div class="flex flex-wrap gap-2">
-                                            <Button as-child size="sm" variant="outline">
-                                                <Link :href="event.links.dashboard">
-                                                    Open workspace
-                                                </Link>
-                                            </Button>
-                                            <Button as-child size="sm" variant="outline">
-                                                <Link :href="event.links.media">
-                                                    <Camera class="size-4" />
-                                                    Media
-                                                </Link>
-                                            </Button>
-                                            <Button as-child size="sm" variant="outline">
-                                                <Link :href="event.links.settings">
-                                                    <Settings class="size-4" />
-                                                    Settings
-                                                </Link>
-                                            </Button>
-                                            <Button v-if="event.billingTone !== 'emerald'" as-child size="sm" variant="outline">
-                                                <Link :href="event.links.billing">
-                                                    <CreditCard class="size-4" />
-                                                    Billing
-                                                </Link>
-                                            </Button>
-                                        </div>
                                     </div>
-                                </article>
-                            </div>
-                        </section>
 
-                        <section class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                            <div class="flex min-h-0 w-full flex-col">
-                                <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                                    <div>
-                                        <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                            Wallet activity
-                                        </h2>
-                                        <p class="mt-1 text-sm text-zinc-600">
-                                            Recent credit movement for the business account.
-                                        </p>
+                                    <div v-if="businessAttentionEvents.length === 0" class="py-6 text-sm leading-6 text-zinc-600">
+                                        Nothing urgent right now.
                                     </div>
-                                    <Button as-child size="sm" variant="outline">
-                                        <Link :href="businessActionLinks.walletHistory">
-                                            View history
-                                        </Link>
-                                    </Button>
-                                </div>
 
-                                <div v-if="walletActivity.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
-                                    No credit activity yet.
-                                </div>
-
-                                <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2">
-                                    <div class="divide-y divide-black/5 pr-1">
+                                    <div v-else class="divide-y divide-black/5 pt-2">
                                         <article
-                                            v-for="item in walletActivity"
-                                            :key="item.id"
-                                            class="flex flex-col gap-2 py-3"
+                                            v-for="event in businessAttentionEvents"
+                                            :key="event.id"
+                                            class="py-4"
                                         >
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div class="min-w-0">
-                                                    <p class="text-sm font-semibold text-[#171411]">
-                                                        {{ walletActivityLabel(item) }}
-                                                    </p>
+                                            <div class="flex flex-col gap-3">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                                        {{ event.statusLabel }}
+                                                    </span>
+                                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                                        {{ event.billingLabel }}
+                                                    </span>
+                                                    <span class="inline-flex rounded-full bg-[#171411] px-2.5 py-1 text-[0.68rem] font-semibold text-white">
+                                                        {{ event.attentionLabel }}
+                                                    </span>
+                                                </div>
+
+                                                <div>
+                                                    <h4 class="text-base font-semibold text-[#171411]">
+                                                        {{ event.name }}
+                                                    </h4>
                                                     <p class="mt-1 text-sm text-zinc-600">
-                                                        {{ item.description }}
-                                                        <span v-if="item.eventName">
-                                                            ·
-                                                            <Link
-                                                                v-if="item.eventUrl"
-                                                                :href="item.eventUrl"
-                                                                class="font-medium text-[#171411] hover:text-[#2b2621]"
-                                                            >
-                                                                {{ item.eventName }}
-                                                            </Link>
-                                                            <span v-else>{{ item.eventName }}</span>
-                                                        </span>
+                                                        {{ event.plan }} · {{ event.attentionDetail }}
+                                                    </p>
+                                                    <p class="mt-1 text-xs text-zinc-500">
+                                                        {{
+                                                            event.paymentDueAt
+                                                                ? `Due ${formatDateOnly(event.paymentDueAt)}`
+                                                                : 'No due date set'
+                                                        }}
+                                                        · {{ event.assetCount }} uploads
+                                                        · {{ formatBytes(event.storageUsedBytes) }} of {{ formatBytes(event.storageLimitBytes) }}
                                                     </p>
                                                 </div>
-                                                <p class="shrink-0 text-xs text-zinc-500">
-                                                    {{ formatDateTime(item.createdAt) }}
-                                                </p>
+
+                                                <div class="flex flex-wrap gap-2">
+                                                    <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                                        <Link :href="event.links.dashboard">
+                                                            Open workspace
+                                                        </Link>
+                                                    </Button>
+                                                    <Button as-child size="sm" variant="outline">
+                                                        <Link :href="attentionSecondaryAction(event).url">
+                                                            <component :is="attentionSecondaryAction(event).icon" class="size-4" />
+                                                            {{ attentionSecondaryAction(event).label }}
+                                                        </Link>
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger as-child>
+                                                            <button
+                                                                type="button"
+                                                                class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                                aria-label="More attention actions"
+                                                            >
+                                                                <MoreHorizontal class="size-4" />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" class="w-44">
+                                                            <DropdownMenuItem
+                                                                v-for="action in attentionOverflowActions(event)"
+                                                                :key="`${event.id}-${action.label}`"
+                                                                as-child
+                                                            >
+                                                                <Link :href="action.url">
+                                                                    <component :is="action.icon" class="size-4" />
+                                                                    {{ action.label }}
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             </div>
                                         </article>
                                     </div>
-                                </div>
+                                </section>
+
+                                <section class="mt-5 flex min-h-0 flex-1 flex-col border-t border-black/5 pt-5">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-[#171411]">
+                                                Wallet activity
+                                            </h3>
+                                            <p class="mt-1 text-sm text-zinc-600">
+                                                Recent credit movement for the business account.
+                                            </p>
+                                        </div>
+                                        <Button as-child size="sm" variant="outline">
+                                            <Link :href="businessActionLinks.walletHistory">
+                                                View history
+                                            </Link>
+                                        </Button>
+                                    </div>
+
+                                    <div v-if="walletActivity.length === 0" class="py-6 text-sm leading-6 text-zinc-600">
+                                        No credit activity yet.
+                                    </div>
+
+                                    <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2 xl:pr-1">
+                                        <div class="divide-y divide-black/5">
+                                            <article
+                                                v-for="item in walletActivity"
+                                                :key="item.id"
+                                                class="py-3"
+                                            >
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <p class="text-sm font-semibold text-[#171411]">
+                                                            {{ walletActivityLabel(item) }}
+                                                        </p>
+                                                        <p class="mt-1 text-sm text-zinc-600">
+                                                            {{ item.description }}
+                                                            <span v-if="item.eventName">
+                                                                ·
+                                                                <Link
+                                                                    v-if="item.eventUrl"
+                                                                    :href="item.eventUrl"
+                                                                    class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                                                >
+                                                                    {{ item.eventName }}
+                                                                </Link>
+                                                                <span v-else>{{ item.eventName }}</span>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                    <p class="shrink-0 text-xs text-zinc-500">
+                                                        {{ formatDateTime(item.createdAt) }}
+                                                    </p>
+                                                </div>
+                                            </article>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
-                        </section>
-                    </div>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>

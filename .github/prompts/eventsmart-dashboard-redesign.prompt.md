@@ -62,6 +62,8 @@ It must not feel:
 28. A dashboard should never read like a newspaper: cut the copy, shrink the headings, and keep support text to one short sentence when possible.
 29. Never show the same primary action twice on the same screen.
 30. Never repeat the same stat in multiple places unless the second instance adds new context or changes the job of the screen.
+31. Before adding a new button, stat, or support block, remove duplicates first. The screen should earn every element it keeps.
+32. If a list, activity feed, or support section can grow long, keep the heading fixed and make only the body scroll.
 
 ## Information architecture goals
 
