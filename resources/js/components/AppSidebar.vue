@@ -7,6 +7,7 @@ import {
     Camera,
     CreditCard,
     CircleDollarSign,
+    FolderKanban,
     FolderPlus,
     LayoutGrid,
     Package,
