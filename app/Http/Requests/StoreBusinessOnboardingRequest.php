@@ -12,6 +12,17 @@ class StoreBusinessOnboardingRequest extends FormRequest
             && $this->user()->isBusinessAccount();
     }
 
+    protected function prepareForValidation(): void
+    {
+        $website = trim((string) $this->input('website', ''));
+
+        if ($website !== '' && ! str_contains($website, '://')) {
+            $this->merge([
+                'website' => 'https://'.$website,
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -23,6 +34,18 @@ class StoreBusinessOnboardingRequest extends FormRequest
             'primary_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'accent_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo_file' => ['nullable', 'image', 'max:4096'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'company_name.required' => 'Add the legal company name you use for invoices or contracts.',
+            'brand_name.required' => 'Add the public brand name clients will recognize.',
+            'billing_email.required' => 'Add the billing email where invoices and payment confirmations should arrive.',
+            'website.url' => 'Add a valid website like https://studio-events.com or just studio-events.com.',
+            'logo_file.image' => 'Upload a valid logo image file.',
+            'logo_file.max' => 'Logo files should stay under 4 MB.',
         ];
     }
 }

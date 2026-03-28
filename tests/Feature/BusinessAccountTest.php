@@ -34,7 +34,7 @@ test('users can switch to business, finish onboarding, and reach the business da
             'brand_name' => 'Studio Events',
             'billing_email' => 'billing@studio-events.test',
             'phone' => '+40 721 000 111',
-            'website' => 'https://studio-events.test',
+            'website' => 'studio-events.test',
             'primary_color' => '#171411',
             'accent_color' => '#D97706',
             'logo_file' => UploadedFile::fake()->image('logo.png'),
