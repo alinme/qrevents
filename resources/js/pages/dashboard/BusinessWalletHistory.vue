@@ -160,24 +160,27 @@ const submitTopUp = (): void => {
                                 <p class="mt-1 text-xs leading-5 text-zinc-500">
                                     {{ metric.detail }}
                                 </p>
-                                <Button
+                                <div
                                     v-if="metric.label === 'Balance'"
-                                    type="button"
-                                    variant="link"
-                                    class="mt-2 h-auto px-0 text-sm font-medium text-[#171411]"
-                                    @click="topUpModalOpen = true"
+                                    class="mt-3 flex flex-col items-start gap-1.5"
                                 >
-                                    Top up credits
-                                </Button>
-                                <Button
-                                    v-if="metric.label === 'Balance'"
-                                    type="button"
-                                    variant="link"
-                                    class="mt-1 h-auto px-0 text-sm font-medium text-zinc-500"
-                                    @click="howItWorksModalOpen = true"
-                                >
-                                    How it works
-                                </Button>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        class="h-auto px-0 text-sm font-medium text-[#171411]"
+                                        @click="topUpModalOpen = true"
+                                    >
+                                        Top up credits
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        class="h-auto px-0 text-sm font-medium text-zinc-500"
+                                        @click="howItWorksModalOpen = true"
+                                    >
+                                        How it works
+                                    </Button>
+                                </div>
                             </div>
                         </dl>
                     </div>
