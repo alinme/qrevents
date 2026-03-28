@@ -126,6 +126,12 @@ Route::get('guest-list/{shareToken}', [EventController::class, 'publicGuestList'
 Route::patch('guest-list/{shareToken}/{guestParty}', [EventController::class, 'updatePublicGuestListAttendance'])
     ->middleware('throttle:public-album-write')
     ->name('events.guests.public-list.update');
+Route::get('album', [EventController::class, 'albumAccess'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.album.access.show');
+Route::post('album', [EventController::class, 'resolveAlbumAccess'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.album.access.resolve');
 
 Route::get('a/{shareToken}', [EventController::class, 'album'])->name('events.album');
 Route::get('a/{shareToken}/assets', [EventController::class, 'albumAssets'])

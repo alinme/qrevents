@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BulkUpdateEventGuestInvitationsRequest;
 use App\Http\Requests\CreateEventCheckoutSessionRequest;
 use App\Http\Requests\ImportEventGuestPartiesRequest;
+use App\Http\Requests\ResolveAlbumCodeRequest;
 use App\Http\Requests\RespondEventGuestInvitationRequest;
 use App\Http\Requests\UpdateEventBillingRequest;
 use App\Http\Requests\UpdateEventInvitationSettingsRequest;
@@ -70,6 +71,39 @@ class EventController extends Controller
     private const PUBLIC_ALBUM_RAW_FETCH_CHUNK = 120;
 
     private const ADMIN_MEDIA_FULL_SCAN_LIMIT = 5000;
+
+    public function albumAccess(): Response
+    {
+        return Inertia::render('public/AlbumAccess', [
+            'submitUrl' => route('events.album.access.resolve'),
+            'homeUrl' => route('home'),
+            'segmentCount' => 8,
+            'segmentLength' => 4,
+        ]);
+    }
+
+    public function resolveAlbumAccess(ResolveAlbumCodeRequest $request): RedirectResponse
+    {
+        $normalizedCode = $request->normalizedCode();
+
+        $event = Event::query()
+            ->where('share_token', $normalizedCode)
+            ->first();
+
+        if ($event === null) {
+            $event = Event::query()
+                ->whereRaw('LOWER(share_token) = ?', [Str::lower($normalizedCode)])
+                ->first();
+        }
+
+        if ($event === null) {
+            throw ValidationException::withMessages([
+                'code' => 'We could not find an album for that code. Check the letters and numbers, then try again.',
+            ]);
+        }
+
+        return redirect()->route('events.album', $event->share_token);
+    }
 
     public function show(Request $request, Event $event): Response
     {
