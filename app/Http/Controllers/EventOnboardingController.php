@@ -478,6 +478,30 @@ class EventOnboardingController extends Controller
             'businessTopUpUrl' => $businessMode
                 ? route('dashboard.business.wallet.history')
                 : null,
+            'accountNavigation' => $businessMode ? [
+                [
+                    'title' => 'Business',
+                    'href' => route('dashboard.business'),
+                ],
+                [
+                    'title' => 'Create',
+                    'href' => route('dashboard.business.events.create'),
+                ],
+                [
+                    'title' => 'Wallet',
+                    'href' => route('dashboard.business.wallet.history'),
+                ],
+                [
+                    'title' => 'Portfolio',
+                    'href' => route('dashboard.account'),
+                ],
+            ] : [],
+            'dashboardLinks' => $businessMode ? [
+                'overview' => route('dashboard.account'),
+                'business' => route('dashboard.business'),
+                'createBusiness' => route('dashboard.business.events.create'),
+            ] : null,
+            'sidebarLabel' => $businessMode ? 'Business' : null,
             'submitUrl' => $businessMode
                 ? route('dashboard.business.events.store')
                 : route('onboarding.store'),

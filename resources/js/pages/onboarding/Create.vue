@@ -23,7 +23,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { businesses, home } from '@/routes';
+import type { BreadcrumbItem } from '@/types';
 
 type EventSubEventOption = {
     key: string;
@@ -83,6 +85,16 @@ const props = defineProps<{
     businessMode?: boolean;
     businessWalletCredits?: number | null;
     businessTopUpUrl?: string | null;
+    accountNavigation?: Array<{
+        title: string;
+        href: string;
+    }>;
+    dashboardLinks?: {
+        overview: string;
+        business: string | null;
+        createBusiness: string;
+    } | null;
+    sidebarLabel?: string | null;
     submitUrl: string;
     owner: {
         name: string;
@@ -95,6 +107,37 @@ const wizardPanelRef = ref<HTMLElement | null>(null);
 const formActionsRef = ref<HTMLElement | null>(null);
 const lastSuggestedWeddingTitle = ref('');
 const isBusinessMode = computed(() => props.businessMode === true);
+const rootComponent = computed(() => (isBusinessMode.value ? AppLayout : 'div'));
+const businessBreadcrumbs = computed<BreadcrumbItem[]>(() => {
+    if (! isBusinessMode.value || props.dashboardLinks == null) {
+        return [];
+    }
+
+    return [
+        {
+            title: 'Dashboard',
+            href: props.dashboardLinks.overview,
+        },
+        {
+            title: 'Business',
+            href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
+        },
+        {
+            title: 'Create event',
+            href: props.dashboardLinks.createBusiness,
+        },
+    ];
+});
+const rootProps = computed(() =>
+    isBusinessMode.value
+        ? { breadcrumbs: businessBreadcrumbs.value }
+        : {},
+);
+const headerHomeHref = computed(() =>
+    isBusinessMode.value
+        ? (props.dashboardLinks?.business ?? props.dashboardLinks?.overview ?? home().url)
+        : home(),
+);
 
 const stepItems = [
     {
@@ -541,6 +584,7 @@ const submit = (): void => {
 <template>
     <Head title="Create your event" />
 
+    <component :is="rootComponent" v-bind="rootProps">
     <div class="min-h-svh bg-[linear-gradient(180deg,oklch(0.985_0.014_338)_0%,oklch(0.975_0.018_338)_52%,oklch(0.988_0.008_28)_100%)] text-promo-ink">
         <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-7xl">
@@ -554,7 +598,7 @@ const submit = (): void => {
         <div class="mx-auto flex min-h-svh max-w-7xl flex-col px-5 py-6 lg:px-8 lg:py-8">
             <header class="flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center gap-3">
-                    <Link :href="home()" class="inline-flex items-center gap-3">
+                    <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
                         <div class="flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]">
                             <AppLogoIcon class="size-7 fill-current" />
                         </div>
@@ -1407,4 +1451,5 @@ const submit = (): void => {
             </main>
         </div>
     </div>
+    </component>
 </template>
