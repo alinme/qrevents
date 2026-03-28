@@ -774,7 +774,7 @@ const submit = (): void => {
                                         v-for="plan in props.pricingPlans"
                                         :key="plan.slug"
                                         type="button"
-                                        class="border px-5 py-4 text-left transition duration-200"
+                                        class="min-h-52 border px-5 py-5 text-left transition duration-200"
                                         :class="
                                             isBusinessMode
                                                 ? (form.plan_slug === plan.slug
@@ -1003,12 +1003,12 @@ const submit = (): void => {
                                         An estimate is enough. This will help later with planning recommendations and supplier-related features.
                                     </p>
 
-                                    <div class="mt-5 grid grid-cols-2 gap-3">
+                                    <div class="mt-5 grid gap-3 sm:grid-cols-2">
                                         <button
                                             v-for="preset in attendeePresets"
                                             :key="preset"
                                             type="button"
-                                            class="rounded-[18px] border px-4 py-3 text-left transition-colors duration-200"
+                                            class="min-h-20 rounded-[18px] border px-4 py-4 text-left transition-colors duration-200"
                                             :class="
                                                 isBusinessMode
                                                     ? (Number(form.attendee_estimate) === preset
@@ -1083,7 +1083,7 @@ const submit = (): void => {
                                         :key="`event-date-${index}`"
                                         :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'border-t border-promo-line pt-4 first:border-t-0 first:pt-0'"
                                     >
-                                        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
+                                        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto] md:items-end">
                                             <div class="grid gap-2">
                                                 <Label :for="`event-date-label-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Label
@@ -1111,7 +1111,7 @@ const submit = (): void => {
                                             <Button
                                                 type="button"
                                                 variant="ghost"
-                                                :class="isBusinessMode ? 'h-11 rounded-full text-brand-muted' : 'h-11 rounded-full text-promo-muted'"
+                                                :class="isBusinessMode ? 'h-12 rounded-full text-brand-muted md:h-11' : 'h-12 rounded-full text-promo-muted md:h-11'"
                                                 :disabled="form.event_dates.length === 1"
                                                 @click="removeEventDate(index)"
                                             >
@@ -1140,7 +1140,7 @@ const submit = (): void => {
                                     </p>
                                 </div>
 
-                                <div class="grid gap-4 xl:grid-cols-2">
+                                <div class="grid gap-4 lg:grid-cols-2">
                                     <button
                                         v-for="subEventOption in availableSubEvents"
                                         :key="subEventOption.key"
@@ -1307,7 +1307,7 @@ const submit = (): void => {
                                             </div>
 
                                             <div
-                                                :class="isBusinessMode ? 'inline-flex cursor-pointer items-center gap-3 rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm text-brand-muted' : 'inline-flex cursor-pointer items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted'"
+                                                :class="isBusinessMode ? 'inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-brand-border bg-brand-inverse px-4 py-3 text-sm text-brand-muted' : 'inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-promo-line bg-white px-4 py-3 text-sm text-promo-muted'"
                                                 role="button"
                                                 tabindex="0"
                                                 @click="toggleSubEventNoAddress(index)"
@@ -1449,7 +1449,7 @@ const submit = (): void => {
                             ref="formActionsRef"
                             :class="isBusinessMode ? 'flex flex-col gap-4 border-t border-brand-border/70 pt-6 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 border-t border-promo-line pt-6 lg:flex-row lg:items-center lg:justify-between'"
                         >
-                            <div :class="isBusinessMode ? 'grid gap-2 text-sm text-brand-muted sm:grid-cols-3 sm:gap-4' : 'grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4'">
+                            <div :class="isBusinessMode ? 'grid gap-2 text-sm text-brand-muted md:grid-cols-3 md:gap-4' : 'grid gap-2 text-sm text-promo-muted md:grid-cols-3 md:gap-4'">
                                 <div class="inline-flex items-center gap-2">
                                     <MapPin :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
                                     {{ addressedMomentsCount }} / {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} addressed
@@ -1468,7 +1468,7 @@ const submit = (): void => {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    :class="isBusinessMode ? 'rounded-full text-brand-muted hover:text-brand-ink' : 'rounded-full text-promo-muted hover:text-promo-ink'"
+                                    :class="isBusinessMode ? 'h-12 w-full rounded-full text-brand-muted hover:text-brand-ink sm:w-auto' : 'h-12 w-full rounded-full text-promo-muted hover:text-promo-ink sm:w-auto'"
                                     :disabled="step === 1 || form.processing"
                                     @click="goToPrevious"
                                 >
@@ -1479,7 +1479,7 @@ const submit = (): void => {
                                 <Button
                                     v-if="step < 3"
                                     type="button"
-                                    :class="isBusinessMode ? 'rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent' : 'rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong'"
+                                    :class="isBusinessMode ? 'h-12 w-full rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent sm:w-auto' : 'h-12 w-full rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong sm:w-auto'"
                                     :disabled="!canMoveToNext || form.processing"
                                     @click="goToNext"
                                 >
@@ -1490,7 +1490,7 @@ const submit = (): void => {
                                 <Button
                                     v-else
                                     type="submit"
-                                    :class="isBusinessMode ? 'rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent' : 'rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong'"
+                                    :class="isBusinessMode ? 'h-12 w-full rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent sm:w-auto' : 'h-12 w-full rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong sm:w-auto'"
                                     :disabled="form.processing || !canSubmitEvent"
                                 >
                                     <Spinner v-if="form.processing" class="mr-2" />

@@ -156,7 +156,7 @@ const saveGuestDetails = (): void => {
 <template>
     <Head :title="`${currentEvent.name} guest list`" />
 
-    <main class="min-h-dvh bg-stone-50 px-3 py-5 text-stone-900 md:px-5 md:py-6">
+    <main class="min-h-dvh bg-stone-50 px-2 py-4 text-stone-900 sm:px-4 md:px-5 md:py-6">
         <div class="mx-auto max-w-5xl space-y-4">
             <section class="space-y-2">
                 <p class="text-xs font-medium uppercase tracking-[0.24em] text-stone-500">
@@ -184,11 +184,11 @@ const saveGuestDetails = (): void => {
                     <div
                         v-for="party in filteredGuestParties"
                         :key="party.id"
-                        class="flex flex-col gap-3 py-3.5 transition-colors md:flex-row md:items-center md:justify-between"
+                        class="flex flex-col gap-3.5 py-4 transition-colors md:flex-row md:items-center md:justify-between"
                     >
                         <button
                             type="button"
-                            class="min-w-0 flex-1 space-y-1 text-left"
+                            class="min-w-0 flex-1 space-y-1.5 rounded-2xl px-1 py-1 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
                             @click="openDetails(party)"
                         >
                             <p class="truncate text-base font-semibold text-stone-950">
@@ -206,7 +206,7 @@ const saveGuestDetails = (): void => {
                         <div class="grid w-full grid-cols-3 items-center rounded-[1.1rem] border border-stone-200 bg-white p-1.5 md:inline-flex md:w-auto md:rounded-full md:p-1">
                             <Button
                                 variant="ghost"
-                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
+                                class="h-12 min-h-12 rounded-xl px-3 text-[15px] font-medium text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-11 md:min-h-11 md:rounded-full"
                                 :class="party.actualAttendanceStatus === 'present'
                                     ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white'
                                     : ''"
@@ -218,7 +218,7 @@ const saveGuestDetails = (): void => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
+                                class="h-12 min-h-12 rounded-xl px-3 text-[15px] font-medium text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-11 md:min-h-11 md:rounded-full"
                                 :class="party.actualAttendanceStatus === 'absent'
                                     ? 'bg-rose-600 text-white hover:bg-rose-700 hover:text-white'
                                     : ''"
@@ -230,7 +230,7 @@ const saveGuestDetails = (): void => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
+                                class="h-12 min-h-12 rounded-xl px-3 text-[15px] font-medium text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-11 md:min-h-11 md:rounded-full"
                                 :disabled="quickSavingGuestId === party.id"
                                 @click="updateAttendance(party, 'unknown')"
                             >
@@ -298,7 +298,7 @@ const saveGuestDetails = (): void => {
                                     <div class="flex items-center gap-3">
                                         <button
                                             type="button"
-                                            class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                            class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
                                             :disabled="checkInCount <= 1"
                                             @click="adjustCheckInCount(-1)"
                                         >
@@ -309,12 +309,12 @@ const saveGuestDetails = (): void => {
                                             :model-value="String(checkInCount)"
                                             readonly
                                             inputmode="none"
-                                            class="h-10 border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
+                                            class="h-11 border-0 bg-transparent px-0 text-center text-lg font-semibold shadow-none focus-visible:ring-0"
                                         />
 
                                         <button
                                             type="button"
-                                            class="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                            class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
                                             :disabled="checkInCount >= 1000"
                                             @click="adjustCheckInCount(1)"
                                         >
@@ -335,10 +335,10 @@ const saveGuestDetails = (): void => {
                         </div>
 
                         <div v-if="props.eventTables.length > 0" class="space-y-2">
-                            <div class="grid gap-0 sm:grid-cols-[minmax(0,1fr)_auto]">
+                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-0">
                                 <NativeSelect
                                     v-model="selectedTableId"
-                                    class="h-11 rounded-b-none rounded-t-2xl border-b-0 sm:rounded-l-2xl sm:rounded-r-none sm:rounded-t-none sm:border-b sm:border-r-0"
+                                    class="h-12 rounded-2xl sm:rounded-l-2xl sm:rounded-r-none sm:border-r-0"
                                 >
                                     <NativeSelectOption value="">No table yet</NativeSelectOption>
                                     <NativeSelectOption
@@ -351,7 +351,7 @@ const saveGuestDetails = (): void => {
                                     </NativeSelectOption>
                                 </NativeSelect>
                                 <Button
-                                    class="h-11 rounded-t-none rounded-b-2xl px-4 sm:rounded-l-none sm:rounded-r-2xl sm:rounded-t-none"
+                                    class="h-12 rounded-2xl px-4 sm:min-w-36 sm:rounded-l-none sm:rounded-r-2xl"
                                     :disabled="quickSavingGuestId === detailsParty.id"
                                     @click="saveGuestDetails"
                                 >
@@ -368,7 +368,7 @@ const saveGuestDetails = (): void => {
                                 No tables have been created by the host yet, so the entrance team cannot assign seating from this page yet.
                             </div>
                             <Button
-                                class="w-full rounded-full px-4"
+                                class="h-12 w-full rounded-full px-4"
                                 :disabled="quickSavingGuestId === detailsParty.id"
                                 @click="saveGuestDetails"
                             >
