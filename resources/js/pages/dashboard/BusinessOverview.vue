@@ -112,14 +112,7 @@ const businessHealthCards = computed(() => [
     },
 ]);
 
-const primaryActions = computed(() =>
-    props.quickActions.filter(
-        (action) =>
-            action.label !== 'Create event' &&
-            action.label !== 'Top up wallet' &&
-            action.label !== 'Open latest workspace',
-    ),
-);
+const primaryActions = computed(() => props.quickActions);
 
 type RowActionLink = {
     label: string;
@@ -551,7 +544,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
+                        <div v-if="primaryActions.length > 0" class="flex flex-wrap gap-2">
                             <Button
                                 v-for="action in primaryActions"
                                 :key="action.label"
@@ -750,7 +743,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </div>
                         </div>
 
-                        <div class="min-w-0 border-t border-black/5 pt-5 xl:flex xl:min-h-0 xl:flex-col xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
+                        <div class="min-w-0 border-t border-black/5 pt-5 xl:flex xl:max-h-[22rem] xl:min-h-0 xl:flex-col xl:overflow-hidden xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
                                     <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -774,7 +767,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 No credit activity yet.
                             </div>
 
-                            <div v-else class="min-h-0 max-h-[18rem] overflow-y-auto pt-2 xl:pr-1">
+                            <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2 xl:pr-1">
                                 <div class="divide-y divide-black/5">
                                     <article
                                         v-for="item in walletActivity"
@@ -946,132 +939,134 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </div>
                     </div>
 
-                    <div v-if="ownedEvents.length === 0" class="py-12 text-center">
-                        <div class="mx-auto max-w-md space-y-2">
-                            <h3 class="text-lg font-semibold text-[#171411]">
-                                {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
-                            </h3>
-                            <p class="text-sm leading-6 text-zinc-600">
-                                {{
-                                    filters.hasActiveFilters
-                                        ? 'Try a broader search or switch back to all workspaces.'
-                                        : 'Your first business event will appear here with quick routes into workspace, media, billing, and export.'
-                                }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div v-else class="divide-y divide-black/5 pt-3">
-                        <article
-                            v-for="event in ownedEvents"
-                            :key="event.id"
-                            class="py-3.5"
-                        >
-                            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <label class="mr-1 inline-flex items-center" :class="allFilteredSelected ? 'opacity-70' : ''">
-                                            <Checkbox
-                                                :checked="allFilteredSelected || selectedEventIds.includes(event.id)"
-                                                :disabled="allFilteredSelected"
-                                                @update:checked="toggleEventSelection(event.id)"
-                                            />
-                                            <span class="sr-only">Select {{ event.name }}</span>
-                                        </label>
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
-                                            {{ event.statusLabel }}
-                                        </span>
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
-                                            {{ event.billingLabel }}
-                                        </span>
-                                        <span class="text-xs text-zinc-500">
-                                            {{ event.plan }}
-                                        </span>
-                                    </div>
-
-                                    <div class="mt-2.5">
-                                        <h3 class="text-[0.97rem] font-semibold text-[#171411]">
-                                            {{ event.name }}
-                                        </h3>
-                                        <p class="mt-1 text-sm text-zinc-600">
-                                            {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
-                                        </p>
-                                        <p class="mt-1 text-sm text-zinc-500">
-                                            {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
-                                            <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
-                                            <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
-                                    <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                        <Link :href="event.primaryAction.url">
-                                            {{ event.primaryAction.label }}
-                                        </Link>
-                                    </Button>
-                                    <Button as-child size="sm" variant="outline">
-                                        <Link :href="eventSecondaryAction(event).url">
-                                            <component :is="eventSecondaryAction(event).icon" class="size-4" />
-                                            {{ eventSecondaryAction(event).label }}
-                                        </Link>
-                                    </Button>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger as-child>
-                                            <button
-                                                type="button"
-                                                class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
-                                                aria-label="More workspace actions"
-                                            >
-                                                <MoreHorizontal class="size-4" />
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" class="w-44">
-                                            <DropdownMenuItem
-                                                v-for="action in eventOverflowActions(event)"
-                                                :key="`${event.id}-${action.label}`"
-                                                as-child
-                                            >
-                                                <Link :href="action.url">
-                                                    <component :is="action.icon" class="size-4" />
-                                                    {{ action.label }}
-                                                </Link>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
+                    <div class="max-h-[36rem] overflow-y-auto pt-1 pr-1">
+                        <div v-if="ownedEvents.length === 0" class="py-12 text-center">
+                            <div class="mx-auto max-w-md space-y-2">
+                                <h3 class="text-lg font-semibold text-[#171411]">
+                                    {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
+                                </h3>
+                                <p class="text-sm leading-6 text-zinc-600">
+                                    {{
+                                        filters.hasActiveFilters
+                                            ? 'Try a broader search or switch back to all workspaces.'
+                                            : 'Your first business event will appear here with quick routes into workspace, media, billing, and export.'
+                                    }}
+                                </p>
                             </div>
-                        </article>
-                    </div>
+                        </div>
 
-                    <div
-                        v-if="ownedEventsPagination.lastPage > 1"
-                        class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
-                    >
-                        <p class="text-sm text-zinc-600">
-                            Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
-                        </p>
+                        <div v-else class="divide-y divide-black/5 pt-3">
+                            <article
+                                v-for="event in ownedEvents"
+                                :key="event.id"
+                                class="py-3.5"
+                            >
+                                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <label class="mr-1 inline-flex items-center" :class="allFilteredSelected ? 'opacity-70' : ''">
+                                                <Checkbox
+                                                    :checked="allFilteredSelected || selectedEventIds.includes(event.id)"
+                                                    :disabled="allFilteredSelected"
+                                                    @update:checked="toggleEventSelection(event.id)"
+                                                />
+                                                <span class="sr-only">Select {{ event.name }}</span>
+                                            </label>
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                                {{ event.statusLabel }}
+                                            </span>
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                                {{ event.billingLabel }}
+                                            </span>
+                                            <span class="text-xs text-zinc-500">
+                                                {{ event.plan }}
+                                            </span>
+                                        </div>
 
-                        <div class="flex flex-wrap items-center gap-2">
-                            <Button v-if="ownedEventsPagination.prevPageUrl" as-child variant="outline">
-                                <Link :href="ownedEventsPagination.prevPageUrl">
+                                        <div class="mt-2.5">
+                                            <h3 class="text-[0.97rem] font-semibold text-[#171411]">
+                                                {{ event.name }}
+                                            </h3>
+                                            <p class="mt-1 text-sm text-zinc-600">
+                                                {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
+                                            </p>
+                                            <p class="mt-1 text-sm text-zinc-500">
+                                                {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
+                                                <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
+                                                <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
+                                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                            <Link :href="event.primaryAction.url">
+                                                {{ event.primaryAction.label }}
+                                            </Link>
+                                        </Button>
+                                        <Button as-child size="sm" variant="outline">
+                                            <Link :href="eventSecondaryAction(event).url">
+                                                <component :is="eventSecondaryAction(event).icon" class="size-4" />
+                                                {{ eventSecondaryAction(event).label }}
+                                            </Link>
+                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger as-child>
+                                                <button
+                                                    type="button"
+                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                    aria-label="More workspace actions"
+                                                >
+                                                    <MoreHorizontal class="size-4" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" class="w-44">
+                                                <DropdownMenuItem
+                                                    v-for="action in eventOverflowActions(event)"
+                                                    :key="`${event.id}-${action.label}`"
+                                                    as-child
+                                                >
+                                                    <Link :href="action.url">
+                                                        <component :is="action.icon" class="size-4" />
+                                                        {{ action.label }}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+
+                        <div
+                            v-if="ownedEventsPagination.lastPage > 1"
+                            class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
+                        >
+                            <p class="text-sm text-zinc-600">
+                                Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Button v-if="ownedEventsPagination.prevPageUrl" as-child variant="outline">
+                                    <Link :href="ownedEventsPagination.prevPageUrl">
+                                        Previous
+                                    </Link>
+                                </Button>
+                                <Button v-else variant="outline" disabled>
                                     Previous
-                                </Link>
-                            </Button>
-                            <Button v-else variant="outline" disabled>
-                                Previous
-                            </Button>
-                            <span class="text-sm font-medium text-zinc-600">
-                                Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
-                            </span>
-                            <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
-                                <Link :href="ownedEventsPagination.nextPageUrl">
+                                </Button>
+                                <span class="text-sm font-medium text-zinc-600">
+                                    Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
+                                </span>
+                                <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
+                                    <Link :href="ownedEventsPagination.nextPageUrl">
+                                        Next
+                                    </Link>
+                                </Button>
+                                <Button v-else variant="outline" disabled>
                                     Next
-                                </Link>
-                            </Button>
-                            <Button v-else variant="outline" disabled>
-                                Next
-                            </Button>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </section>

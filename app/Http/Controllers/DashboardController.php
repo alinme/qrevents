@@ -416,35 +416,11 @@ class DashboardController extends Controller
             'walletActivity' => $this->walletActivityItems($request),
             'businessAttentionEvents' => $this->businessAttentionEvents($ownedEvents, $assetStats, $defaultStats),
             'quickActions' => array_values(array_filter([
-                $canAccessBusinessDashboard ? [
-                    'label' => 'Create event',
-                    'description' => 'Start a new business event using wallet credits.',
-                    'url' => route('dashboard.business.events.create'),
-                    'tone' => 'dark',
-                ] : null,
-                $canAccessBusinessDashboard ? [
-                    'label' => 'Top up wallet',
-                    'description' => 'Add more credits for your next business events.',
-                    'url' => route('businesses'),
-                    'tone' => 'violet',
-                ] : null,
                 $continueSetupEvent !== null ? [
                     'label' => 'Continue setup',
                     'description' => 'Finish onboarding so guests can start uploading.',
                     'url' => $this->onboardingStepUrl($continueSetupEvent),
                     'tone' => 'amber',
-                ] : null,
-                $manageableEvent !== null ? [
-                    'label' => 'Review uploads',
-                    'description' => 'Jump straight into moderation and export prep.',
-                    'url' => route('events.media', $manageableEvent),
-                    'tone' => 'sky',
-                ] : null,
-                $ownedEvents->first() !== null ? [
-                    'label' => 'Open latest workspace',
-                    'description' => 'Jump into your latest event workspace.',
-                    'url' => route('events.show', $ownedEvents->first()),
-                    'tone' => 'emerald',
                 ] : null,
                 $isSuperAdmin ? [
                     'label' => 'Open admin',
@@ -475,7 +451,7 @@ class DashboardController extends Controller
                 ] : null,
                 $canAccessBusinessDashboard ? [
                     'title' => 'Wallet',
-                    'href' => route('businesses'),
+                    'href' => route('dashboard.business.wallet.history'),
                 ] : null,
                 $canAccessBusinessDashboard ? [
                     'title' => 'Portfolio',
