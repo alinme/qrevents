@@ -599,33 +599,33 @@ const submit = (): void => {
                             </p>
                         </div>
 
-                        <div class="space-y-3 px-4 py-4">
+                        <div class="px-5 py-4">
                             <article
                                 v-for="stepItem in stepItems"
                                 :key="stepItem.number"
-                                class="relative overflow-hidden rounded-[22px] border px-4 py-4 transition-colors duration-200"
+                                class="flex gap-4 border-b border-promo-line py-4 last:border-b-0"
                                 :class="
                                     stepItem.number === step
-                                        ? 'border-promo-primary/30 bg-promo-surface'
+                                        ? 'text-promo-ink'
                                         : stepItem.number < step
-                                          ? 'border-promo-line bg-promo-surface/45'
-                                          : 'border-promo-line bg-white'
+                                          ? 'text-promo-ink'
+                                          : 'text-promo-muted'
                                 "
                             >
-                                <span
-                                    class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 select-none text-[6rem] leading-none font-black tracking-[-0.12em] transition-colors duration-200"
+                                <div
+                                    class="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.18em]"
                                     :class="
                                         stepItem.number === step
-                                            ? 'text-promo-primary/20'
+                                            ? 'bg-promo-primary text-white'
                                             : stepItem.number < step
-                                              ? 'text-promo-primary/14'
-                                              : 'text-neutral-200'
+                                              ? 'bg-promo-surface text-promo-primary'
+                                              : 'bg-promo-surface/70 text-promo-muted'
                                     "
                                 >
                                     0{{ stepItem.number }}
-                                </span>
+                                </div>
 
-                                <div class="relative max-w-[10.5rem]">
+                                <div class="min-w-0">
                                     <p
                                         class="text-[0.68rem] font-semibold uppercase tracking-[0.22em]"
                                         :class="stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted'"
@@ -711,7 +711,7 @@ const submit = (): void => {
 
                                 <div
                                     v-if="isBusinessMode"
-                                    class="mt-4 flex flex-col gap-3 rounded-[20px] border border-promo-line bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                                    class="mt-5 flex flex-col gap-3 border-y border-promo-line py-4 sm:flex-row sm:items-center sm:justify-between"
                                 >
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold text-promo-ink">
@@ -1288,9 +1288,7 @@ const submit = (): void => {
                                         This event will be created under the signed-in owner account.
                                     </p>
 
-                                    <div
-                                        class="mt-5 rounded-[22px] border border-promo-line bg-white p-4 text-sm text-promo-muted"
-                                    >
+                                    <div class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
                                         <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>
                                         <p class="mt-1">{{ props.owner?.email }}</p>
                                     </div>
@@ -1312,17 +1310,14 @@ const submit = (): void => {
                                         }}
                                     </p>
 
-                                    <div
-                                        v-if="selectedPlan"
-                                        class="mt-5 space-y-3 text-sm text-promo-muted"
-                                    >
+                                    <div v-if="selectedPlan" class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
                                         <div
                                             v-if="isBusinessMode"
-                                            class="rounded-[18px] border px-4 py-3"
+                                            class="border-b border-promo-line pb-3"
                                             :class="
                                                 selectedBusinessPlanAffordable
-                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                                                    : 'border-amber-200 bg-amber-50 text-amber-900'
+                                                    ? 'text-emerald-800'
+                                                    : 'text-amber-900'
                                             "
                                         >
                                             {{
@@ -1331,18 +1326,18 @@ const submit = (): void => {
                                                     : `You need ${missingBusinessCredits} more credits before you can create this event.`
                                             }}
                                         </div>
-                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                        <div class="border-b border-promo-line py-3">
                                             {{ selectedPlan.uploadLimitLabel }}
                                         </div>
-                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                        <div class="border-b border-promo-line py-3">
                                             {{ selectedPlan.retentionLabel }}
                                         </div>
-                                        <div class="rounded-[18px] bg-promo-surface/45 px-4 py-3">
+                                        <div class="py-3">
                                             {{ selectedPlan.activeWindowLabel }}
                                         </div>
                                         <div
                                             v-if="isBusinessMode && !selectedBusinessPlanAffordable"
-                                            class="rounded-[18px] bg-white px-4 py-3"
+                                            class="border-t border-promo-line pt-3"
                                         >
                                             <Link :href="businessTopUpHref" class="font-semibold text-promo-primary hover:text-promo-primary-strong">
                                                 Top up wallet
