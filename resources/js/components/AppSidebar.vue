@@ -42,6 +42,7 @@ type PageProps = {
     currentEvent?: CurrentEvent;
     eventNavigation?: EventNavItem[];
     accountNavigation?: EventNavItem[];
+    businessNavigation?: EventNavItem[];
     adminNavigation?: EventNavItem[];
     backNavigation?: EventNavItem;
     sidebarLabel?: string;
@@ -51,6 +52,7 @@ const page = usePage<PageProps>();
 
 const eventNavigation = computed(() => page.props.eventNavigation ?? []);
 const adminNavigation = computed(() => page.props.adminNavigation ?? []);
+const businessNavigation = computed(() => page.props.businessNavigation ?? []);
 
 const footerBackItem = computed<NavItem | null>(() => {
     const eventBackItem = eventNavigation.value.find(
@@ -114,6 +116,21 @@ const mainNavItems = computed<NavItem[]>(() => {
                             : item.title === 'Cleanup'
                               ? Activity
                               : Shield,
+        }));
+    }
+
+    if (businessNavigation.value.length > 0) {
+        return businessNavigation.value.map((item) => ({
+            title: item.title,
+            href: item.href,
+            icon:
+                item.title === 'Business'
+                    ? BriefcaseBusiness
+                    : item.title === 'Billing'
+                        ? CreditCard
+                        : item.title === 'Events'
+                            ? FolderKanban
+                            : LayoutGrid,
         }));
     }
 

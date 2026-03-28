@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user?->authContext(),
             ],
             'accountNavigation' => $this->sharedAccountNavigation($request),
+            'businessNavigation' => $this->sharedBusinessNavigation($request),
             'sidebarLabel' => $this->sharedSidebarLabel($request),
             'flash' => [
                 'success' => fn (): mixed => $request->session()->get('success'),
@@ -90,16 +91,12 @@ class HandleInertiaRequests extends Middleware
         if ($user->canAccessBusinessDashboard()) {
             return [
                 [
+                    'title' => 'Events',
+                    'href' => route('dashboard.account'),
+                ],
+                [
                     'title' => 'Business',
                     'href' => route('dashboard.business'),
-                ],
-                [
-                    'title' => 'Billing',
-                    'href' => route('dashboard.business.wallet.history'),
-                ],
-                [
-                    'title' => 'Events',
-                    'href' => route('dashboard.business.events.index'),
                 ],
             ];
         }
@@ -108,6 +105,33 @@ class HandleInertiaRequests extends Middleware
             [
                 'title' => 'Events',
                 'href' => route('dashboard'),
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{title: string, href: string}>
+     */
+    private function sharedBusinessNavigation(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user === null || ! $user->canAccessBusinessDashboard()) {
+            return [];
+        }
+
+        return [
+            [
+                'title' => 'Business',
+                'href' => route('dashboard.business'),
+            ],
+            [
+                'title' => 'Billing',
+                'href' => route('dashboard.business.wallet.history'),
+            ],
+            [
+                'title' => 'Events',
+                'href' => route('dashboard.business.events.index'),
             ],
         ];
     }
@@ -124,7 +148,7 @@ class HandleInertiaRequests extends Middleware
             return 'Admin';
         }
 
-        return $user->canAccessBusinessDashboard() ? 'Business' : 'Events';
+        return 'Account';
     }
 
     private function resolveLocale(Request $request): string

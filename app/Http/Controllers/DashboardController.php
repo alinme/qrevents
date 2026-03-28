@@ -81,6 +81,7 @@ class DashboardController extends Controller
             'businessAttentionEvents' => $data['businessAttentionEvents'],
             'continueSetupEvent' => $data['continueSetupEvent'],
             'accountNavigation' => $data['accountNavigation'],
+            'businessNavigation' => [],
             'dashboardLinks' => $data['dashboardLinks'],
             'ownedEvents' => $data['ownedEvents'],
             'collaboratorEvents' => $data['collaboratorEvents'],
@@ -124,7 +125,8 @@ class DashboardController extends Controller
                 $filters,
             ),
             'quickActions' => $data['quickActions'],
-            'accountNavigation' => $data['accountNavigation'],
+            'accountNavigation' => [],
+            'businessNavigation' => $data['businessNavigation'],
             'dashboardLinks' => $data['dashboardLinks'],
             'businessActionLinks' => [
                 'startExports' => route('dashboard.business.exports.start'),
@@ -160,7 +162,8 @@ class DashboardController extends Controller
                 collect($data['businessAttentionEvents']),
                 $filters,
             ),
-            'accountNavigation' => $data['accountNavigation'],
+            'accountNavigation' => [],
+            'businessNavigation' => $data['businessNavigation'],
             'dashboardLinks' => [
                 'overview' => route('dashboard.account'),
                 'business' => route('dashboard.business'),
@@ -202,7 +205,8 @@ class DashboardController extends Controller
         );
 
         return Inertia::render('dashboard/BusinessWalletHistory', [
-            'accountNavigation' => $data['accountNavigation'],
+            'accountNavigation' => [],
+            'businessNavigation' => $data['businessNavigation'],
             'dashboardLinks' => [
                 'overview' => route('dashboard.account'),
                 'business' => route('dashboard.business'),
@@ -491,13 +495,24 @@ class DashboardController extends Controller
                 )
                 : null,
             'accountNavigation' => array_values(array_filter([
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Business',
-                    'href' => route('dashboard.business'),
-                ] : [
+                [
                     'title' => 'Events',
                     'href' => $accountOverviewUrl,
                 ],
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Business',
+                    'href' => route('dashboard.business'),
+                ] : null,
+                $isSuperAdmin ? [
+                    'title' => 'Admin',
+                    'href' => route('admin.overview'),
+                ] : null,
+            ])),
+            'businessNavigation' => array_values(array_filter([
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Business',
+                    'href' => route('dashboard.business'),
+                ] : null,
                 $canAccessBusinessDashboard ? [
                     'title' => 'Billing',
                     'href' => route('dashboard.business.wallet.history'),
@@ -505,10 +520,6 @@ class DashboardController extends Controller
                 $canAccessBusinessDashboard ? [
                     'title' => 'Events',
                     'href' => route('dashboard.business.events.index'),
-                ] : null,
-                $isSuperAdmin ? [
-                    'title' => 'Admin',
-                    'href' => route('admin.overview'),
                 ] : null,
             ])),
             'dashboardLinks' => [

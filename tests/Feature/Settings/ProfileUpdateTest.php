@@ -12,10 +12,10 @@ test('profile page is displayed', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/Profile')
-            ->where('sidebarLabel', 'Business')
-            ->where('accountNavigation.0.title', 'Business')
-            ->where('accountNavigation.1.title', 'Billing')
-            ->where('accountNavigation.2.title', 'Events')
+            ->where('sidebarLabel', 'Account')
+            ->where('accountNavigation.0.title', 'Events')
+            ->where('accountNavigation.1.title', 'Business')
+            ->where('businessNavigation.0.title', 'Business')
         );
 });
 

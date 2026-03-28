@@ -493,7 +493,8 @@ class EventOnboardingController extends Controller
             'businessTopUpUrl' => $businessMode
                 ? route('dashboard.business.wallet.history')
                 : null,
-            'accountNavigation' => $businessMode ? [
+            'accountNavigation' => [],
+            'businessNavigation' => $businessMode ? [
                 [
                     'title' => 'Business',
                     'href' => route('dashboard.business'),

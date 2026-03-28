@@ -89,6 +89,10 @@ const props = defineProps<{
         title: string;
         href: string;
     }>;
+    businessNavigation?: Array<{
+        title: string;
+        href: string;
+    }>;
     dashboardLinks?: {
         overview: string;
         business: string | null;
