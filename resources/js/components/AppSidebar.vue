@@ -5,6 +5,8 @@ import {
     ArrowLeft,
     Camera,
     CreditCard,
+    CircleDollarSign,
+    FolderPlus,
     LayoutGrid,
     Package,
     Settings,
@@ -125,6 +127,12 @@ const mainNavItems = computed<NavItem[]>(() => {
                     ? LayoutGrid
                     : item.title === 'Business'
                       ? CreditCard
+                      : item.title === 'Create Event'
+                        ? FolderPlus
+                        : item.title === 'Top Up'
+                          ? CircleDollarSign
+                          : item.title === 'Portfolio'
+                            ? Camera
                       : item.title === 'Owned Events'
                         ? Camera
                         : item.title === 'Admin'

@@ -38,6 +38,15 @@ export type BusinessOverview = {
     storageUsagePercent: number;
 };
 
+export type BusinessWalletActivity = {
+    id: number;
+    kind: 'top_up' | 'bonus' | 'event_debit' | 'adjustment';
+    credits: number;
+    description: string;
+    createdAt: string | null;
+    eventName: string | null;
+};
+
 export type BusinessAttentionEvent = {
     id: number;
     name: string;

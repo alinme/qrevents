@@ -47,6 +47,10 @@ class DashboardController extends Controller
             return $onboardingRedirect;
         }
 
+        if ($request->user()->canAccessBusinessDashboard()) {
+            return to_route('dashboard.business');
+        }
+
         $singleAccessibleEvent = $this->singleAccessibleEvent($request);
         if ($singleAccessibleEvent !== null) {
             if ($singleAccessibleEvent->user_id === $request->user()->id && $singleAccessibleEvent->onboarding_completed_at === null) {
@@ -78,6 +82,7 @@ class DashboardController extends Controller
             'ownedEvents' => $data['ownedEvents'],
             'collaboratorEvents' => $data['collaboratorEvents'],
             'recentActivity' => $data['recentActivity'],
+            'sidebarLabel' => $request->user()->canAccessBusinessDashboard() ? 'Portfolio' : 'Events',
             'showDashboardModal' => $request->session()->pull('show_dashboard_modal', false),
         ]);
     }
@@ -104,6 +109,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard/BusinessOverview', [
             'summary' => $data['summary'],
             'businessOverview' => $data['businessOverview'],
+            'walletActivity' => $data['walletActivity'],
             'businessAttentionEvents' => $filteredAttentionEvents->take(6)->all(),
             'businessAttentionSummary' => [
                 'visibleCount' => $filteredAttentionEvents->count(),
@@ -123,6 +129,7 @@ class DashboardController extends Controller
                 'createEvent' => route('dashboard.business.events.create'),
                 'topUpWallet' => route('businesses'),
             ],
+            'sidebarLabel' => 'Business',
             'ownedEvents' => $ownedEventsPaginator->items(),
             'ownedEventsPagination' => $this->paginationMeta($ownedEventsPaginator),
         ]);
@@ -358,6 +365,7 @@ class DashboardController extends Controller
                     ->count(),
             ],
             'businessOverview' => $this->businessOverview($ownedEvents, $ownedEventCards->all()),
+            'walletActivity' => $this->walletActivityItems($request),
             'businessAttentionEvents' => $this->businessAttentionEvents($ownedEvents, $assetStats, $defaultStats),
             'quickActions' => array_values(array_filter([
                 $canAccessBusinessDashboard ? [
@@ -406,10 +414,25 @@ class DashboardController extends Controller
                 )
                 : null,
             'accountNavigation' => array_values(array_filter([
-                [
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Business',
+                    'href' => route('dashboard.business'),
+                ] : [
                     'title' => 'Events',
                     'href' => $accountOverviewUrl,
                 ],
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Create Event',
+                    'href' => route('dashboard.business.events.create'),
+                ] : null,
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Top Up',
+                    'href' => route('businesses'),
+                ] : null,
+                $canAccessBusinessDashboard ? [
+                    'title' => 'Portfolio',
+                    'href' => route('dashboard.account'),
+                ] : null,
                 $isSuperAdmin ? [
                     'title' => 'Admin',
                     'href' => route('admin.overview'),
@@ -425,6 +448,32 @@ class DashboardController extends Controller
             'collaboratorEvents' => $collaboratorEventCards->all(),
             'recentActivity' => $recentActivity,
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function walletActivityItems(Request $request): array
+    {
+        if (! $request->user()->canAccessBusinessDashboard()) {
+            return [];
+        }
+
+        return $request->user()
+            ->businessWalletTransactions()
+            ->with('event:id,name')
+            ->latest('id')
+            ->limit(6)
+            ->get()
+            ->map(fn ($transaction): array => [
+                'id' => $transaction->id,
+                'kind' => $transaction->kind,
+                'credits' => (int) $transaction->credits,
+                'description' => $transaction->description,
+                'createdAt' => $transaction->created_at?->toIso8601String(),
+                'eventName' => $transaction->event?->name,
+            ])
+            ->all();
     }
 
     /**

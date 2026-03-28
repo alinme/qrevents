@@ -170,6 +170,19 @@ test('owned event accounts can still open the account dashboard explicitly', fun
         );
 });
 
+test('business accounts land on the business home from the main dashboard route', function () {
+    $owner = User::factory()->business()->create();
+
+    Event::factory()->for($owner)->create([
+        'name' => 'Business Main Event',
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard'))
+        ->assertRedirect(route('dashboard.business'));
+});
+
 test('normal owned-event users are sent straight into their only event workspace from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
@@ -401,8 +414,12 @@ test('business accounts can open the dedicated business dashboard', function () 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard/BusinessOverview')
+            ->where('sidebarLabel', 'Business')
             ->where('dashboardLinks.overview', route('dashboard.account'))
             ->where('dashboardLinks.business', route('dashboard.business'))
+            ->where('accountNavigation.0.title', 'Business')
+            ->where('accountNavigation.1.title', 'Create Event')
+            ->where('accountNavigation.2.title', 'Top Up')
             ->where('businessOverview.hasOwnedEvents', true)
             ->where('businessOverview.overdueEventCount', 1)
             ->where('businessOverview.readyExportCount', 1)

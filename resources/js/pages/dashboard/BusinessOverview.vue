@@ -29,6 +29,7 @@ import type {
     BusinessDashboardFilters,
     BusinessAttentionEvent,
     BusinessOverview,
+    BusinessWalletActivity,
     DashboardEvent,
     DashboardLinks,
     PaginationMeta,
@@ -39,6 +40,7 @@ import type {
 const props = defineProps<{
     summary: Summary;
     businessOverview: BusinessOverview;
+    walletActivity: BusinessWalletActivity[];
     businessAttentionEvents: BusinessAttentionEvent[];
     businessAttentionSummary: {
         visibleCount: number;
@@ -143,6 +145,24 @@ const shortcutLinks = computed(() => [
         count: props.businessOverview.readyExportCount,
     },
 ]);
+
+const latestWalletEntry = computed(() => props.walletActivity[0] ?? null);
+
+const walletActivityLabel = (item: BusinessWalletActivity): string => {
+    if (item.kind === 'top_up') {
+        return `+${item.credits} credits added`;
+    }
+
+    if (item.kind === 'bonus') {
+        return `+${item.credits} bonus credits`;
+    }
+
+    if (item.kind === 'event_debit') {
+        return `-${item.credits} credits used`;
+    }
+
+    return `${item.credits} credits updated`;
+};
 
 const page = usePage();
 
@@ -450,14 +470,15 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     <h1
                                         class="text-3xl font-semibold tracking-tight md:text-4xl"
                                     >
-                                        Manage multiple events from one place
+                                        Run your event business from one home
                                     </h1>
                                     <p
                                         class="max-w-2xl text-sm leading-6 text-white/72 md:text-base"
                                     >
-                                        Create new events, resume setup, review
-                                        billing, and jump between all owned
-                                        event workspaces.
+                                        Create paid events from wallet credits,
+                                        move between client workspaces, and keep
+                                        billing, exports, and setup in one calm
+                                        place.
                                     </p>
                                 </div>
                             </div>
@@ -510,41 +531,99 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 <h2
                                     class="text-2xl font-semibold text-[#171411]"
                                 >
-                                    Do the main business work fast
+                                    Main business actions
                                 </h2>
                             </div>
                         </div>
 
-                        <div
-                            class="mt-5 rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-5"
-                        >
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <Button
-                                    as-child
-                                    class="bg-[#171411] text-white hover:bg-[#2b2621]"
-                                >
-                                    <Link :href="dashboardLinks.ownedEvents">
-                                        Open all events
-                                    </Link>
-                                </Button>
-                                <Button as-child variant="outline">
-                                    <Link :href="dashboardLinks.overview">
-                                        Account dashboard
-                                    </Link>
-                                </Button>
-                                <Button
-                                    v-for="shortcut in shortcutLinks"
-                                    :key="shortcut.label"
-                                    as-child
-                                    variant="outline"
-                                >
-                                    <Link :href="shortcut.href">
-                                        {{ shortcut.label }}
-                                        <span class="ml-2 text-zinc-500">
-                                            {{ shortcut.count }}
-                                        </span>
-                                    </Link>
-                                </Button>
+                        <div class="mt-5 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+                            <div
+                                class="rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-5"
+                            >
+                                <div class="grid gap-3 md:grid-cols-2">
+                                    <Button
+                                        as-child
+                                        class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    >
+                                        <Link :href="businessActionLinks.createEvent">
+                                            Create event
+                                        </Link>
+                                    </Button>
+                                    <Button as-child variant="outline">
+                                        <Link :href="businessActionLinks.topUpWallet">
+                                            Top up credits
+                                        </Link>
+                                    </Button>
+                                    <Button as-child variant="outline">
+                                        <Link :href="dashboardLinks.ownedEvents">
+                                            Open all events
+                                        </Link>
+                                    </Button>
+                                    <Button as-child variant="outline">
+                                        <Link :href="dashboardLinks.overview">
+                                            Portfolio summary
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        v-for="shortcut in shortcutLinks"
+                                        :key="shortcut.label"
+                                        as-child
+                                        variant="outline"
+                                    >
+                                        <Link :href="shortcut.href">
+                                            {{ shortcut.label }}
+                                            <span class="ml-2 text-zinc-500">
+                                                {{ shortcut.count }}
+                                            </span>
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div
+                                class="rounded-[1.5rem] border border-black/6 bg-[#171411] p-5 text-white"
+                            >
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-medium text-white/70">
+                                            Wallet
+                                        </p>
+                                        <h3 class="mt-1 text-3xl font-semibold tracking-tight">
+                                            {{ businessOverview.walletCredits }} credits
+                                        </h3>
+                                        <p class="mt-2 text-sm leading-6 text-white/72">
+                                            Use credits for new Plus or Pro events. One credit equals one euro in wallet value.
+                                        </p>
+                                    </div>
+                                    <Button as-child class="bg-white text-[#171411] hover:bg-[#f3ece1]">
+                                        <Link :href="businessActionLinks.topUpWallet">
+                                            Add credits
+                                        </Link>
+                                    </Button>
+                                </div>
+
+                                <div class="mt-5 border-t border-white/10 pt-4">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
+                                        Latest wallet movement
+                                    </p>
+                                    <div v-if="latestWalletEntry" class="mt-3 space-y-1">
+                                        <p class="text-sm font-semibold text-white">
+                                            {{ walletActivityLabel(latestWalletEntry) }}
+                                        </p>
+                                        <p class="text-sm text-white/72">
+                                            {{ latestWalletEntry.description }}
+                                            <span v-if="latestWalletEntry.eventName">
+                                                · {{ latestWalletEntry.eventName }}
+                                            </span>
+                                        </p>
+                                        <p class="text-xs text-white/50">
+                                            {{ formatDateTime(latestWalletEntry.createdAt) }}
+                                        </p>
+                                    </div>
+                                    <p v-else class="mt-3 text-sm text-white/68">
+                                        No wallet activity yet. Your first top-up will appear here.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -747,6 +826,53 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </div>
                     </section>
                 </div>
+
+                <section
+                    class="rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
+                >
+                    <div class="flex flex-col gap-2 border-b border-black/5 pb-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-zinc-500">
+                                Wallet activity
+                            </p>
+                            <h2 class="text-2xl font-semibold text-[#171411]">
+                                Recent credit movements
+                            </h2>
+                        </div>
+                        <Button as-child variant="outline">
+                            <Link :href="businessActionLinks.topUpWallet">
+                                Top up credits
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <div v-if="walletActivity.length === 0" class="py-10 text-sm leading-6 text-zinc-600">
+                        No credit activity yet. Top up the wallet to start creating business events from this space.
+                    </div>
+
+                    <div v-else class="divide-y divide-black/5">
+                        <article
+                            v-for="item in walletActivity"
+                            :key="item.id"
+                            class="flex flex-col gap-2 py-4 md:flex-row md:items-center md:justify-between"
+                        >
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-[#171411]">
+                                    {{ walletActivityLabel(item) }}
+                                </p>
+                                <p class="mt-1 text-sm text-zinc-600">
+                                    {{ item.description }}
+                                    <span v-if="item.eventName">
+                                        · {{ item.eventName }}
+                                    </span>
+                                </p>
+                            </div>
+                            <p class="text-xs text-zinc-500">
+                                {{ formatDateTime(item.createdAt) }}
+                            </p>
+                        </article>
+                    </div>
+                </section>
 
                 <section
                     class="rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
