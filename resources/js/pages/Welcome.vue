@@ -462,7 +462,13 @@ onMounted(() => {
         return;
     }
 
-    if (!props.pwaLaunch && !isStandalonePwa()) {
+    if (isStandalonePwa()) {
+        window.location.replace(storedAlbum.albumUrl);
+
+        return;
+    }
+
+    if (!props.pwaLaunch) {
         return;
     }
 
