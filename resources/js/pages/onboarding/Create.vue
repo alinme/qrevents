@@ -515,6 +515,16 @@ const updateSubEventNoAddress = (index: number, checked: CheckedState): void => 
     form.sub_events = [...form.sub_events];
 };
 
+const toggleSubEventNoAddress = (index: number): void => {
+    const currentSubEvent = form.sub_events[index];
+
+    if (currentSubEvent === undefined) {
+        return;
+    }
+
+    updateSubEventNoAddress(index, !currentSubEvent.no_address);
+};
+
 const fieldError = (field: string): string | undefined => {
     const errors = form.errors as Record<string, string | undefined>;
 
@@ -1330,13 +1340,21 @@ const submit = (): void => {
                                                 <InputError :message="fieldError(`sub_events.${index}.address`)" />
                                             </div>
 
-                                            <label class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted">
+                                            <div
+                                                class="inline-flex cursor-pointer items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted"
+                                                role="button"
+                                                tabindex="0"
+                                                @click="toggleSubEventNoAddress(index)"
+                                                @keydown.enter.prevent="toggleSubEventNoAddress(index)"
+                                                @keydown.space.prevent="toggleSubEventNoAddress(index)"
+                                            >
                                                 <Checkbox
                                                     :checked="subEvent.no_address"
+                                                    @click.stop
                                                     @update:checked="(checked: CheckedState) => updateSubEventNoAddress(index, checked)"
                                                 />
                                                 This moment has no address
-                                            </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
