@@ -869,21 +869,21 @@ const submit = (): void => {
                                         v-if="isWeddingType"
                                         :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
                                     >
-                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                            <Sparkles class="size-3.5" />
+                                        <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
+                                            <Sparkles v-if="!isBusinessMode" class="size-3.5" />
                                             Wedding naming
                                         </div>
 
-                                        <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
+                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink'">
                                             We can build the wedding title for you
                                         </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
                                             Add the couple&apos;s first names and the family name. We&apos;ll suggest polished event titles you can use right away.
                                         </p>
 
                                         <div class="mt-5 grid gap-4 md:grid-cols-2">
                                             <div class="grid gap-2">
-                                                <Label for="wedding_partner_one_first_name" class="text-sm font-semibold text-promo-ink">
+                                                <Label for="wedding_partner_one_first_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Groom / partner one
                                                 </Label>
                                                 <Input
@@ -891,13 +891,13 @@ const submit = (): void => {
                                                     v-model="form.wedding_partner_one_first_name"
                                                     name="wedding_partner_one_first_name"
                                                     placeholder="Andrei"
-                                                    class="h-12 rounded-[20px] border-promo-line bg-white"
+                                                    :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
                                                 />
                                                 <InputError :message="form.errors.wedding_partner_one_first_name" />
                                             </div>
 
                                             <div class="grid gap-2">
-                                                <Label for="wedding_partner_two_first_name" class="text-sm font-semibold text-promo-ink">
+                                                <Label for="wedding_partner_two_first_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Bride / partner two
                                                 </Label>
                                                 <Input
@@ -905,14 +905,14 @@ const submit = (): void => {
                                                     v-model="form.wedding_partner_two_first_name"
                                                     name="wedding_partner_two_first_name"
                                                     placeholder="Maria"
-                                                    class="h-12 rounded-[20px] border-promo-line bg-white"
+                                                    :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
                                                 />
                                                 <InputError :message="form.errors.wedding_partner_two_first_name" />
                                             </div>
                                         </div>
 
                                         <div class="mt-4 grid gap-2">
-                                            <Label for="wedding_family_name" class="text-sm font-semibold text-promo-ink">
+                                            <Label for="wedding_family_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                 Family name
                                             </Label>
                                             <Input
@@ -920,7 +920,7 @@ const submit = (): void => {
                                                 v-model="form.wedding_family_name"
                                                 name="wedding_family_name"
                                                 placeholder="Popescu"
-                                                class="h-12 rounded-[20px] border-promo-line bg-white"
+                                                :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
                                             />
                                             <InputError :message="form.errors.wedding_family_name" />
                                         </div>
@@ -930,10 +930,10 @@ const submit = (): void => {
                                             class="mt-5 space-y-3"
                                         >
                                             <div class="flex items-center justify-between gap-3">
-                                                <p class="text-sm font-semibold text-promo-ink">
+                                                <p :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Suggested titles
                                                 </p>
-                                                <p class="text-xs text-promo-muted">
+                                                <p :class="isBusinessMode ? 'text-xs text-brand-muted' : 'text-xs text-promo-muted'">
                                                     Tap one to use it
                                                 </p>
                                             </div>
@@ -962,7 +962,7 @@ const submit = (): void => {
                                     </div>
 
                                     <div class="grid gap-2">
-                                        <Label for="name" class="text-sm font-semibold text-promo-ink">
+                                        <Label for="name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                             Event name
                                         </Label>
                                         <Input
@@ -970,11 +970,11 @@ const submit = (): void => {
                                             v-model="form.name"
                                             name="name"
                                             :placeholder="weddingTitlePlaceholder"
-                                            class="h-12 rounded-[20px] border-promo-line bg-promo-surface/40"
+                                            :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-promo-surface/40'"
                                         />
                                         <p
                                             v-if="isWeddingType"
-                                            class="text-xs leading-5 text-promo-muted"
+                                            :class="isBusinessMode ? 'text-xs leading-5 text-brand-muted' : 'text-xs leading-5 text-promo-muted'"
                                         >
                                             You can keep one of the suggested titles or write your own.
                                         </p>
@@ -991,15 +991,15 @@ const submit = (): void => {
                                 </div>
 
                                 <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
-                                    <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                        <Users class="size-3.5" />
+                                    <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
+                                        <Users v-if="!isBusinessMode" class="size-3.5" />
                                         Guest planning
                                     </div>
 
-                                    <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
+                                    <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink'">
                                         How many attendees are you expecting?
                                     </h3>
-                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                    <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
                                         An estimate is enough. This will help later with planning recommendations and supplier-related features.
                                     </p>
 
@@ -1030,7 +1030,7 @@ const submit = (): void => {
                                     </div>
 
                                     <div class="mt-4 grid gap-2">
-                                        <Label for="attendee_estimate" class="text-sm font-semibold text-promo-ink">
+                                        <Label for="attendee_estimate" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                             Custom estimate
                                         </Label>
                                         <Input
@@ -1041,7 +1041,7 @@ const submit = (): void => {
                                             min="1"
                                             step="1"
                                             placeholder="Type a number"
-                                            class="h-12 rounded-[20px] border-promo-line bg-white"
+                                            :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
                                         />
                                         <InputError :message="form.errors.attendee_estimate" />
                                     </div>
@@ -1053,14 +1053,14 @@ const submit = (): void => {
                             <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
                                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                            <CalendarDays class="size-3.5" />
+                                        <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
+                                            <CalendarDays v-if="!isBusinessMode" class="size-3.5" />
                                             Event dates
                                         </div>
-                                        <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink'">
                                             Add every day that matters
                                         </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
                                             One date works, but this can also support rehearsal dinners, second days, conferences, or multi-day celebrations.
                                         </p>
                                     </div>
@@ -1085,7 +1085,7 @@ const submit = (): void => {
                                     >
                                         <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
                                             <div class="grid gap-2">
-                                                <Label :for="`event-date-label-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                <Label :for="`event-date-label-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Label
                                                 </Label>
                                                 <Input
@@ -1093,12 +1093,12 @@ const submit = (): void => {
                                                     v-model="eventDate.label"
                                                     :name="`event_dates.${index}.label`"
                                                     placeholder="Main day, church day, rehearsal, second day..."
-                                                    class="h-11 rounded-[18px] border-promo-line bg-promo-surface/35"
+                                                    :class="isBusinessMode ? 'h-11 rounded-[18px] border-brand-border bg-brand-inverse' : 'h-11 rounded-[18px] border-promo-line bg-promo-surface/35'"
                                                 />
                                             </div>
 
                                             <div class="grid gap-2">
-                                                <Label :for="`event-date-date-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                <Label :for="`event-date-date-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Date
                                                 </Label>
                                                 <PrettyDatePicker
@@ -1111,7 +1111,7 @@ const submit = (): void => {
                                             <Button
                                                 type="button"
                                                 variant="ghost"
-                                                class="h-11 rounded-full text-promo-muted"
+                                                :class="isBusinessMode ? 'h-11 rounded-full text-brand-muted' : 'h-11 rounded-full text-promo-muted'"
                                                 :disabled="form.event_dates.length === 1"
                                                 @click="removeEventDate(index)"
                                             >
@@ -1128,14 +1128,14 @@ const submit = (): void => {
 
                             <div class="space-y-5">
                                 <div>
-                                    <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                        <Clock3 class="size-3.5" />
+                                    <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
+                                        <Clock3 v-if="!isBusinessMode" class="size-3.5" />
                                         Relevant moments
                                     </div>
-                                    <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                    <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink'">
                                         Pick the moments you need for {{ selectedType?.label ?? 'this event' }}
                                     </h3>
-                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                    <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
                                         We only show moments that make sense for the selected event type.
                                     </p>
                                 </div>
@@ -1209,15 +1209,15 @@ const submit = (): void => {
                             </div>
 
                             <div
-                                v-if="form.sub_events.length > 0"
+                                    v-if="form.sub_events.length > 0"
                                 :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
                             >
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
-                                        <h3 class="text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'text-xl font-bold tracking-[-0.04em] text-promo-ink'">
                                             Schedule the selected moments
                                         </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
                                             Each selected moment needs a date, start time, and address unless it does not need one.
                                         </p>
                                     </div>
@@ -1235,10 +1235,10 @@ const submit = (): void => {
                                     >
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
-                                                <p class="text-base font-semibold text-promo-ink">
+                                                <p :class="isBusinessMode ? 'text-base font-semibold text-brand-ink' : 'text-base font-semibold text-promo-ink'">
                                                     {{ subEvent.label }}
                                                 </p>
-                                                <p class="mt-1 text-sm text-promo-muted">
+                                                <p :class="isBusinessMode ? 'mt-1 text-sm text-brand-muted' : 'mt-1 text-sm text-promo-muted'">
                                                     Add the date, starting hour, and address for this moment.
                                                 </p>
                                             </div>
@@ -1246,14 +1246,14 @@ const submit = (): void => {
                                             <div class="flex items-center gap-2">
                                                 <span
                                                     v-if="subEvent.required"
-                                                    class="rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary"
+                                                    :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary'"
                                                 >
                                                     Required
                                                 </span>
                                                 <button
                                                     v-else
                                                     type="button"
-                                                    class="rounded-full p-2 text-promo-muted transition-colors hover:bg-white"
+                                                    :class="isBusinessMode ? 'rounded-full p-2 text-brand-muted transition-colors hover:bg-brand-highlight/15' : 'rounded-full p-2 text-promo-muted transition-colors hover:bg-white'"
                                                     @click="removeSubEvent(subEvent.key)"
                                                 >
                                                     <X class="size-4" />
@@ -1263,7 +1263,7 @@ const submit = (): void => {
 
                                         <div class="mt-4 grid gap-3 md:grid-cols-2">
                                             <div class="grid gap-2">
-                                                <Label :for="`sub-event-date-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                <Label :for="`sub-event-date-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Date
                                                 </Label>
                                                 <PrettyDatePicker
@@ -1275,7 +1275,7 @@ const submit = (): void => {
                                             </div>
 
                                             <div class="grid gap-2">
-                                                <Label :for="`sub-event-time-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                <Label :for="`sub-event-time-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Start time
                                                 </Label>
                                                 <PrettyTimePicker
@@ -1289,7 +1289,7 @@ const submit = (): void => {
 
                                         <div class="mt-4 grid gap-3">
                                             <div class="grid gap-2">
-                                                <Label :for="`sub-event-address-${index}`" class="text-sm font-semibold text-promo-ink">
+                                                <Label :for="`sub-event-address-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
                                                     Address
                                                 </Label>
                                                 <Textarea
@@ -1298,14 +1298,16 @@ const submit = (): void => {
                                                     :name="`sub_events.${index}.address`"
                                                     :disabled="subEvent.no_address"
                                                     placeholder="Venue name, street, city, or location details for this moment."
-                                                    class="min-h-24 rounded-[18px] border-promo-line bg-white"
-                                                    :class="subEvent.no_address ? 'opacity-60' : ''"
+                                                    :class="[
+                                                        isBusinessMode ? 'min-h-24 rounded-[18px] border-brand-border bg-brand-inverse' : 'min-h-24 rounded-[18px] border-promo-line bg-white',
+                                                        subEvent.no_address ? 'opacity-60' : '',
+                                                    ]"
                                                 />
                                                 <InputError :message="fieldError(`sub_events.${index}.address`)" />
                                             </div>
 
                                             <div
-                                                class="inline-flex cursor-pointer items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted"
+                                                :class="isBusinessMode ? 'inline-flex cursor-pointer items-center gap-3 rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm text-brand-muted' : 'inline-flex cursor-pointer items-center gap-3 rounded-full border border-promo-line bg-white px-4 py-2 text-sm text-promo-muted'"
                                                 role="button"
                                                 tabindex="0"
                                                 @click="toggleSubEventNoAddress(index)"
@@ -1447,17 +1449,17 @@ const submit = (): void => {
                             ref="formActionsRef"
                             :class="isBusinessMode ? 'flex flex-col gap-4 border-t border-brand-border/70 pt-6 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 border-t border-promo-line pt-6 lg:flex-row lg:items-center lg:justify-between'"
                         >
-                            <div class="grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4">
+                            <div :class="isBusinessMode ? 'grid gap-2 text-sm text-brand-muted sm:grid-cols-3 sm:gap-4' : 'grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4'">
                                 <div class="inline-flex items-center gap-2">
-                                    <MapPin class="size-4 text-promo-primary" />
+                                    <MapPin :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
                                     {{ addressedMomentsCount }} / {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} addressed
                                 </div>
                                 <div class="inline-flex items-center gap-2">
-                                    <CalendarDays class="size-4 text-promo-primary" />
+                                    <CalendarDays :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
                                     {{ reviewEventDates.length }} date{{ reviewEventDates.length === 1 ? '' : 's' }}
                                 </div>
                                 <div class="inline-flex items-center gap-2">
-                                    <Users class="size-4 text-promo-primary" />
+                                    <Users :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
                                     {{ form.attendee_estimate || '0' }} guests · {{ selectedPlan?.name ?? 'No plan' }}
                                 </div>
                             </div>

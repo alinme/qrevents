@@ -1090,17 +1090,18 @@ const statCards = computed(() => [
     <Head title="Media" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full space-y-5 bg-[#faf7f2] p-4 md:p-6">
-            <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+        <div class="dashboard-page">
+            <div class="dashboard-shell max-w-7xl">
+            <section class="dashboard-panel">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="max-w-3xl">
-                        <div class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                        <div class="dashboard-eyebrow">
                             Event workspace
                         </div>
-                        <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                        <h1 class="dashboard-title mt-2">
                             Media
                         </h1>
-                        <p class="mt-2 text-sm text-zinc-600">
+                        <p class="dashboard-body mt-2">
                             Review uploads, filter fast, and take action without digging through a heavy dashboard.
                         </p>
                     </div>
@@ -1116,11 +1117,11 @@ const statCards = computed(() => [
                                 Events
                             </a>
                         </Button>
-                        <div class="inline-flex items-center gap-1 rounded-full border border-black/8 bg-[#fcfbf8] p-1">
+                        <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                            :class="mediaView === 'relaxed' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                            :class="mediaView === 'relaxed' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Relaxed gallery view"
                             @click="mediaView = 'relaxed'"
                         >
@@ -1129,8 +1130,8 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                            :class="mediaView === 'balanced' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                            :class="mediaView === 'balanced' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Balanced gallery view"
                             @click="mediaView = 'balanced'"
                         >
@@ -1139,8 +1140,8 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                            :class="mediaView === 'dense' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                            :class="mediaView === 'dense' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Dense gallery view"
                             @click="mediaView = 'dense'"
                         >
@@ -1155,31 +1156,31 @@ const statCards = computed(() => [
                     <div
                         v-for="card in statCards"
                         :key="card.key"
-                        class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
+                        class="dashboard-divider-left"
                     >
-                        <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                            <component :is="card.icon" class="size-3.5 text-zinc-400" />
+                        <dt class="flex items-center gap-2 dashboard-eyebrow">
+                            <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
                             {{ card.title }}
                         </dt>
-                        <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                        <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
                             {{ card.value }}
                         </dd>
                     </div>
                 </dl>
 
-                <div class="mt-5 flex flex-col gap-3 border-t border-black/5 pt-4">
+                <div class="mt-5 flex flex-col gap-3 border-t border-brand-border/70 pt-4">
                     <div class="flex flex-wrap items-center gap-2">
                         <input
                             v-model="searchQuery"
                             type="text"
                             placeholder="Search attendee or filename..."
-                            class="h-10 min-w-[16rem] flex-1 rounded-xl border border-black/8 bg-[#fcfbf8] px-3 text-sm"
+                            class="h-10 min-w-[16rem] flex-1 rounded-xl border border-brand-border bg-brand-inverse px-3 text-sm text-brand-ink placeholder:text-brand-muted/80"
                         />
-                        <div class="inline-flex items-center gap-1 rounded-full border border-black/8 bg-[#fcfbf8] p-1">
+                        <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                                :class="kindFilter === 'all' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                                :class="kindFilter === 'all' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="All uploads"
                                 @click="kindFilter = 'all'"
                             >
@@ -1188,8 +1189,8 @@ const statCards = computed(() => [
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                                :class="kindFilter === 'photo' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                                :class="kindFilter === 'photo' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Photos"
                                 @click="kindFilter = 'photo'"
                             >
@@ -1198,8 +1199,8 @@ const statCards = computed(() => [
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                                :class="kindFilter === 'video' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                                :class="kindFilter === 'video' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Videos"
                                 @click="kindFilter = 'video'"
                             >
@@ -1208,8 +1209,8 @@ const statCards = computed(() => [
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-black/[0.04] hover:text-[#171411]"
-                                :class="kindFilter === 'text' ? 'bg-[#171411] text-white shadow-sm hover:bg-[#171411] hover:text-white' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
+                                :class="kindFilter === 'text' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Text posts"
                                 @click="kindFilter = 'text'"
                             >
@@ -1294,7 +1295,7 @@ const statCards = computed(() => [
 
                 <Empty
                     v-if="!hasAnyUploads"
-                    class="mt-4 rounded-2xl border bg-white py-14"
+                    class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
                 >
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -1309,7 +1310,7 @@ const statCards = computed(() => [
 
                 <Empty
                     v-else-if="filteredAssets.length === 0"
-                    class="mt-4 rounded-2xl border bg-white py-14"
+                    class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
                 >
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -1622,6 +1623,7 @@ const statCards = computed(() => [
                     </div>
                 </div>
             </section>
+            </div>
         </div>
 
         <Dialog

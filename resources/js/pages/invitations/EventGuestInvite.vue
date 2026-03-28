@@ -14,17 +14,18 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { type InvitationTemplateId } from '@/lib/invitation-templates';
-import {
-    composeInvitationPaperPresentation,
-    type InvitationWeddingDetails,
-} from '@/lib/invitation-presentation';
 import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
+import {
+    composeInvitationPaperPresentation
+    
+} from '@/lib/invitation-presentation';
+import type {InvitationWeddingDetails} from '@/lib/invitation-presentation';
+import type {InvitationTemplateId} from '@/lib/invitation-templates';
 
 type GuestParty = {
     name: string;
@@ -246,7 +247,7 @@ onMounted(() => {
                     mode="live"
                 />
 
-                <section class="rounded-[30px] border border-neutral-200 bg-white/92 p-5 shadow-xl backdrop-blur print:hidden sm:p-6">
+                <section class="rounded-[30px] border border-brand-border/70 bg-brand-panel/95 p-5 shadow-sm backdrop-blur print:hidden sm:p-6">
                     <div
                         v-if="submitted"
                         class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
@@ -262,10 +263,10 @@ onMounted(() => {
 
                     <div v-else class="space-y-4">
                         <div class="space-y-1 text-center">
-                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
+                            <p class="dashboard-eyebrow text-center">
                                 {{ t('invitations.rsvp') }}
                             </p>
-                            <p class="text-sm text-neutral-600">
+                            <p class="dashboard-body text-center">
                                 {{ t('invitations.response_help') }}
                             </p>
                         </div>
@@ -273,7 +274,7 @@ onMounted(() => {
                         <div class="grid gap-3 sm:grid-cols-3">
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
                                 @click="openAcceptModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-emerald-400/80 transition group-hover:bg-emerald-500/90" />
@@ -284,7 +285,7 @@ onMounted(() => {
 
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
                                 @click="openMaybeModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-amber-400/80 transition group-hover:bg-amber-500/90" />
@@ -295,7 +296,7 @@ onMounted(() => {
 
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-neutral-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,244,238,0.92))] px-4 py-4 text-center text-neutral-950 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
                                 @click="openDeclineModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-rose-400/80 transition group-hover:bg-rose-500/90" />
@@ -311,13 +312,13 @@ onMounted(() => {
 
                 <section
                     v-if="visibleMoments.length > 0"
-                    class="rounded-[30px] border border-neutral-200 bg-white/92 p-4 shadow-lg backdrop-blur print:hidden sm:p-5"
+                    class="rounded-[30px] border border-brand-border/70 bg-brand-panel/95 p-4 shadow-sm backdrop-blur print:hidden sm:p-5"
                 >
                     <div class="space-y-1 text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-600">
+                        <p class="dashboard-eyebrow text-center">
                             {{ t('invitations.moments_title') }}
                         </p>
-                        <p class="text-sm text-neutral-600">
+                        <p class="dashboard-body text-center">
                             {{ t('invitations.moments_description') }}
                         </p>
                     </div>
@@ -326,17 +327,17 @@ onMounted(() => {
                         <div
                             v-for="moment in visibleMoments"
                             :key="`${moment.label}-${moment.date}-${moment.time}`"
-                            class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3"
+                            class="rounded-2xl border border-brand-border/70 bg-brand-inverse px-4 py-3"
                         >
                             <div class="flex flex-col items-center gap-3 text-center">
                                 <div class="space-y-1">
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-sm font-semibold text-brand-ink">
                                         {{ moment.label }}
                                     </p>
-                                    <p class="text-sm text-neutral-600">
+                                    <p class="text-sm text-brand-muted">
                                         {{ moment.date }} · {{ moment.time }}
                                     </p>
-                                    <p class="text-sm text-neutral-600">
+                                    <p class="text-sm text-brand-muted">
                                         {{ moment.address }}
                                     </p>
                                 </div>
@@ -346,7 +347,7 @@ onMounted(() => {
                                     :href="moment.mapsUrl"
                                     target="_blank"
                                     rel="noreferrer"
-                                    class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:text-neutral-950"
+                                    class="inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-panel px-3 py-2 text-sm font-medium text-brand-muted transition hover:border-brand-accent/30 hover:text-brand-ink"
                                 >
                                     <ExternalLink class="size-4" />
                                     {{ t('invitations.open_maps') }}
@@ -364,12 +365,12 @@ onMounted(() => {
 
                     <Link
                         :href="links.album"
-                        class="text-sm font-medium text-neutral-700 underline underline-offset-4"
+                        class="text-sm font-medium text-brand-ink underline underline-offset-4"
                     >
                         {{ t('invitations.open_album') }}
                     </Link>
 
-                    <p v-if="showPoweredBy" class="text-xs text-neutral-500">
+                    <p v-if="showPoweredBy" class="text-xs text-brand-muted">
                         {{ t('invitations.powered_by', { app: appName }) }}
                     </p>
                 </div>
@@ -377,13 +378,13 @@ onMounted(() => {
         </div>
 
         <Dialog v-model:open="acceptModalOpen">
-            <DialogContent class="flex h-[min(92vh,840px)] flex-col overflow-hidden rounded-[2rem] p-0 sm:max-w-2xl">
-                <DialogHeader class="shrink-0 border-b border-neutral-200/80 px-6 py-5 text-left sm:px-7">
+            <DialogContent class="flex h-[min(92vh,840px)] flex-col overflow-hidden rounded-[2rem] border border-brand-border/70 bg-brand-panel p-0 sm:max-w-2xl">
+                <DialogHeader class="shrink-0 border-b border-brand-border/70 px-6 py-5 text-left sm:px-7">
                     <div class="space-y-2">
                         <DialogTitle class="text-2xl font-semibold tracking-tight">
                             {{ isPublicInvite ? t('invitations.public_title') : t('invitations.private_title') }}
                         </DialogTitle>
-                        <DialogDescription class="text-sm leading-6 text-neutral-600">
+                        <DialogDescription class="text-sm leading-6 text-brand-muted">
                             {{ t('invitations.accept_modal_description') }}
                         </DialogDescription>
                     </div>
@@ -395,11 +396,11 @@ onMounted(() => {
                             <label class="text-sm font-medium">
                                 {{ t('invitations.confirmed_count') }}
                             </label>
-                            <div class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                            <div class="w-full rounded-2xl border border-brand-border bg-brand-inverse px-3 py-2 shadow-sm">
                                 <div class="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand-border bg-brand-panel text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink disabled:cursor-not-allowed disabled:opacity-40"
                                         :disabled="confirmedCount <= 1"
                                         @click="adjustConfirmedCount(-1)"
                                     >
@@ -417,7 +418,7 @@ onMounted(() => {
 
                                     <button
                                         type="button"
-                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        class="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand-border bg-brand-panel text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink disabled:cursor-not-allowed disabled:opacity-40"
                                         :disabled="confirmedCount >= confirmedAttendeeMax"
                                         @click="adjustConfirmedCount(1)"
                                     >
@@ -425,17 +426,17 @@ onMounted(() => {
                                     </button>
                                 </div>
                             </div>
-                            <p class="text-sm text-neutral-600">
+                            <p class="text-sm text-brand-muted">
                                 {{ t('invitations.how_many_hint') }}
                             </p>
                             <InputError :message="form.errors.confirmed_attendees_count" />
                         </div>
 
                         <div v-if="!isPublicInvite" class="space-y-1 text-center">
-                            <p class="text-sm font-medium text-neutral-900">
+                            <p class="text-sm font-medium text-brand-ink">
                                 {{ guestParty?.name }}
                             </p>
-                            <p class="text-sm text-neutral-600">
+                            <p class="text-sm text-brand-muted">
                                 {{ t('invitations.invited_for', { count: guestParty?.invitedAttendeesCount ?? 1 }) }}
                             </p>
                         </div>
@@ -473,7 +474,7 @@ onMounted(() => {
                                     :placeholder="t('invitations.guest_names_placeholder')"
                                     class="min-h-14 rounded-2xl py-3"
                                 />
-                                <p class="text-sm text-neutral-500">
+                                <p class="text-sm text-brand-muted">
                                     {{ t('invitations.guest_names_help') }}
                                 </p>
                                 <InputError :message="form.errors.guest_names" />
@@ -508,7 +509,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="shrink-0 border-t border-neutral-200/80 px-6 py-4 sm:px-7">
+                    <div class="shrink-0 border-t border-brand-border/70 px-6 py-4 sm:px-7">
                         <div class="flex justify-end">
                             <Button
                                 type="submit"
