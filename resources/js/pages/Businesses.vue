@@ -2,9 +2,7 @@
 import { computed } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowRight, BriefcaseBusiness, Building2, LayoutPanelTop, MonitorPlay, Repeat2, ShieldCheck, Sparkles, Users } from 'lucide-vue-next';
-import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
-import MarketingStepCard from '@/components/marketing/MarketingStepCard.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
@@ -74,6 +72,21 @@ const businessFeatures = [
         icon: ShieldCheck,
         title: t('marketing.businesses.features.4.title'),
         description: t('marketing.businesses.features.4.description'),
+    },
+];
+
+const businessOperationNotes = [
+    {
+        title: 'One credit equals one euro',
+        description: 'Top-ups stay simple. The wallet always stores EUR-based credits, even if checkout happens in RON or GBP.',
+    },
+    {
+        title: 'Business uses paid plans only',
+        description: 'Business events use Plus or Pro. Free is kept for consumer accounts, so resource usage stays fair.',
+    },
+    {
+        title: 'Top up once, create as needed',
+        description: 'Your team can add credit in advance, then launch new events without repeating a full checkout every time.',
     },
 ];
 
@@ -213,70 +226,97 @@ const businessPrimaryCtaLabel = computed(() => {
                             {{ t('marketing.businesses.hero.secondary_cta') }}
                         </Link>
                     </div>
+
+                    <div class="mt-10 grid gap-4 border-t border-promo-line pt-6 sm:grid-cols-3">
+                        <div class="sm:pr-4">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                Wallet
+                            </p>
+                            <p class="mt-2 text-sm font-semibold text-promo-ink">
+                                Prepaid credits
+                            </p>
+                            <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                Buy once, spend across future paid events.
+                            </p>
+                        </div>
+                        <div class="border-t border-promo-line pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                Plans
+                            </p>
+                            <p class="mt-2 text-sm font-semibold text-promo-ink">
+                                Plus and Pro
+                            </p>
+                            <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                Business mode stays on the same paid resource model as every other event.
+                            </p>
+                        </div>
+                        <div class="border-t border-promo-line pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                Fit
+                            </p>
+                            <p class="mt-2 text-sm font-semibold text-promo-ink">
+                                Repeatable delivery
+                            </p>
+                            <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                Built for venues, planners, agencies, and event teams running multiple client events.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="rounded-[32px] border border-promo-line bg-white p-4 shadow-[0_24px_70px_rgba(120,86,255,0.12)]">
-                    <div class="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-                        <div class="grid gap-4">
-                            <div class="rounded-[24px] border border-promo-line bg-promo-surface p-5">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex size-11 items-center justify-center rounded-[18px] bg-white text-promo-primary">
-                                        <LayoutPanelTop class="size-5" />
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                                            {{ t('marketing.businesses.hero.operations_title') }}
-                                        </p>
-                                        <p class="mt-2 text-sm leading-7 text-promo-muted">
-                                            {{ t('marketing.businesses.hero.operations_description') }}
-                                        </p>
-                                    </div>
+                <div class="grid gap-4">
+                    <div class="grid gap-4 sm:grid-cols-[0.84fr_1.16fr]">
+                        <div class="border border-promo-line bg-white px-5 py-5">
+                            <div class="flex items-start gap-4">
+                                <div class="flex size-11 shrink-0 items-center justify-center rounded-[18px] bg-promo-surface text-promo-primary">
+                                    <LayoutPanelTop class="size-5" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
+                                        {{ t('marketing.businesses.hero.operations_title') }}
+                                    </p>
+                                    <p class="mt-2 text-sm leading-7 text-promo-muted">
+                                        {{ t('marketing.businesses.hero.operations_description') }}
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+                        <img
+                            :src="businessImages[0]"
+                            :alt="t('marketing.businesses.hero.main_image_alt')"
+                            class="aspect-[5/4] w-full object-cover"
+                        />
+                    </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="rounded-[22px] border border-promo-line bg-white p-4">
-                                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
-                                        <Users class="size-4" />
-                                    </div>
-                                    <p class="mt-4 text-sm font-semibold text-promo-ink">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border border-promo-line bg-white px-5 py-5">
+                            <div class="flex items-start gap-4">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
+                                    <Users class="size-4" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-promo-ink">
                                         {{ t('marketing.businesses.hero.guest_album_title') }}
                                     </p>
                                     <p class="mt-2 text-sm leading-6 text-promo-muted">
                                         {{ t('marketing.businesses.hero.guest_album_description') }}
                                     </p>
                                 </div>
-                                <div class="rounded-[22px] border border-promo-line bg-white p-4">
-                                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
-                                        <MonitorPlay class="size-4" />
-                                    </div>
-                                    <p class="mt-4 text-sm font-semibold text-promo-ink">
+                            </div>
+                        </div>
+                        <div class="border border-promo-line bg-white px-5 py-5">
+                            <div class="flex items-start gap-4">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
+                                    <MonitorPlay class="size-4" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-promo-ink">
                                         {{ t('marketing.businesses.hero.live_wall_title') }}
                                     </p>
                                     <p class="mt-2 text-sm leading-6 text-promo-muted">
                                         {{ t('marketing.businesses.hero.live_wall_description') }}
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-4">
-                            <img
-                                :src="businessImages[0]"
-                                :alt="t('marketing.businesses.hero.main_image_alt')"
-                                class="aspect-[5/4] w-full rounded-[26px] object-cover"
-                            />
-                            <div class="grid grid-cols-2 gap-4">
-                                <img
-                                    :src="businessImages[1]"
-                                    :alt="t('marketing.businesses.hero.gallery_upload_alt')"
-                                    class="aspect-square rounded-[22px] object-cover"
-                                />
-                                <img
-                                    :src="businessImages[2]"
-                                    :alt="t('marketing.businesses.hero.gallery_moment_alt')"
-                                    class="aspect-square rounded-[22px] object-cover"
-                                />
                             </div>
                         </div>
                     </div>
@@ -286,7 +326,7 @@ const businessPrimaryCtaLabel = computed(() => {
 
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-                <div class="grid gap-6 rounded-[28px] border border-promo-line bg-promo-bg p-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div class="grid gap-10 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
                     <div>
                         <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
                             Business wallet
@@ -298,26 +338,44 @@ const businessPrimaryCtaLabel = computed(() => {
                             One credit is one euro. Business events consume credits instead of going through the normal consumer checkout every time.
                         </p>
 
-                        <div class="mt-5 grid gap-3">
+                        <div class="mt-8 space-y-4 border-t border-promo-line pt-6">
                             <div
-                                v-for="plan in businessPlans"
-                                :key="plan.slug"
-                                class="rounded-[20px] border border-promo-line bg-white px-4 py-4 text-sm"
+                                v-for="note in businessOperationNotes"
+                                :key="note.title"
+                                class="grid gap-2 border-b border-promo-line pb-4 last:border-b-0 last:pb-0"
                             >
-                                <div class="flex items-center justify-between gap-4">
+                                <p class="text-sm font-semibold text-promo-ink">
+                                    {{ note.title }}
+                                </p>
+                                <p class="text-sm leading-6 text-promo-muted">
+                                    {{ note.description }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 border-t border-promo-line pt-6">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                Event costs
+                            </p>
+                            <div class="mt-4 divide-y divide-promo-line border-y border-promo-line">
+                                <div
+                                    v-for="plan in businessPlans"
+                                    :key="plan.slug"
+                                    class="flex items-start justify-between gap-4 py-4 text-sm"
+                                >
                                     <div>
                                         <p class="font-semibold text-promo-ink">{{ plan.name }}</p>
                                         <p class="mt-1 text-promo-muted">Consumer price: {{ plan.consumerPriceLabel }}</p>
                                     </div>
-                                    <div class="rounded-full bg-promo-surface px-3 py-1 font-semibold text-promo-primary">
+                                    <p class="text-sm font-semibold text-promo-primary">
                                         {{ plan.businessCreditCost }} credits
-                                    </div>
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-[24px] border border-promo-line bg-white p-5">
+                    <div class="border border-promo-line bg-promo-bg px-5 py-5 sm:px-6 sm:py-6">
                         <div class="flex flex-col gap-4 border-b border-promo-line pb-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-promo-ink">Launch top-up packs</p>
@@ -338,11 +396,11 @@ const businessPrimaryCtaLabel = computed(() => {
                                 v-for="pack in businessPacks"
                                 :key="pack.credits"
                                 type="button"
-                                class="rounded-[20px] border px-4 py-4 text-left transition"
+                                class="border px-4 py-4 text-left transition"
                                 :class="
                                     topUpForm.credits === pack.credits
-                                        ? 'border-promo-primary bg-white shadow-[0_16px_34px_rgba(232,79,154,0.12)]'
-                                        : 'border-promo-line bg-promo-bg hover:border-promo-primary/30 hover:bg-white'
+                                        ? 'border-promo-primary bg-white'
+                                        : 'border-promo-line bg-white/75 hover:border-promo-primary/30'
                                 "
                                 @click="topUpForm.credits = pack.credits"
                             >
@@ -350,7 +408,7 @@ const businessPrimaryCtaLabel = computed(() => {
                                     <p class="text-lg font-semibold text-promo-ink">{{ pack.credits }} credits</p>
                                     <span
                                         v-if="topUpForm.credits === pack.credits"
-                                        class="rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary"
+                                        class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary"
                                     >
                                         Selected
                                     </span>
@@ -367,10 +425,7 @@ const businessPrimaryCtaLabel = computed(() => {
                             </button>
                         </div>
 
-                        <div
-                            v-if="selectedPack"
-                            class="mt-5 rounded-[20px] border border-promo-line bg-promo-surface/45 px-4 py-4"
-                        >
+                        <div v-if="selectedPack" class="mt-5 border-t border-promo-line pt-4">
                             <p class="text-sm font-semibold text-promo-ink">
                                 {{ selectedPackPriceLabel ?? selectedPack.priceLabels.EUR }} for {{ selectedPack.credits }} credits
                             </p>
@@ -425,14 +480,24 @@ const businessPrimaryCtaLabel = computed(() => {
                     :description="t('marketing.businesses.why.description')"
                 />
 
-                <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                    <MarketingFeatureCard
+                <div class="mt-14 divide-y divide-promo-line border-y border-promo-line">
+                    <div
                         v-for="feature in businessFeatures"
                         :key="feature.title"
-                        :icon="feature.icon"
-                        :title="feature.title"
-                        :description="feature.description"
-                    />
+                        class="grid gap-4 py-5 md:grid-cols-[180px_minmax(0,1fr)] md:items-start"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div class="flex size-10 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
+                                <component :is="feature.icon" class="size-4" />
+                            </div>
+                            <p class="text-sm font-semibold text-promo-ink">
+                                {{ feature.title }}
+                            </p>
+                        </div>
+                        <p class="text-sm leading-6 text-promo-muted">
+                            {{ feature.description }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -446,17 +511,42 @@ const businessPrimaryCtaLabel = computed(() => {
                     centered
                 />
 
-                <div class="mt-14 grid gap-6 lg:grid-cols-3">
-                    <MarketingStepCard
+                <div class="mt-14 divide-y divide-promo-line border-y border-promo-line bg-white">
+                    <article
                         v-for="item in businessSteps"
                         :key="item.step"
-                        :step="item.step"
-                        :title="item.title"
-                        :description="item.description"
-                        :image="item.image"
-                        :image-alt="item.imageAlt"
-                        :highlights="item.highlights"
-                    />
+                        class="grid gap-5 px-5 py-5 lg:grid-cols-[150px_minmax(0,1fr)_220px] lg:items-start"
+                    >
+                        <div>
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                {{ item.step }}
+                            </p>
+                            <p class="mt-2 text-base font-semibold text-promo-ink">
+                                {{ item.title }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm leading-6 text-promo-muted">
+                                {{ item.description }}
+                            </p>
+                            <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-promo-ink">
+                                <li
+                                    v-for="highlight in item.highlights"
+                                    :key="highlight"
+                                    class="font-medium"
+                                >
+                                    {{ highlight }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <img
+                            :src="item.image"
+                            :alt="item.imageAlt"
+                            class="aspect-[4/3] w-full object-cover"
+                        />
+                    </article>
                 </div>
             </div>
         </section>
