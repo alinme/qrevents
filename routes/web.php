@@ -167,6 +167,9 @@ Route::get('a/{shareToken}/assets/{asset}/download', [EventController::class, 'd
 Route::post('a/{shareToken}/assets/{asset}/delete', [EventController::class, 'deletePublicAsset'])
     ->middleware('throttle:public-album-write')
     ->name('events.album.asset-delete');
-Route::get('wall/{shareToken}', [EventController::class, 'wall'])->name('events.wall');
+Route::get('w/{shareToken}', [EventController::class, 'wall'])->name('events.wall');
+Route::get('wall/{shareToken}', function (string $shareToken) {
+    return redirect()->route('events.wall', $shareToken);
+})->name('events.wall.legacy');
 
 require __DIR__.'/settings.php';

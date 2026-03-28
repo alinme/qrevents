@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 defineProps<{
     eventName: string;
     albumUrl: string;
+    albumShortUrl?: string | null;
     albumAccessCode: string;
     albumAccessEntryUrl: string;
     albumAccessShortcutUrl: string;
     wallUrl: string;
+    wallShortUrl?: string | null;
     qrCodeDataUrl: string;
     readyUrl?: string | null;
     businessMode?: boolean;
@@ -52,6 +54,15 @@ defineProps<{
                     </p>
                     <p class="mx-auto max-w-md text-sm leading-6 text-brand-muted">
                         No QR reader? Visit {{ albumAccessShortcutUrl }} and enter this code.
+                    </p>
+                    <p
+                        v-if="albumShortUrl || wallShortUrl"
+                        class="mx-auto max-w-md text-sm leading-6 text-brand-muted"
+                    >
+                        Short links:
+                        <span v-if="albumShortUrl">{{ albumShortUrl }}</span>
+                        <span v-if="albumShortUrl && wallShortUrl"> · </span>
+                        <span v-if="wallShortUrl">{{ wallShortUrl }}</span>
                     </p>
                 </div>
 

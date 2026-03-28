@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\BusinessPlanCatalog;
 use App\Support\BusinessWalletManager;
 use App\Support\EventLifecycleWindows;
+use App\Support\IsgdShortUrlManager;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -141,15 +142,18 @@ class EventOnboardingController extends Controller
         $request->session()->flash('show_dashboard_modal', true);
 
         $albumUrl = route('events.album', $event->publicAlbumCode());
-        $wallUrl = route('events.wall', $event->share_token);
+        $wallUrl = route('events.wall', $event->publicAlbumCode());
+        $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
 
         return Inertia::render('onboarding/FirstPhotos', [
             'eventName' => $event->name,
             'albumUrl' => $albumUrl,
+            'albumShortUrl' => $publicShortLinks['albumShortUrl'],
             'albumAccessCode' => $event->publicAlbumCode(),
             'albumAccessEntryUrl' => route('events.album.access.show'),
             'albumAccessShortcutUrl' => 'https://is.gd/evsmrt',
             'wallUrl' => $wallUrl,
+            'wallShortUrl' => $publicShortLinks['wallShortUrl'],
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'businessMode' => $businessMode,
             'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard'),

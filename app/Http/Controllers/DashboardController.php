@@ -11,6 +11,7 @@ use App\Models\EventCollaborator;
 use App\Support\AuthOnboardingRedirector;
 use App\Support\BusinessWalletManager;
 use App\Support\ExchangeRateManager;
+use App\Support\IsgdShortUrlManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -857,6 +858,7 @@ class DashboardController extends Controller
         [$statusLabel, $statusTone] = $this->eventStatusMeta($event);
         [$billingLabel, $billingTone] = $this->billingMeta($event);
         [$mediaExportLabel, $mediaExportTone] = $this->mediaExportMeta($event);
+        $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
 
         return [
             'id' => $event->id,
@@ -900,7 +902,9 @@ class DashboardController extends Controller
                 'settings' => route('events.settings', $event),
                 'billing' => route('events.settings', ['event' => $event, 'tab' => 'billing']),
                 'album' => route('events.album', $event->publicAlbumCode()),
-                'wall' => route('events.wall', $event->share_token),
+                'albumShortUrl' => $publicShortLinks['albumShortUrl'],
+                'wall' => route('events.wall', $event->publicAlbumCode()),
+                'wallShortUrl' => $publicShortLinks['wallShortUrl'],
                 'albumAccessCode' => $event->publicAlbumCode(),
                 'albumEntry' => route('events.album.access.show'),
                 'albumEntryShortcut' => 'https://is.gd/evsmrt',

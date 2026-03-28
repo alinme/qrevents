@@ -97,10 +97,12 @@ type EventLinks = {
     mediaExportDownload: string;
     settings: string;
     album: string;
+    albumShortUrl?: string | null;
     albumAccessCode: string;
     albumEntry: string;
     albumEntryShortcut: string;
     wall: string;
+    wallShortUrl?: string | null;
     albumQrDataUrl: string;
     wallQrDataUrl: string;
 };
@@ -681,6 +683,9 @@ onUnmounted(() => {
                                         <p class="mt-1 text-xs text-zinc-500">
                                             Guests without a QR reader can visit {{ eventLinks.albumEntryShortcut }} and enter the code.
                                         </p>
+                                        <p v-if="eventLinks.albumShortUrl" class="mt-1 text-xs text-zinc-500">
+                                            Short link {{ eventLinks.albumShortUrl }}
+                                        </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
@@ -700,10 +705,10 @@ onUnmounted(() => {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                @click="copyText(eventLinks.albumAccessCode, 'Album code copied.')"
+                                                @click="copyText(eventLinks.albumShortUrl ?? eventLinks.albumAccessCode, eventLinks.albumShortUrl ? 'Album short link copied.' : 'Album code copied.')"
                                             >
                                                 <Copy class="mr-2 size-4" />
-                                                Code
+                                                {{ eventLinks.albumShortUrl ? 'Short link' : 'Code' }}
                                             </Button>
                                         </div>
                                     </div>
@@ -730,6 +735,12 @@ onUnmounted(() => {
                                         <p class="mt-1 text-sm text-zinc-600">
                                             Open this on a screen during the event.
                                         </p>
+                                        <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                            Wall code {{ eventLinks.albumAccessCode }}
+                                        </p>
+                                        <p v-if="eventLinks.wallShortUrl" class="mt-1 text-xs text-zinc-500">
+                                            Short link {{ eventLinks.wallShortUrl }}
+                                        </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
@@ -739,6 +750,15 @@ onUnmounted(() => {
                                             <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
                                                 <Copy class="mr-2 size-4" />
                                                 Copy
+                                            </Button>
+                                            <Button
+                                                v-if="eventLinks.wallShortUrl"
+                                                size="sm"
+                                                variant="outline"
+                                                @click="copyText(eventLinks.wallShortUrl, 'Photo wall short link copied.')"
+                                            >
+                                                <Copy class="mr-2 size-4" />
+                                                Short link
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">

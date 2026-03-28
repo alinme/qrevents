@@ -51,4 +51,8 @@ return [
         'base_url' => env('FRANKFURTER_BASE_URL', 'https://api.frankfurter.dev/v1'),
     ],
 
+    'isgd' => [
+        'base_url' => env('ISGD_BASE_URL', 'https://is.gd'),
+    ],
+
 ];

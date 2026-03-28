@@ -35,6 +35,7 @@ use App\Support\EventBillingManager;
 use App\Support\EventGuestPartyImportParser;
 use App\Support\EventLifecycleWindows;
 use App\Support\FrontendLocalization;
+use App\Support\IsgdShortUrlManager;
 use App\Support\StripeCheckoutGateway;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -79,6 +80,7 @@ class EventController extends Controller
             'homeUrl' => route('home'),
             'segmentCount' => 4,
             'entryShortcutUrl' => 'https://is.gd/evsmrt',
+            'defaultTarget' => 'album',
         ]);
     }
 
@@ -92,7 +94,7 @@ class EventController extends Controller
             ]);
         }
 
-        return redirect()->route('events.album', $event->publicAlbumCode());
+        return redirect()->route($request->target() === 'wall' ? 'events.wall' : 'events.album', $event->publicAlbumCode());
     }
 
     public function show(Request $request, Event $event): Response
@@ -2345,6 +2347,7 @@ class EventController extends Controller
     {
         $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
         $albumUrl = $this->publicAlbumUrl($event);
+        $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
         $planFeatures = $this->planFeaturePayload($event);
@@ -2529,21 +2532,25 @@ class EventController extends Controller
                 'businessActivate' => route('dashboard.business.activate'),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
                 'album' => $albumUrl,
+                'albumShortUrl' => $publicShortLinks['albumShortUrl'],
                 'albumAccessCode' => $event->publicAlbumCode(),
                 'albumEntry' => route('events.album.access.show'),
                 'albumEntryShortcut' => 'https://is.gd/evsmrt',
-                'wall' => route('events.wall', $event->share_token),
+                'wall' => route('events.wall', $event->publicAlbumCode()),
+                'wallShortUrl' => $publicShortLinks['wallShortUrl'],
                 'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
-                'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->share_token)),
+                'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->publicAlbumCode())),
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
             'eventNavigation' => array_values(array_filter([
-                $showEventOverviewLink ? ['title' => 'Events', 'href' => route('dashboard.account')] : null,
                 ['title' => 'Workspace', 'href' => route('events.show', $event)],
                 ['title' => 'Media', 'href' => route('events.media', $event)],
                 ['title' => 'Guests', 'href' => route('events.guests', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
             ])),
+            'backNavigation' => $showEventOverviewLink
+                ? ['title' => 'Events', 'href' => route('dashboard.account')]
+                : null,
         ];
     }
 

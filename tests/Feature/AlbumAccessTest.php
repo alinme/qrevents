@@ -11,6 +11,7 @@ it('renders the album access page', function () {
             ->where('segmentCount', 4)
             ->where('submitUrl', route('events.album.access.resolve'))
             ->where('entryShortcutUrl', 'https://is.gd/evsmrt')
+            ->where('defaultTarget', 'album')
         );
 });
 
@@ -22,7 +23,19 @@ it('redirects to the album for a matching code', function () {
 
     $this->post(route('events.album.access.resolve'), [
         'code' => 'ab12',
+        'target' => 'album',
     ])->assertRedirect(route('events.album', $event->publicAlbumCode()));
+});
+
+it('redirects to the wall for a matching code when wall is selected', function () {
+    $event = Event::factory()->create([
+        'album_access_code' => 'WX91',
+    ]);
+
+    $this->post(route('events.album.access.resolve'), [
+        'code' => 'wx91',
+        'target' => 'wall',
+    ])->assertRedirect(route('events.wall', $event->publicAlbumCode()));
 });
 
 it('returns an error when the code does not match an album', function () {
@@ -43,7 +56,7 @@ it('validates the album code length', function () {
         ])
         ->assertRedirect(route('events.album.access.show'))
         ->assertSessionHasErrors([
-            'code' => 'Album codes use 4 letters or numbers. Fill all 4 boxes and we will open the album.',
+            'code' => 'Codes use 4 letters or numbers. Fill all 4 boxes and we will open it.',
         ]);
 });
 

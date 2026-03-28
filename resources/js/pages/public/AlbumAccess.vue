@@ -11,6 +11,7 @@ const props = defineProps<{
     homeUrl: string;
     segmentCount: number;
     entryShortcutUrl: string;
+    defaultTarget: 'album' | 'wall';
 }>();
 
 const segmentRefs = ref<Array<HTMLInputElement | null>>([]);
@@ -18,6 +19,7 @@ const segments = ref<string[]>(Array.from({ length: props.segmentCount }, () => 
 const lastSubmittedCode = ref<string>('');
 const form = useForm({
     code: '',
+    target: props.defaultTarget,
 });
 
 const isComplete = computed(() => segments.value.every((segment) => segment.length === 1));
@@ -111,6 +113,15 @@ const handlePaste = (event: ClipboardEvent): void => {
     focusSegment(firstIncompleteIndex === -1 ? props.segmentCount - 1 : firstIncompleteIndex);
 };
 
+const setTarget = (target: 'album' | 'wall'): void => {
+    form.target = target;
+    lastSubmittedCode.value = '';
+
+    if (isComplete.value) {
+        submit();
+    }
+};
+
 watch(
     segments,
     () => {
@@ -154,12 +165,32 @@ watch(
                         Enter the album code
                     </h1>
                     <p class="mx-auto max-w-lg text-sm leading-7 text-promo-muted sm:text-base">
-                        Enter the 4-character code from the QR card. We will open the album automatically as soon as it is complete.
+                        Enter the 4-character code from the QR card. Choose album or wall first and we will open it automatically as soon as the code is complete.
                     </p>
                 </div>
 
                 <form class="mt-8 space-y-5" @submit.prevent="submit">
                     <input type="hidden" name="code" :value="form.code">
+                    <input type="hidden" name="target" :value="form.target">
+
+                    <div class="mx-auto grid max-w-sm grid-cols-2 gap-2 rounded-full bg-white p-1 shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
+                        <button
+                            type="button"
+                            class="rounded-full px-4 py-3 text-sm font-semibold transition"
+                            :class="form.target === 'album' ? 'bg-promo-primary text-white' : 'text-promo-muted hover:text-promo-ink'"
+                            @click="setTarget('album')"
+                        >
+                            Album
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-full px-4 py-3 text-sm font-semibold transition"
+                            :class="form.target === 'wall' ? 'bg-promo-primary text-white' : 'text-promo-muted hover:text-promo-ink'"
+                            @click="setTarget('wall')"
+                        >
+                            Wall
+                        </button>
+                    </div>
 
                     <div class="grid grid-cols-4 gap-3">
                         <label

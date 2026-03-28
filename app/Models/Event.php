@@ -79,6 +79,8 @@ class Event extends Model
         'invitation_settings',
         'share_token',
         'album_access_code',
+        'album_short_url',
+        'wall_short_url',
         'public_invitation_token',
         'media_export_status',
         'media_export_token',
