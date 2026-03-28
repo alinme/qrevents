@@ -54,12 +54,17 @@ const compactMetrics = [
     {
         label: 'Added',
         value: `${props.walletSummary.creditsAdded} credits`,
-        detail: 'Top-ups and bonus credits combined.',
+        detail: 'Top-ups and bonus credits.',
     },
     {
         label: 'Used',
         value: `${props.walletSummary.creditsUsed} credits`,
-        detail: 'Credits spent on business event creation.',
+        detail: 'Spent on new events.',
+    },
+    {
+        label: 'Entries',
+        value: `${props.walletSummary.totalTransactions}`,
+        detail: 'Total ledger movements.',
     },
 ];
 </script>
@@ -69,22 +74,38 @@ const compactMetrics = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-full bg-[#faf7f2]">
-            <div class="mx-auto grid max-w-7xl gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1.55fr)_320px]">
+            <div class="mx-auto grid max-w-7xl gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1.75fr)_300px]">
                 <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-3 border-b border-black/5 pb-5">
-                        <div class="max-w-3xl">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                                Business wallet
-                            </p>
-                            <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
-                                Transaction history
-                            </h1>
-                            <p class="mt-2 text-sm leading-6 text-zinc-600">
-                                Every credit movement in one simple ledger.
-                            </p>
+                    <div class="border-b border-black/5 pb-5">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                            <div class="max-w-3xl">
+                                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                                    Business wallet
+                                </p>
+                                <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                                    Wallet history
+                                </h1>
+                                <p class="mt-2 text-sm leading-6 text-zinc-600">
+                                    A simple ledger for top-ups, bonus credits, and event spend.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button as-child class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                    <Link :href="businessActionLinks.topUpWallet">
+                                        <Plus class="size-4" />
+                                        Top up credits
+                                    </Link>
+                                </Button>
+                                <Button as-child variant="outline">
+                                    <Link :href="businessActionLinks.createEvent">
+                                        Create event
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
 
-                        <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-3">
+                        <dl class="mt-5 grid gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
                             <div
                                 v-for="metric in compactMetrics"
                                 :key="metric.label"
@@ -103,7 +124,7 @@ const compactMetrics = [
                         </dl>
                     </div>
 
-                    <div class="flex items-center justify-between gap-3 border-b border-black/5 py-4">
+                    <div class="flex flex-col gap-2 border-b border-black/5 py-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
                                 All activity
@@ -132,27 +153,27 @@ const compactMetrics = [
                         <article
                             v-for="item in walletTransactions"
                             :key="item.id"
-                            class="grid gap-3 py-4 md:grid-cols-[minmax(0,1fr)_160px]"
+                            class="grid gap-3 py-4 sm:grid-cols-[132px_minmax(0,1fr)_120px] sm:items-start"
                         >
-                            <div class="min-w-0">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span
-                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                        :class="badgeClass(walletActivityTone(item.kind))"
-                                    >
-                                        {{ walletActivityKindLabel(item.kind) }}
-                                    </span>
-                                    <span class="text-xs text-zinc-500">
-                                        {{ formatDateTime(item.createdAt) }}
-                                    </span>
-                                </div>
+                            <div class="min-w-0 sm:pr-2">
+                                <span
+                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                    :class="badgeClass(walletActivityTone(item.kind))"
+                                >
+                                    {{ walletActivityKindLabel(item.kind) }}
+                                </span>
+                                <p class="mt-2 text-xs text-zinc-500">
+                                    {{ formatDateTime(item.createdAt) }}
+                                </p>
+                            </div>
 
-                                <p class="mt-3 text-sm font-semibold text-[#171411]">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-[#171411]">
                                     {{ item.description }}
                                 </p>
                                 <p class="mt-1 text-sm text-zinc-600">
                                     <template v-if="item.eventName">
-                                        Workspace
+                                        Event
                                         <Link
                                             v-if="item.eventUrl"
                                             :href="item.eventUrl"
@@ -163,20 +184,20 @@ const compactMetrics = [
                                         <span v-else class="font-medium text-[#171411]">{{ item.eventName }}</span>
                                     </template>
                                     <template v-else>
-                                        Business wallet account activity
+                                        Business wallet activity
                                     </template>
                                 </p>
                             </div>
 
-                            <div class="flex items-center justify-between gap-3 md:flex-col md:items-end md:justify-center">
+                            <div class="flex items-center justify-between gap-3 sm:block sm:text-right">
                                 <p
                                     class="text-sm font-semibold"
                                     :class="item.credits >= 0 ? 'text-emerald-700' : 'text-amber-700'"
                                 >
                                     {{ formatCreditDelta(item.credits) }}
                                 </p>
-                                <p class="text-xs text-zinc-500">
-                                    {{ walletActivityKindLabel(item.kind) }}
+                                <p class="mt-1 text-xs text-zinc-500">
+                                    {{ item.credits >= 0 ? 'Added to wallet' : 'Used from wallet' }}
                                 </p>
                             </div>
                         </article>
@@ -215,43 +236,39 @@ const compactMetrics = [
                 </section>
 
                 <aside class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="space-y-5">
+                    <div class="flex h-full flex-col gap-5">
                         <div class="border-b border-black/5 pb-4">
-                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                Next move
-                            </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
-                                Add credits when you need more capacity, then create the next client workspace from the same wallet.
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                                Balance
+                            </p>
+                            <p class="mt-2 text-2xl font-semibold tracking-tight text-[#171411]">
+                                {{ walletSummary.currentBalance }} credits
+                            </p>
+                            <p class="mt-2 text-sm leading-6 text-zinc-600">
+                                One credit equals one euro in wallet value.
                             </p>
                         </div>
 
                         <div class="space-y-3 text-sm text-zinc-600">
                             <p class="flex items-start gap-3">
                                 <CreditCard class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                One credit equals one euro in wallet value.
-                            </p>
-                            <p class="flex items-start gap-3">
-                                <ArrowUpRight class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                Bonus credits stay visible in the same ledger so top-ups and promotions are easy to audit.
+                                Top-ups and bonus credits land in the same balance.
                             </p>
                             <p class="flex items-start gap-3">
                                 <FolderKanban class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                Event creation debits are linked back to the workspace when available.
+                                Creating a Plus or Pro event subtracts credits from this wallet.
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <ArrowUpRight class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                Each debit links back to the event when it is available.
                             </p>
                         </div>
 
-                        <div class="flex flex-col gap-2">
-                            <Button as-child class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                <Link :href="businessActionLinks.topUpWallet">
-                                    <Plus class="size-4" />
-                                    Top up wallet
-                                </Link>
-                            </Button>
-                            <Button as-child variant="outline">
-                                <Link :href="businessActionLinks.createEvent">
-                                    Create event
-                                </Link>
-                            </Button>
+                        <div class="mt-auto border-t border-black/5 pt-4 text-xs leading-5 text-zinc-500">
+                            Latest movement
+                            <span class="block text-sm font-medium text-[#171411]">
+                                {{ formatDateTime(walletSummary.latestActivityAt, 'No activity yet') }}
+                            </span>
                         </div>
                     </div>
                 </aside>
