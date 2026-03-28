@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventOnboardingController;
@@ -27,9 +28,7 @@ Route::inertia('/weddings', 'Weddings', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('weddings');
 
-Route::inertia('/businesses', 'Businesses', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('businesses');
+Route::get('/businesses', [MarketingController::class, 'businesses'])->name('businesses');
 
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
@@ -38,6 +37,8 @@ Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('on
 
 Route::middleware(['auth'])->group(function () {
     Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
+    Route::get('dashboard/business/events/create', [EventOnboardingController::class, 'createBusiness'])->name('dashboard.business.events.create');
+    Route::post('dashboard/business/events', [EventOnboardingController::class, 'storeBusiness'])->name('dashboard.business.events.store');
     Route::get('onboarding/{event}/creating', [EventOnboardingController::class, 'creating'])->name('onboarding.creating');
     Route::get('onboarding/{event}/photos', [EventOnboardingController::class, 'photos'])->name('onboarding.photos');
     Route::get('onboarding/{event}/ready', [EventOnboardingController::class, 'ready'])->name('onboarding.ready');
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/account', [DashboardController::class, 'account'])->name('dashboard.account');
     Route::get('dashboard/business', [DashboardController::class, 'business'])->name('dashboard.business');
+    Route::post('dashboard/business/activate', [BusinessController::class, 'activate'])->name('dashboard.business.activate');
+    Route::get('dashboard/business/onboarding', [BusinessController::class, 'onboarding'])->name('dashboard.business.onboarding');
+    Route::post('dashboard/business/onboarding', [BusinessController::class, 'storeOnboarding'])->name('dashboard.business.onboarding.store');
+    Route::post('dashboard/business/wallet/checkout', [BusinessController::class, 'createWalletCheckout'])->name('dashboard.business.wallet.checkout');
     Route::post('dashboard/business/actions/start-exports', [DashboardController::class, 'startFilteredExports'])->name('dashboard.business.exports.start');
     Route::get('dashboard/business/actions/billing-queue', [DashboardController::class, 'downloadBillingQueue'])->name('dashboard.business.billing-queue');
     Route::get('dashboard/events', [DashboardController::class, 'ownedEvents'])->name('dashboard.events');

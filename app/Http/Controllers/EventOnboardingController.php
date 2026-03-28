@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEventOnboardingRequest;
 use App\Models\Event;
 use App\Models\Plan;
+use App\Models\User;
+use App\Support\BusinessWalletManager;
 use App\Support\EventLifecycleWindows;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -12,6 +14,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,6 +25,12 @@ class EventOnboardingController extends Controller
     {
         if ($request->user() === null) {
             return redirect()->guest(route('register', absolute: false));
+        }
+
+        if ($request->user()->isBusinessAccount()) {
+            return $request->user()->hasCompletedBusinessOnboarding()
+                ? to_route('dashboard.business')
+                : to_route('dashboard.business.onboarding');
         }
 
         if ($request->boolean('restart')) {
@@ -39,64 +48,48 @@ class EventOnboardingController extends Controller
         return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
     }
 
+    public function createBusiness(Request $request): Response|RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null && $user->isBusinessAccount(), 403);
+
+        if (! $user->hasCompletedBusinessOnboarding()) {
+            return to_route('dashboard.business.onboarding');
+        }
+
+        return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request, true));
+    }
+
     public function store(StoreEventOnboardingRequest $request): RedirectResponse
     {
         $validated = $request->validated();
         $user = $request->user();
         abort_unless($user !== null, 403);
-        $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null);
-        $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
-        $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
-        $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
-        $venueAddress = $this->resolveVenueAddress($subEvents);
-        $eventDate = $this->resolvePrimaryEventDate($validated['event_date'] ?? null, $eventDates, $subEvents);
-        $windows = EventLifecycleWindows::build(
-            $eventDate,
-            $timezone,
-            (int) $plan->upload_window_days,
-            (int) $plan->grace_days,
-        );
-        $branding = $this->initialBranding($validated);
-        $isFreePlan = (int) $plan->price_cents === 0;
+        abort_if($user->isBusinessAccount(), 403);
 
-        $event = $user->events()->create([
-            'plan_id' => $plan->id,
-            'type' => $validated['type'],
-            'name' => $validated['name'],
-            'venue_address' => $venueAddress,
-            'event_date' => $eventDate,
-            'event_dates' => $eventDates,
-            'sub_events' => $subEvents,
-            'timezone' => $timezone,
-            'attendee_estimate' => (int) $validated['attendee_estimate'],
-            'status' => $windows['status'],
-            'onboarding_step' => 'creating',
-            'currency' => $plan->currency,
-            'is_paid' => $isFreePlan,
-            'paid_at' => $isFreePlan ? now() : null,
-            'branding' => $branding !== [] ? $branding : null,
-            'payment_due_at' => $isFreePlan ? null : $windows['upload_window_starts_at'],
-            'upload_window_starts_at' => $windows['upload_window_starts_at'],
-            'upload_window_ends_at' => $windows['upload_window_ends_at'],
-            'grace_ends_at' => $windows['grace_ends_at'],
-            'hard_lock_at' => $windows['hard_lock_at'],
-            'storage_limit_bytes' => $plan->storage_limit_bytes,
-            'upload_limit' => $plan->upload_limit,
-            'upload_window_days' => $plan->upload_window_days,
-            'customization_tier' => $plan->customization_tier,
-            'download_all_enabled' => $plan->download_all_enabled,
-            'moderation_tools_enabled' => $plan->moderation_tools_enabled,
-            'remove_app_branding' => $plan->remove_app_branding,
-            'moderation_enabled' => $plan->moderation_tools_enabled,
-            'auto_moderation_enabled' => $plan->moderation_tools_enabled,
-            'video_max_duration_seconds' => $plan->video_max_duration_seconds,
-            'photo_max_size_bytes' => $plan->photo_max_size_bytes,
-            'video_max_size_bytes' => $plan->video_max_size_bytes,
-            'share_token' => Str::random(32),
-            'public_invitation_token' => Str::lower((string) Str::uuid()),
-        ]);
+        $event = $this->createEventFromValidatedData($user, $validated);
 
-        $user->syncConfiguredAccountType();
+        return to_route('onboarding.creating', $event)->with('success', 'Event created.');
+    }
+
+    public function storeBusiness(
+        StoreEventOnboardingRequest $request,
+        BusinessWalletManager $businessWalletManager,
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $user = $request->user();
+        abort_unless($user !== null && $user->isBusinessAccount(), 403);
+        abort_unless($user->hasCompletedBusinessOnboarding(), 403);
+
+        $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null, true);
+        abort_unless($businessWalletManager->canAffordPlan($user, $plan), 422, 'Not enough business credits to create this event.');
+
+        $event = DB::transaction(function () use ($user, $validated, $plan, $businessWalletManager): Event {
+            $event = $this->createEventFromValidatedData($user, $validated, $plan, true);
+            $businessWalletManager->debitForEvent($user, $event, $plan);
+
+            return $event;
+        });
 
         return to_route('onboarding.creating', $event)->with('success', 'Event created.');
     }
@@ -198,7 +191,7 @@ class EventOnboardingController extends Controller
         };
     }
 
-    private function resolveSelectedPlan(?string $slug): Plan
+    private function resolveSelectedPlan(?string $slug, bool $businessMode = false): Plan
     {
         $normalizedSlug = is_string($slug) ? Str::lower(trim($slug)) : '';
 
@@ -206,15 +199,19 @@ class EventOnboardingController extends Controller
             $selectedPlan = Plan::query()
                 ->where('slug', $normalizedSlug)
                 ->where('is_active', true)
+                ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
                 ->first();
 
             if ($selectedPlan !== null) {
                 return $selectedPlan;
             }
+
+            abort_if($businessMode, 422, 'Choose an available business plan.');
         }
 
         $activeDefaultPlan = Plan::query()
             ->where('is_active', true)
+            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
             ->where('is_default', true)
             ->orderBy('price_cents')
             ->first();
@@ -225,12 +222,15 @@ class EventOnboardingController extends Controller
 
         $fallbackActivePlan = Plan::query()
             ->where('is_active', true)
+            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
             ->orderBy('price_cents')
             ->first();
 
         if ($fallbackActivePlan !== null) {
             return $fallbackActivePlan;
         }
+
+        abort_if($businessMode, 404);
 
         return tap(
             Plan::query()->firstOrNew(['slug' => 'free']),
@@ -258,6 +258,75 @@ class EventOnboardingController extends Controller
                 $plan->save();
             },
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function createEventFromValidatedData(
+        User $user,
+        array $validated,
+        ?Plan $resolvedPlan = null,
+        bool $businessMode = false,
+    ): Event {
+        $plan = $resolvedPlan ?? $this->resolveSelectedPlan($validated['plan_slug'] ?? null, $businessMode);
+        $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
+        $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
+        $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
+        $venueAddress = $this->resolveVenueAddress($subEvents);
+        $eventDate = $this->resolvePrimaryEventDate($validated['event_date'] ?? null, $eventDates, $subEvents);
+        $windows = EventLifecycleWindows::build(
+            $eventDate,
+            $timezone,
+            (int) $plan->upload_window_days,
+            (int) $plan->grace_days,
+        );
+        $branding = $this->initialBranding($validated);
+        $isPaid = $businessMode || (int) $plan->price_cents === 0;
+        $retentionEndsAt = $isPaid && $windows['upload_window_ends_at'] !== null
+            ? $windows['upload_window_ends_at']->addDays((int) $plan->retention_days)->endOfDay()
+            : null;
+
+        /** @var Event $event */
+        $event = $user->events()->create([
+            'plan_id' => $plan->id,
+            'type' => $validated['type'],
+            'name' => $validated['name'],
+            'venue_address' => $venueAddress,
+            'event_date' => $eventDate,
+            'event_dates' => $eventDates,
+            'sub_events' => $subEvents,
+            'timezone' => $timezone,
+            'attendee_estimate' => (int) $validated['attendee_estimate'],
+            'status' => $windows['status'],
+            'onboarding_step' => 'creating',
+            'currency' => $plan->currency,
+            'is_paid' => $isPaid,
+            'paid_at' => $isPaid ? now() : null,
+            'branding' => $branding !== [] ? $branding : null,
+            'payment_due_at' => $isPaid ? null : $windows['upload_window_starts_at'],
+            'retention_ends_at' => $retentionEndsAt,
+            'upload_window_starts_at' => $windows['upload_window_starts_at'],
+            'upload_window_ends_at' => $windows['upload_window_ends_at'],
+            'grace_ends_at' => $windows['grace_ends_at'],
+            'hard_lock_at' => $windows['hard_lock_at'],
+            'storage_limit_bytes' => $plan->storage_limit_bytes,
+            'upload_limit' => $plan->upload_limit,
+            'upload_window_days' => $plan->upload_window_days,
+            'customization_tier' => $plan->customization_tier,
+            'download_all_enabled' => $plan->download_all_enabled,
+            'moderation_tools_enabled' => $plan->moderation_tools_enabled,
+            'remove_app_branding' => $plan->remove_app_branding,
+            'moderation_enabled' => $plan->moderation_tools_enabled,
+            'auto_moderation_enabled' => $plan->moderation_tools_enabled,
+            'video_max_duration_seconds' => $plan->video_max_duration_seconds,
+            'photo_max_size_bytes' => $plan->photo_max_size_bytes,
+            'video_max_size_bytes' => $plan->video_max_size_bytes,
+            'share_token' => Str::random(32),
+            'public_invitation_token' => Str::lower((string) Str::uuid()),
+        ]);
+
+        return $event;
     }
 
     private function createQrCodeDataUrl(string $content): string
@@ -382,18 +451,25 @@ class EventOnboardingController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function onboardingCreateProps(Request $request): array
+    private function onboardingCreateProps(Request $request, bool $businessMode = false): array
     {
         return [
             'defaultTimezone' => config('events.default_timezone'),
-            'defaultPlanSlug' => $this->resolveSelectedPlan($request->query('plan'))->slug,
+            'defaultPlanSlug' => $this->resolveSelectedPlan($request->query('plan'), $businessMode)->slug,
             'owner' => $request->user() === null
                 ? null
                 : [
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                 ],
-            'pricingPlans' => $this->pricingPlansPayload(),
+            'businessMode' => $businessMode,
+            'businessWalletCredits' => $businessMode && $request->user() !== null
+                ? (int) $request->user()->business_wallet_credits
+                : null,
+            'submitUrl' => $businessMode
+                ? route('dashboard.business.events.store')
+                : route('onboarding.store'),
+            'pricingPlans' => $this->pricingPlansPayload($businessMode),
             'eventTypes' => [
                 [
                     'value' => 'wedding',
@@ -530,13 +606,14 @@ class EventOnboardingController extends Controller
     /**
      * @return list<array<string, mixed>>
      */
-    private function pricingPlansPayload(): array
+    private function pricingPlansPayload(bool $businessMode = false): array
     {
         return Plan::query()
             ->where('is_active', true)
+            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
             ->orderBy('price_cents')
             ->get()
-            ->map(function (Plan $plan): array {
+            ->map(function (Plan $plan) use ($businessMode): array {
                 return [
                     'slug' => $plan->slug,
                     'name' => $plan->name,
@@ -553,6 +630,7 @@ class EventOnboardingController extends Controller
                     'downloadAllEnabled' => (bool) $plan->download_all_enabled,
                     'moderationToolsEnabled' => (bool) $plan->moderation_tools_enabled,
                     'isDefault' => (bool) $plan->is_default,
+                    'businessCreditCost' => $businessMode ? (int) ($plan->business_credit_cost ?? 0) : null,
                 ];
             })
             ->values()

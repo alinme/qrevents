@@ -120,6 +120,8 @@ class DashboardController extends Controller
             'businessActionLinks' => [
                 'startExports' => route('dashboard.business.exports.start'),
                 'billingQueueDownload' => route('dashboard.business.billing-queue'),
+                'createEvent' => route('dashboard.business.events.create'),
+                'topUpWallet' => route('businesses'),
             ],
             'ownedEvents' => $ownedEventsPaginator->items(),
             'ownedEventsPagination' => $this->paginationMeta($ownedEventsPaginator),
@@ -358,6 +360,18 @@ class DashboardController extends Controller
             'businessOverview' => $this->businessOverview($ownedEvents, $ownedEventCards->all()),
             'businessAttentionEvents' => $this->businessAttentionEvents($ownedEvents, $assetStats, $defaultStats),
             'quickActions' => array_values(array_filter([
+                $canAccessBusinessDashboard ? [
+                    'label' => 'Create event',
+                    'description' => 'Start a new business event using wallet credits.',
+                    'url' => route('dashboard.business.events.create'),
+                    'tone' => 'dark',
+                ] : null,
+                $canAccessBusinessDashboard ? [
+                    'label' => 'Top up wallet',
+                    'description' => 'Add more credits for your next business events.',
+                    'url' => route('businesses'),
+                    'tone' => 'violet',
+                ] : null,
                 $continueSetupEvent !== null ? [
                     'label' => 'Continue setup',
                     'description' => 'Finish onboarding so guests can start uploading.',
@@ -454,6 +468,8 @@ class DashboardController extends Controller
             'readyExportCount' => collect($ownedEventCards)
                 ->filter(fn (array $card): bool => ($card['mediaExportStatus'] ?? null) === 'ready')
                 ->count(),
+            'walletCredits' => (int) (auth()->user()?->business_wallet_credits ?? 0),
+            'walletCurrency' => (string) (auth()->user()?->business_wallet_currency ?? config('business.base_currency', 'EUR')),
             'totalAllocatedStorageBytes' => $totalAllocatedStorageBytes,
             'totalUsedStorageBytes' => $totalUsedStorageBytes,
             'totalFreeStorageBytes' => $totalFreeStorageBytes,

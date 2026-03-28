@@ -30,6 +30,8 @@ export type BusinessOverview = {
     unpaidEventCount: number;
     overdueEventCount: number;
     readyExportCount: number;
+    walletCredits: number;
+    walletCurrency: string;
     totalAllocatedStorageBytes: number;
     totalUsedStorageBytes: number;
     totalFreeStorageBytes: number;

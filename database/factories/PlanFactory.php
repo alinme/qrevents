@@ -37,6 +37,8 @@ class PlanFactory extends Factory
             'video_max_size_bytes' => 524288000,
             'is_active' => true,
             'is_default' => true,
+            'business_enabled' => false,
+            'business_credit_cost' => null,
         ];
     }
 }

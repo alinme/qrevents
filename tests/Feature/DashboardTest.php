@@ -61,7 +61,7 @@ test('collaborator-only users can still enter the dashboard flow without owner o
         ->assertRedirect(route('events.show', $event));
 });
 
-test('multi-event accounts land on the main dashboard and keep business tools as a secondary route', function () {
+test('multi-event user accounts stay on the main dashboard without business tools', function () {
     $owner = User::factory()->create();
 
     $liveEvent = Event::factory()->for($owner)->create([
@@ -98,7 +98,8 @@ test('multi-event accounts land on the main dashboard and keep business tools as
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
-            ->where('dashboardLinks.business', route('dashboard.business'))
+            ->where('auth.user.accountType', User::ACCOUNT_TYPE_USER)
+            ->where('dashboardLinks.business', null)
             ->where('summary.ownedEventCount', 3)
         );
 });
@@ -284,8 +285,8 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
             ->where('summary.totalUploadCount', 2)
             ->where('summary.pendingModerationCount', 1)
             ->where('summary.readyExportCount', 1)
-            ->where('dashboardLinks.ownedEvents', route('dashboard.account').'#events')
-            ->where('dashboardLinks.recentActivity', route('dashboard.account').'#activity')
+            ->where('dashboardLinks.ownedEvents', route('dashboard').'#events')
+            ->where('dashboardLinks.recentActivity', route('dashboard').'#activity')
             ->where('continueSetupEvent.name', 'Rooftop Rehearsal')
             ->where('continueSetupEvent.primaryAction.url', route('onboarding.photos', $setupEvent))
             ->where(
@@ -357,6 +358,7 @@ test('super admins can still open their account dashboard explicitly', function 
     ]);
     $event = Event::factory()->for($admin)->create([
         'name' => 'Admin Hosted Event',
+        'onboarding_completed_at' => now(),
     ]);
 
     $this->actingAs($admin)
@@ -374,7 +376,7 @@ test('super admins can still open their account dashboard explicitly', function 
 });
 
 test('business accounts can open the dedicated business dashboard', function () {
-    $owner = User::factory()->create();
+    $owner = User::factory()->business()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Business Studio Launch',
         'status' => Event::STATUS_LIVE,

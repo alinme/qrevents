@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Support\BusinessWalletManager;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
@@ -14,6 +16,30 @@ class MarketingController extends Controller
         return Inertia::render('Pricing', [
             'canRegister' => Features::enabled(Features::registration()),
             'plans' => $this->pricingPlans(),
+            'businessTeaser' => [
+                'href' => route('businesses'),
+            ],
+        ]);
+    }
+
+    public function businesses(Request $request, BusinessWalletManager $businessWalletManager): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('Businesses', [
+            'canRegister' => Features::enabled(Features::registration()),
+            'businessPacks' => $businessWalletManager->topUpPacks(),
+            'businessPlans' => $this->businessPlans(),
+            'activateUrl' => $user !== null && ! $user->isBusinessAccount() ? route('dashboard.business.activate') : null,
+            'onboardingUrl' => $user !== null && $user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()
+                ? route('dashboard.business.onboarding')
+                : null,
+            'topUpUrl' => $user !== null && $user->isBusinessAccount() && $user->hasCompletedBusinessOnboarding()
+                ? route('dashboard.business.wallet.checkout')
+                : null,
+            'dashboardUrl' => $user !== null && $user->canAccessBusinessDashboard()
+                ? route('dashboard.business')
+                : null,
         ]);
     }
 
@@ -87,6 +113,26 @@ class MarketingController extends Controller
                     'ctaLabel' => __('marketing.actions.create_event'),
                 ];
             })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function businessPlans(): array
+    {
+        return Plan::query()
+            ->where('is_active', true)
+            ->where('business_enabled', true)
+            ->orderBy('price_cents')
+            ->get()
+            ->map(fn (Plan $plan): array => [
+                'slug' => $plan->slug,
+                'name' => $plan->name,
+                'businessCreditCost' => (int) ($plan->business_credit_cost ?? 0),
+                'consumerPriceLabel' => $this->moneyLabel($plan->currency, (int) $plan->price_cents),
+            ])
             ->values()
             ->all();
     }

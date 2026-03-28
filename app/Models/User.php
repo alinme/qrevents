@@ -31,6 +31,10 @@ class User extends Authenticatable
         'email',
         'password',
         'account_type',
+        'business_onboarded_at',
+        'business_profile',
+        'business_wallet_credits',
+        'business_wallet_currency',
         'google_id',
         'google_avatar',
     ];
@@ -56,6 +60,10 @@ class User extends Authenticatable
     {
         return [
             'account_type' => 'string',
+            'business_onboarded_at' => 'datetime',
+            'business_profile' => 'array',
+            'business_wallet_credits' => 'integer',
+            'business_wallet_currency' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
@@ -70,6 +78,16 @@ class User extends Authenticatable
     public function eventCollaborations(): HasMany
     {
         return $this->hasMany(EventCollaborator::class);
+    }
+
+    public function businessWalletPurchases(): HasMany
+    {
+        return $this->hasMany(BusinessWalletPurchase::class);
+    }
+
+    public function businessWalletTransactions(): HasMany
+    {
+        return $this->hasMany(BusinessWalletTransaction::class);
     }
 
     public function accountType(): string
@@ -116,26 +134,20 @@ class User extends Authenticatable
 
     public function canAccessBusinessDashboard(): bool
     {
-        return $this->isBusinessAccount();
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isBusinessAccount() && $this->hasCompletedBusinessOnboarding();
     }
 
-    public function promoteToBusiness(): void
+    public function hasCompletedBusinessOnboarding(): bool
     {
-        if ($this->hasConfiguredSuperAdminEmail()) {
-            return;
+        if ($this->isSuperAdmin()) {
+            return true;
         }
 
-        if (! $this->ownsMultipleEvents()) {
-            return;
-        }
-
-        if ($this->account_type === self::ACCOUNT_TYPE_BUSINESS) {
-            return;
-        }
-
-        $this->forceFill([
-            'account_type' => self::ACCOUNT_TYPE_BUSINESS,
-        ])->save();
+        return $this->business_onboarded_at !== null;
     }
 
     public function promoteToSuperAdmin(): void
@@ -162,18 +174,6 @@ class User extends Authenticatable
 
             return;
         }
-
-        $expectedAccountType = $this->ownsMultipleEvents()
-            ? self::ACCOUNT_TYPE_BUSINESS
-            : self::ACCOUNT_TYPE_USER;
-
-        if ($this->account_type === $expectedAccountType) {
-            return;
-        }
-
-        $this->forceFill([
-            'account_type' => $expectedAccountType,
-        ])->save();
     }
 
     /**
@@ -191,9 +191,12 @@ class User extends Authenticatable
             'updated_at' => $this->updated_at?->toIso8601String(),
             'accountType' => $this->accountType(),
             'accountLabel' => $this->accountTypeLabel(),
+            'isBusinessOnboarded' => $this->hasCompletedBusinessOnboarding(),
+            'businessWalletCredits' => (int) ($this->business_wallet_credits ?? 0),
             'capabilities' => [
                 'accessAdmin' => $this->canAccessAdmin(),
                 'accessBusinessDashboard' => $this->canAccessBusinessDashboard(),
+                'canCreateMultipleEvents' => $this->isBusinessAccount(),
             ],
         ];
     }
@@ -210,10 +213,5 @@ class User extends Authenticatable
         $superAdminEmails = config('app.super_admin_emails', []);
 
         return in_array($email, $superAdminEmails, true);
-    }
-
-    private function ownsMultipleEvents(): bool
-    {
-        return $this->events()->count() >= 2;
     }
 }

@@ -8,9 +8,12 @@ export type User = {
     updated_at: string;
     accountType: 'user' | 'business' | 'super_admin';
     accountLabel: string;
+    isBusinessOnboarded: boolean;
+    businessWalletCredits: number;
     capabilities: {
         accessAdmin: boolean;
         accessBusinessDashboard: boolean;
+        canCreateMultipleEvents: boolean;
     };
     [key: string]: unknown;
 };

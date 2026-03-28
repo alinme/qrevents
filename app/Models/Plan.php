@@ -32,6 +32,8 @@ class Plan extends Model
         'video_max_size_bytes',
         'is_active',
         'is_default',
+        'business_enabled',
+        'business_credit_cost',
     ];
 
     /**
@@ -45,6 +47,7 @@ class Plan extends Model
             'download_all_enabled' => 'boolean',
             'moderation_tools_enabled' => 'boolean',
             'remove_app_branding' => 'boolean',
+            'business_enabled' => 'boolean',
         ];
     }
 

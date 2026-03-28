@@ -19,8 +19,14 @@ class AuthOnboardingRedirector
             return redirect()->to($this->onboardingStepPath($latestOwnedEvent));
         }
 
+        if ($user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()) {
+            return to_route('dashboard.business.onboarding');
+        }
+
         if ($latestOwnedEvent === null && ! $this->hasActiveCollaboratorEvent($user)) {
-            return to_route('onboarding.create');
+            return $user->isBusinessAccount()
+                ? to_route('dashboard.business')
+                : to_route('onboarding.create');
         }
 
         return null;

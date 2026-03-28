@@ -50,6 +50,8 @@ const props = defineProps<{
     businessActionLinks: {
         startExports: string;
         billingQueueDownload: string;
+        createEvent: string;
+        topUpWallet: string;
     };
     ownedEvents: DashboardEvent[];
     ownedEventsPagination: PaginationMeta;
@@ -92,6 +94,12 @@ const businessHealthCards = computed(() => [
                 ? `${props.businessOverview.overdueEventCount} overdue`
                 : `${props.businessOverview.unpaidEventCount} unpaid`,
         detail: 'Events that still need billing follow-up.',
+        icon: CreditCard,
+    },
+    {
+        label: 'Wallet',
+        value: `${props.businessOverview.walletCredits} credits`,
+        detail: `Stored in ${props.businessOverview.walletCurrency}.`,
         icon: CreditCard,
     },
 ]);

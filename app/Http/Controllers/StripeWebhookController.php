@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BusinessWalletPurchase;
 use App\Models\Event;
 use App\Models\Plan;
+use App\Support\BusinessWalletManager;
 use App\Support\EventBillingManager;
 use App\Support\StripeCheckoutGateway;
 use Illuminate\Http\JsonResponse;
@@ -19,8 +21,8 @@ class StripeWebhookController extends Controller
         Request $request,
         StripeCheckoutGateway $stripeCheckoutGateway,
         EventBillingManager $eventBillingManager,
-    ): JsonResponse
-    {
+        BusinessWalletManager $businessWalletManager,
+    ): JsonResponse {
         $signature = (string) $request->header('Stripe-Signature', '');
 
         if ($signature === '') {
@@ -54,6 +56,30 @@ class StripeWebhookController extends Controller
         }
 
         $metadata = $event['metadata'];
+        $scope = (string) ($metadata['scope'] ?? 'event');
+
+        if ($scope === 'business_wallet') {
+            $purchaseId = (int) ($metadata['purchase_id'] ?? 0);
+            $purchase = BusinessWalletPurchase::query()->find($purchaseId);
+
+            if (! $purchase instanceof BusinessWalletPurchase) {
+                Log::warning('Stripe wallet webhook referenced a missing purchase.', [
+                    'purchase_id' => $purchaseId,
+                    'session_id' => $event['sessionId'],
+                ]);
+
+                return response()->json(['received' => true]);
+            }
+
+            $businessWalletManager->applyPurchasePayment(
+                $purchase,
+                (string) ($event['sessionId'] ?? ''),
+                $event['paymentIntentId'],
+            );
+
+            return response()->json(['received' => true]);
+        }
+
         $eventId = (int) ($metadata['event_id'] ?? 0);
         $planId = (int) ($metadata['plan_id'] ?? 0);
 

@@ -3,6 +3,7 @@
 use App\Console\Commands\EnforceEventLifecycle;
 use App\Console\Commands\SendCleanupDigest;
 use App\Console\Commands\SendGuestLedgerExportReminders;
+use App\Console\Commands\SyncExchangeRates;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -12,6 +13,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(EnforceEventLifecycle::class)->hourly()->withoutOverlapping();
+Schedule::command(SyncExchangeRates::class)->hourly()->withoutOverlapping();
 Schedule::command(SendGuestLedgerExportReminders::class)
     ->dailyAt(sprintf(
         '%02d:%02d',

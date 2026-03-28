@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { home } from '@/routes';
-import { store } from '@/routes/onboarding';
 
 type EventSubEventOption = {
     key: string;
@@ -55,6 +54,7 @@ type PricingPlanOption = {
     downloadAllEnabled: boolean;
     moderationToolsEnabled: boolean;
     isDefault: boolean;
+    businessCreditCost?: number | null;
 };
 
 type EventDateInput = {
@@ -80,6 +80,9 @@ const props = defineProps<{
     pricingPlans: PricingPlanOption[];
     defaultTimezone: string;
     defaultPlanSlug: string;
+    businessMode?: boolean;
+    businessWalletCredits?: number | null;
+    submitUrl: string;
     owner: {
         name: string;
         email: string;
@@ -90,6 +93,7 @@ const step = ref<OnboardingStep>(1);
 const wizardPanelRef = ref<HTMLElement | null>(null);
 const formActionsRef = ref<HTMLElement | null>(null);
 const lastSuggestedWeddingTitle = ref('');
+const isBusinessMode = computed(() => props.businessMode === true);
 
 const stepItems = [
     {
@@ -482,7 +486,7 @@ const submit = (): void => {
             event_dates: eventDates,
             sub_events: subEvents,
         };
-    }).post(store.url(), {
+    }).post(props.submitUrl, {
         preserveScroll: true,
         onError: (errors) => {
             if (errors.type || errors.plan_slug) {
@@ -664,13 +668,13 @@ const submit = (): void => {
                                     <div>
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                             <Sparkles class="size-3.5" />
-                                            Choose your plan
+                                            {{ isBusinessMode ? 'Choose the plan for this business event' : 'Choose your plan' }}
                                         </div>
                                         <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
-                                            Pick the event package that fits this celebration
+                                            {{ isBusinessMode ? 'Pick the paid plan this event should consume' : 'Pick the event package that fits this celebration' }}
                                         </h3>
                                         <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.
+                                            {{ isBusinessMode ? 'Business events use wallet credits. Free is not available here.' : 'You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.' }}
                                         </p>
                                     </div>
 
@@ -678,7 +682,11 @@ const submit = (): void => {
                                         v-if="selectedPlan"
                                         class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted"
                                     >
-                                        {{ selectedPlan.name }} · {{ selectedPlan.priceLabel }}
+                                        {{
+                                            isBusinessMode
+                                                ? `${selectedPlan.name} · ${selectedPlan.businessCreditCost ?? 0} credits`
+                                                : `${selectedPlan.name} · ${selectedPlan.priceLabel}`
+                                        }}
                                     </div>
                                 </div>
 
@@ -704,10 +712,10 @@ const submit = (): void => {
                                                     {{ plan.name }}
                                                 </p>
                                                 <h4 class="mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
-                                                    {{ plan.priceLabel }}
+                                                    {{ isBusinessMode ? `${plan.businessCreditCost ?? 0} credits` : plan.priceLabel }}
                                                 </h4>
                                                 <p class="mt-2 text-sm text-promo-muted">
-                                                    {{ plan.billingLabel }}
+                                                    {{ isBusinessMode ? 'Paid from your business wallet' : plan.billingLabel }}
                                                 </p>
                                             </div>
 
@@ -1225,13 +1233,17 @@ const submit = (): void => {
                                 <div class="rounded-[28px] border border-promo-line bg-white p-5">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Sparkles class="size-3.5" />
-                                        Selected plan
+                                        {{ isBusinessMode ? 'Wallet summary' : 'Selected plan' }}
                                     </div>
                                     <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
-                                        {{ selectedPlan?.name ?? 'Choose a plan' }}
+                                        {{ isBusinessMode ? `${props.businessWalletCredits ?? 0} credits available` : (selectedPlan?.name ?? 'Choose a plan') }}
                                     </h3>
                                     <p class="mt-2 text-sm text-promo-muted">
-                                        {{ selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.' }}
+                                        {{
+                                            isBusinessMode
+                                                ? (selectedPlan ? `${selectedPlan.name} will consume ${selectedPlan.businessCreditCost ?? 0} credits.` : 'Choose the paid business plan for this event.')
+                                                : (selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.')
+                                        }}
                                     </p>
 
                                     <div

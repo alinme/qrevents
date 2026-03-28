@@ -62,6 +62,12 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'account_type' => \App\Models\User::ACCOUNT_TYPE_BUSINESS,
+            'business_onboarded_at' => now(),
+            'business_profile' => [
+                'company_name' => fake()->company(),
+                'brand_name' => fake()->company(),
+                'billing_email' => fake()->companyEmail(),
+            ],
         ]);
     }
 

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
+import { businesses } from '@/routes';
 import { create as onboardingCreate } from '@/routes/onboarding';
 
 type PricingFeature = {
@@ -44,6 +45,9 @@ type PricingPlan = {
 const props = defineProps<{
     canRegister: boolean;
     plans: PricingPlan[];
+    businessTeaser: {
+        href: string;
+    };
 }>();
 
 const page = usePage();
@@ -231,6 +235,30 @@ const openFeatureHelp = (label: string, help: string): void => {
                 class="rounded-[28px] border border-promo-line bg-white px-8 py-12 text-center text-promo-muted"
             >
                 {{ t('marketing.pricing.empty') }}
+            </div>
+
+            <div class="mx-auto mt-6 max-w-5xl rounded-[24px] border border-promo-primary/18 bg-white px-5 py-5 sm:px-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="max-w-3xl">
+                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                            Multi-event teams
+                        </p>
+                        <h2 class="mt-2 text-xl font-semibold tracking-tight text-promo-ink">
+                            Running events for clients or multiple celebrations?
+                        </h2>
+                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                            Switch to Business, top up wallet credits, and create paid Plus or Pro events without repeating the consumer billing flow each time.
+                        </p>
+                    </div>
+
+                    <Link
+                        :href="businessTeaser.href || businesses().url"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        Explore Business
+                        <ArrowRight class="size-4" />
+                    </Link>
+                </div>
             </div>
         </section>
 

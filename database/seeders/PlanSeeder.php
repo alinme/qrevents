@@ -30,6 +30,8 @@ class PlanSeeder extends Seeder
                 'video_max_size_bytes' => 314572800,
                 'is_active' => true,
                 'is_default' => true,
+                'business_enabled' => false,
+                'business_credit_cost' => null,
             ],
             [
                 'slug' => 'plus',
@@ -51,6 +53,8 @@ class PlanSeeder extends Seeder
                 'video_max_size_bytes' => 524288000,
                 'is_active' => true,
                 'is_default' => false,
+                'business_enabled' => true,
+                'business_credit_cost' => 25,
             ],
             [
                 'slug' => 'pro',
@@ -72,6 +76,8 @@ class PlanSeeder extends Seeder
                 'video_max_size_bytes' => 1073741824,
                 'is_active' => true,
                 'is_default' => false,
+                'business_enabled' => true,
+                'business_credit_cost' => 50,
             ],
         ];
 

@@ -2,6 +2,7 @@ import MarketingController from './MarketingController'
 import SocialAuthController from './SocialAuthController'
 import EventOnboardingController from './EventOnboardingController'
 import DashboardController from './DashboardController'
+import BusinessController from './BusinessController'
 import AdminController from './AdminController'
 import EventController from './EventController'
 import StripeWebhookController from './StripeWebhookController'
@@ -12,6 +13,7 @@ const Controllers = {
     SocialAuthController: Object.assign(SocialAuthController, SocialAuthController),
     EventOnboardingController: Object.assign(EventOnboardingController, EventOnboardingController),
     DashboardController: Object.assign(DashboardController, DashboardController),
+    BusinessController: Object.assign(BusinessController, BusinessController),
     AdminController: Object.assign(AdminController, AdminController),
     EventController: Object.assign(EventController, EventController),
     StripeWebhookController: Object.assign(StripeWebhookController, StripeWebhookController),

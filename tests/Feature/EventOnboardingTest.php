@@ -177,7 +177,7 @@ it('creates an event from onboarding and calculates event windows', function () 
     CarbonImmutable::setTestNow();
 });
 
-it('promotes multi-event owners to business after creating another event', function () {
+it('keeps multi-event owners as regular users after creating another event', function () {
     Plan::factory()->create([
         'name' => 'Free',
         'slug' => 'free',
@@ -224,7 +224,154 @@ it('promotes multi-event owners to business after creating another event', funct
         'timezone' => 'Europe/Bucharest',
     ])->assertRedirect();
 
-    expect($user->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_BUSINESS);
+    expect($user->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_USER);
+});
+
+it('redirects business accounts into business onboarding instead of consumer onboarding', function () {
+    $user = User::factory()->create([
+        'account_type' => User::ACCOUNT_TYPE_BUSINESS,
+        'business_onboarded_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('onboarding.create'))
+        ->assertRedirect(route('dashboard.business.onboarding'));
+});
+
+it('lets onboarded business accounts create paid events from wallet credits', function () {
+    $plusPlan = Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'currency' => 'EUR',
+        'price_cents' => 4900,
+        'business_enabled' => true,
+        'business_credit_cost' => 25,
+        'storage_limit_bytes' => 12884901888,
+        'upload_limit' => 500,
+        'retention_days' => 90,
+        'grace_days' => 7,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'video_max_duration_seconds' => 45,
+        'photo_max_size_bytes' => 26214400,
+        'video_max_size_bytes' => 524288000,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->business()->create([
+        'business_wallet_credits' => 100,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard.business.events.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/Create')
+            ->where('businessMode', true)
+            ->where('businessWalletCredits', 100)
+        );
+
+    $response = $this->actingAs($user)->post(route('dashboard.business.events.store'), [
+        'plan_slug' => 'plus',
+        'type' => 'wedding',
+        'name' => 'Studio Wedding',
+        'wedding_partner_one_first_name' => 'Ana',
+        'wedding_partner_two_first_name' => 'Mihai',
+        'wedding_family_name' => 'Ionescu',
+        'attendee_estimate' => 140,
+        'event_dates' => [
+            [
+                'label' => 'Main day',
+                'date' => now()->addMonth()->toDateString(),
+            ],
+        ],
+        'sub_events' => [
+            [
+                'key' => 'reception',
+                'label' => 'Reception',
+                'date' => now()->addMonth()->toDateString(),
+                'start_time' => '18:00',
+                'address' => '12 Garden Lane, Bucharest, Romania',
+                'no_address' => false,
+            ],
+        ],
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $event = Event::query()->firstOrFail();
+
+    $response->assertRedirect(route('onboarding.creating', $event));
+
+    expect($event->plan_id)->toBe($plusPlan->id)
+        ->and($event->is_paid)->toBeTrue()
+        ->and($event->payment_due_at)->toBeNull()
+        ->and($event->paid_at)->not->toBeNull()
+        ->and($user->fresh()->business_wallet_credits)->toBe(75);
+});
+
+it('blocks business accounts from creating free plan events', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'business_enabled' => false,
+        'is_active' => true,
+        'is_default' => false,
+    ]);
+
+    Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'price_cents' => 4900,
+        'business_enabled' => true,
+        'business_credit_cost' => 25,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->business()->create([
+        'business_wallet_credits' => 100,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('dashboard.business.events.store'), [
+            'plan_slug' => 'free',
+            'type' => 'wedding',
+            'name' => 'Blocked Event',
+            'wedding_partner_one_first_name' => 'Alex',
+            'wedding_partner_two_first_name' => 'Bianca',
+            'wedding_family_name' => 'Popa',
+            'attendee_estimate' => 140,
+            'event_dates' => [
+                [
+                    'label' => 'Main day',
+                    'date' => now()->addMonth()->toDateString(),
+                ],
+            ],
+            'sub_events' => [
+                [
+                    'key' => 'reception',
+                    'label' => 'Reception',
+                    'date' => now()->addMonth()->toDateString(),
+                    'start_time' => '18:00',
+                    'address' => '12 Garden Lane, Bucharest, Romania',
+                    'no_address' => false,
+                ],
+            ],
+            'timezone' => 'Europe/Bucharest',
+        ])
+        ->assertStatus(422);
+
+    expect(Event::query()->count())->toBe(0)
+        ->and($user->fresh()->business_wallet_credits)->toBe(100);
 });
 
 it('blocks event dates too far in the future', function () {

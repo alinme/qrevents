@@ -1,11 +1,11 @@
 <?php
 
+use App\Models\BusinessWalletPurchase;
 use App\Models\Event;
 use App\Models\Plan;
 use App\Models\User;
 use App\Support\StripeCheckoutGateway;
 use Inertia\Testing\AssertableInertia as Assert;
-use Stripe\WebhookSignature;
 
 test('event owners can see online checkout when stripe billing is configured', function () {
     config(['services.stripe.secret' => 'sk_test_123']);
@@ -108,17 +108,17 @@ test('stripe webhook marks the event paid after checkout completion', function (
     app()->instance(StripeCheckoutGateway::class, $gateway);
 
     $this->call(
-            'POST',
-            route('stripe.webhook'),
-            [],
-            [],
-            [],
-            [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_STRIPE_SIGNATURE' => 'sig_test_123',
-            ],
-            '{"id":"evt_test"}',
-        )
+        'POST',
+        route('stripe.webhook'),
+        [],
+        [],
+        [],
+        [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_STRIPE_SIGNATURE' => 'sig_test_123',
+        ],
+        '{"id":"evt_test"}',
+    )
         ->assertOk()
         ->assertJson(['received' => true]);
 
@@ -220,10 +220,7 @@ test('stripe webhook parser preserves checkout session metadata', function () {
     ], JSON_THROW_ON_ERROR);
 
     $timestamp = time();
-    $signature = WebhookSignature::computeSignature(
-        $timestamp.'.'.$payload,
-        'whsec_test_123',
-    );
+    $signature = hash_hmac('sha256', $timestamp.'.'.$payload, 'whsec_test_123');
 
     $parsed = app(StripeCheckoutGateway::class)->parseWebhookEvent(
         $payload,
@@ -243,4 +240,67 @@ test('stripe webhook parser preserves checkout session metadata', function () {
             'owner_id' => '1',
         ],
     ]);
+});
+
+test('stripe webhook fulfills business wallet top-ups with locked purchase data', function () {
+    $user = User::factory()->business()->create([
+        'business_wallet_credits' => 0,
+    ]);
+
+    $purchase = BusinessWalletPurchase::query()->create([
+        'user_id' => $user->id,
+        'credits_purchased' => 100,
+        'bonus_credits' => 25,
+        'total_credits' => 125,
+        'base_amount_cents' => 10000,
+        'checkout_currency' => 'RON',
+        'localized_amount_cents' => 49500,
+        'locked_fx_rate' => 4.95,
+        'status' => 'pending',
+        'metadata' => [
+            'pack' => 100,
+        ],
+    ]);
+
+    $gateway = \Mockery::mock(StripeCheckoutGateway::class);
+    $gateway->shouldReceive('parseWebhookEvent')
+        ->once()
+        ->with('{"id":"evt_wallet"}', 'sig_wallet_123')
+        ->andReturn([
+            'type' => 'checkout.session.completed',
+            'sessionId' => 'cs_wallet_123',
+            'paymentStatus' => 'paid',
+            'paymentIntentId' => 'pi_wallet_123',
+            'amountTotal' => 49500,
+            'currency' => 'ron',
+            'metadata' => [
+                'scope' => 'business_wallet',
+                'purchase_id' => (string) $purchase->id,
+                'user_id' => (string) $user->id,
+            ],
+        ]);
+    app()->instance(StripeCheckoutGateway::class, $gateway);
+
+    $this->call(
+        'POST',
+        route('stripe.webhook'),
+        [],
+        [],
+        [],
+        [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_STRIPE_SIGNATURE' => 'sig_wallet_123',
+        ],
+        '{"id":"evt_wallet"}',
+    )->assertOk()->assertJson(['received' => true]);
+
+    $purchase->refresh();
+
+    expect($purchase->status)->toBe('paid')
+        ->and($purchase->stripe_checkout_session_id)->toBe('cs_wallet_123')
+        ->and($purchase->stripe_payment_intent_id)->toBe('pi_wallet_123')
+        ->and($purchase->paid_at)->not->toBeNull()
+        ->and($user->fresh()->business_wallet_credits)->toBe(125)
+        ->and($user->businessWalletTransactions()->where('kind', 'top_up')->sum('credits'))->toBe(100)
+        ->and($user->businessWalletTransactions()->where('kind', 'bonus')->sum('credits'))->toBe(25);
 });

@@ -207,6 +207,7 @@ type EventLinks = {
     settingsUpdate: string;
     billingUpdate: string;
     billingCheckout: string;
+    businessActivate: string;
     collaboratorsStore: string;
 };
 
@@ -239,6 +240,7 @@ type PageProps = {
     auth?: {
         user?: {
             email?: string;
+            accountType?: string;
         };
     };
 };
@@ -253,6 +255,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage<PageProps>();
+const currentAccountType = computed(() => page.props.auth?.user?.accountType ?? 'user');
 const checkoutState = computed(() => {
     const query = page.url.split('?')[1] ?? '';
 
@@ -2656,7 +2659,30 @@ function resolveSupportedTimezones(): string[] {
                                             </Link>
                                         </Button>
                                     </template>
-                                    <p v-else>
+                                    <div
+                                        v-if="
+                                            currentAccountType !== 'business' &&
+                                            currentAccountType !== 'super_admin'
+                                        "
+                                        class="rounded-xl border border-promo-primary/20 bg-white px-4 py-4"
+                                    >
+                                        <h3 class="text-sm font-semibold text-promo-ink">
+                                            Need multiple paid events?
+                                        </h3>
+                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                            Switch this account to Business, top up credits once, and create Plus or Pro events without repeating the normal billing flow each time.
+                                        </p>
+                                        <Button as-child class="mt-4 h-11 bg-[#171411] text-white hover:bg-[#2b2621]">
+                                            <Link
+                                                :href="props.eventLinks.businessActivate"
+                                                method="post"
+                                                as="button"
+                                            >
+                                                Upgrade to Business
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                    <p v-if="!props.currentEvent.billing.canCheckout">
                                         Billing for this event is managed by QR
                                         Events admin. If you need plan or
                                         payment changes, contact the platform
