@@ -92,6 +92,7 @@ const topUpForm = useForm({
     currency: props.businessTopUp.defaultCurrency,
 });
 const topUpModalOpen = ref(false);
+const howItWorksModalOpen = ref(false);
 
 const selectedPack = computed(
     () =>
@@ -167,6 +168,15 @@ const submitTopUp = (): void => {
                                     @click="topUpModalOpen = true"
                                 >
                                     Top up credits
+                                </Button>
+                                <Button
+                                    v-if="metric.label === 'Balance'"
+                                    type="button"
+                                    variant="link"
+                                    class="mt-1 h-auto px-0 text-sm font-medium text-zinc-500"
+                                    @click="howItWorksModalOpen = true"
+                                >
+                                    How it works
                                 </Button>
                             </div>
                         </dl>
@@ -377,6 +387,40 @@ const submitTopUp = (): void => {
                     </Button>
                 </div>
             </form>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="howItWorksModalOpen">
+        <DialogContent class="sm:max-w-lg">
+            <DialogHeader class="text-left">
+                <DialogTitle>How the wallet works</DialogTitle>
+                <DialogDescription>
+                    Keep business credits simple and reusable across paid events.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-4 text-sm leading-6 text-zinc-600">
+                <div>
+                    <p class="font-semibold text-[#171411]">Top up once</p>
+                    <p class="mt-1">
+                        Add credits in advance, then reuse that balance whenever you create a new paid business event.
+                    </p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-[#171411]">Bonus credits stay in the same balance</p>
+                    <p class="mt-1">
+                        Any bonus from a larger top-up lands in the same wallet, so you only need to track one credit balance.
+                    </p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-[#171411]">Events deduct from that wallet</p>
+                    <p class="mt-1">
+                        When you create a Plus or Pro business event, the required credits are subtracted automatically and recorded in the ledger below.
+                    </p>
+                </div>
+            </div>
         </DialogContent>
     </Dialog>
 </template>
