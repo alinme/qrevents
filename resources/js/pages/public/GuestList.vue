@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { CheckCircle2, Clock3, Minus, Plus, Search, XCircle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -10,7 +11,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
     NativeSelect,
     NativeSelectOption,
@@ -184,7 +184,7 @@ const saveGuestDetails = (): void => {
                     <div
                         v-for="party in filteredGuestParties"
                         :key="party.id"
-                        class="flex flex-col gap-3 py-3 transition-colors md:flex-row md:items-center md:justify-between"
+                        class="flex flex-col gap-3 py-3.5 transition-colors md:flex-row md:items-center md:justify-between"
                     >
                         <button
                             type="button"
@@ -203,10 +203,10 @@ const saveGuestDetails = (): void => {
                             </div>
                         </button>
 
-                        <div class="inline-flex w-full items-center rounded-full border border-stone-200 bg-white p-1 md:w-auto">
+                        <div class="grid w-full grid-cols-3 items-center rounded-[1.1rem] border border-stone-200 bg-white p-1.5 md:inline-flex md:w-auto md:rounded-full md:p-1">
                             <Button
                                 variant="ghost"
-                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
+                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
                                 :class="party.actualAttendanceStatus === 'present'
                                     ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white'
                                     : ''"
@@ -218,7 +218,7 @@ const saveGuestDetails = (): void => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
+                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
                                 :class="party.actualAttendanceStatus === 'absent'
                                     ? 'bg-rose-600 text-white hover:bg-rose-700 hover:text-white'
                                     : ''"
@@ -230,7 +230,7 @@ const saveGuestDetails = (): void => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                class="h-9 rounded-full px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950"
+                                class="h-11 rounded-xl px-3 text-stone-700 hover:bg-stone-50 hover:text-stone-950 md:h-10 md:rounded-full"
                                 :disabled="quickSavingGuestId === party.id"
                                 @click="updateAttendance(party, 'unknown')"
                             >

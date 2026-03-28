@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, ref, watch, type Component } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -14,16 +13,18 @@ import {
     Square,
     X,
 } from 'lucide-vue-next';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/AppLayout.vue';
+import { computed, ref, watch  } from 'vue';
+import type {Component} from 'vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
 import {
     badgeClass,
     formatBytes,
@@ -875,7 +876,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </div>
                     </div>
 
-                    <div class="lg:h-[36rem] lg:overflow-y-auto lg:pt-1 lg:pr-1">
+                    <div class="max-h-[32rem] overflow-y-auto overscroll-contain pt-1 pr-1 sm:max-h-[36rem]">
                         <div v-if="ownedEvents.length === 0" class="py-12 text-center">
                             <div class="mx-auto max-w-md space-y-2">
                                 <h3 class="text-lg font-semibold text-[#171411]">
@@ -1031,7 +1032,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         No credit activity yet.
                     </div>
 
-                    <div v-else class="lg:h-[20rem] lg:overflow-y-auto lg:pt-2 lg:pr-1">
+                    <div v-else class="max-h-[18rem] overflow-y-auto overscroll-contain pt-2 pr-1 sm:max-h-[20rem]">
                         <div class="divide-y divide-black/5">
                             <article
                                 v-for="item in walletActivity"

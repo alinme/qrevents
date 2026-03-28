@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -10,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/AppLayout.vue';
 import {
     badgeClass,
     formatCreditDelta,
@@ -17,7 +18,6 @@ import {
     walletActivityKindLabel,
     walletActivityTone,
 } from '@/lib/dashboard';
-import AppLayout from '@/layouts/AppLayout.vue';
 import type {
     BreadcrumbItem,
     BusinessWalletActivity,
@@ -212,58 +212,60 @@ const submitTopUp = (): void => {
                         </div>
                     </div>
 
-                    <div v-else class="divide-y divide-black/5">
-                        <article
-                            v-for="item in walletTransactions"
-                            :key="item.id"
-                            class="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_140px] sm:items-start"
-                        >
-                            <div class="min-w-0 sm:pr-2">
-                                <span
-                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
-                                    :class="badgeClass(walletActivityTone(item.kind))"
-                                >
-                                    {{ walletActivityKindLabel(item.kind) }}
-                                </span>
-                                <p class="mt-2 text-xs text-zinc-500">
-                                    {{ formatDateTime(item.createdAt) }}
-                                </p>
-                            </div>
+                    <div v-else class="max-h-[34rem] overflow-y-auto overscroll-contain pr-1">
+                        <div class="divide-y divide-black/5">
+                            <article
+                                v-for="item in walletTransactions"
+                                :key="item.id"
+                                class="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_140px] sm:items-start"
+                            >
+                                <div class="min-w-0 sm:pr-2">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                        :class="badgeClass(walletActivityTone(item.kind))"
+                                    >
+                                        {{ walletActivityKindLabel(item.kind) }}
+                                    </span>
+                                    <p class="mt-2 text-xs text-zinc-500">
+                                        {{ formatDateTime(item.createdAt) }}
+                                    </p>
+                                </div>
 
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-[#171411]">
-                                    {{ item.description }}
-                                </p>
-                                <p class="mt-1 text-sm text-zinc-600">
-                                    <template v-if="item.eventName">
-                                        Event
-                                        <Link
-                                            v-if="item.eventUrl"
-                                            :href="item.eventUrl"
-                                            class="font-medium text-[#171411] hover:text-[#2b2621]"
-                                        >
-                                            {{ item.eventName }}
-                                        </Link>
-                                        <span v-else class="font-medium text-[#171411]">{{ item.eventName }}</span>
-                                    </template>
-                                    <template v-else>
-                                        Business wallet activity
-                                    </template>
-                                </p>
-                            </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-[#171411]">
+                                        {{ item.description }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-zinc-600">
+                                        <template v-if="item.eventName">
+                                            Event
+                                            <Link
+                                                v-if="item.eventUrl"
+                                                :href="item.eventUrl"
+                                                class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                            >
+                                                {{ item.eventName }}
+                                            </Link>
+                                            <span v-else class="font-medium text-[#171411]">{{ item.eventName }}</span>
+                                        </template>
+                                        <template v-else>
+                                            Business wallet activity
+                                        </template>
+                                    </p>
+                                </div>
 
-                            <div class="flex items-center justify-between gap-3 sm:block sm:text-right">
-                                <p
-                                    class="text-sm font-semibold"
-                                    :class="item.credits >= 0 ? 'text-emerald-700' : 'text-amber-700'"
-                                >
-                                    {{ formatCreditDelta(item.credits) }}
-                                </p>
-                                <p class="mt-1 text-xs text-zinc-500">
-                                    {{ item.credits >= 0 ? 'Added to wallet' : 'Used from wallet' }}
-                                </p>
-                            </div>
-                        </article>
+                                <div class="flex items-center justify-between gap-3 sm:block sm:text-right">
+                                    <p
+                                        class="text-sm font-semibold"
+                                        :class="item.credits >= 0 ? 'text-emerald-700' : 'text-amber-700'"
+                                    >
+                                        {{ formatCreditDelta(item.credits) }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-zinc-500">
+                                        {{ item.credits >= 0 ? 'Added to wallet' : 'Used from wallet' }}
+                                    </p>
+                                </div>
+                            </article>
+                        </div>
                     </div>
 
                     <div
