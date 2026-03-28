@@ -595,12 +595,12 @@ const submit = (): void => {
     <Head title="Create your event" />
 
     <component :is="rootComponent" v-bind="rootProps">
-    <div :class="isBusinessMode ? 'min-h-svh bg-brand-canvas text-brand-ink' : 'min-h-svh bg-[linear-gradient(180deg,oklch(0.985_0.014_338)_0%,oklch(0.975_0.018_338)_52%,oklch(0.988_0.008_28)_100%)] text-promo-ink'">
+    <div :class="isBusinessMode ? 'min-h-svh bg-brand-canvas text-brand-ink' : 'min-h-svh bg-[linear-gradient(180deg,oklch(0.989_0.01_338)_0%,oklch(0.982_0.012_338)_58%,oklch(0.989_0.006_28)_100%)] text-promo-ink'">
         <div v-if="!isBusinessMode" class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-7xl">
                 <div class="relative h-[24rem]">
-                    <div class="absolute left-[-5rem] top-[-7rem] h-[18rem] w-[18rem] rounded-full bg-promo-purple/55 blur-3xl" />
-                    <div class="absolute right-[-4rem] top-[1rem] h-[20rem] w-[20rem] rounded-full bg-promo-surface-strong/70 blur-3xl" />
+                    <div class="absolute left-[-4rem] top-[-6rem] h-[14rem] w-[14rem] rounded-full bg-promo-purple/22 blur-[90px]" />
+                    <div class="absolute right-[-3rem] top-[2rem] h-[16rem] w-[16rem] rounded-full bg-promo-surface-strong/35 blur-[110px]" />
                 </div>
             </div>
         </div>
@@ -612,7 +612,7 @@ const submit = (): void => {
             >
                 <div class="flex items-center gap-3">
                     <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
-                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]">
+                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-promo-primary text-white shadow-[0_8px_18px_rgba(232,79,154,0.12)]">
                             <AppLogoIcon class="size-7 fill-current" />
                         </div>
                         <div>
@@ -639,7 +639,7 @@ const submit = (): void => {
             <main class="flex-1 py-4 lg:py-6">
                 <section
                     ref="wizardPanelRef"
-                    :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line bg-white shadow-[0_26px_70px_rgba(232,79,154,0.10)] lg:scroll-mt-8'"
+                    :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line/80 bg-white shadow-[0_14px_36px_rgba(232,79,154,0.06)] lg:scroll-mt-8'"
                 >
                     <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-6 py-6 sm:px-8' : 'border-b border-promo-line px-6 py-6 sm:px-8'">
                         <div
@@ -685,7 +685,7 @@ const submit = (): void => {
                             <div class="min-w-0 lg:w-72">
                                 <div :class="isBusinessMode ? 'h-2 rounded-full bg-brand-highlight/35' : 'h-2 rounded-full bg-promo-surface'">
                                     <div
-                                        :class="isBusinessMode ? 'h-full rounded-full bg-brand-ink transition-all duration-300' : 'h-full rounded-full bg-linear-to-r from-promo-primary to-promo-primary-strong transition-all duration-300'"
+                                        :class="isBusinessMode ? 'h-full rounded-full bg-brand-ink transition-all duration-300' : 'h-full rounded-full bg-promo-primary transition-all duration-300'"
                                         :style="{ width: progressWidth }"
                                     />
                                 </div>
@@ -781,7 +781,7 @@ const submit = (): void => {
                                                     ? 'rounded-[1rem] border-brand-ink bg-brand-inverse'
                                                     : 'rounded-[1rem] border-brand-border bg-transparent hover:bg-brand-highlight/15')
                                                 : (form.plan_slug === plan.slug
-                                                    ? 'border-promo-primary bg-white shadow-[0_18px_36px_rgba(232,79,154,0.12)]'
+                                                    ? 'border-promo-primary bg-white shadow-[0_10px_24px_rgba(232,79,154,0.08)]'
                                                     : 'border-promo-line bg-white/70 hover:bg-white')
                                         "
                                         @click="
@@ -950,7 +950,7 @@ const submit = (): void => {
                                                                 ? 'border-brand-ink bg-brand-inverse text-brand-ink shadow-sm'
                                                                 : 'border-brand-border bg-brand-inverse text-brand-muted hover:bg-brand-highlight/15')
                                                             : (form.name.trim() === suggestion
-                                                                ? 'border-promo-primary bg-white text-promo-ink shadow-[0_12px_24px_rgba(232,79,154,0.10)]'
+                                                                ? 'border-promo-primary bg-white text-promo-ink shadow-[0_8px_18px_rgba(232,79,154,0.08)]'
                                                                 : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white')
                                                     "
                                                     @click="applyWeddingTitleSuggestion(suggestion)"
@@ -1145,11 +1145,11 @@ const submit = (): void => {
                                         v-for="subEventOption in availableSubEvents"
                                         :key="subEventOption.key"
                                         type="button"
-                                        class="group relative overflow-hidden rounded-[26px] border text-left transition duration-200 hover:-translate-y-0.5"
+                                        class="group relative overflow-hidden rounded-[26px] border text-left transition duration-200"
                                         :class="
                                             isSubEventSelected(subEventOption.key)
-                                                ? 'border-promo-primary shadow-[0_18px_44px_rgba(232,79,154,0.16)]'
-                                                : 'border-neutral-300 shadow-[0_12px_34px_rgba(17,24,39,0.06)]'
+                                                ? 'border-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.10)]'
+                                                : 'border-neutral-300 shadow-[0_8px_20px_rgba(17,24,39,0.04)]'
                                         "
                                         @click="toggleSubEvent(subEventOption)"
                                     >
@@ -1166,19 +1166,19 @@ const submit = (): void => {
                                             class="absolute inset-0 transition duration-300"
                                             :class="
                                                 isSubEventSelected(subEventOption.key)
-                                                    ? 'bg-linear-to-t from-[rgba(42,22,35,0.92)] via-[rgba(42,22,35,0.34)] to-[rgba(255,255,255,0.04)]'
-                                                    : 'bg-linear-to-t from-[rgba(17,17,17,0.84)] via-[rgba(17,17,17,0.42)] to-[rgba(255,255,255,0.08)]'
+                                                    ? 'bg-linear-to-t from-[rgba(42,22,35,0.80)] via-[rgba(42,22,35,0.24)] to-[rgba(255,255,255,0.03)]'
+                                                    : 'bg-linear-to-t from-[rgba(17,17,17,0.70)] via-[rgba(17,17,17,0.28)] to-[rgba(255,255,255,0.06)]'
                                             "
                                         />
 
                                         <div class="relative flex min-h-52 flex-col justify-between p-5 text-white">
                                             <div class="flex items-start justify-between gap-3">
                                                 <span
-                                                    class="rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] backdrop-blur-sm transition duration-300"
+                                                    class="rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition duration-300"
                                                     :class="
                                                         isSubEventSelected(subEventOption.key)
-                                                            ? 'bg-white/18 text-white'
-                                                            : 'bg-white/88 text-neutral-900'
+                                                            ? 'bg-white/14 text-white'
+                                                            : 'bg-white/78 text-neutral-900'
                                                     "
                                                 >
                                                     {{ subEventOption.required ? 'Required moment' : 'Optional moment' }}
@@ -1188,7 +1188,7 @@ const submit = (): void => {
                                                     class="size-3 rounded-full border transition duration-300"
                                                     :class="
                                                         isSubEventSelected(subEventOption.key)
-                                                            ? 'border-promo-primary bg-promo-primary shadow-[0_0_0_4px_rgba(255,255,255,0.22)]'
+                                                            ? 'border-promo-primary bg-promo-primary shadow-[0_0_0_3px_rgba(255,255,255,0.16)]'
                                                             : 'border-white/95 bg-white/85'
                                                     "
                                                 >

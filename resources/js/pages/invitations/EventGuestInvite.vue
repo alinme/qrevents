@@ -139,8 +139,8 @@ const invitationSurfaceStyle = computed(() => ({
     '--invite-primary': props.branding.primaryColor,
     '--invite-accent': props.branding.accentColor,
     backgroundImage: props.branding.albumBackgroundImageUrl
-        ? `linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.84)), url(${props.branding.albumBackgroundImageUrl})`
-        : `radial-gradient(circle at top, ${props.branding.accentColor}18, transparent 42%), linear-gradient(180deg, #fff8ef 0%, #ffffff 48%, ${props.branding.primaryColor}08 100%)`,
+        ? `linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(15, 23, 42, 0.68)), url(${props.branding.albumBackgroundImageUrl})`
+        : `radial-gradient(circle at top, ${props.branding.accentColor}10, transparent 40%), linear-gradient(180deg, #fffaf3 0%, #ffffff 52%, ${props.branding.primaryColor}05 100%)`,
     backgroundSize: props.branding.albumBackgroundImageUrl ? 'cover' : 'auto',
     backgroundPosition: 'center',
 }));
@@ -225,9 +225,9 @@ onMounted(() => {
         <Head :title="`${eventName} Invitation`" />
 
         <div class="pointer-events-none absolute inset-0 overflow-hidden print:hidden">
-            <div class="absolute -left-24 top-8 h-72 w-72 rounded-full bg-[var(--invite-accent)]/18 blur-3xl" />
-            <div class="absolute right-[-5rem] top-20 h-80 w-80 rounded-full bg-[var(--invite-primary)]/14 blur-3xl" />
-            <div class="absolute bottom-[-7rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-white/28 blur-3xl" />
+            <div class="absolute -left-16 top-10 h-56 w-56 rounded-full bg-[var(--invite-accent)]/10 blur-[84px]" />
+            <div class="absolute right-[-3rem] top-24 h-60 w-60 rounded-full bg-[var(--invite-primary)]/8 blur-[96px]" />
+            <div class="absolute bottom-[-5rem] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-white/16 blur-[108px]" />
         </div>
 
         <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center print:min-h-0 print:max-w-none">
@@ -247,7 +247,7 @@ onMounted(() => {
                     mode="live"
                 />
 
-                <section class="rounded-[30px] border border-brand-border/70 bg-brand-panel/95 p-5 shadow-sm backdrop-blur print:hidden sm:p-6">
+                <section class="rounded-[30px] border border-brand-border/70 bg-brand-panel/94 p-5 print:hidden sm:p-6">
                     <div
                         v-if="submitted"
                         class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
@@ -274,7 +274,7 @@ onMounted(() => {
                         <div class="grid gap-3 sm:grid-cols-3">
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink transition hover:border-brand-accent/20 hover:bg-brand-highlight/12"
                                 @click="openAcceptModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-emerald-400/80 transition group-hover:bg-emerald-500/90" />
@@ -285,7 +285,7 @@ onMounted(() => {
 
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink transition hover:border-brand-accent/20 hover:bg-brand-highlight/12"
                                 @click="openMaybeModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-amber-400/80 transition group-hover:bg-amber-500/90" />
@@ -296,7 +296,7 @@ onMounted(() => {
 
                             <button
                                 type="button"
-                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink shadow-sm transition hover:border-brand-accent/30 hover:bg-brand-highlight/18"
+                                class="group rounded-[1.75rem] border border-brand-border bg-brand-inverse px-4 py-4 text-center text-brand-ink transition hover:border-brand-accent/20 hover:bg-brand-highlight/12"
                                 @click="openDeclineModal"
                             >
                                 <span class="mx-auto mb-3 block h-2.5 w-10 rounded-full bg-rose-400/80 transition group-hover:bg-rose-500/90" />
@@ -312,7 +312,7 @@ onMounted(() => {
 
                 <section
                     v-if="visibleMoments.length > 0"
-                    class="rounded-[30px] border border-brand-border/70 bg-brand-panel/95 p-4 shadow-sm backdrop-blur print:hidden sm:p-5"
+                    class="rounded-[30px] border border-brand-border/70 bg-brand-panel/94 p-4 print:hidden sm:p-5"
                 >
                     <div class="space-y-1 text-center">
                         <p class="dashboard-eyebrow text-center">
@@ -396,7 +396,7 @@ onMounted(() => {
                             <label class="text-sm font-medium">
                                 {{ t('invitations.confirmed_count') }}
                             </label>
-                            <div class="w-full rounded-2xl border border-brand-border bg-brand-inverse px-3 py-2 shadow-sm">
+                            <div class="w-full rounded-2xl border border-brand-border bg-brand-inverse px-3 py-2">
                                 <div class="flex items-center gap-3">
                                     <button
                                         type="button"

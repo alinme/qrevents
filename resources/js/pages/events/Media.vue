@@ -1121,7 +1121,7 @@ const statCards = computed(() => [
                         <button
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'relaxed' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            :class="mediaView === 'relaxed' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Relaxed gallery view"
                             @click="mediaView = 'relaxed'"
                         >
@@ -1131,7 +1131,7 @@ const statCards = computed(() => [
                         <button
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'balanced' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            :class="mediaView === 'balanced' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Balanced gallery view"
                             @click="mediaView = 'balanced'"
                         >
@@ -1141,7 +1141,7 @@ const statCards = computed(() => [
                         <button
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'dense' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            :class="mediaView === 'dense' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                             title="Dense gallery view"
                             @click="mediaView = 'dense'"
                         >
@@ -1180,7 +1180,7 @@ const statCards = computed(() => [
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'all' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                :class="kindFilter === 'all' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="All uploads"
                                 @click="kindFilter = 'all'"
                             >
@@ -1190,7 +1190,7 @@ const statCards = computed(() => [
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'photo' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                :class="kindFilter === 'photo' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Photos"
                                 @click="kindFilter = 'photo'"
                             >
@@ -1200,7 +1200,7 @@ const statCards = computed(() => [
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'video' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                :class="kindFilter === 'video' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Videos"
                                 @click="kindFilter = 'video'"
                             >
@@ -1210,7 +1210,7 @@ const statCards = computed(() => [
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'text' ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                :class="kindFilter === 'text' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
                                 title="Text posts"
                                 @click="kindFilter = 'text'"
                             >
@@ -1358,7 +1358,7 @@ const statCards = computed(() => [
                                 "
                                 :src="assetThumbnailSource(asset) ?? undefined"
                                 alt="Uploaded event asset"
-                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
+                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
                                 :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
                                 @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
                                 @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
@@ -1367,7 +1367,7 @@ const statCards = computed(() => [
                                 v-else-if="asset.kind === 'video' && asset.thumbnailUrl"
                                 :src="asset.thumbnailUrl"
                                 alt="Uploaded event video"
-                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
+                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
                                 :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
                                 @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
                                 @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
@@ -1409,7 +1409,7 @@ const statCards = computed(() => [
 
                             <div
                                 v-if="showsGridAssetChrome(asset)"
-                                class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+                                class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/68 via-black/22 to-transparent"
                             />
 
                             <div
@@ -1418,7 +1418,7 @@ const statCards = computed(() => [
                             >
                                 <label
                                     v-if="canManageMedia"
-                                    class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-sm backdrop-blur"
+                                    class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
                                     :data-test="`asset-select-toggle-${asset.id}`"
                                     @click.stop
                                 >
@@ -1436,13 +1436,13 @@ const statCards = computed(() => [
                                     />
                                 </label>
                                 <span
-                                    class="inline-flex size-8 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-sm backdrop-blur"
+                                    class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
                                     :title="asset.kind"
                                 >
                                     <component :is="kindIcon(asset.kind)" class="size-4" />
                                 </span>
                                 <span
-                                    class="inline-flex size-8 items-center justify-center rounded-full shadow-sm backdrop-blur"
+                                    class="inline-flex size-8 items-center justify-center rounded-full"
                                     :class="moderationBadgeClass(asset.moderationStatus)"
                                     :title="asset.moderationStatus"
                                 >
@@ -1460,22 +1460,22 @@ const statCards = computed(() => [
                             >
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-rose-500/24 text-white transition hover:bg-rose-500/34 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-rose-500/18 text-white transition hover:bg-rose-500/26 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Hide ${asset.guestName} upload from photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'rejected')"
                                 >
-                                    <ThumbsDown class="size-14 drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)] sm:size-16" />
+                                    <ThumbsDown class="size-12 sm:size-14" />
                                 </button>
 
                                 <button
                                     type="button"
-                                    class="flex h-full items-center justify-center bg-emerald-500/26 text-white transition hover:bg-emerald-500/36 disabled:pointer-events-none disabled:opacity-55"
+                                    class="flex h-full items-center justify-center bg-emerald-500/20 text-white transition hover:bg-emerald-500/28 disabled:pointer-events-none disabled:opacity-55"
                                     :disabled="wallVisibilityAssetId === asset.id"
                                     :aria-label="`Show ${asset.guestName} upload on photo wall`"
                                     @click.stop="updateWallVisibility(asset, 'approved')"
                                 >
-                                    <ThumbsUp class="size-14 drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)] sm:size-16" />
+                                    <ThumbsUp class="size-12 sm:size-14" />
                                 </button>
                             </div>
 
@@ -1762,13 +1762,13 @@ const statCards = computed(() => [
 
                                 <div class="absolute left-3 top-3 flex items-center gap-2">
                                     <span
-                                        class="inline-flex size-8 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-sm backdrop-blur"
+                                        class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
                                         :title="asset.kind"
                                     >
                                         <component :is="kindIcon(asset.kind)" class="size-4" />
                                     </span>
                                     <span
-                                        class="inline-flex size-8 items-center justify-center rounded-full shadow-sm backdrop-blur"
+                                        class="inline-flex size-8 items-center justify-center rounded-full"
                                         :class="moderationBadgeClass(asset.moderationStatus)"
                                         :title="asset.moderationStatus"
                                     >
