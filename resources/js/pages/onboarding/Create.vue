@@ -585,8 +585,8 @@ const submit = (): void => {
     <Head title="Create your event" />
 
     <component :is="rootComponent" v-bind="rootProps">
-    <div class="min-h-svh bg-[linear-gradient(180deg,oklch(0.985_0.014_338)_0%,oklch(0.975_0.018_338)_52%,oklch(0.988_0.008_28)_100%)] text-promo-ink">
-        <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
+    <div :class="isBusinessMode ? 'min-h-svh bg-brand-canvas text-brand-ink' : 'min-h-svh bg-[linear-gradient(180deg,oklch(0.985_0.014_338)_0%,oklch(0.975_0.018_338)_52%,oklch(0.988_0.008_28)_100%)] text-promo-ink'">
+        <div v-if="!isBusinessMode" class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-7xl">
                 <div class="relative h-[24rem]">
                     <div class="absolute left-[-5rem] top-[-7rem] h-[18rem] w-[18rem] rounded-full bg-promo-purple/55 blur-3xl" />
@@ -596,17 +596,17 @@ const submit = (): void => {
         </div>
 
         <div class="mx-auto flex min-h-svh max-w-7xl flex-col px-5 py-6 lg:px-8 lg:py-8">
-            <header class="flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
+            <header :class="isBusinessMode ? 'flex flex-col gap-4 rounded-[1.75rem] border border-brand-border/70 bg-brand-panel px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between'">
                 <div class="flex items-center gap-3">
                     <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
-                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]">
+                        <div :class="isBusinessMode ? 'flex size-11 items-center justify-center rounded-[16px] bg-brand-panel-strong/35 text-brand-ink' : 'flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]'">
                             <AppLogoIcon class="size-7 fill-current" />
                         </div>
                         <div>
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            <p :class="isBusinessMode ? 'text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brand-muted' : 'text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary'">
                                 EventSmart
                             </p>
-                            <p class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
+                            <p :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'text-lg font-extrabold tracking-[-0.04em] text-promo-ink'">
                                 Event planning setup
                             </p>
                         </div>
@@ -614,10 +614,10 @@ const submit = (): void => {
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="rounded-full bg-promo-surface px-4 py-2 text-sm font-medium text-promo-muted">
+                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm font-medium text-brand-muted' : 'rounded-full bg-promo-surface px-4 py-2 text-sm font-medium text-promo-muted'">
                         Setup takes about 2 minutes
                     </div>
-                    <div class="rounded-full border border-promo-line px-4 py-2 text-sm font-medium text-promo-muted">
+                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm font-medium text-brand-muted' : 'rounded-full border border-promo-line px-4 py-2 text-sm font-medium text-promo-muted'">
                         Step {{ step }} of {{ stepItems.length }}
                     </div>
                 </div>
@@ -625,16 +625,16 @@ const submit = (): void => {
 
             <main class="grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8">
                 <aside class="lg:sticky lg:top-8 lg:self-start">
-                    <div class="overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]">
-                        <div class="border-b border-promo-line bg-promo-surface/70 px-5 py-5">
-                            <p class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary">
+                    <div :class="isBusinessMode ? 'overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm' : 'overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]'">
+                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-5 py-5' : 'border-b border-promo-line bg-promo-surface/70 px-5 py-5'">
+                            <p :class="isBusinessMode ? 'inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-muted' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary'">
                                 <Sparkles class="size-3.5" />
                                 {{ isBusinessMode ? 'Business flow' : 'Why this matters' }}
                             </p>
-                            <h1 class="mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                            <h1 :class="isBusinessMode ? 'mt-4 text-xl font-semibold tracking-tight text-brand-ink' : 'mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink'">
                                 {{ isBusinessMode ? 'Create the next client event' : 'Plan it once. Use it everywhere.' }}
                             </h1>
-                            <p class="mt-3 text-sm leading-7 text-promo-muted">
+                            <p :class="isBusinessMode ? 'dashboard-body mt-3' : 'mt-3 text-sm leading-7 text-promo-muted'">
                                 {{
                                     isBusinessMode
                                         ? 'Choose the paid plan this event should use, then finish the event setup. Your business profile and wallet stay at the account level.'
@@ -647,23 +647,26 @@ const submit = (): void => {
                             <article
                                 v-for="stepItem in stepItems"
                                 :key="stepItem.number"
-                                class="flex gap-4 border-b border-promo-line py-4 last:border-b-0"
                                 :class="
-                                    stepItem.number === step
-                                        ? 'text-promo-ink'
-                                        : stepItem.number < step
-                                          ? 'text-promo-ink'
-                                          : 'text-promo-muted'
+                                    isBusinessMode
+                                        ? `flex gap-4 border-b border-brand-border/70 py-4 last:border-b-0 ${stepItem.number <= step ? 'text-brand-ink' : 'text-brand-muted'}`
+                                        : `flex gap-4 border-b border-promo-line py-4 last:border-b-0 ${stepItem.number <= step ? 'text-promo-ink' : 'text-promo-muted'}`
                                 "
                             >
                                 <div
                                     class="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.18em]"
                                     :class="
-                                        stepItem.number === step
-                                            ? 'bg-promo-primary text-white'
-                                            : stepItem.number < step
-                                              ? 'bg-promo-surface text-promo-primary'
-                                              : 'bg-promo-surface/70 text-promo-muted'
+                                        isBusinessMode
+                                            ? (stepItem.number === step
+                                                ? 'bg-brand-ink text-brand-inverse'
+                                                : stepItem.number < step
+                                                  ? 'bg-brand-highlight/30 text-brand-ink'
+                                                  : 'bg-brand-panel-strong/35 text-brand-muted')
+                                            : (stepItem.number === step
+                                                ? 'bg-promo-primary text-white'
+                                                : stepItem.number < step
+                                                  ? 'bg-promo-surface text-promo-primary'
+                                                  : 'bg-promo-surface/70 text-promo-muted')
                                     "
                                 >
                                     0{{ stepItem.number }}
@@ -672,14 +675,14 @@ const submit = (): void => {
                                 <div class="min-w-0">
                                     <p
                                         class="text-[0.68rem] font-semibold uppercase tracking-[0.22em]"
-                                        :class="stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted'"
+                                        :class="isBusinessMode ? (stepItem.number <= step ? 'text-brand-ink' : 'text-brand-muted') : (stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted')"
                                     >
                                         {{ stepItem.label }}
                                     </p>
-                                    <h2 class="mt-1 text-sm font-semibold text-promo-ink">
+                                    <h2 :class="isBusinessMode ? 'mt-1 text-sm font-semibold text-brand-ink' : 'mt-1 text-sm font-semibold text-promo-ink'">
                                         {{ stepItem.title }}
                                     </h2>
-                                    <p class="mt-1.5 text-sm leading-6 text-promo-muted">
+                                    <p :class="isBusinessMode ? 'dashboard-body mt-1.5' : 'mt-1.5 text-sm leading-6 text-promo-muted'">
                                         {{ stepItem.description }}
                                     </p>
                                 </div>
@@ -690,26 +693,26 @@ const submit = (): void => {
 
                 <section
                     ref="wizardPanelRef"
-                    class="scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line bg-white shadow-[0_26px_70px_rgba(232,79,154,0.10)] lg:scroll-mt-8"
+                    :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line bg-white shadow-[0_26px_70px_rgba(232,79,154,0.10)] lg:scroll-mt-8'"
                 >
-                    <div class="border-b border-promo-line px-6 py-6 sm:px-8">
+                    <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-6 py-6 sm:px-8' : 'border-b border-promo-line px-6 py-6 sm:px-8'">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
+                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary'">
                                     {{ stepItems[step - 1]?.label }}
                                 </p>
-                                <h2 class="mt-3 text-3xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                                <h2 :class="isBusinessMode ? 'mt-3 text-2xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-3xl font-extrabold tracking-[-0.05em] text-promo-ink'">
                                     {{ stepItems[step - 1]?.title }}
                                 </h2>
-                                <p class="mt-3 max-w-2xl text-sm leading-7 text-promo-muted">
+                                <p :class="isBusinessMode ? 'dashboard-body mt-3 max-w-2xl' : 'mt-3 max-w-2xl text-sm leading-7 text-promo-muted'">
                                     {{ stepItems[step - 1]?.description }}
                                 </p>
                             </div>
 
                             <div class="min-w-0 lg:w-72">
-                                <div class="h-2 rounded-full bg-promo-surface">
+                                <div :class="isBusinessMode ? 'h-2 rounded-full bg-brand-highlight/35' : 'h-2 rounded-full bg-promo-surface'">
                                     <div
-                                        class="h-full rounded-full bg-linear-to-r from-promo-primary to-promo-primary-strong transition-all duration-300"
+                                        :class="isBusinessMode ? 'h-full rounded-full bg-brand-ink transition-all duration-300' : 'h-full rounded-full bg-linear-to-r from-promo-primary to-promo-primary-strong transition-all duration-300'"
                                         :style="{ width: progressWidth }"
                                     />
                                 </div>
@@ -727,7 +730,7 @@ const submit = (): void => {
 
                             <InputError :message="form.errors.type" />
 
-                            <div class="rounded-[28px] border border-promo-line bg-promo-surface/40 p-5 sm:p-6">
+                            <div :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel-strong/15 p-5 sm:p-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/40 p-5 sm:p-6'">
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
@@ -743,7 +746,7 @@ const submit = (): void => {
                                     </div>
 
                                     <div
-                                        class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted"
+                                        :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm font-medium text-brand-muted' : 'rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted'"
                                     >
                                         {{
                                             isBusinessMode
@@ -755,7 +758,7 @@ const submit = (): void => {
 
                                 <div
                                     v-if="isBusinessMode"
-                                    class="mt-5 flex flex-col gap-3 border-y border-promo-line py-4 sm:flex-row sm:items-center sm:justify-between"
+                                    :class="isBusinessMode ? 'mt-5 flex flex-col gap-3 border-y border-brand-border/70 py-4 sm:flex-row sm:items-center sm:justify-between' : 'mt-5 flex flex-col gap-3 border-y border-promo-line py-4 sm:flex-row sm:items-center sm:justify-between'"
                                 >
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold text-promo-ink">
@@ -776,7 +779,7 @@ const submit = (): void => {
                                         v-if="selectedPlan && !selectedBusinessPlanAffordable"
                                         as-child
                                         variant="outline"
-                                        class="border-promo-line bg-white text-promo-ink hover:bg-promo-surface"
+                                        :class="isBusinessMode ? 'border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20' : 'border-promo-line bg-white text-promo-ink hover:bg-promo-surface'"
                                     >
                                         <Link :href="businessTopUpHref">
                                             Top up wallet
@@ -791,9 +794,13 @@ const submit = (): void => {
                                         type="button"
                                         class="rounded-[24px] border px-5 py-5 text-left transition duration-200"
                                         :class="
-                                            form.plan_slug === plan.slug
-                                                ? 'border-promo-primary bg-white shadow-[0_18px_36px_rgba(232,79,154,0.12)]'
-                                                : 'border-promo-line bg-white/70 hover:bg-white'
+                                            isBusinessMode
+                                                ? (form.plan_slug === plan.slug
+                                                    ? 'border-brand-ink bg-brand-inverse shadow-sm'
+                                                    : 'border-brand-border bg-brand-inverse hover:bg-brand-highlight/15')
+                                                : (form.plan_slug === plan.slug
+                                                    ? 'border-promo-primary bg-white shadow-[0_18px_36px_rgba(232,79,154,0.12)]'
+                                                    : 'border-promo-line bg-white/70 hover:bg-white')
                                         "
                                         @click="
                                             form.plan_slug = plan.slug;
@@ -878,7 +885,7 @@ const submit = (): void => {
                                 <div class="space-y-5">
                                     <div
                                         v-if="isWeddingType"
-                                        class="rounded-[26px] border border-promo-line bg-promo-surface/45 p-5"
+                                        :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel p-5' : 'rounded-[26px] border border-promo-line bg-promo-surface/45 p-5'"
                                     >
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                             <Sparkles class="size-3.5" />
@@ -956,9 +963,13 @@ const submit = (): void => {
                                                     type="button"
                                                     class="rounded-[18px] border px-4 py-3 text-left text-sm font-medium transition-colors duration-200"
                                                     :class="
-                                                        form.name.trim() === suggestion
-                                                            ? 'border-promo-primary bg-white text-promo-ink shadow-[0_12px_24px_rgba(232,79,154,0.10)]'
-                                                            : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white'
+                                                        isBusinessMode
+                                                            ? (form.name.trim() === suggestion
+                                                                ? 'border-brand-ink bg-brand-inverse text-brand-ink shadow-sm'
+                                                                : 'border-brand-border bg-brand-inverse text-brand-muted hover:bg-brand-highlight/15')
+                                                            : (form.name.trim() === suggestion
+                                                                ? 'border-promo-primary bg-white text-promo-ink shadow-[0_12px_24px_rgba(232,79,154,0.10)]'
+                                                                : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white')
                                                     "
                                                     @click="applyWeddingTitleSuggestion(suggestion)"
                                                 >
@@ -988,7 +999,7 @@ const submit = (): void => {
                                         <InputError :message="form.errors.name" />
                                     </div>
 
-                                    <div class="rounded-[22px] border border-dashed border-promo-line bg-white/65 px-4 py-4 text-sm text-promo-muted">
+                                    <div :class="isBusinessMode ? 'rounded-[1.25rem] border border-dashed border-brand-border bg-brand-panel px-4 py-4 text-sm text-brand-muted' : 'rounded-[22px] border border-dashed border-promo-line bg-white/65 px-4 py-4 text-sm text-promo-muted'">
                                         {{
                                             isWeddingType
                                                 ? 'Wedding addresses are collected on each selected moment in the next step.'
@@ -997,7 +1008,7 @@ const submit = (): void => {
                                     </div>
                                 </div>
 
-                                <div class="rounded-[26px] border border-promo-line bg-promo-surface/55 p-5">
+                                <div :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel p-5' : 'rounded-[26px] border border-promo-line bg-promo-surface/55 p-5'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Users class="size-3.5" />
                                         Guest planning
@@ -1017,9 +1028,13 @@ const submit = (): void => {
                                             type="button"
                                             class="rounded-[18px] border px-4 py-3 text-left transition-colors duration-200"
                                             :class="
-                                                Number(form.attendee_estimate) === preset
-                                                    ? 'border-promo-primary bg-white text-promo-ink'
-                                                    : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white'
+                                                isBusinessMode
+                                                    ? (Number(form.attendee_estimate) === preset
+                                                        ? 'border-brand-ink bg-brand-inverse text-brand-ink'
+                                                        : 'border-brand-border bg-brand-inverse text-brand-muted hover:bg-brand-highlight/15')
+                                                    : (Number(form.attendee_estimate) === preset
+                                                        ? 'border-promo-primary bg-white text-promo-ink'
+                                                        : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white')
                                             "
                                             @click="applyAttendeePreset(preset)"
                                         >
@@ -1053,7 +1068,7 @@ const submit = (): void => {
                         </section>
 
                         <section v-if="step === 3" class="space-y-8">
-                            <div class="rounded-[28px] border border-promo-line bg-promo-surface/45 p-5 sm:p-6">
+                            <div :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel p-5 sm:p-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/45 p-5 sm:p-6'">
                                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
@@ -1071,7 +1086,7 @@ const submit = (): void => {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        class="rounded-full border-promo-line bg-white text-promo-ink"
+                                        :class="isBusinessMode ? 'rounded-full border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20' : 'rounded-full border-promo-line bg-white text-promo-ink'"
                                         :disabled="form.event_dates.length >= 6"
                                         @click="addEventDate"
                                     >
@@ -1084,7 +1099,7 @@ const submit = (): void => {
                                     <div
                                         v-for="(eventDate, index) in form.event_dates"
                                         :key="`event-date-${index}`"
-                                        class="rounded-[22px] border border-promo-line bg-white p-4"
+                                        :class="isBusinessMode ? 'rounded-[1.25rem] border border-brand-border/70 bg-brand-inverse p-4' : 'rounded-[22px] border border-promo-line bg-white p-4'"
                                     >
                                         <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
                                             <div class="grid gap-2">
@@ -1213,7 +1228,7 @@ const submit = (): void => {
 
                             <div
                                 v-if="form.sub_events.length > 0"
-                                class="rounded-[28px] border border-promo-line bg-white p-5 sm:p-6"
+                                :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel p-5 sm:p-6' : 'rounded-[28px] border border-promo-line bg-white p-5 sm:p-6'"
                             >
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
@@ -1225,7 +1240,7 @@ const submit = (): void => {
                                         </p>
                                     </div>
 
-                                    <div class="rounded-full bg-promo-surface px-4 py-2 text-sm text-promo-muted">
+                                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm text-brand-muted' : 'rounded-full bg-promo-surface px-4 py-2 text-sm text-promo-muted'">
                                         {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} selected
                                     </div>
                                 </div>
@@ -1234,7 +1249,7 @@ const submit = (): void => {
                                     <div
                                         v-for="(subEvent, index) in form.sub_events"
                                         :key="subEvent.key"
-                                        class="rounded-[22px] border border-promo-line bg-promo-surface/35 p-4"
+                                        :class="isBusinessMode ? 'rounded-[1.25rem] border border-brand-border/70 bg-brand-panel-strong/15 p-4' : 'rounded-[22px] border border-promo-line bg-promo-surface/35 p-4'"
                                     >
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
@@ -1320,7 +1335,7 @@ const submit = (): void => {
                             </div>
 
                             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                                <div class="rounded-[28px] border border-promo-line bg-promo-surface/35 p-5 sm:p-6">
+                                <div :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-panel p-5 sm:p-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/35 p-5 sm:p-6'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Users class="size-3.5" />
                                         Event owner
@@ -1332,13 +1347,13 @@ const submit = (): void => {
                                         This event will be created under the signed-in owner account.
                                     </p>
 
-                                    <div class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
+                                    <div :class="isBusinessMode ? 'mt-5 border-t border-brand-border/70 pt-4 text-sm text-brand-muted' : 'mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted'">
                                         <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>
                                         <p class="mt-1">{{ props.owner?.email }}</p>
                                     </div>
                                 </div>
 
-                                <div class="rounded-[28px] border border-promo-line bg-white p-5">
+                                <div :class="isBusinessMode ? 'rounded-[1.5rem] border border-brand-border/70 bg-brand-inverse p-5' : 'rounded-[28px] border border-promo-line bg-white p-5'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Sparkles class="size-3.5" />
                                         {{ isBusinessMode ? 'Wallet summary' : 'Selected plan' }}
@@ -1354,10 +1369,10 @@ const submit = (): void => {
                                         }}
                                     </p>
 
-                                    <div v-if="selectedPlan" class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
+                                    <div v-if="selectedPlan" :class="isBusinessMode ? 'mt-5 border-t border-brand-border/70 pt-4 text-sm text-brand-muted' : 'mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted'">
                                         <div
                                             v-if="isBusinessMode"
-                                            class="border-b border-promo-line pb-3"
+                                            class="border-b border-brand-border/70 pb-3"
                                             :class="
                                                 selectedBusinessPlanAffordable
                                                     ? 'text-emerald-800'
@@ -1370,10 +1385,10 @@ const submit = (): void => {
                                                     : `You need ${missingBusinessCredits} more credits before you can create this event.`
                                             }}
                                         </div>
-                                        <div class="border-b border-promo-line py-3">
+                                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 py-3' : 'border-b border-promo-line py-3'">
                                             {{ selectedPlan.uploadLimitLabel }}
                                         </div>
-                                        <div class="border-b border-promo-line py-3">
+                                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 py-3' : 'border-b border-promo-line py-3'">
                                             {{ selectedPlan.retentionLabel }}
                                         </div>
                                         <div class="py-3">
@@ -1381,7 +1396,7 @@ const submit = (): void => {
                                         </div>
                                         <div
                                             v-if="isBusinessMode && !selectedBusinessPlanAffordable"
-                                            class="border-t border-promo-line pt-3"
+                                            class="border-t border-brand-border/70 pt-3"
                                         >
                                             <Link :href="businessTopUpHref" class="font-semibold text-promo-primary hover:text-promo-primary-strong">
                                                 Top up wallet
@@ -1395,7 +1410,7 @@ const submit = (): void => {
 
                         <div
                             ref="formActionsRef"
-                            class="flex flex-col gap-4 rounded-[24px] border border-promo-line bg-promo-surface/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+                            :class="isBusinessMode ? 'flex flex-col gap-4 rounded-[1.5rem] border border-brand-border/70 bg-brand-panel px-5 py-4 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 rounded-[24px] border border-promo-line bg-promo-surface/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between'"
                         >
                             <div class="grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4">
                                 <div class="inline-flex items-center gap-2">
@@ -1416,7 +1431,7 @@ const submit = (): void => {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    class="rounded-full text-promo-muted hover:text-promo-ink"
+                                    :class="isBusinessMode ? 'rounded-full text-brand-muted hover:text-brand-ink' : 'rounded-full text-promo-muted hover:text-promo-ink'"
                                     :disabled="step === 1 || form.processing"
                                     @click="goToPrevious"
                                 >
@@ -1427,7 +1442,7 @@ const submit = (): void => {
                                 <Button
                                     v-if="step < 3"
                                     type="button"
-                                    class="rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong"
+                                    :class="isBusinessMode ? 'rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent' : 'rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong'"
                                     :disabled="!canMoveToNext || form.processing"
                                     @click="goToNext"
                                 >
@@ -1438,7 +1453,7 @@ const submit = (): void => {
                                 <Button
                                     v-else
                                     type="submit"
-                                    class="rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong"
+                                    :class="isBusinessMode ? 'rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent' : 'rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong'"
                                     :disabled="form.processing || !canSubmitEvent"
                                 >
                                     <Spinner v-if="form.processing" class="mr-2" />
