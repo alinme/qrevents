@@ -28,15 +28,11 @@ const passwordInput = useTemplateRef('passwordInput');
             title="Delete account"
             description="Delete your account and all of its resources"
         />
-        <div
-            class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
-        >
-            <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">Warning</p>
-                <p class="text-sm">
-                    Please proceed with caution, this cannot be undone.
-                </p>
-            </div>
+        <div class="space-y-4 border-t border-brand-border/70 pt-6">
+            <p class="text-sm leading-6 text-brand-muted">
+                Deleting your account permanently removes your events, uploads,
+                billing history, and collaborators. This cannot be undone.
+            </p>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="destructive" data-test="delete-user-button"
@@ -55,16 +51,12 @@ const passwordInput = useTemplateRef('passwordInput');
                         v-slot="{ errors, processing, reset, clearErrors }"
                     >
                         <DialogHeader class="space-y-3">
-                            <DialogTitle
-                                >Are you sure you want to delete your
-                                account?</DialogTitle
-                            >
+                            <DialogTitle>
+                                Are you sure you want to delete your account?
+                            </DialogTitle>
                             <DialogDescription>
-                                Once your account is deleted, all of its
-                                resources and data will also be permanently
-                                deleted. Please enter your password to confirm
-                                you would like to permanently delete your
-                                account.
+                                Enter your password to permanently delete this
+                                account and all of its data.
                             </DialogDescription>
                         </DialogHeader>
 

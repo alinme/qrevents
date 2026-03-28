@@ -310,15 +310,15 @@ const submitTopUp = (): void => {
     </AppLayout>
 
     <Dialog v-model:open="topUpModalOpen">
-        <DialogContent class="sm:max-w-xl">
+        <DialogContent class="sm:max-w-lg">
             <DialogHeader class="text-left">
                 <DialogTitle>Top up credits</DialogTitle>
                 <DialogDescription>
-                    Pick a pack, choose checkout currency, and Stripe will bring you back here when payment is done. Top-ups and bonus credits land in the same balance, and new events deduct from that billing balance.
+                    Pick a pack, choose checkout currency, and continue to Stripe.
                 </DialogDescription>
             </DialogHeader>
 
-            <form class="space-y-4" @submit.prevent="submitTopUp">
+            <form class="space-y-5" @submit.prevent="submitTopUp">
                 <div
                     role="radiogroup"
                     aria-label="Choose a top-up pack"
@@ -359,11 +359,9 @@ const submitTopUp = (): void => {
                     </button>
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px]">
-                    <div class="rounded-[1.15rem] border border-brand-border bg-brand-panel px-4 py-3">
-                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
-                            You receive
-                        </p>
+                <div class="space-y-3 border-t border-brand-border/70 pt-4">
+                    <div>
+                        <p class="dashboard-eyebrow">You receive</p>
                         <p class="mt-1 text-base font-semibold text-brand-ink">
                             {{ selectedPack?.total_credits ?? 0 }} credits
                         </p>
@@ -372,13 +370,11 @@ const submitTopUp = (): void => {
                         </p>
                     </div>
 
-                    <label class="rounded-[1.15rem] border border-brand-border bg-brand-panel px-4 py-3 text-sm text-brand-muted">
-                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
-                            Currency
-                        </span>
+                    <label class="block text-sm text-brand-muted">
+                        <span class="dashboard-eyebrow">Currency</span>
                         <select
                             v-model="topUpForm.currency"
-                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-brand-ink focus:ring-0"
+                            class="mt-2 block h-11 w-full rounded-xl border border-brand-border bg-brand-inverse px-3 text-sm font-medium text-brand-ink focus:border-brand-accent focus:outline-none"
                         >
                             <option
                                 v-for="currency in businessTopUp.supportedCheckoutCurrencies"
@@ -409,7 +405,7 @@ const submitTopUp = (): void => {
     </Dialog>
 
     <Dialog v-model:open="howItWorksModalOpen">
-        <DialogContent class="sm:max-w-lg">
+        <DialogContent class="sm:max-w-md">
             <DialogHeader class="text-left">
                 <DialogTitle>How billing works</DialogTitle>
                 <DialogDescription>
@@ -417,22 +413,22 @@ const submitTopUp = (): void => {
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="space-y-4 text-sm leading-6 text-brand-muted">
-                <div>
+            <div class="space-y-3 text-sm leading-6 text-brand-muted">
+                <div class="border-t border-brand-border/70 pt-3 first:border-0 first:pt-0">
                     <p class="font-semibold text-brand-ink">Top up once</p>
                     <p class="mt-1">
                         Add credits in advance, then reuse that balance whenever you create a new paid business event.
                     </p>
                 </div>
 
-                <div>
+                <div class="border-t border-brand-border/70 pt-3">
                     <p class="font-semibold text-brand-ink">Bonus credits stay in the same balance</p>
                     <p class="mt-1">
                         Any bonus from a larger top-up lands in the same wallet, so you only need to track one credit balance.
                     </p>
                 </div>
 
-                <div>
+                <div class="border-t border-brand-border/70 pt-3">
                     <p class="font-semibold text-brand-ink">Events deduct from that wallet</p>
                     <p class="mt-1">
                         When you create a Plus or Pro business event, the required credits are subtracted automatically and recorded in the ledger below.

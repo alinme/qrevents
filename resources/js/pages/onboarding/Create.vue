@@ -704,63 +704,72 @@ const submit = (): void => {
                             <InputError :message="form.errors.type" />
 
                             <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
-                                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                                    <div>
-                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                            <Sparkles class="size-3.5" />
-                                            {{ isBusinessMode ? 'Choose the plan for this business event' : 'Choose your plan' }}
+                                <template v-if="isBusinessMode">
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                                        <div>
+                                            <h3 class="text-lg font-semibold tracking-tight text-brand-ink">
+                                                Select the paid plan
+                                            </h3>
+                                            <p class="dashboard-body mt-1">
+                                                Business events use credits. Free is not available here.
+                                            </p>
                                         </div>
-                                        <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
-                                            {{ isBusinessMode ? 'Pick the paid plan this event should consume' : 'Pick the event package that fits this celebration' }}
-                                        </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            {{ isBusinessMode ? 'Business events use wallet credits. Free is not available here.' : 'You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.' }}
+
+                                        <p class="text-sm font-medium text-brand-muted">
+                                            {{ businessWalletCredits }} credits available
                                         </p>
                                     </div>
 
                                     <div
-                                        :class="isBusinessMode ? 'text-sm font-medium text-brand-muted' : 'rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted'"
+                                        v-if="selectedPlan"
+                                        class="flex flex-col gap-3 border-y border-brand-border/70 py-4 sm:flex-row sm:items-center sm:justify-between"
                                     >
-                                        {{
-                                            isBusinessMode
-                                                ? `${businessWalletCredits} credits available`
-                                                : (selectedPlan ? `${selectedPlan.name} · ${selectedPlan.priceLabel}` : 'Choose a plan')
-                                        }}
-                                    </div>
-                                </div>
-
-                                <div
-                                    v-if="isBusinessMode"
-                                    :class="isBusinessMode ? 'mt-5 flex flex-col gap-3 border-y border-brand-border/70 py-4 sm:flex-row sm:items-center sm:justify-between' : 'mt-5 flex flex-col gap-3 border-y border-promo-line py-4 sm:flex-row sm:items-center sm:justify-between'"
-                                >
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-semibold text-promo-ink">
-                                            {{ selectedPlan ? `${selectedPlan.name} uses ${selectedBusinessPlanCost} credits` : 'Choose the plan for this event' }}
-                                        </p>
-                                        <p class="mt-1 text-sm leading-6 text-promo-muted">
-                                            {{
-                                                selectedPlan
-                                                    ? (selectedBusinessPlanAffordable
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-brand-ink">
+                                                {{ `${selectedPlan.name} uses ${selectedBusinessPlanCost} credits` }}
+                                            </p>
+                                            <p class="dashboard-meta mt-1">
+                                                {{
+                                                    selectedBusinessPlanAffordable
                                                         ? `${remainingBusinessCredits} credits will remain after creation.`
-                                                        : `You need ${missingBusinessCredits} more credits before you can create this event.`)
-                                                    : 'Free is not available in business mode.'
-                                            }}
+                                                        : `You need ${missingBusinessCredits} more credits before you can create this event.`
+                                                }}
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            v-if="!selectedBusinessPlanAffordable"
+                                            as-child
+                                            variant="outline"
+                                            class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20"
+                                        >
+                                            <Link :href="businessTopUpHref">
+                                                Top up credits
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </template>
+
+                                <div v-else class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                                    <div>
+                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                            <Sparkles class="size-3.5" />
+                                            Choose your plan
+                                        </div>
+                                        <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
+                                            Pick the event package that fits this celebration
+                                        </h3>
+                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                            You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.
                                         </p>
                                     </div>
 
-                                    <Button
-                                        v-if="selectedPlan && !selectedBusinessPlanAffordable"
-                                        as-child
-                                        variant="outline"
-                                        :class="isBusinessMode ? 'border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20' : 'border-promo-line bg-white text-promo-ink hover:bg-promo-surface'"
-                                    >
-                                        <Link :href="businessTopUpHref">
-                                            Top up credits
-                                        </Link>
-                                    </Button>
+                                    <div class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted">
+                                        {{ selectedPlan ? `${selectedPlan.name} · ${selectedPlan.priceLabel}` : 'Choose a plan' }}
+                                    </div>
                                 </div>
 
-                                <div class="mt-5 grid gap-4 xl:grid-cols-3">
+                                <div :class="isBusinessMode ? 'mt-5 grid gap-3 lg:grid-cols-2' : 'mt-5 grid gap-4 xl:grid-cols-3'">
                                     <button
                                         v-for="plan in props.pricingPlans"
                                         :key="plan.slug"
@@ -782,35 +791,35 @@ const submit = (): void => {
                                     >
                                         <div class="flex items-start justify-between gap-4">
                                             <div>
-                                                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-promo-primary">
+                                                <p :class="isBusinessMode ? 'text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'text-sm font-semibold uppercase tracking-[0.18em] text-promo-primary'">
                                                     {{ plan.name }}
                                                 </p>
-                                                <h4 class="mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                                                <h4 :class="isBusinessMode ? 'mt-2 text-xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink'">
                                                     {{ isBusinessMode ? `${plan.businessCreditCost ?? 0} credits` : plan.priceLabel }}
                                                 </h4>
-                                                <p class="mt-2 text-sm text-promo-muted">
+                                                <p :class="isBusinessMode ? 'mt-1 text-sm text-brand-muted' : 'mt-2 text-sm text-promo-muted'">
                                                     {{ isBusinessMode ? 'Paid from your business wallet' : plan.billingLabel }}
                                                 </p>
                                             </div>
 
                                             <div
                                                 v-if="plan.isDefault"
-                                                class="rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-promo-primary"
+                                                :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-promo-primary'"
                                             >
                                                 Recommended
                                             </div>
                                         </div>
 
-                                        <div class="mt-5 space-y-2 text-sm text-promo-muted">
+                                        <div :class="isBusinessMode ? 'mt-4 space-y-1.5 text-sm text-brand-muted' : 'mt-5 space-y-2 text-sm text-promo-muted'">
                                             <p>{{ plan.uploadLimitLabel }}</p>
                                             <p>{{ plan.retentionLabel }}</p>
                                             <p>{{ plan.activeWindowLabel }}</p>
-                                            <p class="capitalize">{{ plan.customizationTier }} customization</p>
+                                            <p v-if="!isBusinessMode" class="capitalize">{{ plan.customizationTier }} customization</p>
                                         </div>
 
                                         <p
                                             v-if="isBusinessMode"
-                                            class="mt-4 text-sm"
+                                            class="mt-4 text-sm font-medium"
                                             :class="
                                                 (plan.businessCreditCost ?? 0) <= businessWalletCredits
                                                     ? 'text-emerald-700'
@@ -824,7 +833,7 @@ const submit = (): void => {
                                             }}
                                         </p>
 
-                                        <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
+                                        <div v-if="!isBusinessMode" class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
                                             <span
                                                 class="rounded-full px-3 py-1"
                                                 :class="
@@ -1315,8 +1324,81 @@ const submit = (): void => {
                                 </div>
                             </div>
 
-                            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
+                            <div
+                                v-if="isBusinessMode"
+                                class="space-y-4 border-t border-brand-border/70 pt-6"
+                            >
+                                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-semibold tracking-tight text-brand-ink">
+                                            Review before create
+                                        </h3>
+                                        <p class="dashboard-body mt-1">
+                                            Confirm the owner and the billing impact, then create the workspace.
+                                        </p>
+                                    </div>
+                                    <p class="text-sm font-medium text-brand-muted">
+                                        {{ businessWalletCredits }} credits available
+                                    </p>
+                                </div>
+
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="space-y-1">
+                                        <p class="dashboard-eyebrow">Owner</p>
+                                        <p class="text-sm font-semibold text-brand-ink">{{ props.owner?.name }}</p>
+                                        <p class="text-sm text-brand-muted">{{ props.owner?.email }}</p>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <p class="dashboard-eyebrow">Plan</p>
+                                        <p class="text-sm font-semibold text-brand-ink">
+                                            {{ selectedPlan?.name ?? 'Choose a plan' }}
+                                        </p>
+                                        <p class="text-sm text-brand-muted">
+                                            {{
+                                                selectedPlan
+                                                    ? `${selectedBusinessPlanCost} credits will be used for this event.`
+                                                    : 'Pick the paid business plan for this event.'
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="selectedPlan"
+                                    class="grid gap-2 border-t border-brand-border/70 pt-4 text-sm text-brand-muted"
+                                >
+                                    <p
+                                        class="font-medium"
+                                        :class="
+                                            selectedBusinessPlanAffordable
+                                                ? 'text-emerald-800'
+                                                : 'text-amber-900'
+                                        "
+                                    >
+                                        {{
+                                            selectedBusinessPlanAffordable
+                                                ? `${remainingBusinessCredits} credits will remain after this event.`
+                                                : `You need ${missingBusinessCredits} more credits before you can create this event.`
+                                        }}
+                                    </p>
+                                    <p>{{ selectedPlan.uploadLimitLabel }}</p>
+                                    <p>{{ selectedPlan.retentionLabel }}</p>
+                                    <p>{{ selectedPlan.activeWindowLabel }}</p>
+                                    <div
+                                        v-if="!selectedBusinessPlanAffordable"
+                                        class="border-t border-brand-border/70 pt-3"
+                                    >
+                                        <Link :href="businessTopUpHref" class="font-semibold text-brand-ink hover:text-brand-accent">
+                                            Top up credits
+                                        </Link>
+                                        <span> to unlock this plan before you submit.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                                <div class="space-y-5 border-t border-promo-line pt-6">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Users class="size-3.5" />
                                         Event owner
@@ -1328,61 +1410,33 @@ const submit = (): void => {
                                         This event will be created under the signed-in owner account.
                                     </p>
 
-                                    <div :class="isBusinessMode ? 'mt-5 border-t border-brand-border/70 pt-4 text-sm text-brand-muted' : 'mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted'">
+                                    <div class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
                                         <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>
                                         <p class="mt-1">{{ props.owner?.email }}</p>
                                     </div>
                                 </div>
 
-                                <div :class="isBusinessMode ? 'space-y-4 border-t border-brand-border/70 pt-6' : 'space-y-4 border-t border-promo-line pt-6'">
+                                <div class="space-y-4 border-t border-promo-line pt-6">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Sparkles class="size-3.5" />
-                                        {{ isBusinessMode ? 'Billing summary' : 'Selected plan' }}
+                                        Selected plan
                                     </div>
                                     <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
-                                        {{ isBusinessMode ? `${businessWalletCredits} credits available` : (selectedPlan?.name ?? 'Choose a plan') }}
+                                        {{ selectedPlan?.name ?? 'Choose a plan' }}
                                     </h3>
                                     <p class="mt-2 text-sm text-promo-muted">
-                                        {{
-                                            isBusinessMode
-                                                ? (selectedPlan ? `${selectedPlan.name} will consume ${selectedBusinessPlanCost} credits.` : 'Choose the paid business plan for this event.')
-                                                : (selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.')
-                                        }}
+                                        {{ selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.' }}
                                     </p>
 
-                                    <div v-if="selectedPlan" :class="isBusinessMode ? 'mt-5 border-t border-brand-border/70 pt-4 text-sm text-brand-muted' : 'mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted'">
-                                        <div
-                                            v-if="isBusinessMode"
-                                            class="border-b border-brand-border/70 pb-3"
-                                            :class="
-                                                selectedBusinessPlanAffordable
-                                                    ? 'text-emerald-800'
-                                                    : 'text-amber-900'
-                                            "
-                                        >
-                                            {{
-                                                selectedBusinessPlanAffordable
-                                                    ? `${remainingBusinessCredits} credits will remain after this event.`
-                                                    : `You need ${missingBusinessCredits} more credits before you can create this event.`
-                                            }}
-                                        </div>
-                                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 py-3' : 'border-b border-promo-line py-3'">
+                                    <div v-if="selectedPlan" class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
+                                        <div class="border-b border-promo-line py-3">
                                             {{ selectedPlan.uploadLimitLabel }}
                                         </div>
-                                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 py-3' : 'border-b border-promo-line py-3'">
+                                        <div class="border-b border-promo-line py-3">
                                             {{ selectedPlan.retentionLabel }}
                                         </div>
                                         <div class="py-3">
                                             {{ selectedPlan.activeWindowLabel }}
-                                        </div>
-                                        <div
-                                            v-if="isBusinessMode && !selectedBusinessPlanAffordable"
-                                            class="border-t border-brand-border/70 pt-3"
-                                        >
-                                            <Link :href="businessTopUpHref" class="font-semibold text-promo-primary hover:text-promo-primary-strong">
-                                                Top up credits
-                                            </Link>
-                                            <span class="text-promo-muted"> to unlock this plan before you submit.</span>
                                         </div>
                                     </div>
                                 </div>
