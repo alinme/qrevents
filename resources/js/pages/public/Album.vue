@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import {
+    IconBoxMultiple,
+    IconFileText,
+    IconLanguage,
+    IconPhoto,
+    IconVideo,
+} from '@tabler/icons-vue';
+import {
     ArrowUp,
     AlertTriangle,
     CalendarDays,
@@ -30,13 +37,6 @@ import {
     UploadCloud,
     X,
 } from 'lucide-vue-next';
-import {
-    IconBoxMultiple,
-    IconFileText,
-    IconLanguage,
-    IconPhoto,
-    IconVideo,
-} from '@tabler/icons-vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -66,7 +66,6 @@ import {
     InputGroupAddon,
     InputGroupButton,
     InputGroupInput,
-    InputGroupText,
 } from '@/components/ui/input-group';
 import {
     Item,
@@ -2299,39 +2298,6 @@ const saveGuestSettings = async (): Promise<void> => {
     onboardingDone.value = true;
     persistGuestProfile();
     menuOpen.value = false;
-};
-
-const setMenuActiveView = (view: GuestIntent): void => {
-    if (!isIntentEnabled(view)) {
-        return;
-    }
-
-    activeView.value = view;
-    selectedIntent.value = view;
-
-    if (composerOpenTimeoutId !== null && typeof window !== 'undefined') {
-        window.clearTimeout(composerOpenTimeoutId);
-        composerOpenTimeoutId = null;
-    }
-
-    pendingComposerIntent.value = null;
-    menuOpen.value = false;
-
-    if (view === 'browse_gallery') {
-        isComposerOpen.value = false;
-        persistGuestProfile();
-        return;
-    }
-
-    if (typeof window === 'undefined') {
-        isComposerOpen.value = true;
-        return;
-    }
-
-    composerOpenTimeoutId = window.setTimeout(() => {
-        composerOpenTimeoutId = null;
-        isComposerOpen.value = true;
-    }, 320);
 };
 
 const closeComposer = (): void => {

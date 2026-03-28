@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import {
+    IconFileText,
+    IconPhoto,
+    IconVideo,
+} from '@tabler/icons-vue';
+import {
     ChevronLeft,
     ChevronRight,
     Columns2,
@@ -25,11 +30,6 @@ import {
     Video,
     X,
 } from 'lucide-vue-next';
-import {
-    IconFileText,
-    IconPhoto,
-    IconVideo,
-} from '@tabler/icons-vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import {
@@ -260,17 +260,6 @@ const moderationPipelineLabel = (pipeline: MediaAsset['moderationPipeline']): st
             return 'Moderation off';
         default:
             return 'Unknown';
-    }
-};
-
-const wallVisibilityLabel = (visibility: MediaAsset['wallVisibility']): string => {
-    switch (visibility) {
-        case 'approved':
-            return 'On wall';
-        case 'rejected':
-            return 'Hidden from wall';
-        default:
-            return 'Wall pending';
     }
 };
 

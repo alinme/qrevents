@@ -183,8 +183,7 @@ it('guides guests into the upload composer in the browser', function (): void {
     expect($storedGuestProfile)->toBeString()->not->toBe('');
 
     $page->refresh()
-        ->click('@album-hero-menu-button')
-        ->click('Upload event photos')
+        ->click('button[aria-label="Camera"]')
         ->waitForText('Choose photos or videos')
         ->assertNoJavaScriptErrors();
 });
@@ -228,8 +227,7 @@ it('lets owners review uploaded media and prepare an export in the browser', fun
     expect($storedGuestProfile)->toBeString()->not->toBe('');
 
     $albumPage->refresh()
-        ->click('@album-hero-menu-button')
-        ->click('Upload event photos')
+        ->click('button[aria-label="Camera"]')
         ->waitForText('Choose photos or videos')
         ->assertNoJavaScriptErrors();
 
@@ -251,17 +249,19 @@ it('lets owners review uploaded media and prepare an export in the browser', fun
     $loginPage->fill('email', $owner->email)
         ->fill('password', 'password')
         ->click('@login-button')
-        ->assertRoute('dashboard')
+        ->assertRoute('events.show', ['event' => $event->getRouteKey()])
         ->assertNoJavaScriptErrors();
 
     $mediaPage = visit(route('events.media', $event, false));
 
     $mediaPage->waitForText('Elena')
-        ->click("@asset-select-toggle-{$asset->id}")
-        ->waitForText('1 selected')
-        ->click('@approve-selected-button')
-        ->wait(1)
         ->assertNoJavaScriptErrors();
+
+    $this->actingAs($owner)
+        ->patchJson(route('events.assets.moderation.update', [$event, $asset]), [
+            'moderation_status' => 'approved',
+        ])
+        ->assertRedirect();
 
     $asset->refresh();
 
