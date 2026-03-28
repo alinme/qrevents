@@ -85,7 +85,7 @@ class DashboardController extends Controller
             'ownedEvents' => $data['ownedEvents'],
             'collaboratorEvents' => $data['collaboratorEvents'],
             'recentActivity' => $data['recentActivity'],
-            'sidebarLabel' => $request->user()->canAccessBusinessDashboard() ? 'Portfolio' : 'Events',
+            'sidebarLabel' => 'Events',
             'showDashboardModal' => $request->session()->pull('show_dashboard_modal', false),
         ]);
     }
@@ -459,7 +459,7 @@ class DashboardController extends Controller
                     'href' => $accountOverviewUrl,
                 ],
                 $canAccessBusinessDashboard ? [
-                    'title' => 'Create',
+                    'title' => 'Create event',
                     'href' => route('dashboard.business.events.create'),
                 ] : null,
                 $canAccessBusinessDashboard ? [
@@ -467,8 +467,8 @@ class DashboardController extends Controller
                     'href' => route('dashboard.business.wallet.history'),
                 ] : null,
                 $canAccessBusinessDashboard ? [
-                    'title' => 'Portfolio',
-                    'href' => route('dashboard.account'),
+                    'title' => 'Events',
+                    'href' => route('dashboard.events'),
                 ] : null,
                 $isSuperAdmin ? [
                     'title' => 'Admin',

@@ -277,8 +277,10 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
             ->where('sidebarLabel', 'Business')
             ->where('dashboardLinks.business', route('dashboard.business'))
             ->where('dashboardLinks.createBusiness', route('dashboard.business.events.create'))
-            ->where('accountNavigation.1.title', 'Create')
+            ->where('accountNavigation.1.title', 'Create event')
             ->where('accountNavigation.1.href', route('dashboard.business.events.create'))
+            ->where('accountNavigation.3.title', 'Events')
+            ->where('accountNavigation.3.href', route('dashboard.events'))
         );
 
     $response = $this->actingAs($user)->post(route('dashboard.business.events.store'), [

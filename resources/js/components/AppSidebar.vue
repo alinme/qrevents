@@ -129,11 +129,11 @@ const mainNavItems = computed<NavItem[]>(() => {
                     ? LayoutGrid
                     : item.title === 'Business'
                       ? BriefcaseBusiness
-                      : item.title === 'Create'
+                      : item.title === 'Create event'
                         ? FolderPlus
                         : item.title === 'Wallet'
                           ? CircleDollarSign
-                          : item.title === 'Portfolio'
+                          : item.title === 'Events'
                             ? FolderKanban
                       : item.title === 'Owned Events'
                         ? Camera

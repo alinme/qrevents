@@ -484,7 +484,7 @@ class EventOnboardingController extends Controller
                     'href' => route('dashboard.business'),
                 ],
                 [
-                    'title' => 'Create',
+                    'title' => 'Create event',
                     'href' => route('dashboard.business.events.create'),
                 ],
                 [
@@ -492,8 +492,8 @@ class EventOnboardingController extends Controller
                     'href' => route('dashboard.business.wallet.history'),
                 ],
                 [
-                    'title' => 'Portfolio',
-                    'href' => route('dashboard.account'),
+                    'title' => 'Events',
+                    'href' => route('dashboard.events'),
                 ],
             ] : [],
             'dashboardLinks' => $businessMode ? [
