@@ -639,281 +639,19 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
                 </section>
 
-                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_320px] xl:items-start">
-                    <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                        <div class="flex flex-col gap-3 border-b border-black/5 pb-4 md:flex-row md:items-end md:justify-between">
-                            <div>
-                                <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                    Event portfolio
-                                </h2>
-                                <p class="mt-1 text-sm text-zinc-600">
-                                    Find the right workspace fast, then jump into the next action.
-                                </p>
-                            </div>
-                            <p class="text-sm text-zinc-500">
-                                {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
-                            </p>
-                        </div>
-
-                        <div class="space-y-4 pt-5">
-                            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                <form class="flex w-full flex-col gap-3 md:max-w-xl md:flex-row" @submit.prevent="applyFilters">
-                                    <div class="relative flex-1">
-                                        <Search class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-zinc-400" />
-                                        <Input
-                                            v-model="search"
-                                            type="search"
-                                            placeholder="Search events, plans, billing, or status"
-                                            class="h-11 rounded-full border-black/10 bg-white pr-4 pl-10"
-                                        />
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <Button type="submit" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                            Apply
-                                        </Button>
-                                        <Button
-                                            v-if="filters.hasActiveFilters"
-                                            type="button"
-                                            variant="outline"
-                                            @click="resetFilters"
-                                        >
-                                            <X class="size-4" />
-                                            Clear
-                                        </Button>
-                                    </div>
-                                </form>
-
-                            </div>
-
-                            <div class="flex flex-wrap gap-2">
-                                <Link
-                                    v-for="option in filters.statusOptions"
-                                    :key="option.value"
-                                    :href="buildBusinessUrl({ status: option.value, page: null })"
-                                    class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition"
-                                    :class="
-                                        option.value === filters.status
-                                            ? 'border-[#171411] bg-[#171411] text-white'
-                                            : 'border-black/10 bg-white text-zinc-700 hover:border-black/20 hover:bg-[#faf7f1]'
-                                    "
-                                >
-                                    <span>{{ option.label }}</span>
-                                    <span
-                                        class="rounded-full px-2 py-0.5 text-xs"
-                                        :class="
-                                            option.value === filters.status
-                                                ? 'bg-white/12 text-white'
-                                                : 'bg-[#fbfaf7] text-zinc-500'
-                                        "
-                                    >
-                                        {{ option.count }}
-                                    </span>
-                                </Link>
-                            </div>
-
-                            <div
-                                v-if="hasSelection"
-                                class="flex flex-col gap-3 border-t border-black/5 pt-4 lg:flex-row lg:items-center lg:justify-between"
-                            >
-                                <div>
-                                    <p class="text-sm font-medium text-zinc-600">
-                                        <span class="font-semibold text-[#171411]">{{ selectionLabel }}</span>
-                                    </p>
-                                    <p v-if="allFilteredSelected" class="mt-1 text-xs text-zinc-500">
-                                        Clear selection to go back to page-by-page picks.
-                                    </p>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    <Button
-                                        v-if="filters.ownedEventCount > 0 && !allFilteredSelected"
-                                        type="button"
-                                        variant="outline"
-                                        @click="selectAllFiltered"
-                                    >
-                                        <CheckSquare class="size-4" />
-                                        Select all filtered
-                                    </Button>
-                                    <Button
-                                        v-if="visibleEventIds.length > 0 && !allFilteredSelected"
-                                        type="button"
-                                        variant="outline"
-                                        @click="toggleVisibleSelection"
-                                    >
-                                        <component :is="allVisibleSelected ? CheckSquare : Square" class="size-4" />
-                                        {{ allVisibleSelected ? 'Clear page' : 'Select page' }}
-                                    </Button>
-                                    <Button
-                                        v-if="hasSelection"
-                                        type="button"
-                                        variant="outline"
-                                        @click="clearSelection"
-                                    >
-                                        <X class="size-4" />
-                                        Clear selection
-                                    </Button>
-                                    <Button
-                                        v-if="hasSelection"
-                                        type="button"
-                                        class="bg-[#171411] text-white hover:bg-[#2b2621]"
-                                        @click="startBulkExports"
-                                    >
-                                        <Download class="size-4" />
-                                        Start exports
-                                    </Button>
-                                    <Button
-                                        v-if="hasSelection"
-                                        as-child
-                                        variant="outline"
-                                    >
-                                        <a :href="buildBusinessActionUrl(businessActionLinks.billingQueueDownload)">
-                                            <CreditCard class="size-4" />
-                                            Billing CSV
-                                        </a>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="ownedEvents.length === 0" class="py-12 text-center">
-                            <div class="mx-auto max-w-md space-y-2">
-                                <h3 class="text-lg font-semibold text-[#171411]">
-                                    {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
-                                </h3>
-                                <p class="text-sm leading-6 text-zinc-600">
-                                    {{
-                                        filters.hasActiveFilters
-                                            ? 'Try a broader search or switch back to all workspaces.'
-                                            : 'Your first business event will appear here with quick routes into workspace, media, billing, and export.'
-                                    }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div v-else class="divide-y divide-black/5 pt-3">
-                            <article
-                                v-for="event in ownedEvents"
-                                :key="event.id"
-                                class="py-3.5"
-                            >
-                                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <label class="mr-1 inline-flex items-center" :class="allFilteredSelected ? 'opacity-70' : ''">
-                                                <Checkbox
-                                                    :checked="allFilteredSelected || selectedEventIds.includes(event.id)"
-                                                    :disabled="allFilteredSelected"
-                                                    @update:checked="toggleEventSelection(event.id)"
-                                                />
-                                                <span class="sr-only">Select {{ event.name }}</span>
-                                            </label>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
-                                                {{ event.statusLabel }}
-                                            </span>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
-                                                {{ event.billingLabel }}
-                                            </span>
-                                            <span class="text-xs text-zinc-500">
-                                                {{ event.plan }}
-                                            </span>
-                                        </div>
-
-                                        <div class="mt-2.5">
-                                            <h3 class="text-[0.97rem] font-semibold text-[#171411]">
-                                                {{ event.name }}
-                                            </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
-                                            </p>
-                                            <p class="mt-1 text-sm text-zinc-500">
-                                                {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
-                                                <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
-                                                <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
-                                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                            <Link :href="event.primaryAction.url">
-                                                {{ event.primaryAction.label }}
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="eventSecondaryAction(event).url">
-                                                <component :is="eventSecondaryAction(event).icon" class="size-4" />
-                                                {{ eventSecondaryAction(event).label }}
-                                            </Link>
-                                        </Button>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger as-child>
-                                                <button
-                                                    type="button"
-                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
-                                                    aria-label="More workspace actions"
-                                                >
-                                                    <MoreHorizontal class="size-4" />
-                                                </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" class="w-44">
-                                                <DropdownMenuItem
-                                                    v-for="action in eventOverflowActions(event)"
-                                                    :key="`${event.id}-${action.label}`"
-                                                    as-child
-                                                >
-                                                    <Link :href="action.url">
-                                                        <component :is="action.icon" class="size-4" />
-                                                        {{ action.label }}
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-
-                        <div
-                            v-if="ownedEventsPagination.lastPage > 1"
-                            class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
-                        >
-                            <p class="text-sm text-zinc-600">
-                                Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
-                            </p>
-
-                            <div class="flex flex-wrap items-center gap-2">
-                                <Button v-if="ownedEventsPagination.prevPageUrl" as-child variant="outline">
-                                    <Link :href="ownedEventsPagination.prevPageUrl">
-                                        Previous
-                                    </Link>
-                                </Button>
-                                <Button v-else variant="outline" disabled>
-                                    Previous
-                                </Button>
-                                <span class="text-sm font-medium text-zinc-600">
-                                    Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
-                                </span>
-                                <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
-                                    <Link :href="ownedEventsPagination.nextPageUrl">
-                                        Next
-                                    </Link>
-                                </Button>
-                                <Button v-else variant="outline" disabled>
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
-                    </section>
-
-                    <aside class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6 xl:sticky xl:top-6 xl:max-h-[calc(100vh-7rem)]">
-                        <div class="flex min-h-0 w-full flex-col">
+                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+                        <div class="min-w-0">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
-                                    <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                                         Attention
+                                    </p>
+                                    <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
+                                        What needs you first
                                     </h2>
                                     <p class="mt-1 text-sm text-zinc-600">
-                                        Urgent workspaces first, then recent wallet movement.
+                                        Billing follow-up, overdue workspaces, and the next places to open.
                                     </p>
                                 </div>
                                 <span class="inline-flex rounded-full bg-[#fbfaf7] px-2.5 py-1 text-xs font-semibold text-zinc-600">
@@ -921,161 +659,415 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </span>
                             </div>
 
-                            <div class="flex min-h-0 flex-1 flex-col pt-4">
-                                <section>
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-[#171411]">
-                                                Needs attention
-                                            </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                The workspaces that need action first.
-                                            </p>
-                                        </div>
-                                    </div>
+                            <div v-if="businessAttentionEvents.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
+                                Nothing urgent right now.
+                            </div>
 
-                                    <div v-if="businessAttentionEvents.length === 0" class="py-6 text-sm leading-6 text-zinc-600">
-                                        Nothing urgent right now.
-                                    </div>
-
-                                    <div v-else class="divide-y divide-black/5 pt-2">
-                                        <article
-                                            v-for="event in businessAttentionEvents"
-                                            :key="event.id"
-                                            class="py-4"
-                                        >
-                                            <div class="flex flex-col gap-3">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
-                                                        {{ event.statusLabel }}
-                                                    </span>
-                                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
-                                                        {{ event.billingLabel }}
-                                                    </span>
-                                                    <span class="inline-flex rounded-full bg-[#171411] px-2.5 py-1 text-[0.68rem] font-semibold text-white">
-                                                        {{ event.attentionLabel }}
-                                                    </span>
-                                                </div>
-
-                                                <div>
-                                                    <h4 class="text-base font-semibold text-[#171411]">
-                                                        {{ event.name }}
-                                                    </h4>
-                                                    <p class="mt-1 text-sm text-zinc-600">
-                                                        {{ event.plan }} · {{ event.attentionDetail }}
-                                                    </p>
-                                                    <p class="mt-1 text-xs text-zinc-500">
-                                                        {{
-                                                            event.paymentDueAt
-                                                                ? `Due ${formatDateOnly(event.paymentDueAt)}`
-                                                                : 'No due date set'
-                                                        }}
-                                                        · {{ event.assetCount }} uploads
-                                                        · {{ formatBytes(event.storageUsedBytes) }} of {{ formatBytes(event.storageLimitBytes) }}
-                                                    </p>
-                                                </div>
-
-                                                <div class="flex flex-wrap gap-2">
-                                                    <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                                        <Link :href="event.links.dashboard">
-                                                            Open workspace
-                                                        </Link>
-                                                    </Button>
-                                                    <Button as-child size="sm" variant="outline">
-                                                        <Link :href="attentionSecondaryAction(event).url">
-                                                            <component :is="attentionSecondaryAction(event).icon" class="size-4" />
-                                                            {{ attentionSecondaryAction(event).label }}
-                                                        </Link>
-                                                    </Button>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger as-child>
-                                                            <button
-                                                                type="button"
-                                                                class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
-                                                                aria-label="More attention actions"
-                                                            >
-                                                                <MoreHorizontal class="size-4" />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" class="w-44">
-                                                            <DropdownMenuItem
-                                                                v-for="action in attentionOverflowActions(event)"
-                                                                :key="`${event.id}-${action.label}`"
-                                                                as-child
-                                                            >
-                                                                <Link :href="action.url">
-                                                                    <component :is="action.icon" class="size-4" />
-                                                                    {{ action.label }}
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
+                            <div v-else class="divide-y divide-black/5 pt-2">
+                                <article
+                                    v-for="event in businessAttentionEvents"
+                                    :key="event.id"
+                                    class="py-4"
+                                >
+                                    <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                                    {{ event.statusLabel }}
+                                                </span>
+                                                <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                                    {{ event.billingLabel }}
+                                                </span>
+                                                <span class="inline-flex rounded-full bg-[#171411] px-2.5 py-1 text-[0.68rem] font-semibold text-white">
+                                                    {{ event.attentionLabel }}
+                                                </span>
                                             </div>
-                                        </article>
-                                    </div>
-                                </section>
 
-                                <section class="mt-5 flex min-h-0 flex-1 flex-col border-t border-black/5 pt-5">
-                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-[#171411]">
-                                                Wallet activity
-                                            </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                Recent credit movement.
-                                            </p>
+                                            <div class="mt-2.5">
+                                                <h3 class="text-[0.97rem] font-semibold text-[#171411]">
+                                                    {{ event.name }}
+                                                </h3>
+                                                <p class="mt-1 text-sm text-zinc-600">
+                                                    {{ event.plan }} · {{ event.attentionDetail }}
+                                                </p>
+                                                <p class="mt-1 text-sm text-zinc-500">
+                                                    {{
+                                                        event.paymentDueAt
+                                                            ? `Due ${formatDateOnly(event.paymentDueAt)}`
+                                                            : 'No due date set'
+                                                    }}
+                                                    · {{ event.assetCount }} uploads
+                                                    · {{ formatBytes(event.storageUsedBytes) }} of {{ formatBytes(event.storageLimitBytes) }}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="businessActionLinks.walletHistory">
-                                                View history
-                                            </Link>
-                                        </Button>
-                                    </div>
 
-                                    <div v-if="walletActivity.length === 0" class="py-6 text-sm leading-6 text-zinc-600">
-                                        No credit activity yet.
-                                    </div>
-
-                                    <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2 xl:pr-1">
-                                        <div class="divide-y divide-black/5">
-                                            <article
-                                                v-for="item in walletActivity"
-                                                :key="item.id"
-                                                class="py-3"
-                                            >
-                                                <div class="flex items-start justify-between gap-3">
-                                                    <div class="min-w-0">
-                                                        <p class="text-sm font-semibold text-[#171411]">
-                                                            {{ walletActivityLabel(item) }}
-                                                        </p>
-                                                        <p class="mt-1 text-sm text-zinc-600">
-                                                            {{ item.description }}
-                                                            <span v-if="item.eventName">
-                                                                ·
-                                                                <Link
-                                                                    v-if="item.eventUrl"
-                                                                    :href="item.eventUrl"
-                                                                    class="font-medium text-[#171411] hover:text-[#2b2621]"
-                                                                >
-                                                                    {{ item.eventName }}
-                                                                </Link>
-                                                                <span v-else>{{ item.eventName }}</span>
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                    <p class="shrink-0 text-xs text-zinc-500">
-                                                        {{ formatDateTime(item.createdAt) }}
-                                                    </p>
-                                                </div>
-                                            </article>
+                                        <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
+                                            <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                                <Link :href="event.links.dashboard">
+                                                    Open workspace
+                                                </Link>
+                                            </Button>
+                                            <Button as-child size="sm" variant="outline">
+                                                <Link :href="attentionSecondaryAction(event).url">
+                                                    <component :is="attentionSecondaryAction(event).icon" class="size-4" />
+                                                    {{ attentionSecondaryAction(event).label }}
+                                                </Link>
+                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger as-child>
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                        aria-label="More attention actions"
+                                                    >
+                                                        <MoreHorizontal class="size-4" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" class="w-44">
+                                                    <DropdownMenuItem
+                                                        v-for="action in attentionOverflowActions(event)"
+                                                        :key="`${event.id}-${action.label}`"
+                                                        as-child
+                                                    >
+                                                        <Link :href="action.url">
+                                                            <component :is="action.icon" class="size-4" />
+                                                            {{ action.label }}
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     </div>
-                                </section>
+                                </article>
                             </div>
                         </div>
-                    </aside>
-                </div>
+
+                        <div class="min-w-0 border-t border-black/5 pt-5 xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
+                            <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
+                                <div>
+                                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                        Wallet
+                                    </p>
+                                    <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
+                                        Recent movement
+                                    </h2>
+                                    <p class="mt-1 text-sm text-zinc-600">
+                                        The latest credit changes for this business account.
+                                    </p>
+                                </div>
+                                <Button as-child size="sm" variant="outline">
+                                    <Link :href="businessActionLinks.walletHistory">
+                                        View history
+                                    </Link>
+                                </Button>
+                            </div>
+
+                            <div v-if="walletActivity.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
+                                No credit activity yet.
+                            </div>
+
+                            <div v-else class="max-h-[24rem] overflow-y-auto pt-2 xl:pr-1">
+                                <div class="divide-y divide-black/5">
+                                    <article
+                                        v-for="item in walletActivity"
+                                        :key="item.id"
+                                        class="py-3"
+                                    >
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-semibold text-[#171411]">
+                                                    {{ walletActivityLabel(item) }}
+                                                </p>
+                                                <p class="mt-1 text-sm text-zinc-600">
+                                                    {{ item.description }}
+                                                    <span v-if="item.eventName">
+                                                        ·
+                                                        <Link
+                                                            v-if="item.eventUrl"
+                                                            :href="item.eventUrl"
+                                                            class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                                        >
+                                                            {{ item.eventName }}
+                                                        </Link>
+                                                        <span v-else>{{ item.eventName }}</span>
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <p class="shrink-0 text-xs text-zinc-500">
+                                                {{ formatDateTime(item.createdAt) }}
+                                            </p>
+                                        </div>
+                                    </article>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <div class="flex flex-col gap-3 border-b border-black/5 pb-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                Event portfolio
+                            </h2>
+                            <p class="mt-1 text-sm text-zinc-600">
+                                Find the right workspace fast, then jump into the next action.
+                            </p>
+                        </div>
+                        <p class="text-sm text-zinc-500">
+                            {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
+                        </p>
+                    </div>
+
+                    <div class="space-y-4 pt-5">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <form class="flex w-full flex-col gap-3 md:max-w-xl md:flex-row" @submit.prevent="applyFilters">
+                                <div class="relative flex-1">
+                                    <Search class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-zinc-400" />
+                                    <Input
+                                        v-model="search"
+                                        type="search"
+                                        placeholder="Search events, plans, billing, or status"
+                                        class="h-11 rounded-full border-black/10 bg-white pr-4 pl-10"
+                                    />
+                                </div>
+                                <div class="flex gap-2">
+                                    <Button type="submit" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                        Apply
+                                    </Button>
+                                    <Button
+                                        v-if="filters.hasActiveFilters"
+                                        type="button"
+                                        variant="outline"
+                                        @click="resetFilters"
+                                    >
+                                        <X class="size-4" />
+                                        Clear
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Link
+                                v-for="option in filters.statusOptions"
+                                :key="option.value"
+                                :href="buildBusinessUrl({ status: option.value, page: null })"
+                                class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition"
+                                :class="
+                                    option.value === filters.status
+                                        ? 'border-[#171411] bg-[#171411] text-white'
+                                        : 'border-black/10 bg-white text-zinc-700 hover:border-black/20 hover:bg-[#faf7f1]'
+                                "
+                            >
+                                <span>{{ option.label }}</span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs"
+                                    :class="
+                                        option.value === filters.status
+                                            ? 'bg-white/12 text-white'
+                                            : 'bg-[#fbfaf7] text-zinc-500'
+                                    "
+                                >
+                                    {{ option.count }}
+                                </span>
+                            </Link>
+                        </div>
+
+                        <div
+                            v-if="hasSelection"
+                            class="flex flex-col gap-3 border-t border-black/5 pt-4 lg:flex-row lg:items-center lg:justify-between"
+                        >
+                            <div>
+                                <p class="text-sm font-medium text-zinc-600">
+                                    <span class="font-semibold text-[#171411]">{{ selectionLabel }}</span>
+                                </p>
+                                <p v-if="allFilteredSelected" class="mt-1 text-xs text-zinc-500">
+                                    Clear selection to go back to page-by-page picks.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button
+                                    v-if="filters.ownedEventCount > 0 && !allFilteredSelected"
+                                    type="button"
+                                    variant="outline"
+                                    @click="selectAllFiltered"
+                                >
+                                    <CheckSquare class="size-4" />
+                                    Select all filtered
+                                </Button>
+                                <Button
+                                    v-if="visibleEventIds.length > 0 && !allFilteredSelected"
+                                    type="button"
+                                    variant="outline"
+                                    @click="toggleVisibleSelection"
+                                >
+                                    <component :is="allVisibleSelected ? CheckSquare : Square" class="size-4" />
+                                    {{ allVisibleSelected ? 'Clear page' : 'Select page' }}
+                                </Button>
+                                <Button
+                                    v-if="hasSelection"
+                                    type="button"
+                                    variant="outline"
+                                    @click="clearSelection"
+                                >
+                                    <X class="size-4" />
+                                    Clear selection
+                                </Button>
+                                <Button
+                                    v-if="hasSelection"
+                                    type="button"
+                                    class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    @click="startBulkExports"
+                                >
+                                    <Download class="size-4" />
+                                    Start exports
+                                </Button>
+                                <Button
+                                    v-if="hasSelection"
+                                    as-child
+                                    variant="outline"
+                                >
+                                    <a :href="buildBusinessActionUrl(businessActionLinks.billingQueueDownload)">
+                                        <CreditCard class="size-4" />
+                                        Billing CSV
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="ownedEvents.length === 0" class="py-12 text-center">
+                        <div class="mx-auto max-w-md space-y-2">
+                            <h3 class="text-lg font-semibold text-[#171411]">
+                                {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
+                            </h3>
+                            <p class="text-sm leading-6 text-zinc-600">
+                                {{
+                                    filters.hasActiveFilters
+                                        ? 'Try a broader search or switch back to all workspaces.'
+                                        : 'Your first business event will appear here with quick routes into workspace, media, billing, and export.'
+                                }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div v-else class="divide-y divide-black/5 pt-3">
+                        <article
+                            v-for="event in ownedEvents"
+                            :key="event.id"
+                            class="py-3.5"
+                        >
+                            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <label class="mr-1 inline-flex items-center" :class="allFilteredSelected ? 'opacity-70' : ''">
+                                            <Checkbox
+                                                :checked="allFilteredSelected || selectedEventIds.includes(event.id)"
+                                                :disabled="allFilteredSelected"
+                                                @update:checked="toggleEventSelection(event.id)"
+                                            />
+                                            <span class="sr-only">Select {{ event.name }}</span>
+                                        </label>
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                            {{ event.statusLabel }}
+                                        </span>
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                            {{ event.billingLabel }}
+                                        </span>
+                                        <span class="text-xs text-zinc-500">
+                                            {{ event.plan }}
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-2.5">
+                                        <h3 class="text-[0.97rem] font-semibold text-[#171411]">
+                                            {{ event.name }}
+                                        </h3>
+                                        <p class="mt-1 text-sm text-zinc-600">
+                                            {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-zinc-500">
+                                            {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
+                                            <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
+                                            <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
+                                    <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                        <Link :href="event.primaryAction.url">
+                                            {{ event.primaryAction.label }}
+                                        </Link>
+                                    </Button>
+                                    <Button as-child size="sm" variant="outline">
+                                        <Link :href="eventSecondaryAction(event).url">
+                                            <component :is="eventSecondaryAction(event).icon" class="size-4" />
+                                            {{ eventSecondaryAction(event).label }}
+                                        </Link>
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <button
+                                                type="button"
+                                                class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                aria-label="More workspace actions"
+                                            >
+                                                <MoreHorizontal class="size-4" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" class="w-44">
+                                            <DropdownMenuItem
+                                                v-for="action in eventOverflowActions(event)"
+                                                :key="`${event.id}-${action.label}`"
+                                                as-child
+                                            >
+                                                <Link :href="action.url">
+                                                    <component :is="action.icon" class="size-4" />
+                                                    {{ action.label }}
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div
+                        v-if="ownedEventsPagination.lastPage > 1"
+                        class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
+                    >
+                        <p class="text-sm text-zinc-600">
+                            Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
+                        </p>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Button v-if="ownedEventsPagination.prevPageUrl" as-child variant="outline">
+                                <Link :href="ownedEventsPagination.prevPageUrl">
+                                    Previous
+                                </Link>
+                            </Button>
+                            <Button v-else variant="outline" disabled>
+                                Previous
+                            </Button>
+                            <span class="text-sm font-medium text-zinc-600">
+                                Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
+                            </span>
+                            <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
+                                <Link :href="ownedEventsPagination.nextPageUrl">
+                                    Next
+                                </Link>
+                            </Button>
+                            <Button v-else variant="outline" disabled>
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </AppLayout>
