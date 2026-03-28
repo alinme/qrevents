@@ -608,7 +608,7 @@ const submit = (): void => {
         <div class="mx-auto flex min-h-svh max-w-7xl flex-col px-5 py-6 lg:px-8 lg:py-8">
             <header
                 v-if="!isBusinessMode"
-                class="flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between"
+                class="flex flex-col gap-4 py-2 lg:flex-row lg:items-center lg:justify-between"
             >
                 <div class="flex items-center gap-3">
                     <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
@@ -636,76 +636,31 @@ const submit = (): void => {
                 </div>
             </header>
 
-            <main :class="isBusinessMode ? 'flex-1 py-2 lg:py-3' : 'grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8'">
-                <aside v-if="!isBusinessMode" class="lg:sticky lg:top-8 lg:self-start">
-                    <div class="overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]">
-                        <div class="border-b border-promo-line bg-promo-surface/70 px-5 py-5">
-                            <p class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary">
-                                <Sparkles class="size-3.5" />
-                                Why this matters
-                            </p>
-                            <h1 class="mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
-                                Plan it once. Use it everywhere.
-                            </h1>
-                            <p class="mt-3 text-sm leading-7 text-promo-muted">
-                                This wizard is for event setup, not account access. The details here will later support invitations, menus, guest flows, supplier suggestions, and smarter event tools.
-                            </p>
-                        </div>
-
-                        <div class="px-5 py-4">
-                            <article
-                                v-for="stepItem in stepItems"
-                                :key="stepItem.number"
-                                :class="`flex gap-4 border-b border-promo-line py-4 last:border-b-0 ${stepItem.number <= step ? 'text-promo-ink' : 'text-promo-muted'}`"
-                            >
-                                <div
-                                    class="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.18em]"
-                                    :class="stepItem.number === step
-                                        ? 'bg-promo-primary text-white'
-                                        : stepItem.number < step
-                                          ? 'bg-promo-surface text-promo-primary'
-                                          : 'bg-promo-surface/70 text-promo-muted'"
-                                >
-                                    0{{ stepItem.number }}
-                                </div>
-
-                                <div class="min-w-0">
-                                    <p
-                                        class="text-[0.68rem] font-semibold uppercase tracking-[0.22em]"
-                                        :class="stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted'"
-                                    >
-                                        {{ stepItem.label }}
-                                    </p>
-                                    <h2 class="mt-1 text-sm font-semibold text-promo-ink">
-                                        {{ stepItem.title }}
-                                    </h2>
-                                    <p class="mt-1.5 text-sm leading-6 text-promo-muted">
-                                        {{ stepItem.description }}
-                                    </p>
-                                </div>
-                            </article>
-                        </div>
-                    </div>
-                </aside>
-
+            <main class="flex-1 py-4 lg:py-6">
                 <section
                     ref="wizardPanelRef"
                     :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line bg-white shadow-[0_26px_70px_rgba(232,79,154,0.10)] lg:scroll-mt-8'"
                 >
                     <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-6 py-6 sm:px-8' : 'border-b border-promo-line px-6 py-6 sm:px-8'">
                         <div
-                            v-if="isBusinessMode"
-                            class="mb-5 flex flex-wrap gap-2 border-b border-brand-border/70 pb-5"
+                            class="mb-5 flex flex-wrap gap-2 border-b pb-5"
+                            :class="isBusinessMode ? 'border-brand-border/70' : 'border-promo-line'"
                         >
                             <div
                                 v-for="stepItem in stepItems"
-                                :key="`business-step-${stepItem.number}`"
+                                :key="`step-${stepItem.number}`"
                                 class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium"
-                                :class="stepItem.number === step
-                                    ? 'border-brand-ink bg-brand-ink text-brand-inverse'
-                                    : stepItem.number < step
-                                      ? 'border-brand-border bg-brand-highlight/25 text-brand-ink'
-                                      : 'border-brand-border bg-brand-inverse text-brand-muted'"
+                                :class="isBusinessMode
+                                    ? (stepItem.number === step
+                                        ? 'border-brand-ink bg-brand-ink text-brand-inverse'
+                                        : stepItem.number < step
+                                          ? 'border-brand-border bg-brand-highlight/25 text-brand-ink'
+                                          : 'border-brand-border bg-brand-inverse text-brand-muted')
+                                    : (stepItem.number === step
+                                        ? 'border-promo-primary bg-promo-primary text-white'
+                                        : stepItem.number < step
+                                          ? 'border-promo-line bg-promo-surface text-promo-ink'
+                                          : 'border-promo-line bg-white text-promo-muted')"
                             >
                                 <span class="text-[0.68rem] font-semibold uppercase tracking-[0.2em]">
                                     0{{ stepItem.number }}
@@ -748,7 +703,7 @@ const submit = (): void => {
 
                             <InputError :message="form.errors.type" />
 
-                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/40 p-5 sm:p-6'">
+                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
@@ -903,7 +858,7 @@ const submit = (): void => {
                                 <div class="space-y-5">
                                     <div
                                         v-if="isWeddingType"
-                                        :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[26px] border border-promo-line bg-promo-surface/45 p-5'"
+                                        :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
                                     >
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                             <Sparkles class="size-3.5" />
@@ -1017,7 +972,7 @@ const submit = (): void => {
                                         <InputError :message="form.errors.name" />
                                     </div>
 
-                                    <div :class="isBusinessMode ? 'border-t border-dashed border-brand-border pt-4 text-sm text-brand-muted' : 'rounded-[22px] border border-dashed border-promo-line bg-white/65 px-4 py-4 text-sm text-promo-muted'">
+                                    <div :class="isBusinessMode ? 'border-t border-dashed border-brand-border pt-4 text-sm text-brand-muted' : 'border-t border-dashed border-promo-line pt-4 text-sm text-promo-muted'">
                                         {{
                                             isWeddingType
                                                 ? 'Wedding addresses are collected on each selected moment in the next step.'
@@ -1026,7 +981,7 @@ const submit = (): void => {
                                     </div>
                                 </div>
 
-                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[26px] border border-promo-line bg-promo-surface/55 p-5'">
+                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Users class="size-3.5" />
                                         Guest planning
@@ -1086,7 +1041,7 @@ const submit = (): void => {
                         </section>
 
                         <section v-if="step === 3" class="space-y-8">
-                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/45 p-5 sm:p-6'">
+                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
                                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
@@ -1117,7 +1072,7 @@ const submit = (): void => {
                                     <div
                                         v-for="(eventDate, index) in form.event_dates"
                                         :key="`event-date-${index}`"
-                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'rounded-[22px] border border-promo-line bg-white p-4'"
+                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'border-t border-promo-line pt-4 first:border-t-0 first:pt-0'"
                                     >
                                         <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-end">
                                             <div class="grid gap-2">
@@ -1246,7 +1201,7 @@ const submit = (): void => {
 
                             <div
                                 v-if="form.sub_events.length > 0"
-                                :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[28px] border border-promo-line bg-white p-5 sm:p-6'"
+                                :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
                             >
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
@@ -1267,7 +1222,7 @@ const submit = (): void => {
                                     <div
                                         v-for="(subEvent, index) in form.sub_events"
                                         :key="subEvent.key"
-                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'rounded-[22px] border border-promo-line bg-promo-surface/35 p-4'"
+                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'border-t border-promo-line pt-4 first:border-t-0 first:pt-0'"
                                     >
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
@@ -1361,7 +1316,7 @@ const submit = (): void => {
                             </div>
 
                             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'rounded-[28px] border border-promo-line bg-promo-surface/35 p-5 sm:p-6'">
+                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Users class="size-3.5" />
                                         Event owner
@@ -1379,7 +1334,7 @@ const submit = (): void => {
                                     </div>
                                 </div>
 
-                                <div :class="isBusinessMode ? 'space-y-4 border-t border-brand-border/70 pt-6' : 'rounded-[28px] border border-promo-line bg-white p-5'">
+                                <div :class="isBusinessMode ? 'space-y-4 border-t border-brand-border/70 pt-6' : 'space-y-4 border-t border-promo-line pt-6'">
                                     <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
                                         <Sparkles class="size-3.5" />
                                         {{ isBusinessMode ? 'Billing summary' : 'Selected plan' }}
@@ -1436,7 +1391,7 @@ const submit = (): void => {
 
                         <div
                             ref="formActionsRef"
-                            :class="isBusinessMode ? 'flex flex-col gap-4 border-t border-brand-border/70 pt-6 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 rounded-[24px] border border-promo-line bg-promo-surface/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between'"
+                            :class="isBusinessMode ? 'flex flex-col gap-4 border-t border-brand-border/70 pt-6 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 border-t border-promo-line pt-6 lg:flex-row lg:items-center lg:justify-between'"
                         >
                             <div class="grid gap-2 text-sm text-promo-muted sm:grid-cols-3 sm:gap-4">
                                 <div class="inline-flex items-center gap-2">

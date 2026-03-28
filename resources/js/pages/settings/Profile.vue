@@ -39,7 +39,7 @@ const user = computed(() => page.props.auth.user);
         <h1 class="sr-only">Profile settings</h1>
 
         <SettingsLayout>
-            <div class="flex flex-col space-y-6">
+            <div class="space-y-6">
                 <Heading
                     variant="small"
                     title="Profile information"
@@ -125,7 +125,9 @@ const user = computed(() => page.props.auth.user);
                 </Form>
             </div>
 
-            <DeleteUser />
+            <div class="border-t border-brand-border/70 pt-8">
+                <DeleteUser />
+            </div>
         </SettingsLayout>
     </AppLayout>
 </template>

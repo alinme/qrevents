@@ -119,7 +119,7 @@ it('creates an event from onboarding and calculates event windows', function () 
 
     $event = Event::query()->firstOrFail();
 
-    $response->assertRedirect(route('onboarding.creating', $event));
+    $response->assertRedirect(route('onboarding.photos', $event));
 
     expect($event->plan_id)->toBe($plusPlan->id)
         ->and($event->upload_window_starts_at?->toDateTimeString())->toBe('2026-05-14 00:00:00')
@@ -171,7 +171,7 @@ it('creates an event from onboarding and calculates event windows', function () 
         ->and($event->moderation_tools_enabled)->toBeFalse()
         ->and($event->video_max_duration_seconds)->toBe(45)
         ->and($event->is_paid)->toBeFalse()
-        ->and($event->onboarding_step)->toBe('creating')
+        ->and($event->onboarding_step)->toBe('photos')
         ->and($user->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_USER);
 
     CarbonImmutable::setTestNow();
@@ -335,6 +335,28 @@ it('completes business onboarding from the first-photos screen', function () {
             ->component('onboarding/FirstPhotos')
             ->where('businessMode', true)
             ->where('dashboardUrl', route('dashboard.business'))
+        );
+
+    $event->refresh();
+
+    expect($event->onboarding_step)->toBe('completed')
+        ->and($event->onboarding_completed_at)->not->toBeNull();
+});
+
+it('completes regular onboarding from the first-photos screen', function () {
+    $user = User::factory()->create();
+    $event = Event::factory()->for($user)->create([
+        'onboarding_step' => 'photos',
+        'onboarding_completed_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('onboarding.photos', $event))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/FirstPhotos')
+            ->where('businessMode', false)
+            ->where('dashboardUrl', route('dashboard'))
         );
 
     $event->refresh();
@@ -629,7 +651,7 @@ it('creates an event for the signed-in owner without collecting account details 
 
     $event = Event::query()->firstOrFail();
 
-    $response->assertRedirect(route('onboarding.creating', $event));
+    $response->assertRedirect(route('onboarding.photos', $event));
     $this->assertAuthenticatedAs($owner);
 
     expect($event->user_id)->toBe($owner->id)
@@ -681,7 +703,7 @@ it('allows a selected moment to skip the address when marked accordingly', funct
 
     $event = Event::query()->firstOrFail();
 
-    $response->assertRedirect(route('onboarding.creating', $event));
+    $response->assertRedirect(route('onboarding.photos', $event));
 
     expect($event->venue_address)->toBeNull()
         ->and($event->sub_events)->toBe([
@@ -740,7 +762,7 @@ it('requires at least two relevant moments for baptisms', function () {
     $response->assertSessionHasErrors(['sub_events']);
 });
 
-it('marks onboarding complete when ready screen is opened', function () {
+it('marks onboarding complete when the ready route is opened', function () {
     $user = User::factory()->create();
     $event = Event::factory()->for($user)->create([
         'onboarding_step' => 'photos',
@@ -751,7 +773,7 @@ it('marks onboarding complete when ready screen is opened', function () {
 
     $response = $this->get(route('onboarding.ready', $event));
 
-    $response->assertOk();
+    $response->assertRedirect(route('dashboard'));
 
     $event->refresh();
 

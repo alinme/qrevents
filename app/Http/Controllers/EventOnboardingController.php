@@ -74,8 +74,11 @@ class EventOnboardingController extends Controller
         abort_if($user->isBusinessAccount(), 403);
 
         $event = $this->createEventFromValidatedData($user, $validated);
+        $event->update([
+            'onboarding_step' => 'photos',
+        ]);
 
-        return to_route('onboarding.creating', $event)->with('success', 'Event created.');
+        return to_route('onboarding.photos', $event)->with('success', 'Event created.');
     }
 
     public function storeBusiness(
@@ -101,6 +104,9 @@ class EventOnboardingController extends Controller
         $event = DB::transaction(function () use ($user, $validated, $plan, $businessWalletManager): Event {
             $event = $this->createEventFromValidatedData($user, $validated, $plan, true);
             $businessWalletManager->debitForEvent($user, $event, $plan);
+            $event->update([
+                'onboarding_step' => 'photos',
+            ]);
 
             return $event;
         });
@@ -108,20 +114,17 @@ class EventOnboardingController extends Controller
         return to_route('onboarding.photos', $event)->with('success', 'Event created.');
     }
 
-    public function creating(Request $request, Event $event): Response
+    public function creating(Request $request, Event $event): RedirectResponse
     {
         $this->assertOwnership($request, $event);
 
-        if ($event->onboarding_step === 'created') {
+        if (in_array($event->onboarding_step, ['created', 'creating'], true)) {
             $event->update([
-                'onboarding_step' => 'creating',
+                'onboarding_step' => 'photos',
             ]);
         }
 
-        return Inertia::render('onboarding/Creating', [
-            'eventName' => $event->name,
-            'nextUrl' => route('onboarding.photos', $event),
-        ]);
+        return to_route('onboarding.photos', $event);
     }
 
     public function photos(Request $request, Event $event): Response
@@ -130,18 +133,12 @@ class EventOnboardingController extends Controller
 
         $businessMode = $request->user()?->isBusinessAccount() === true;
 
-        if ($businessMode) {
-            $event->update([
-                'onboarding_step' => 'completed',
-                'onboarding_completed_at' => $event->onboarding_completed_at ?? now(),
-            ]);
+        $event->update([
+            'onboarding_step' => 'completed',
+            'onboarding_completed_at' => $event->onboarding_completed_at ?? now(),
+        ]);
 
-            $request->session()->flash('show_dashboard_modal', true);
-        } else {
-            $event->update([
-                'onboarding_step' => 'photos',
-            ]);
-        }
+        $request->session()->flash('show_dashboard_modal', true);
 
         $albumUrl = route('events.album', $event->share_token);
         $wallUrl = route('events.wall', $event->share_token);
@@ -153,11 +150,11 @@ class EventOnboardingController extends Controller
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'readyUrl' => route('onboarding.ready', $event),
             'businessMode' => $businessMode,
-            'dashboardUrl' => $businessMode ? route('dashboard.business') : null,
+            'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard'),
         ]);
     }
 
-    public function ready(Request $request, Event $event): Response
+    public function ready(Request $request, Event $event): RedirectResponse
     {
         $this->assertOwnership($request, $event);
 
@@ -170,10 +167,7 @@ class EventOnboardingController extends Controller
 
         $request->session()->flash('show_dashboard_modal', true);
 
-        return Inertia::render('onboarding/Ready', [
-            'eventName' => $event->name,
-            'dashboardUrl' => route('dashboard'),
-        ]);
+        return to_route('dashboard');
     }
 
     /**
@@ -211,10 +205,10 @@ class EventOnboardingController extends Controller
     private function redirectToStep(Event $event): RedirectResponse
     {
         return match ($event->onboarding_step) {
-            'creating' => to_route('onboarding.creating', $event),
+            'creating' => to_route('onboarding.photos', $event),
             'photos' => to_route('onboarding.photos', $event),
             'completed' => to_route('dashboard'),
-            default => to_route('onboarding.creating', $event),
+            default => to_route('onboarding.photos', $event),
         };
     }
 

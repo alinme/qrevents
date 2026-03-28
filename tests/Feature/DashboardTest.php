@@ -461,6 +461,10 @@ test('business accounts can open a dedicated wallet history page', function () {
         'kind' => 'top_up',
         'credits' => 100,
         'description' => 'Business wallet top-up',
+        'metadata' => [
+            'checkout_currency' => 'EUR',
+            'localized_amount_cents' => 10000,
+        ],
     ]);
     $owner->businessWalletTransactions()->create([
         'kind' => 'bonus',
@@ -502,6 +506,7 @@ test('business accounts can open a dedicated wallet history page', function () {
             ->where('walletTransactions.0.credits', -45)
             ->where('walletTransactions.0.eventName', 'Wallet Launch Event')
             ->where('walletTransactions.0.eventUrl', route('events.show', $event))
+            ->where('walletTransactions.2.moneyLabel', 'EUR 100.00')
         );
 });
 

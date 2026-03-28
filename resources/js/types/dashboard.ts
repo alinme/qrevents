@@ -46,6 +46,7 @@ export type BusinessWalletActivity = {
     createdAt: string | null;
     eventName: string | null;
     eventUrl: string | null;
+    moneyLabel: string | null;
 };
 
 export type BusinessWalletSummary = {

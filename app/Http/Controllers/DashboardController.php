@@ -554,6 +554,16 @@ class DashboardController extends Controller
      */
     private function walletTransactionItem(BusinessWalletTransaction $transaction): array
     {
+        $metadata = is_array($transaction->metadata) ? $transaction->metadata : [];
+        $moneyLabel = null;
+
+        if (is_string($metadata['checkout_currency'] ?? null) && is_numeric($metadata['localized_amount_cents'] ?? null)) {
+            $moneyLabel = $this->moneyLabel(
+                (string) $metadata['checkout_currency'],
+                (int) $metadata['localized_amount_cents'],
+            );
+        }
+
         return [
             'id' => $transaction->id,
             'kind' => $transaction->kind,
@@ -562,6 +572,7 @@ class DashboardController extends Controller
             'createdAt' => $transaction->created_at?->toIso8601String(),
             'eventName' => $transaction->event?->name,
             'eventUrl' => $transaction->event !== null ? route('events.show', $transaction->event) : null,
+            'moneyLabel' => $moneyLabel,
         ];
     }
 

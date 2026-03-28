@@ -4,13 +4,6 @@ import { Eye, EyeOff, LockKeyhole, RefreshCw } from 'lucide-vue-next';
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
 
@@ -39,17 +32,18 @@ onMounted(async () => {
 </script>
 
 <template>
-    <Card class="w-full">
-        <CardHeader>
-            <CardTitle class="flex gap-3">
+    <section class="w-full border-t border-brand-border/70 pt-6">
+        <div class="space-y-2">
+            <h3 class="flex items-center gap-3 text-base font-semibold text-brand-ink">
                 <LockKeyhole class="size-4" />2FA recovery codes
-            </CardTitle>
-            <CardDescription>
+            </h3>
+            <p class="text-sm text-brand-muted">
                 Recovery codes let you regain access if you lose your 2FA
                 device. Store them in a secure password manager.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
+            </p>
+        </div>
+
+        <div class="mt-4">
             <div
                 class="flex flex-col gap-3 select-none sm:flex-row sm:items-center sm:justify-between"
             >
@@ -93,7 +87,7 @@ onMounted(async () => {
                 <div v-else class="mt-3 space-y-3">
                     <div
                         ref="recoveryCodeSectionRef"
-                        class="grid gap-1 rounded-lg bg-muted p-4 font-mono text-sm"
+                        class="grid gap-1 rounded-[1.1rem] border border-brand-border/70 bg-brand-inverse px-4 py-4 font-mono text-sm"
                     >
                         <div v-if="!recoveryCodesList.length" class="space-y-2">
                             <div
@@ -118,6 +112,6 @@ onMounted(async () => {
                     </p>
                 </div>
             </div>
-        </CardContent>
-    </Card>
+        </div>
+    </section>
 </template>

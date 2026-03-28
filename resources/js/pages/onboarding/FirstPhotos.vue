@@ -8,7 +8,7 @@ defineProps<{
     albumUrl: string;
     wallUrl: string;
     qrCodeDataUrl: string;
-    readyUrl: string;
+    readyUrl?: string | null;
     businessMode?: boolean;
     dashboardUrl?: string | null;
 }>();
@@ -83,21 +83,23 @@ defineProps<{
                     </Button>
 
                     <Button
-                        v-if="businessMode && dashboardUrl"
+                        v-if="dashboardUrl"
                         as-child
                         variant="ghost"
                         class="rounded-full text-brand-muted hover:text-brand-ink"
                     >
-                        <Link :href="dashboardUrl">Go to business dashboard</Link>
+                        <Link :href="dashboardUrl">
+                            {{ businessMode ? 'Go to business dashboard' : 'Go to dashboard' }}
+                        </Link>
                     </Button>
 
                     <Button
-                        v-else
+                        v-else-if="readyUrl"
                         as-child
                         variant="ghost"
                         class="rounded-full text-brand-muted hover:text-brand-ink"
                     >
-                        <Link :href="readyUrl">I&apos;ll do this later</Link>
+                        <Link :href="readyUrl">Go to dashboard</Link>
                     </Button>
                 </div>
             </div>

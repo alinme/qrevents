@@ -260,6 +260,12 @@ const submitTopUp = (): void => {
                                     >
                                         {{ formatCreditDelta(item.credits) }}
                                     </p>
+                                    <p
+                                        v-if="item.moneyLabel"
+                                        class="mt-1 text-sm text-brand-muted"
+                                    >
+                                        Paid {{ item.moneyLabel }}
+                                    </p>
                                     <p class="dashboard-meta mt-1">
                                         {{ item.credits >= 0 ? 'Added to wallet' : 'Used from wallet' }}
                                     </p>
