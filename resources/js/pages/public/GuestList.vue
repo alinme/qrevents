@@ -159,7 +159,7 @@ const saveGuestDetails = (): void => {
     <main class="min-h-dvh bg-stone-50 px-2 py-4 text-stone-900 sm:px-4 md:px-5 md:py-6">
         <div class="mx-auto max-w-5xl space-y-4">
             <section class="space-y-2">
-                <p class="text-xs font-medium uppercase tracking-[0.24em] text-stone-500">
+                <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">
                     Entrance list
                 </p>
                 <h1 class="text-2xl font-semibold tracking-tight text-stone-950 md:text-3xl">
@@ -261,23 +261,23 @@ const saveGuestDetails = (): void => {
                 <div v-if="detailsParty" class="space-y-4 py-2">
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div class="space-y-1">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Phone</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Phone</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.phone || 'No phone saved' }}</p>
                         </div>
                         <div class="space-y-1">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Table</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Table</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.tableName || 'No table yet' }}</p>
                         </div>
                         <div class="space-y-1">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Invited</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Invited</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.invitedAttendeesCount }}</p>
                         </div>
                         <div class="space-y-1">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Confirmed</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Confirmed</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.confirmedAttendeesCount ?? 'Not answered yet' }}</p>
                         </div>
                         <div class="space-y-1 sm:col-span-2">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Notes</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Notes</p>
                             <p class="text-sm text-stone-800">{{ detailsParty.notes || 'No notes added' }}</p>
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const saveGuestDetails = (): void => {
                         <div class="space-y-2">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Confirmed attendees</p>
+                                    <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Confirmed attendees</p>
                                     <p class="mt-1 text-sm text-stone-600">
                                         Use this to tell the host how many people are actually here with this party tonight.
                                     </p>
@@ -327,7 +327,7 @@ const saveGuestDetails = (): void => {
 
                         <div class="flex items-center justify-between gap-3">
                             <div>
-                                <p class="text-xs font-medium uppercase tracking-[0.2em] text-stone-500">Seat them at</p>
+                                <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">Seat them at</p>
                                 <p class="mt-1 text-sm text-stone-600">
                                     Choose a table here so the entrance team can greet them and tell them where to sit.
                                 </p>

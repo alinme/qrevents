@@ -592,7 +592,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 :key="card.label"
                                 class="dashboard-divider-left"
                             >
-                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                                <dt class="dashboard-eyebrow flex items-center gap-2">
                                     <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
                                     {{ card.label }}
                                 </dt>
@@ -606,7 +606,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </dl>
 
                         <div class="border-t border-brand-border/70 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                            <p class="dashboard-eyebrow">
                                 Billing
                             </p>
                             <p class="mt-2 text-2xl font-semibold tracking-tight text-brand-ink">
@@ -671,13 +671,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold" :class="badgeClass(event.statusTone)">
                                             {{ event.statusLabel }}
                                         </span>
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold" :class="badgeClass(event.billingTone)">
                                             {{ event.billingLabel }}
                                         </span>
-                                        <span class="inline-flex rounded-full bg-brand-ink px-2.5 py-1 text-[0.68rem] font-semibold text-brand-inverse">
+                                        <span class="inline-flex rounded-full bg-brand-ink px-2.5 py-1 text-[0.72rem] font-semibold text-brand-inverse">
                                             {{ event.attentionLabel }}
                                         </span>
                                     </div>
@@ -909,10 +909,10 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                                 />
                                                 <span class="sr-only">Select {{ event.name }}</span>
                                             </label>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold" :class="badgeClass(event.statusTone)">
                                                 {{ event.statusLabel }}
                                             </span>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold" :class="badgeClass(event.billingTone)">
                                                 {{ event.billingLabel }}
                                             </span>
                                             <span class="text-xs text-brand-muted">

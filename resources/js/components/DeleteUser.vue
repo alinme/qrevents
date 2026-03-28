@@ -30,8 +30,7 @@ const passwordInput = useTemplateRef('passwordInput');
         />
         <div class="space-y-4 border-t border-brand-border/70 pt-6">
             <p class="text-sm leading-6 text-brand-muted">
-                Deleting your account permanently removes your events, uploads,
-                billing history, and collaborators. This cannot be undone.
+                Deleting your account permanently removes your events, uploads, billing history, and collaborators. This cannot be undone.
             </p>
             <Dialog>
                 <DialogTrigger as-child>
@@ -39,7 +38,7 @@ const passwordInput = useTemplateRef('passwordInput');
                         >Delete account</Button
                     >
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent class="sm:max-w-md">
                     <Form
                         v-bind="ProfileController.destroy.form()"
                         reset-on-success
@@ -50,7 +49,7 @@ const passwordInput = useTemplateRef('passwordInput');
                         class="space-y-6"
                         v-slot="{ errors, processing, reset, clearErrors }"
                     >
-                        <DialogHeader class="space-y-3">
+                        <DialogHeader class="space-y-2 text-left">
                             <DialogTitle>
                                 Are you sure you want to delete your account?
                             </DialogTitle>

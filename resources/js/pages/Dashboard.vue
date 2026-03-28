@@ -124,7 +124,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 :key="card.label"
                                 class="dashboard-divider-left"
                             >
-                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                                <dt class="dashboard-eyebrow flex items-center gap-2">
                                     <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
                                     {{ card.label }}
                                 </dt>
@@ -197,13 +197,13 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                         <div class="min-w-0 space-y-2">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span
-                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                                                     :class="badgeClass(event.statusTone)"
                                                 >
                                                     {{ event.statusLabel }}
                                                 </span>
                                                 <span
-                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                                                     :class="badgeClass(event.billingTone)"
                                                 >
                                                     {{ event.billingLabel }}
@@ -272,13 +272,13 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                         <div class="min-w-0 space-y-2">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span
-                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                                                     :class="badgeClass(event.roleTone)"
                                                 >
                                                     {{ event.roleLabel }}
                                                 </span>
                                                 <span
-                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                                                     :class="badgeClass(event.statusTone)"
                                                 >
                                                     {{ event.statusLabel }}
@@ -359,7 +359,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
 
                                 <div class="flex items-center gap-2">
                                     <span
-                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
+                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold capitalize"
                                         :class="moderationBadgeClass(activity.moderationStatus)"
                                     >
                                         {{ activity.moderationStatus }}

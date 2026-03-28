@@ -620,7 +620,7 @@ const submit = (): void => {
                             <AppLogoIcon class="size-7 fill-current" />
                         </div>
                         <div>
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            <p class="text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-promo-primary">
                                 EventSmart
                             </p>
                             <p class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
@@ -666,7 +666,7 @@ const submit = (): void => {
                                           ? 'border-promo-line bg-promo-surface text-promo-ink'
                                           : 'border-promo-line bg-white text-promo-muted')"
                             >
-                                <span class="text-[0.68rem] font-semibold uppercase tracking-[0.2em]">
+                                <span class="text-[0.72rem] font-semibold uppercase tracking-[0.16em]">
                                     0{{ stepItem.number }}
                                 </span>
                                 <span>{{ stepItem.label }}</span>
@@ -675,7 +675,7 @@ const submit = (): void => {
 
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary'">
+                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-xs font-semibold uppercase tracking-[0.16em] text-promo-primary'">
                                     {{ stepItems[step - 1]?.label }}
                                 </p>
                                 <h2 :class="isBusinessMode ? 'mt-3 text-2xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-3xl font-extrabold tracking-[-0.05em] text-promo-ink'">
@@ -795,7 +795,7 @@ const submit = (): void => {
                                     >
                                         <div class="flex items-start justify-between gap-4">
                                             <div>
-                                                <p :class="isBusinessMode ? 'text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'text-sm font-semibold uppercase tracking-[0.18em] text-promo-primary'">
+                                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-sm font-semibold uppercase tracking-[0.16em] text-promo-primary'">
                                                     {{ plan.name }}
                                                 </p>
                                                 <h4 :class="isBusinessMode ? 'mt-2 text-xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink'">
@@ -808,7 +808,7 @@ const submit = (): void => {
 
                                             <div
                                                 v-if="plan.isDefault"
-                                                :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-promo-primary'"
+                                                :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-2.5 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-muted' : 'rounded-full bg-promo-surface px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-promo-primary'"
                                             >
                                                 Recommended
                                             </div>
@@ -1027,7 +1027,7 @@ const submit = (): void => {
                                             <span class="block text-lg font-bold text-current">
                                                 {{ preset }}
                                             </span>
-                                            <span class="block text-[0.68rem] uppercase tracking-[0.2em]">
+                                            <span class="block text-[0.72rem] uppercase tracking-[0.16em]">
                                                 guests
                                             </span>
                                         </button>
@@ -1178,7 +1178,7 @@ const submit = (): void => {
                                         <div class="relative flex min-h-52 flex-col justify-between p-5 text-white">
                                             <div class="flex items-start justify-between gap-3">
                                                 <span
-                                                    class="rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition duration-300"
+                                                    class="rounded-full px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] transition duration-300"
                                                     :class="
                                                         isSubEventSelected(subEventOption.key)
                                                             ? 'bg-white/14 text-white'
@@ -1250,7 +1250,7 @@ const submit = (): void => {
                                             <div class="flex items-center gap-2">
                                                 <span
                                                     v-if="subEvent.required"
-                                                    :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted' : 'rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary'"
+                                                    :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-muted' : 'rounded-full bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-promo-primary'"
                                                 >
                                                     Required
                                                 </span>

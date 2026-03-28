@@ -32,6 +32,9 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
     <div class="dashboard-page">
         <div class="dashboard-shell max-w-5xl">
             <div class="space-y-2">
+                <p class="dashboard-eyebrow">
+                    Account
+                </p>
                 <Heading
                     title="Settings"
                     description="Manage your profile and account settings"
@@ -63,7 +66,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 
             <Separator class="hidden" />
 
-            <section class="max-w-2xl space-y-10 pt-2">
+            <section class="max-w-3xl space-y-8 pt-2">
                 <slot />
             </section>
         </div>

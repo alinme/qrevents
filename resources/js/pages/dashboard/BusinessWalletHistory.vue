@@ -151,7 +151,7 @@ const submitTopUp = (): void => {
                                 :key="metric.label"
                                 class="dashboard-divider-left"
                             >
-                                <dt class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                                <dt class="dashboard-eyebrow">
                                     {{ metric.label }}
                                 </dt>
                                 <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
@@ -162,7 +162,7 @@ const submitTopUp = (): void => {
                                 </p>
                                 <div
                                     v-if="metric.label === 'Balance'"
-                                    class="mt-3 flex flex-col items-start gap-1.5"
+                                    class="mt-3 flex flex-col items-start gap-2 pt-0.5"
                                 >
                                     <Button
                                         type="button"
@@ -221,7 +221,7 @@ const submitTopUp = (): void => {
                             >
                                 <div class="min-w-0 sm:pr-2">
                                     <span
-                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                        class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                                         :class="badgeClass(walletActivityTone(item.kind))"
                                     >
                                         {{ walletActivityKindLabel(item.kind) }}
