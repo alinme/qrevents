@@ -105,7 +105,7 @@ class EventOnboardingController extends Controller
             return $event;
         });
 
-        return to_route('onboarding.creating', $event)->with('success', 'Event created.');
+        return to_route('onboarding.photos', $event)->with('success', 'Event created.');
     }
 
     public function creating(Request $request, Event $event): Response
@@ -128,9 +128,20 @@ class EventOnboardingController extends Controller
     {
         $this->assertOwnership($request, $event);
 
-        $event->update([
-            'onboarding_step' => 'photos',
-        ]);
+        $businessMode = $request->user()?->isBusinessAccount() === true;
+
+        if ($businessMode) {
+            $event->update([
+                'onboarding_step' => 'completed',
+                'onboarding_completed_at' => $event->onboarding_completed_at ?? now(),
+            ]);
+
+            $request->session()->flash('show_dashboard_modal', true);
+        } else {
+            $event->update([
+                'onboarding_step' => 'photos',
+            ]);
+        }
 
         $albumUrl = route('events.album', $event->share_token);
         $wallUrl = route('events.wall', $event->share_token);
@@ -141,6 +152,8 @@ class EventOnboardingController extends Controller
             'wallUrl' => $wallUrl,
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'readyUrl' => route('onboarding.ready', $event),
+            'businessMode' => $businessMode,
+            'dashboardUrl' => $businessMode ? route('dashboard.business') : null,
         ]);
     }
 

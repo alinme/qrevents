@@ -312,13 +312,35 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
 
     $event = Event::query()->firstOrFail();
 
-    $response->assertRedirect(route('onboarding.creating', $event));
+    $response->assertRedirect(route('onboarding.photos', $event));
 
     expect($event->plan_id)->toBe($plusPlan->id)
         ->and($event->is_paid)->toBeTrue()
         ->and($event->payment_due_at)->toBeNull()
         ->and($event->paid_at)->not->toBeNull()
         ->and($user->fresh()->business_wallet_credits)->toBe(75);
+});
+
+it('completes business onboarding from the first-photos screen', function () {
+    $user = User::factory()->business()->create();
+    $event = Event::factory()->for($user)->create([
+        'onboarding_step' => 'creating',
+        'onboarding_completed_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('onboarding.photos', $event))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/FirstPhotos')
+            ->where('businessMode', true)
+            ->where('dashboardUrl', route('dashboard.business'))
+        );
+
+    $event->refresh();
+
+    expect($event->onboarding_step)->toBe('completed')
+        ->and($event->onboarding_completed_at)->not->toBeNull();
 });
 
 it('shows a validation error when a business wallet cannot afford the selected plan', function () {

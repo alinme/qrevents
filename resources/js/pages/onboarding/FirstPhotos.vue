@@ -9,6 +9,8 @@ defineProps<{
     wallUrl: string;
     qrCodeDataUrl: string;
     readyUrl: string;
+    businessMode?: boolean;
+    dashboardUrl?: string | null;
 }>();
 </script>
 
@@ -62,6 +64,41 @@ defineProps<{
 
                     <div class="px-6 py-8 sm:px-8">
                         <div class="space-y-6">
+                            <div
+                                v-if="businessMode"
+                                class="rounded-[1.5rem] border border-brand-border/70 bg-brand-panel-strong/15 px-5 py-5"
+                            >
+                                <p class="dashboard-eyebrow">Ready to work</p>
+                                <h2 class="mt-2 text-lg font-semibold text-brand-ink">
+                                    Your event is ready
+                                </h2>
+                                <p class="mt-2 text-sm leading-6 text-brand-muted">
+                                    You can test the upload flow from here, or jump
+                                    straight into the business dashboard and keep
+                                    setting everything up there.
+                                </p>
+
+                                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                                    <Button
+                                        v-if="dashboardUrl"
+                                        as-child
+                                        class="rounded-full bg-brand-accent text-white hover:bg-brand-accent/90"
+                                    >
+                                        <Link :href="dashboardUrl">
+                                            Go to business dashboard
+                                        </Link>
+                                    </Button>
+
+                                    <Button
+                                        as-child
+                                        variant="ghost"
+                                        class="rounded-full px-0 text-brand-muted hover:text-brand-ink"
+                                    >
+                                        <Link :href="albumUrl">Test the album first</Link>
+                                    </Button>
+                                </div>
+                            </div>
+
                             <div class="grid gap-3 sm:grid-cols-3">
                                 <div class="rounded-[1.4rem] border border-brand-border/70 bg-brand-inverse px-4 py-4">
                                     <ScanLine class="size-5 text-brand-accent" />
@@ -146,7 +183,9 @@ defineProps<{
                             </div>
 
                             <Button as-child variant="ghost" class="h-auto justify-start px-0 text-sm font-medium text-brand-muted hover:text-brand-ink">
-                                <Link :href="readyUrl">I&apos;ll do this later</Link>
+                                <Link :href="businessMode && dashboardUrl ? dashboardUrl : readyUrl">
+                                    {{ businessMode ? "I'll finish in the dashboard" : "I'll do this later" }}
+                                </Link>
                             </Button>
                         </div>
                     </div>
