@@ -83,7 +83,7 @@ const businessHealthCards = computed(() => [
         icon: ArrowRight,
     },
     {
-        label: 'Setup',
+        label: 'To setup',
         value: props.summary.pendingSetupCount,
         detail: 'Events still going through onboarding.',
         icon: Settings,
@@ -840,48 +840,52 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </div>
                         </section>
 
-                        <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                            <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                                <div>
-                                    <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                        Wallet activity
-                                    </h2>
-                                    <p class="mt-1 text-sm text-zinc-600">
-                                        Recent credit movement for the business account.
-                                    </p>
-                                </div>
-                                <Button as-child size="sm" variant="outline">
-                                    <Link :href="businessActionLinks.topUpWallet">
-                                        Top up credits
-                                    </Link>
-                                </Button>
-                            </div>
-
-                            <div v-if="walletActivity.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
-                                No credit activity yet.
-                            </div>
-
-                            <div v-else class="divide-y divide-black/5 pt-2">
-                                <article
-                                    v-for="item in walletActivity"
-                                    :key="item.id"
-                                    class="flex flex-col gap-2 py-3"
-                                >
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-[#171411]">
-                                                {{ walletActivityLabel(item) }}
-                                            </p>
-                                            <p class="mt-1 text-sm text-zinc-600">
-                                                {{ item.description }}
-                                                <span v-if="item.eventName"> · {{ item.eventName }}</span>
-                                            </p>
-                                        </div>
-                                        <p class="shrink-0 text-xs text-zinc-500">
-                                            {{ formatDateTime(item.createdAt) }}
+                        <section class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                            <div class="flex min-h-0 w-full flex-col">
+                                <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                                    <div>
+                                        <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                            Wallet activity
+                                        </h2>
+                                        <p class="mt-1 text-sm text-zinc-600">
+                                            Recent credit movement for the business account.
                                         </p>
                                     </div>
-                                </article>
+                                    <Button as-child size="sm" variant="outline">
+                                        <Link :href="businessActionLinks.topUpWallet">
+                                            Top up credits
+                                        </Link>
+                                    </Button>
+                                </div>
+
+                                <div v-if="walletActivity.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
+                                    No credit activity yet.
+                                </div>
+
+                                <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2">
+                                    <div class="divide-y divide-black/5 pr-1">
+                                        <article
+                                            v-for="item in walletActivity"
+                                            :key="item.id"
+                                            class="flex flex-col gap-2 py-3"
+                                        >
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-semibold text-[#171411]">
+                                                        {{ walletActivityLabel(item) }}
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-zinc-600">
+                                                        {{ item.description }}
+                                                        <span v-if="item.eventName"> · {{ item.eventName }}</span>
+                                                    </p>
+                                                </div>
+                                                <p class="shrink-0 text-xs text-zinc-500">
+                                                    {{ formatDateTime(item.createdAt) }}
+                                                </p>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
                             </div>
                         </section>
                     </div>
