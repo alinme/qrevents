@@ -1,4 +1,4 @@
-import type { RecentActivity, Tone } from '@/types';
+import type { BusinessWalletActivity, RecentActivity, Tone } from '@/types';
 
 export const formatBytes = (bytes: number): string => {
     if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -55,6 +55,67 @@ export const badgeClass = (tone: Tone): string => {
             return 'bg-rose-100 text-rose-800';
         default:
             return 'bg-zinc-100 text-zinc-700';
+    }
+};
+
+export const formatCreditDelta = (credits: number): string => {
+    const absoluteCredits = Math.abs(credits);
+
+    if (credits > 0) {
+        return `+${absoluteCredits} credits`;
+    }
+
+    if (credits < 0) {
+        return `-${absoluteCredits} credits`;
+    }
+
+    return `${absoluteCredits} credits`;
+};
+
+export const walletActivityLabel = (item: BusinessWalletActivity): string => {
+    const absoluteCredits = Math.abs(item.credits);
+
+    if (item.kind === 'top_up') {
+        return `+${absoluteCredits} credits added`;
+    }
+
+    if (item.kind === 'bonus') {
+        return `+${absoluteCredits} bonus credits`;
+    }
+
+    if (item.kind === 'event_debit') {
+        return `-${absoluteCredits} credits used`;
+    }
+
+    return `${formatCreditDelta(item.credits)} updated`;
+};
+
+export const walletActivityKindLabel = (
+    kind: BusinessWalletActivity['kind'],
+): string => {
+    switch (kind) {
+        case 'top_up':
+            return 'Top up';
+        case 'bonus':
+            return 'Bonus';
+        case 'event_debit':
+            return 'Event spend';
+        default:
+            return 'Adjustment';
+    }
+};
+
+export const walletActivityTone = (
+    kind: BusinessWalletActivity['kind'],
+): Tone => {
+    switch (kind) {
+        case 'top_up':
+        case 'bonus':
+            return 'emerald';
+        case 'event_debit':
+            return 'amber';
+        default:
+            return 'zinc';
     }
 };
 

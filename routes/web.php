@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('dashboard/business/activate', [BusinessController::class, 'activate'])->name('dashboard.business.activate');
     Route::get('dashboard/business/onboarding', [BusinessController::class, 'onboarding'])->name('dashboard.business.onboarding');
     Route::post('dashboard/business/onboarding', [BusinessController::class, 'storeOnboarding'])->name('dashboard.business.onboarding.store');
+    Route::get('dashboard/business/wallet', [DashboardController::class, 'walletHistory'])->name('dashboard.business.wallet.history');
     Route::post('dashboard/business/wallet/checkout', [BusinessController::class, 'createWalletCheckout'])->name('dashboard.business.wallet.checkout');
     Route::post('dashboard/business/actions/start-exports', [DashboardController::class, 'startFilteredExports'])->name('dashboard.business.exports.start');
     Route::get('dashboard/business/actions/billing-queue', [DashboardController::class, 'downloadBillingQueue'])->name('dashboard.business.billing-queue');

@@ -433,6 +433,54 @@ test('business accounts can open the dedicated business dashboard', function () 
         );
 });
 
+test('business accounts can open a dedicated wallet history page', function () {
+    $owner = User::factory()->business()->create([
+        'business_wallet_credits' => 80,
+        'business_wallet_currency' => 'EUR',
+    ]);
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Wallet Launch Event',
+    ]);
+
+    $owner->businessWalletTransactions()->create([
+        'kind' => 'top_up',
+        'credits' => 100,
+        'description' => 'Business wallet top-up',
+    ]);
+    $owner->businessWalletTransactions()->create([
+        'kind' => 'bonus',
+        'credits' => 25,
+        'description' => 'Business top-up bonus credits',
+    ]);
+    $owner->businessWalletTransactions()->create([
+        'event_id' => $event->id,
+        'kind' => 'event_debit',
+        'credits' => -45,
+        'description' => 'Created Plus event: Wallet Launch Event',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.business.wallet.history'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard/BusinessWalletHistory')
+            ->where('sidebarLabel', 'Business')
+            ->where('dashboardLinks.business', route('dashboard.business'))
+            ->where('businessActionLinks.createEvent', route('dashboard.business.events.create'))
+            ->where('businessActionLinks.topUpWallet', route('businesses'))
+            ->where('walletSummary.currentBalance', 80)
+            ->where('walletSummary.currency', 'EUR')
+            ->where('walletSummary.totalTransactions', 3)
+            ->where('walletSummary.creditsAdded', 125)
+            ->where('walletSummary.creditsUsed', 45)
+            ->where('walletTransactionsPagination.total', 3)
+            ->where('walletTransactions.0.kind', 'event_debit')
+            ->where('walletTransactions.0.credits', -45)
+            ->where('walletTransactions.0.eventName', 'Wallet Launch Event')
+            ->where('walletTransactions.0.eventUrl', route('events.show', $event))
+        );
+});
+
 test('business dashboard filters owned workspaces and attention items by query parameters', function () {
     $owner = User::factory()->business()->create();
 

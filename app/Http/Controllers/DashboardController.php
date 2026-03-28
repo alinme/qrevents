@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BusinessDashboardRequest;
 use App\Jobs\GenerateEventMediaExport;
+use App\Models\BusinessWalletTransaction;
 use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\EventCollaborator;
@@ -126,12 +127,59 @@ class DashboardController extends Controller
             'businessActionLinks' => [
                 'startExports' => route('dashboard.business.exports.start'),
                 'billingQueueDownload' => route('dashboard.business.billing-queue'),
-                'createEvent' => route('dashboard.business.events.create'),
-                'topUpWallet' => route('businesses'),
+                'walletHistory' => route('dashboard.business.wallet.history'),
             ],
             'sidebarLabel' => 'Business',
             'ownedEvents' => $ownedEventsPaginator->items(),
             'ownedEventsPagination' => $this->paginationMeta($ownedEventsPaginator),
+        ]);
+    }
+
+    public function walletHistory(Request $request): Response
+    {
+        abort_unless($request->user()->canAccessBusinessDashboard(), 403);
+
+        $latestTransaction = $request->user()
+            ->businessWalletTransactions()
+            ->latest('id')
+            ->first();
+
+        $transactionsPaginator = $request->user()
+            ->businessWalletTransactions()
+            ->with('event:id,name')
+            ->latest('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        $transactionsPaginator->setCollection(
+            $transactionsPaginator->getCollection()->map(
+                fn (BusinessWalletTransaction $transaction): array => $this->walletTransactionItem($transaction),
+            ),
+        );
+
+        return Inertia::render('dashboard/BusinessWalletHistory', [
+            'dashboardLinks' => [
+                'overview' => route('dashboard.account'),
+                'business' => route('dashboard.business'),
+                'ownedEvents' => route('dashboard.account').'#events',
+                'recentActivity' => route('dashboard.account').'#activity',
+            ],
+            'businessActionLinks' => [
+                'createEvent' => route('dashboard.business.events.create'),
+                'topUpWallet' => route('businesses'),
+                'walletHistory' => route('dashboard.business.wallet.history'),
+            ],
+            'walletSummary' => [
+                'currentBalance' => (int) ($request->user()->business_wallet_credits ?? 0),
+                'currency' => (string) ($request->user()->business_wallet_currency ?? config('business.base_currency', 'EUR')),
+                'totalTransactions' => (int) $request->user()->businessWalletTransactions()->count(),
+                'creditsAdded' => (int) $request->user()->businessWalletTransactions()->where('credits', '>', 0)->sum('credits'),
+                'creditsUsed' => abs((int) $request->user()->businessWalletTransactions()->where('credits', '<', 0)->sum('credits')),
+                'latestActivityAt' => $latestTransaction?->created_at?->toIso8601String(),
+            ],
+            'walletTransactions' => $transactionsPaginator->items(),
+            'walletTransactionsPagination' => $this->paginationMeta($transactionsPaginator),
+            'sidebarLabel' => 'Business',
         ]);
     }
 
@@ -465,15 +513,24 @@ class DashboardController extends Controller
             ->latest('id')
             ->limit(6)
             ->get()
-            ->map(fn ($transaction): array => [
-                'id' => $transaction->id,
-                'kind' => $transaction->kind,
-                'credits' => (int) $transaction->credits,
-                'description' => $transaction->description,
-                'createdAt' => $transaction->created_at?->toIso8601String(),
-                'eventName' => $transaction->event?->name,
-            ])
+            ->map(fn (BusinessWalletTransaction $transaction): array => $this->walletTransactionItem($transaction))
             ->all();
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function walletTransactionItem(BusinessWalletTransaction $transaction): array
+    {
+        return [
+            'id' => $transaction->id,
+            'kind' => $transaction->kind,
+            'credits' => (int) $transaction->credits,
+            'description' => $transaction->description,
+            'createdAt' => $transaction->created_at?->toIso8601String(),
+            'eventName' => $transaction->event?->name,
+            'eventUrl' => $transaction->event !== null ? route('events.show', $transaction->event) : null,
+        ];
     }
 
     /**

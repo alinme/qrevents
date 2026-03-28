@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import businessE58f3e from './business'
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 export const account = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ account.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 account.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ account.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 account.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -36,7 +36,7 @@ account.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 account.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -46,7 +46,7 @@ account.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 const accountForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -56,7 +56,7 @@ const accountForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =>
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 accountForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -66,7 +66,7 @@ accountForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:62
+* @see app/Http/Controllers/DashboardController.php:67
 * @route '/dashboard/account'
 */
 accountForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -83,7 +83,7 @@ account.form = accountForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 export const business = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -98,7 +98,7 @@ business.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 business.url = (options?: RouteQueryOptions) => {
@@ -107,7 +107,7 @@ business.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -117,7 +117,7 @@ business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -127,7 +127,7 @@ business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 const businessForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -137,7 +137,7 @@ const businessForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 businessForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -147,7 +147,7 @@ businessForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => 
 
 /**
 * @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:85
+* @see app/Http/Controllers/DashboardController.php:91
 * @route '/dashboard/business'
 */
 businessForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -164,7 +164,7 @@ business.form = businessForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 export const events = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -179,7 +179,7 @@ events.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 events.url = (options?: RouteQueryOptions) => {
@@ -188,7 +188,7 @@ events.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 events.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -198,7 +198,7 @@ events.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 events.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -208,7 +208,7 @@ events.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 const eventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -218,7 +218,7 @@ const eventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => 
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 eventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -228,7 +228,7 @@ eventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::events
-* @see app/Http/Controllers/DashboardController.php:265
+* @see app/Http/Controllers/DashboardController.php:320
 * @route '/dashboard/events'
 */
 eventsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -245,7 +245,7 @@ events.form = eventsForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 export const activity = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -260,7 +260,7 @@ activity.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 activity.url = (options?: RouteQueryOptions) => {
@@ -269,7 +269,7 @@ activity.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 activity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -279,7 +279,7 @@ activity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 activity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -289,7 +289,7 @@ activity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 const activityForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -299,7 +299,7 @@ const activityForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 activityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -309,7 +309,7 @@ activityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => 
 
 /**
 * @see \App\Http\Controllers\DashboardController::activity
-* @see app/Http/Controllers/DashboardController.php:270
+* @see app/Http/Controllers/DashboardController.php:325
 * @route '/dashboard/activity'
 */
 activityForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

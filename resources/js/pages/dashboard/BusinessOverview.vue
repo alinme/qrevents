@@ -22,6 +22,7 @@ import {
     formatBytes,
     formatDateOnly,
     formatDateTime,
+    walletActivityLabel,
 } from '@/lib/dashboard';
 import type {
     BreadcrumbItem,
@@ -51,8 +52,7 @@ const props = defineProps<{
     businessActionLinks: {
         startExports: string;
         billingQueueDownload: string;
-        createEvent: string;
-        topUpWallet: string;
+        walletHistory: string;
     };
     ownedEvents: DashboardEvent[];
     ownedEventsPagination: PaginationMeta;
@@ -98,10 +98,10 @@ const businessHealthCards = computed(() => [
         icon: CreditCard,
     },
     {
-        label: 'Wallet',
-        value: `${props.businessOverview.walletCredits} credits`,
-        detail: `Stored in ${props.businessOverview.walletCurrency}.`,
-        icon: CreditCard,
+        label: 'Exports',
+        value: props.businessOverview.readyExportCount,
+        detail: 'Workspaces with a media export ready to download.',
+        icon: Download,
     },
 ]);
 
@@ -116,22 +116,6 @@ const actionButtonClass = (tone: QuickAction['tone']): string => {
 };
 
 const latestWalletEntry = computed(() => props.walletActivity[0] ?? null);
-
-const walletActivityLabel = (item: BusinessWalletActivity): string => {
-    if (item.kind === 'top_up') {
-        return `+${item.credits} credits added`;
-    }
-
-    if (item.kind === 'bonus') {
-        return `+${item.credits} bonus credits`;
-    }
-
-    if (item.kind === 'event_debit') {
-        return `-${item.credits} credits used`;
-    }
-
-    return `${item.credits} credits updated`;
-};
 
 const page = usePage();
 
@@ -487,6 +471,10 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </p>
                                 <p v-else>
                                     No credit activity yet.
+                                </p>
+                                <p>
+                                    {{ businessOverview.walletCredits }} credits on hand ·
+                                    {{ businessOverview.walletCurrency }}
                                 </p>
                                 <p>
                                     {{ formatBytes(businessOverview.totalUsedStorageBytes) }} used ·
@@ -852,8 +840,8 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         </p>
                                     </div>
                                     <Button as-child size="sm" variant="outline">
-                                        <Link :href="businessActionLinks.topUpWallet">
-                                            Top up credits
+                                        <Link :href="businessActionLinks.walletHistory">
+                                            View history
                                         </Link>
                                     </Button>
                                 </div>
@@ -876,7 +864,17 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                                     </p>
                                                     <p class="mt-1 text-sm text-zinc-600">
                                                         {{ item.description }}
-                                                        <span v-if="item.eventName"> · {{ item.eventName }}</span>
+                                                        <span v-if="item.eventName">
+                                                            ·
+                                                            <Link
+                                                                v-if="item.eventUrl"
+                                                                :href="item.eventUrl"
+                                                                class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                                            >
+                                                                {{ item.eventName }}
+                                                            </Link>
+                                                            <span v-else>{{ item.eventName }}</span>
+                                                        </span>
                                                     </p>
                                                 </div>
                                                 <p class="shrink-0 text-xs text-zinc-500">

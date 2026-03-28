@@ -45,6 +45,16 @@ export type BusinessWalletActivity = {
     description: string;
     createdAt: string | null;
     eventName: string | null;
+    eventUrl: string | null;
+};
+
+export type BusinessWalletSummary = {
+    currentBalance: number;
+    currency: string;
+    totalTransactions: number;
+    creditsAdded: number;
+    creditsUsed: number;
+    latestActivityAt: string | null;
 };
 
 export type BusinessAttentionEvent = {
