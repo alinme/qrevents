@@ -139,6 +139,8 @@ class DashboardController extends Controller
     {
         abort_unless($request->user()->canAccessBusinessDashboard(), 403);
 
+        $data = $this->accountData($request);
+
         $latestTransaction = $request->user()
             ->businessWalletTransactions()
             ->latest('id')
@@ -158,6 +160,7 @@ class DashboardController extends Controller
         );
 
         return Inertia::render('dashboard/BusinessWalletHistory', [
+            'accountNavigation' => $data['accountNavigation'],
             'dashboardLinks' => [
                 'overview' => route('dashboard.account'),
                 'business' => route('dashboard.business'),

@@ -465,6 +465,10 @@ test('business accounts can open a dedicated wallet history page', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard/BusinessWalletHistory')
             ->where('sidebarLabel', 'Business')
+            ->where('accountNavigation.0.title', 'Business')
+            ->where('accountNavigation.1.title', 'Create')
+            ->where('accountNavigation.2.title', 'Wallet')
+            ->where('accountNavigation.3.title', 'Portfolio')
             ->where('dashboardLinks.business', route('dashboard.business'))
             ->where('businessActionLinks.createEvent', route('dashboard.business.events.create'))
             ->where('businessActionLinks.topUpWallet', route('businesses'))
