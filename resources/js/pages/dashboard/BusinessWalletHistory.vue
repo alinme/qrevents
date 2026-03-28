@@ -313,11 +313,18 @@ const submitTopUp = (): void => {
             </DialogHeader>
 
             <form class="space-y-4" @submit.prevent="submitTopUp">
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div
+                    role="radiogroup"
+                    aria-label="Choose a top-up pack"
+                    class="grid grid-cols-2 gap-2 sm:grid-cols-3"
+                >
                     <button
                         v-for="pack in businessTopUp.packs"
                         :key="pack.credits"
                         type="button"
+                        role="radio"
+                        :aria-checked="pack.credits === topUpForm.credits"
+                        :aria-label="`${pack.credits} credits${pack.bonus_credits > 0 ? ` plus ${pack.bonus_credits} bonus credits` : ''}`"
                         class="rounded-[1.15rem] border px-3 py-3 text-left transition"
                         :class="
                             pack.credits === topUpForm.credits

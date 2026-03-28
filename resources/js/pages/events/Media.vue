@@ -318,6 +318,22 @@ const moderationBadgeClass = (status: MediaAsset['moderationStatus']): string =>
     }
 };
 
+const wallVisibilityAriaLabel = (
+    asset: MediaAsset,
+    visibility: MediaAsset['wallVisibility'],
+): string =>
+    visibility === 'approved'
+        ? `Show ${asset.guestName} upload on photo wall`
+        : `Hide ${asset.guestName} upload from photo wall`;
+
+const moderationAriaLabel = (
+    asset: MediaAsset,
+    moderationStatus: MediaAsset['moderationStatus'],
+): string =>
+    moderationStatus === 'approved'
+        ? `Approve ${asset.guestName} upload`
+        : `Reject ${asset.guestName} upload`;
+
 const guestInitials = (value: string | null): string => {
     const normalized = (value ?? '').trim();
     if (normalized.length === 0) {
@@ -1940,6 +1956,7 @@ const statCards = computed(() => [
                                         type="button"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                         title="Copy file link"
+                                        aria-label="Copy file link"
                                         @click="copyAssetLink(activeAsset)"
                                     >
                                         <Copy class="size-4" />
@@ -1951,6 +1968,7 @@ const statCards = computed(() => [
                                         rel="noopener noreferrer"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
                                         title="Download or open file"
+                                        aria-label="Download or open file"
                                     >
                                         <Download class="size-4" />
                                     </a>
@@ -1963,6 +1981,8 @@ const statCards = computed(() => [
                                             activeAsset.wallVisibility === 'approved'
                                         "
                                         title="Show on photo wall"
+                                        :aria-label="wallVisibilityAriaLabel(activeAsset, 'approved')"
+                                        :aria-pressed="activeAsset.wallVisibility === 'approved'"
                                         @click="updateWallVisibility(activeAsset, 'approved')"
                                     >
                                         <ThumbsUp class="size-4" />
@@ -1976,6 +1996,8 @@ const statCards = computed(() => [
                                             activeAsset.wallVisibility === 'rejected'
                                         "
                                         title="Hide from photo wall"
+                                        :aria-label="wallVisibilityAriaLabel(activeAsset, 'rejected')"
+                                        :aria-pressed="activeAsset.wallVisibility === 'rejected'"
                                         @click="updateWallVisibility(activeAsset, 'rejected')"
                                     >
                                         <ThumbsDown class="size-4" />
@@ -1989,6 +2011,8 @@ const statCards = computed(() => [
                                             activeAsset.moderationStatus === 'approved'
                                         "
                                         title="Approve"
+                                        :aria-label="moderationAriaLabel(activeAsset, 'approved')"
+                                        :aria-pressed="activeAsset.moderationStatus === 'approved'"
                                         @click="updateModeration(activeAsset, 'approved')"
                                     >
                                         <Check class="size-4" />
@@ -2002,6 +2026,8 @@ const statCards = computed(() => [
                                             activeAsset.moderationStatus === 'rejected'
                                         "
                                         title="Reject"
+                                        :aria-label="moderationAriaLabel(activeAsset, 'rejected')"
+                                        :aria-pressed="activeAsset.moderationStatus === 'rejected'"
                                         @click="updateModeration(activeAsset, 'rejected')"
                                     >
                                         <X class="size-4" />
@@ -2011,6 +2037,7 @@ const statCards = computed(() => [
                                         type="button"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/70 text-white ring-1 ring-rose-200/20 backdrop-blur transition hover:bg-rose-500/84"
                                         title="Delete"
+                                        :aria-label="`Delete ${activeAsset.guestName} upload`"
                                         @click="requestDeleteAsset(activeAsset)"
                                     >
                                         <Trash2 class="size-4" />
@@ -2221,6 +2248,7 @@ const statCards = computed(() => [
                                 size="icon"
                                 variant="outline"
                                 title="Copy file link"
+                                aria-label="Copy file link"
                                 @click="copyAssetLink(assetInfoAsset)"
                             >
                                 <Copy class="size-4" />
@@ -2236,6 +2264,7 @@ const statCards = computed(() => [
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title="Open file"
+                                    aria-label="Open file"
                                 >
                                     <ExternalLink class="size-4" />
                                 </a>
@@ -2244,6 +2273,7 @@ const statCards = computed(() => [
                                 size="icon"
                                 variant="outline"
                                 title="Open preview"
+                                aria-label="Open preview"
                                 @click="assetInfoId = null; openAssetDetails(assetInfoAsset)"
                             >
                                 <Eye class="size-4" />
@@ -2257,6 +2287,8 @@ const statCards = computed(() => [
                                         assetInfoAsset.wallVisibility === 'approved'
                                     "
                                     title="Show on photo wall"
+                                    :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'approved')"
+                                    :aria-pressed="assetInfoAsset.wallVisibility === 'approved'"
                                     @click="updateWallVisibility(assetInfoAsset, 'approved')"
                                 >
                                     <ThumbsUp class="size-4" />
@@ -2269,6 +2301,8 @@ const statCards = computed(() => [
                                         assetInfoAsset.wallVisibility === 'rejected'
                                     "
                                     title="Hide from photo wall"
+                                    :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'rejected')"
+                                    :aria-pressed="assetInfoAsset.wallVisibility === 'rejected'"
                                     @click="updateWallVisibility(assetInfoAsset, 'rejected')"
                                 >
                                     <ThumbsDown class="size-4" />
@@ -2281,6 +2315,8 @@ const statCards = computed(() => [
                                         assetInfoAsset.moderationStatus === 'approved'
                                     "
                                     title="Approve"
+                                    :aria-label="moderationAriaLabel(assetInfoAsset, 'approved')"
+                                    :aria-pressed="assetInfoAsset.moderationStatus === 'approved'"
                                     @click="updateModeration(assetInfoAsset, 'approved')"
                                 >
                                     <Check class="size-4" />
@@ -2293,6 +2329,8 @@ const statCards = computed(() => [
                                         assetInfoAsset.moderationStatus === 'rejected'
                                     "
                                     title="Reject"
+                                    :aria-label="moderationAriaLabel(assetInfoAsset, 'rejected')"
+                                    :aria-pressed="assetInfoAsset.moderationStatus === 'rejected'"
                                     @click="updateModeration(assetInfoAsset, 'rejected')"
                                 >
                                     <X class="size-4" />
@@ -2301,6 +2339,7 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="destructive"
                                     title="Delete"
+                                    :aria-label="`Delete ${assetInfoAsset.guestName} upload`"
                                     @click="requestDeleteAsset(assetInfoAsset)"
                                 >
                                     <Trash2 class="size-4" />
