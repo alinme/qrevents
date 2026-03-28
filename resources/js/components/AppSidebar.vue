@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     Activity,
     ArrowLeft,
+    BriefcaseBusiness,
     Camera,
     CreditCard,
     CircleDollarSign,
@@ -126,13 +127,13 @@ const mainNavItems = computed<NavItem[]>(() => {
                 item.title === 'Overview'
                     ? LayoutGrid
                     : item.title === 'Business'
-                      ? CreditCard
-                      : item.title === 'Create Event'
+                      ? BriefcaseBusiness
+                      : item.title === 'Create'
                         ? FolderPlus
-                        : item.title === 'Top Up'
+                        : item.title === 'Wallet'
                           ? CircleDollarSign
                           : item.title === 'Portfolio'
-                            ? Camera
+                            ? FolderKanban
                       : item.title === 'Owned Events'
                         ? Camera
                         : item.title === 'Admin'

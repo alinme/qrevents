@@ -470,11 +470,11 @@ class DashboardController extends Controller
                     'href' => $accountOverviewUrl,
                 ],
                 $canAccessBusinessDashboard ? [
-                    'title' => 'Create Event',
+                    'title' => 'Create',
                     'href' => route('dashboard.business.events.create'),
                 ] : null,
                 $canAccessBusinessDashboard ? [
-                    'title' => 'Top Up',
+                    'title' => 'Wallet',
                     'href' => route('businesses'),
                 ] : null,
                 $canAccessBusinessDashboard ? [
