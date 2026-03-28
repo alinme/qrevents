@@ -585,13 +585,17 @@ const submit = (): void => {
                         <div class="border-b border-promo-line bg-promo-surface/70 px-5 py-5">
                             <p class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary">
                                 <Sparkles class="size-3.5" />
-                                Why this matters
+                                {{ isBusinessMode ? 'Business flow' : 'Why this matters' }}
                             </p>
                             <h1 class="mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
-                                Plan it once. Use it everywhere.
+                                {{ isBusinessMode ? 'Create the next client event' : 'Plan it once. Use it everywhere.' }}
                             </h1>
                             <p class="mt-3 text-sm leading-7 text-promo-muted">
-                                This wizard is for event setup, not account access. The details here will later support invitations, menus, guest flows, supplier suggestions, and smarter event tools.
+                                {{
+                                    isBusinessMode
+                                        ? 'Choose the paid plan this event should use, then finish the event setup. Your business profile and wallet stay at the account level.'
+                                        : 'This wizard is for event setup, not account access. The details here will later support invitations, menus, guest flows, supplier suggestions, and smarter event tools.'
+                                }}
                             </p>
                         </div>
 
@@ -694,17 +698,47 @@ const submit = (): void => {
                                         </p>
                                     </div>
 
-                                        <div
-                                            v-if="selectedPlan"
-                                            class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted"
-                                        >
-                                            {{
-                                                isBusinessMode
-                                                    ? `${selectedPlan.name} · ${selectedBusinessPlanCost} credits`
-                                                    : `${selectedPlan.name} · ${selectedPlan.priceLabel}`
-                                            }}
-                                        </div>
+                                    <div
+                                        class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted"
+                                    >
+                                        {{
+                                            isBusinessMode
+                                                ? `${businessWalletCredits} credits available`
+                                                : (selectedPlan ? `${selectedPlan.name} · ${selectedPlan.priceLabel}` : 'Choose a plan')
+                                        }}
                                     </div>
+                                </div>
+
+                                <div
+                                    v-if="isBusinessMode"
+                                    class="mt-4 flex flex-col gap-3 rounded-[20px] border border-promo-line bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-promo-ink">
+                                            {{ selectedPlan ? `${selectedPlan.name} uses ${selectedBusinessPlanCost} credits` : 'Choose the plan for this event' }}
+                                        </p>
+                                        <p class="mt-1 text-sm leading-6 text-promo-muted">
+                                            {{
+                                                selectedPlan
+                                                    ? (selectedBusinessPlanAffordable
+                                                        ? `${remainingBusinessCredits} credits will remain after creation.`
+                                                        : `You need ${missingBusinessCredits} more credits before you can create this event.`)
+                                                    : 'Free is not available in business mode.'
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <Button
+                                        v-if="selectedPlan && !selectedBusinessPlanAffordable"
+                                        as-child
+                                        variant="outline"
+                                        class="border-promo-line bg-white text-promo-ink hover:bg-promo-surface"
+                                    >
+                                        <Link :href="businessTopUpHref">
+                                            Top up wallet
+                                        </Link>
+                                    </Button>
+                                </div>
 
                                 <div class="mt-5 grid gap-4 xl:grid-cols-3">
                                     <button
@@ -789,25 +823,6 @@ const submit = (): void => {
                                             </span>
                                         </div>
                                     </button>
-                                </div>
-
-                                <div
-                                    v-if="isBusinessMode && selectedPlan && !selectedBusinessPlanAffordable"
-                                    class="mt-4 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900"
-                                >
-                                    <p class="font-semibold">
-                                        {{ selectedPlan.name }} needs {{ selectedBusinessPlanCost }} credits, but your wallet has {{ businessWalletCredits }}.
-                                    </p>
-                                    <p class="mt-1 leading-6 text-amber-800">
-                                        Top up {{ missingBusinessCredits }} more credits, then come back and create this event.
-                                    </p>
-                                    <div class="mt-3">
-                                        <Button as-child variant="outline" class="border-amber-300 bg-white text-amber-900 hover:bg-amber-100">
-                                            <Link :href="businessTopUpHref">
-                                                Top up wallet
-                                            </Link>
-                                        </Button>
-                                    </div>
                                 </div>
 
                                 <InputError :message="form.errors.plan_slug" class="mt-4" />

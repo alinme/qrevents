@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { BadgeCheck, BriefcaseBusiness, Globe2, Palette, ReceiptText } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,27 +48,35 @@ const submit = (): void => {
 };
 
 const fieldHintClass = 'text-xs leading-5 text-zinc-500';
+const previewBrandName = computed(() =>
+    form.brand_name.trim() || form.company_name.trim() || 'Your business brand',
+);
+const brandPreviewStyle = computed(() => ({
+    backgroundColor: `${form.primary_color}14`,
+    borderColor: `${form.primary_color}2b`,
+    color: form.primary_color,
+}));
 </script>
 
 <template>
     <Head title="Business onboarding" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
-            <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                    Business setup
-                </p>
-                <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#171411]">
-                    Finish your business profile
-                </h1>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-                    Add the company and brand details you want to reuse across multiple events. You only do this once.
-                </p>
-            </section>
-
+        <div class="mx-auto grid max-w-6xl gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
             <form class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6" @submit.prevent="submit">
-                <div class="grid gap-5 md:grid-cols-2">
+                <div class="border-b border-black/5 pb-5">
+                    <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                        Business setup
+                    </p>
+                    <h1 class="mt-2 text-2xl font-semibold tracking-tight text-[#171411]">
+                        Finish your business profile
+                    </h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+                        Add the company and brand details you want to reuse across future events, billing, and business pages.
+                    </p>
+                </div>
+
+                <div class="grid gap-6 py-5 md:grid-cols-2">
                     <div class="space-y-2">
                         <Label for="company_name">Company name</Label>
                         <Input id="company_name" v-model="form.company_name" placeholder="Studio Events SRL" />
@@ -80,7 +90,7 @@ const fieldHintClass = 'text-xs leading-5 text-zinc-500';
                         <Label for="brand_name">Public brand name</Label>
                         <Input id="brand_name" v-model="form.brand_name" placeholder="Studio Events" />
                         <p :class="fieldHintClass">
-                            This is the name clients will see across your business dashboard and future event spaces.
+                            This is the name clients will see across your business dashboard and event spaces.
                         </p>
                         <InputError :message="form.errors.brand_name" />
                     </div>
@@ -98,7 +108,7 @@ const fieldHintClass = 'text-xs leading-5 text-zinc-500';
                         <Label for="phone">Phone</Label>
                         <Input id="phone" v-model="form.phone" placeholder="+40 721 000 111" />
                         <p :class="fieldHintClass">
-                            Optional, but helpful when you need quick client-facing contact details later.
+                            Optional, but helpful when clients or collaborators need a quick contact point.
                         </p>
                         <InputError :message="form.errors.phone" />
                     </div>
@@ -117,7 +127,7 @@ const fieldHintClass = 'text-xs leading-5 text-zinc-500';
                         <Label for="logo_file">Logo</Label>
                         <Input id="logo_file" type="file" accept="image/*" @input="form.logo_file = ($event.target as HTMLInputElement).files?.[0] ?? null" />
                         <p :class="fieldHintClass">
-                            Use a square or clean transparent logo if you have one. You can always change it later.
+                            Use a square or transparent logo if you have one. You can always change it later.
                         </p>
                         <InputError :message="form.errors.logo_file" />
                     </div>
@@ -126,7 +136,7 @@ const fieldHintClass = 'text-xs leading-5 text-zinc-500';
                         <Label for="primary_color">Primary color</Label>
                         <Input id="primary_color" v-model="form.primary_color" type="color" class="h-11" />
                         <p :class="fieldHintClass">
-                            Main brand color for business-facing pages. Example: your darkest signature brand tone.
+                            Main brand tone for business pages and reusable accents.
                         </p>
                         <InputError :message="form.errors.primary_color" />
                     </div>
@@ -135,22 +145,84 @@ const fieldHintClass = 'text-xs leading-5 text-zinc-500';
                         <Label for="accent_color">Accent color</Label>
                         <Input id="accent_color" v-model="form.accent_color" type="color" class="h-11" />
                         <p :class="fieldHintClass">
-                            Secondary highlight color for buttons and accents. Example: a warm gold, coral, or bright brand accent.
+                            Secondary highlight color for buttons, details, and support accents.
                         </p>
                         <InputError :message="form.errors.accent_color" />
                     </div>
                 </div>
 
-                <div v-if="profile.logoUrl" class="mt-5">
-                    <img :src="profile.logoUrl" alt="Current logo" class="h-20 w-20 rounded-2xl object-cover" />
-                </div>
-
-                <div class="mt-6 flex justify-end">
+                <div class="flex justify-end border-t border-black/5 pt-5">
                     <Button type="submit" class="bg-[#171411] text-white hover:bg-[#2b2621]" :disabled="form.processing">
                         Save business profile
                     </Button>
                 </div>
             </form>
+
+            <aside class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6 xl:sticky xl:top-6">
+                <div class="space-y-5">
+                    <section class="border-b border-black/5 pb-5">
+                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            Preview
+                        </p>
+                        <div class="mt-4 rounded-[24px] border px-4 py-4" :style="brandPreviewStyle">
+                            <div class="flex items-start gap-3">
+                                <img
+                                    v-if="profile.logoUrl"
+                                    :src="profile.logoUrl"
+                                    alt="Current logo"
+                                    class="size-12 rounded-2xl object-cover ring-1 ring-black/5"
+                                />
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold" :style="{ color: form.primary_color }">
+                                        {{ previewBrandName }}
+                                    </p>
+                                    <p class="mt-1 text-sm leading-6 text-zinc-600">
+                                        This brand will follow your business dashboard and future event workspaces.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2">
+                                <span class="inline-flex h-4 w-4 rounded-full ring-1 ring-black/5" :style="{ backgroundColor: form.primary_color }" />
+                                <span class="inline-flex h-4 w-4 rounded-full ring-1 ring-black/5" :style="{ backgroundColor: form.accent_color }" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-4">
+                        <div>
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                Reused across
+                            </p>
+                        </div>
+
+                        <div class="space-y-3 text-sm text-zinc-600">
+                            <p class="flex items-start gap-3">
+                                <BriefcaseBusiness class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                Business dashboard and multi-event workspace branding.
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <ReceiptText class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                Billing email and company details for wallet receipts.
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <Globe2 class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                Public-facing brand details you may reuse across events.
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <Palette class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                Primary and accent colors for your business surfaces.
+                            </p>
+                        </div>
+
+                        <div class="border-t border-black/5 pt-4 text-sm leading-6 text-zinc-600">
+                            <p class="flex items-start gap-3">
+                                <BadgeCheck class="mt-0.5 size-4 shrink-0 text-zinc-400" />
+                                You only do this once. You can still update it later from your business settings.
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </aside>
         </div>
     </AppLayout>
 </template>

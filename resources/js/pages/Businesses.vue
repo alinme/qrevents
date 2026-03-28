@@ -415,14 +415,6 @@ const businessPrimaryCtaLabel = computed(() => {
                             >
                                 {{ businessPrimaryCtaLabel }}
                             </Link>
-
-                            <Link
-                                v-if="dashboardUrl"
-                                :href="dashboardUrl"
-                                class="inline-flex items-center justify-center rounded-full border border-promo-line bg-white px-5 py-3 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
-                            >
-                                Open business dashboard
-                            </Link>
                         </div>
                     </div>
                 </div>

@@ -647,7 +647,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     Event portfolio
                                 </h2>
                                 <p class="mt-1 text-sm text-zinc-600">
-                                    Create events, filter the portfolio, and jump straight into the right workspace.
+                                    Find the right workspace fast, then jump into the next action.
                                 </p>
                             </div>
                             <p class="text-sm text-zinc-500">
@@ -717,7 +717,6 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             >
                                 <div>
                                     <p class="text-sm font-medium text-zinc-600">
-                                        Bulk actions
                                         <span class="font-semibold text-[#171411]">{{ selectionLabel }}</span>
                                     </p>
                                     <p v-if="allFilteredSelected" class="mt-1 text-xs text-zinc-500">
@@ -795,18 +794,18 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             <article
                                 v-for="event in ownedEvents"
                                 :key="event.id"
-                                class="py-4"
+                                class="py-3.5"
                             >
                                 <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <label class="mr-2 inline-flex items-center gap-2 text-sm font-medium text-[#171411]" :class="allFilteredSelected ? 'opacity-70' : ''">
+                                            <label class="mr-1 inline-flex items-center" :class="allFilteredSelected ? 'opacity-70' : ''">
                                                 <Checkbox
                                                     :checked="allFilteredSelected || selectedEventIds.includes(event.id)"
                                                     :disabled="allFilteredSelected"
                                                     @update:checked="toggleEventSelection(event.id)"
                                                 />
-                                                Select
+                                                <span class="sr-only">Select {{ event.name }}</span>
                                             </label>
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.statusTone)">
                                                 {{ event.statusLabel }}
@@ -814,24 +813,27 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
                                                 {{ event.billingLabel }}
                                             </span>
+                                            <span class="text-xs text-zinc-500">
+                                                {{ event.plan }}
+                                            </span>
                                         </div>
 
-                                        <div class="mt-3">
-                                            <h3 class="text-base font-semibold text-[#171411]">
+                                        <div class="mt-2.5">
+                                            <h3 class="text-[0.97rem] font-semibold text-[#171411]">
                                                 {{ event.name }}
                                             </h3>
                                             <p class="mt-1 text-sm text-zinc-600">
-                                                {{ event.plan }} · {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
+                                                {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
                                             </p>
                                             <p class="mt-1 text-sm text-zinc-500">
-                                                {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending review
+                                                {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
                                                 <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
                                                 <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-2 xl:max-w-[320px] xl:justify-end">
+                                    <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
                                         <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
                                             <Link :href="event.primaryAction.url">
                                                 {{ event.primaryAction.label }}
@@ -908,7 +910,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
                                     <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                        Support rail
+                                        Attention
                                     </h2>
                                     <p class="mt-1 text-sm text-zinc-600">
                                         Urgent workspaces first, then recent wallet movement.
@@ -1021,7 +1023,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                                 Wallet activity
                                             </h3>
                                             <p class="mt-1 text-sm text-zinc-600">
-                                                Recent credit movement for the business account.
+                                                Recent credit movement.
                                             </p>
                                         </div>
                                         <Button as-child size="sm" variant="outline">

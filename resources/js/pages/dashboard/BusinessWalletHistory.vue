@@ -239,13 +239,10 @@ const compactMetrics = [
                     <div class="flex h-full flex-col gap-5">
                         <div class="border-b border-black/5 pb-4">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                                Balance
-                            </p>
-                            <p class="mt-2 text-2xl font-semibold tracking-tight text-[#171411]">
-                                {{ walletSummary.currentBalance }} credits
+                                How it works
                             </p>
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
-                                One credit equals one euro in wallet value.
+                                One credit equals one euro in wallet value, and the ledger below is the source of truth for top-ups, bonuses, and event spend.
                             </p>
                         </div>
 
@@ -264,11 +261,19 @@ const compactMetrics = [
                             </p>
                         </div>
 
-                        <div class="mt-auto border-t border-black/5 pt-4 text-xs leading-5 text-zinc-500">
-                            Latest movement
-                            <span class="block text-sm font-medium text-[#171411]">
-                                {{ formatDateTime(walletSummary.latestActivityAt, 'No activity yet') }}
-                            </span>
+                        <div class="mt-auto border-t border-black/5 pt-4">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                Balance now
+                            </p>
+                            <p class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                                {{ walletSummary.currentBalance }} credits
+                            </p>
+                            <p class="mt-2 text-xs leading-5 text-zinc-500">
+                                Latest movement
+                                <span class="mt-1 block text-sm font-medium text-[#171411]">
+                                    {{ formatDateTime(walletSummary.latestActivityAt, 'No activity yet') }}
+                                </span>
+                            </p>
                         </div>
                     </div>
                 </aside>
