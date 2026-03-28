@@ -99,39 +99,52 @@ const applyFilters = (overrides?: {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-full bg-brand-canvas">
             <div class="mx-auto flex max-w-7xl flex-col gap-6 p-4 md:p-6">
-                <section class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                    <div class="space-y-2">
-                        <p class="dashboard-eyebrow text-brand-muted">Business</p>
-                        <h1 class="text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">
-                            Events
-                        </h1>
-                        <p class="dashboard-body max-w-2xl">
-                            Every business workspace in one place, with direct routes into workspace, media, billing, and settings.
-                        </p>
-                        <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="max-w-3xl">
+                            <p class="dashboard-eyebrow">
+                                Business
+                            </p>
+                            <h1 class="dashboard-title mt-2">
+                                Events
+                            </h1>
+                            <p class="dashboard-body mt-2">
+                                Every business workspace in one place, with direct routes into workspace, media, billing, and settings.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
+                                <Link :href="props.dashboardLinks.business ?? props.dashboardLinks.overview">
+                                    Back to business
+                                </Link>
+                            </Button>
+                            <Button as-child class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
+                                <Link :href="props.dashboardLinks.createBusiness ?? '/dashboard/business/events/create'">
+                                    Create event
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="pt-5">
+                        <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
                             <div
                                 v-for="card in summaryCards"
                                 :key="card.label"
-                                class="min-w-[7rem]"
+                                class="dashboard-divider-left"
                             >
-                                <dt class="dashboard-eyebrow">{{ card.label }}</dt>
-                                <dd class="mt-1 text-base font-semibold text-brand-ink">{{ card.value }}</dd>
-                                <p class="dashboard-meta mt-1">{{ card.detail }}</p>
+                                <dt class="dashboard-eyebrow">
+                                    {{ card.label }}
+                                </dt>
+                                <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
+                                    {{ card.value }}
+                                </dd>
+                                <p class="dashboard-meta mt-1">
+                                    {{ card.detail }}
+                                </p>
                             </div>
                         </dl>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2">
-                        <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
-                            <Link :href="props.dashboardLinks.business ?? props.dashboardLinks.overview">
-                                Back to business
-                            </Link>
-                        </Button>
-                        <Button as-child class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
-                            <Link :href="props.dashboardLinks.createBusiness ?? '/dashboard/business/events/create'">
-                                Create event
-                            </Link>
-                        </Button>
                     </div>
                 </section>
 
