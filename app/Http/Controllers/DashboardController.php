@@ -332,12 +332,12 @@ class DashboardController extends Controller
 
     public function ownedEvents(Request $request): RedirectResponse
     {
-        return redirect()->to(route('dashboard').'#events');
+        return redirect()->to($this->accountOverviewUrl($request).'#events');
     }
 
     public function recentActivity(Request $request): RedirectResponse
     {
-        return redirect()->to(route('dashboard').'#activity');
+        return redirect()->to($this->accountOverviewUrl($request).'#activity');
     }
 
     /**
@@ -347,9 +347,7 @@ class DashboardController extends Controller
     {
         $isSuperAdmin = $request->user()->canAccessAdmin();
         $canAccessBusinessDashboard = $request->user()->canAccessBusinessDashboard();
-        $accountOverviewUrl = $isSuperAdmin || $canAccessBusinessDashboard
-            ? route('dashboard.account')
-            : route('dashboard');
+        $accountOverviewUrl = $this->accountOverviewUrl($request);
 
         $ownedEvents = $request->user()
             ->events()
@@ -485,6 +483,13 @@ class DashboardController extends Controller
             'collaboratorEvents' => $collaboratorEventCards->all(),
             'recentActivity' => $recentActivity,
         ];
+    }
+
+    private function accountOverviewUrl(Request $request): string
+    {
+        return $request->user()->canAccessAdmin() || $request->user()->canAccessBusinessDashboard()
+            ? route('dashboard.account')
+            : route('dashboard');
     }
 
     /**

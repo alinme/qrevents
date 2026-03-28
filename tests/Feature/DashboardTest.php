@@ -860,6 +860,15 @@ test('owned events page renders all owned event workspaces', function () {
         ->assertRedirect(route('dashboard').'#events');
 });
 
+test('business accounts open the account events page from the events shortcut', function () {
+    $owner = User::factory()->business()->create();
+    Event::factory()->count(2)->for($owner)->create();
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.events'))
+        ->assertRedirect(route('dashboard.account').'#events');
+});
+
 test('recent activity page links directly to the matching asset in media', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
@@ -878,6 +887,22 @@ test('recent activity page links directly to the matching asset in media', funct
     $this->actingAs($owner)
         ->get(route('dashboard.activity'))
         ->assertRedirect(route('dashboard').'#activity');
+});
+
+test('business accounts open the account activity page from the activity shortcut', function () {
+    $owner = User::factory()->business()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Activity Event',
+    ]);
+
+    EventAsset::factory()->for($event)->for($owner)->create([
+        'kind' => 'photo',
+        'moderation_status' => 'approved',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.activity'))
+        ->assertRedirect(route('dashboard.account').'#activity');
 });
 
 test('media page accepts a deep-linked asset from dashboard activity', function () {
