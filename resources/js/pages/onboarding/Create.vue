@@ -596,17 +596,20 @@ const submit = (): void => {
         </div>
 
         <div class="mx-auto flex min-h-svh max-w-7xl flex-col px-5 py-6 lg:px-8 lg:py-8">
-            <header :class="isBusinessMode ? 'flex flex-col gap-4 rounded-[1.75rem] border border-brand-border/70 bg-brand-panel px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between'">
+            <header
+                v-if="!isBusinessMode"
+                class="flex flex-col gap-4 rounded-[28px] border border-promo-line/80 bg-white/80 px-5 py-4 shadow-[0_18px_48px_rgba(232,79,154,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between"
+            >
                 <div class="flex items-center gap-3">
                     <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
-                        <div :class="isBusinessMode ? 'flex size-11 items-center justify-center rounded-[16px] bg-brand-panel-strong/35 text-brand-ink' : 'flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]'">
+                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(232,79,154,0.22)]">
                             <AppLogoIcon class="size-7 fill-current" />
                         </div>
                         <div>
-                            <p :class="isBusinessMode ? 'text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brand-muted' : 'text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary'">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                                 EventSmart
                             </p>
-                            <p :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'text-lg font-extrabold tracking-[-0.04em] text-promo-ink'">
+                            <p class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
                                 Event planning setup
                             </p>
                         </div>
@@ -614,16 +617,16 @@ const submit = (): void => {
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm font-medium text-brand-muted' : 'rounded-full bg-promo-surface px-4 py-2 text-sm font-medium text-promo-muted'">
+                    <div class="rounded-full bg-promo-surface px-4 py-2 text-sm font-medium text-promo-muted">
                         Setup takes about 2 minutes
                     </div>
-                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm font-medium text-brand-muted' : 'rounded-full border border-promo-line px-4 py-2 text-sm font-medium text-promo-muted'">
+                    <div class="rounded-full border border-promo-line px-4 py-2 text-sm font-medium text-promo-muted">
                         Step {{ step }} of {{ stepItems.length }}
                     </div>
                 </div>
             </header>
 
-            <main class="grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8">
+            <main :class="isBusinessMode ? 'grid flex-1 gap-6 py-2 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-3' : 'grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8'">
                 <aside class="lg:sticky lg:top-8 lg:self-start">
                     <div :class="isBusinessMode ? 'overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm' : 'overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]'">
                         <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-5 py-5' : 'border-b border-promo-line bg-promo-surface/70 px-5 py-5'">
