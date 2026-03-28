@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowUpRight, CreditCard, FolderKanban, Plus } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -143,7 +143,7 @@ const submitTopUp = (): void => {
                         </div>
                     </div>
 
-                    <div class="grid gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <div class="pt-5">
                         <dl class="grid gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
                             <div
                                 v-for="metric in compactMetrics"
@@ -170,43 +170,6 @@ const submitTopUp = (): void => {
                                 </Button>
                             </div>
                         </dl>
-
-                        <div class="border-t border-black/5 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                How it works
-                            </p>
-                            <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
-                                Keep credits and spend in one place
-                            </h2>
-                            <p class="mt-1 text-sm leading-6 text-zinc-600">
-                                The wallet keeps every top-up, bonus, and event debit together so you can follow the balance without leaving the business area.
-                            </p>
-
-                            <div class="mt-4 space-y-3 border-t border-black/5 pt-4 text-sm text-zinc-600">
-                                <p class="flex items-start gap-3">
-                                    <CreditCard class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                    Top-ups and bonus credits land in the same balance.
-                                </p>
-                                <p class="flex items-start gap-3">
-                                    <FolderKanban class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                    Plus and Pro events deduct credits from this wallet.
-                                </p>
-                                <p class="flex items-start gap-3">
-                                    <ArrowUpRight class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                    Each debit in the ledger links back to the event when one exists.
-                                </p>
-                            </div>
-
-                            <Button
-                                type="button"
-                                variant="outline"
-                                class="mt-4"
-                                @click="topUpModalOpen = true"
-                            >
-                                <Plus class="size-4" />
-                                Top up credits
-                            </Button>
-                        </div>
                     </div>
                 </section>
 
@@ -330,7 +293,7 @@ const submitTopUp = (): void => {
             <DialogHeader class="text-left">
                 <DialogTitle>Top up credits</DialogTitle>
                 <DialogDescription>
-                    Pick a pack, choose checkout currency, and Stripe will bring you back to the wallet when payment is done.
+                    Pick a pack, choose checkout currency, and Stripe will bring you back here when payment is done. Top-ups and bonus credits land in the same balance, and new events deduct from that wallet.
                 </DialogDescription>
             </DialogHeader>
 
