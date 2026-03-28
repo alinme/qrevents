@@ -505,11 +505,7 @@ class EventOnboardingController extends Controller
                     'href' => route('dashboard.business'),
                 ],
                 [
-                    'title' => 'Create event',
-                    'href' => route('dashboard.business.events.create'),
-                ],
-                [
-                    'title' => 'Wallet',
+                    'title' => 'Billing',
                     'href' => route('dashboard.business.wallet.history'),
                 ],
                 [

@@ -138,6 +138,7 @@ export type RecentActivity = {
 export type DashboardLinks = {
     overview: string;
     business: string | null;
+    createBusiness?: string | null;
     ownedEvents: string;
     recentActivity: string;
 };

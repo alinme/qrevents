@@ -164,8 +164,9 @@ class DashboardController extends Controller
             'dashboardLinks' => [
                 'overview' => route('dashboard.account'),
                 'business' => route('dashboard.business'),
+                'createBusiness' => route('dashboard.business.events.create'),
                 'ownedEvents' => route('dashboard.business.events.index'),
-                'recentActivity' => route('dashboard.activity'),
+                'recentActivity' => route('dashboard.business'),
             ],
             'sidebarLabel' => 'Business',
             'ownedEvents' => $ownedEventsPaginator->items(),
@@ -205,8 +206,9 @@ class DashboardController extends Controller
             'dashboardLinks' => [
                 'overview' => route('dashboard.account'),
                 'business' => route('dashboard.business'),
-                'ownedEvents' => route('dashboard.account').'#events',
-                'recentActivity' => route('dashboard.account').'#activity',
+                'createBusiness' => route('dashboard.business.events.create'),
+                'ownedEvents' => route('dashboard.business.events.index'),
+                'recentActivity' => route('dashboard.business'),
             ],
             'businessActionLinks' => [
                 'walletHistory' => route('dashboard.business.wallet.history'),
@@ -497,11 +499,7 @@ class DashboardController extends Controller
                     'href' => $accountOverviewUrl,
                 ],
                 $canAccessBusinessDashboard ? [
-                    'title' => 'Create event',
-                    'href' => route('dashboard.business.events.create'),
-                ] : null,
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Wallet',
+                    'title' => 'Billing',
                     'href' => route('dashboard.business.wallet.history'),
                 ] : null,
                 $canAccessBusinessDashboard ? [

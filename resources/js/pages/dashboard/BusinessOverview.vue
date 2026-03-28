@@ -541,7 +541,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 Create and run client events
                             </h1>
                             <p class="dashboard-body mt-2">
-                                Wallet, billing, exports, and live workspaces in one calm home.
+                                Billing, exports, and live workspaces in one calm home.
                             </p>
                         </div>
 
@@ -607,13 +607,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
 
                         <div class="border-t border-brand-border/70 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
-                                Wallet
+                                Billing
                             </p>
                             <p class="mt-2 text-2xl font-semibold tracking-tight text-brand-ink">
                                 {{ businessOverview.walletCredits }} credits
                             </p>
                             <p class="dashboard-body mt-1">
-                                One credit equals one euro in wallet value.
+                                One credit equals one euro in billing value.
                             </p>
 
                             <div class="mt-4 space-y-2 text-sm text-brand-muted">
@@ -624,7 +624,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     </span>
                                 </p>
                                 <p v-else>
-                                    No credit activity yet.
+                                    No billing activity yet.
                                 </p>
                                 <p>
                                     {{ businessOverview.walletCredits }} credits on hand ·
@@ -1012,13 +1012,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="dashboard-panel-divider flex items-start justify-between gap-3 pb-4">
                         <div>
                             <p class="dashboard-eyebrow">
-                                Wallet
+                                Billing
                             </p>
                             <h2 class="dashboard-section-title mt-2">
                                 Recent activity
                             </h2>
                             <p class="dashboard-body mt-1">
-                                The latest credit changes for this business account.
+                                The latest billing activity for this business account.
                             </p>
                         </div>
                         <Button as-child size="sm" variant="outline">
@@ -1029,7 +1029,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
 
                     <div v-if="walletActivity.length === 0" class="dashboard-body py-8">
-                        No credit activity yet.
+                        No billing activity yet.
                     </div>
 
                     <div v-else class="max-h-[18rem] overflow-y-auto overscroll-contain pt-2 pr-1 sm:max-h-[20rem]">

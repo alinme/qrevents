@@ -1,15 +1,22 @@
 <?php
 
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('profile page is displayed', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->business()->create();
 
-    $response = $this
+    $this
         ->actingAs($user)
-        ->get(route('profile.edit'));
-
-    $response->assertOk();
+        ->get(route('profile.edit'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('settings/Profile')
+            ->where('sidebarLabel', 'Business')
+            ->where('accountNavigation.0.title', 'Business')
+            ->where('accountNavigation.1.title', 'Billing')
+            ->where('accountNavigation.2.title', 'Events')
+        );
 });
 
 test('profile information can be updated', function () {

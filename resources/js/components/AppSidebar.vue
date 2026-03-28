@@ -6,9 +6,7 @@ import {
     BriefcaseBusiness,
     Camera,
     CreditCard,
-    CircleDollarSign,
     FolderKanban,
-    FolderPlus,
     LayoutGrid,
     Package,
     Settings,
@@ -129,10 +127,8 @@ const mainNavItems = computed<NavItem[]>(() => {
                     ? LayoutGrid
                     : item.title === 'Business'
                       ? BriefcaseBusiness
-                      : item.title === 'Create event'
-                        ? FolderPlus
-                        : item.title === 'Wallet'
-                          ? CircleDollarSign
+                      : item.title === 'Billing'
+                        ? CreditCard
                           : item.title === 'Events'
                             ? FolderKanban
                       : item.title === 'Owned Events'

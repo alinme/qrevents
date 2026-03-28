@@ -51,6 +51,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user?->authContext(),
             ],
+            'accountNavigation' => $this->sharedAccountNavigation($request),
+            'sidebarLabel' => $this->sharedSidebarLabel($request),
             'flash' => [
                 'success' => fn (): mixed => $request->session()->get('success'),
                 'error' => fn (): mixed => $request->session()->get('error'),
@@ -63,6 +65,66 @@ class HandleInertiaRequests extends Middleware
             'translations' => FrontendLocalization::translationsFor($currentLocale),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return list<array{title: string, href: string}>
+     */
+    private function sharedAccountNavigation(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return [];
+        }
+
+        if ($user->canAccessAdmin()) {
+            return [
+                [
+                    'title' => 'Admin',
+                    'href' => route('admin.overview'),
+                ],
+            ];
+        }
+
+        if ($user->canAccessBusinessDashboard()) {
+            return [
+                [
+                    'title' => 'Business',
+                    'href' => route('dashboard.business'),
+                ],
+                [
+                    'title' => 'Billing',
+                    'href' => route('dashboard.business.wallet.history'),
+                ],
+                [
+                    'title' => 'Events',
+                    'href' => route('dashboard.business.events.index'),
+                ],
+            ];
+        }
+
+        return [
+            [
+                'title' => 'Events',
+                'href' => route('dashboard'),
+            ],
+        ];
+    }
+
+    private function sharedSidebarLabel(Request $request): ?string
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return null;
+        }
+
+        if ($user->canAccessAdmin()) {
+            return 'Admin';
+        }
+
+        return $user->canAccessBusinessDashboard() ? 'Business' : 'Events';
     }
 
     private function resolveLocale(Request $request): string

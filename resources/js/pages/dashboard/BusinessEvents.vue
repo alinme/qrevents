@@ -3,14 +3,11 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowUpRight,
     Camera,
-    CreditCard,
     FolderKanban,
     Search,
     Settings,
-    Users,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -102,42 +99,39 @@ const applyFilters = (overrides?: {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-full bg-brand-canvas">
             <div class="mx-auto flex max-w-7xl flex-col gap-6 p-4 md:p-6">
-                <section class="overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm">
-                    <div class="border-b border-brand-border/70 px-6 py-6 md:px-8">
-                        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                            <div class="space-y-2">
-                                <p class="dashboard-eyebrow text-brand-muted">Business</p>
-                                <h1 class="text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">
-                                    Events
-                                </h1>
-                                <p class="dashboard-body max-w-2xl">
-                                    Every business workspace in one place, with direct routes into workspace, media, billing, and event settings.
-                                </p>
+                <section class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="space-y-2">
+                        <p class="dashboard-eyebrow text-brand-muted">Business</p>
+                        <h1 class="text-3xl font-semibold tracking-tight text-brand-ink md:text-4xl">
+                            Events
+                        </h1>
+                        <p class="dashboard-body max-w-2xl">
+                            Every business workspace in one place, with direct routes into workspace, media, billing, and settings.
+                        </p>
+                        <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                            <div
+                                v-for="card in summaryCards"
+                                :key="card.label"
+                                class="min-w-[7rem]"
+                            >
+                                <dt class="dashboard-eyebrow">{{ card.label }}</dt>
+                                <dd class="mt-1 text-base font-semibold text-brand-ink">{{ card.value }}</dd>
+                                <p class="dashboard-meta mt-1">{{ card.detail }}</p>
                             </div>
-
-                            <div class="flex flex-wrap gap-2">
-                                <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
-                                    <Link :href="props.dashboardLinks.business ?? props.dashboardLinks.overview">
-                                        Back to business
-                                    </Link>
-                                </Button>
-                                <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
-                                    <Link href="/dashboard/business/events/create">
-                                        Create event
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
+                        </dl>
                     </div>
 
-                    <div class="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4 xl:p-6">
-                        <DashboardMetricCard
-                            v-for="card in summaryCards"
-                            :key="card.label"
-                            :label="card.label"
-                            :value="card.value"
-                            :detail="card.detail"
-                        />
+                    <div class="flex flex-wrap gap-2">
+                        <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
+                            <Link :href="props.dashboardLinks.business ?? props.dashboardLinks.overview">
+                                Back to business
+                            </Link>
+                        </Button>
+                        <Button as-child class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
+                            <Link :href="props.dashboardLinks.createBusiness ?? '/dashboard/business/events/create'">
+                                Create event
+                            </Link>
+                        </Button>
                     </div>
                 </section>
 
@@ -192,9 +186,9 @@ const applyFilters = (overrides?: {
                         >
                             <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                                 <div class="min-w-0 space-y-3">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.roleTone)">
-                                            {{ event.roleLabel }}
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.roleTone)">
+                                        {{ event.roleLabel }}
                                         </span>
                                         <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.statusTone)">
                                             {{ event.statusLabel }}
@@ -205,7 +199,7 @@ const applyFilters = (overrides?: {
                                     </div>
 
                                     <div class="space-y-1">
-                                        <h2 class="text-2xl font-semibold tracking-tight text-brand-ink">
+                                        <h2 class="text-lg font-semibold tracking-tight text-brand-ink sm:text-xl">
                                             {{ event.name }}
                                         </h2>
                                         <p class="dashboard-body">
@@ -213,9 +207,10 @@ const applyFilters = (overrides?: {
                                         </p>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-5 text-sm text-brand-muted">
+                                    <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-brand-muted">
                                         <span>{{ event.guestCount }} guests</span>
                                         <span>{{ event.assetCount }} uploads</span>
+                                        <span>{{ event.processingCount }} pending</span>
                                         <span>{{ formatBytes(event.storageUsedBytes) }} / {{ formatBytes(event.storageLimitBytes) }}</span>
                                         <span>{{ formatDateTime(event.lastUploadAt) }}</span>
                                     </div>
@@ -236,7 +231,6 @@ const applyFilters = (overrides?: {
                                     </Button>
                                     <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                         <Link :href="event.links.billing">
-                                            <CreditCard class="size-4" />
                                             Billing
                                         </Link>
                                     </Button>
@@ -246,24 +240,6 @@ const applyFilters = (overrides?: {
                                             Settings
                                         </Link>
                                     </Button>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 grid gap-3 md:grid-cols-3">
-                                <div class="rounded-[1.1rem] border border-brand-border/70 bg-brand-inverse px-4 py-3">
-                                    <p class="dashboard-eyebrow text-brand-muted">Uploads</p>
-                                    <p class="mt-1 text-lg font-semibold text-brand-ink">{{ event.uploadCount }} / {{ event.uploadLimit }}</p>
-                                </div>
-                                <div class="rounded-[1.1rem] border border-brand-border/70 bg-brand-inverse px-4 py-3">
-                                    <p class="dashboard-eyebrow text-brand-muted">Review</p>
-                                    <p class="mt-1 text-lg font-semibold text-brand-ink">{{ event.processingCount }} pending</p>
-                                </div>
-                                <div class="rounded-[1.1rem] border border-brand-border/70 bg-brand-inverse px-4 py-3">
-                                    <p class="dashboard-eyebrow text-brand-muted">Guests</p>
-                                    <p class="mt-1 flex items-center gap-2 text-lg font-semibold text-brand-ink">
-                                        <Users class="size-4" />
-                                        {{ event.guestCount }}
-                                    </p>
                                 </div>
                             </div>
                         </article>

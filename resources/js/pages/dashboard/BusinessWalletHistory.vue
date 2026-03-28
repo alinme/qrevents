@@ -59,7 +59,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
     },
     {
-        title: 'Wallet history',
+        title: 'Billing',
         href: props.businessActionLinks.walletHistory,
     },
 ];
@@ -124,7 +124,7 @@ const submitTopUp = (): void => {
 </script>
 
 <template>
-    <Head title="Wallet History" />
+    <Head title="Billing" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -133,13 +133,13 @@ const submitTopUp = (): void => {
                     <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="dashboard-eyebrow">
-                                Business wallet
+                                Business billing
                             </p>
                             <h1 class="dashboard-title mt-2">
-                                Wallet history
+                                Billing
                             </h1>
                             <p class="dashboard-body mt-2">
-                                A full ledger for top-ups, bonus credits, and event spend.
+                                Top-ups, bonus credits, and event spend in one billing ledger.
                             </p>
                         </div>
                     </div>
@@ -193,7 +193,7 @@ const submitTopUp = (): void => {
                                 All activity
                             </h2>
                             <p class="dashboard-body mt-1">
-                                {{ walletTransactionsPagination.total }} transactions recorded.
+                                {{ walletTransactionsPagination.total }} billing entries recorded.
                             </p>
                         </div>
                         <p class="text-sm text-brand-muted">
@@ -204,10 +204,10 @@ const submitTopUp = (): void => {
                     <div v-if="walletTransactions.length === 0" class="py-12 text-center">
                         <div class="mx-auto max-w-md space-y-2">
                             <h3 class="text-lg font-semibold text-brand-ink">
-                                No wallet activity yet
+                                No billing activity yet
                             </h3>
                             <p class="dashboard-body">
-                                Your next top-up will appear here first, followed by bonus credits and event debits.
+                                Your first top-up will appear here, followed by bonus credits and event charges.
                             </p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@ const submitTopUp = (): void => {
                                             <span v-else class="font-medium text-brand-ink">{{ item.eventName }}</span>
                                         </template>
                                         <template v-else>
-                                            Business wallet activity
+                                            Business billing activity
                                         </template>
                                     </p>
                                 </div>
@@ -308,7 +308,7 @@ const submitTopUp = (): void => {
             <DialogHeader class="text-left">
                 <DialogTitle>Top up credits</DialogTitle>
                 <DialogDescription>
-                    Pick a pack, choose checkout currency, and Stripe will bring you back here when payment is done. Top-ups and bonus credits land in the same balance, and new events deduct from that wallet.
+                    Pick a pack, choose checkout currency, and Stripe will bring you back here when payment is done. Top-ups and bonus credits land in the same balance, and new events deduct from that billing balance.
                 </DialogDescription>
             </DialogHeader>
 
@@ -405,7 +405,7 @@ const submitTopUp = (): void => {
     <Dialog v-model:open="howItWorksModalOpen">
         <DialogContent class="sm:max-w-lg">
             <DialogHeader class="text-left">
-                <DialogTitle>How the wallet works</DialogTitle>
+                <DialogTitle>How billing works</DialogTitle>
                 <DialogDescription>
                     Keep business credits simple and reusable across paid events.
                 </DialogDescription>
