@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
 import type { HTMLAttributes, Component } from 'vue';
+import { cn } from '@/lib/utils';
 
 const props = defineProps<{
     label: string;
@@ -15,28 +15,28 @@ const props = defineProps<{
     <div
         :class="
             cn(
-                'rounded-2xl border border-black/6 bg-[#fbfaf7] p-4',
+                'rounded-2xl border border-brand-border/70 bg-brand-panel p-4',
                 props.class,
             )
         "
     >
         <div class="flex items-start justify-between gap-3">
             <div class="space-y-2">
-                <p class="text-sm font-medium text-zinc-500">
+                <p class="text-sm font-medium text-brand-muted">
                     {{ label }}
                 </p>
-                <p class="text-3xl font-semibold text-[#171411]">
+                <p class="text-3xl font-semibold text-brand-ink">
                     {{ value }}
                 </p>
             </div>
             <div
                 v-if="icon"
-                class="rounded-2xl bg-white p-3 text-[#171411] shadow-sm"
+                class="rounded-2xl bg-brand-inverse p-3 text-brand-ink shadow-sm"
             >
                 <component :is="icon" class="size-5" />
             </div>
         </div>
-        <p v-if="detail" class="mt-4 text-sm leading-6 text-zinc-600">
+        <p v-if="detail" class="dashboard-body mt-4">
             {{ detail }}
         </p>
     </div>

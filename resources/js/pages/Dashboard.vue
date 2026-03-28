@@ -16,13 +16,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/AppLayout.vue';
 import {
     badgeClass,
     formatDateOnly,
     formatDateTime,
     moderationBadgeClass,
 } from '@/lib/dashboard';
-import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import type {
     BusinessAttentionEvent,
@@ -103,18 +103,18 @@ const workspaceLabel = (event: DashboardEvent): string =>
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full bg-[#faf7f2]">
-            <div class="mx-auto max-w-6xl space-y-5 p-4 md:p-6">
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+        <div class="dashboard-page">
+            <div class="dashboard-shell max-w-6xl">
+                <section class="dashboard-panel">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                            <p class="dashboard-eyebrow">
                                 Events
                             </p>
-                            <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                            <h1 class="dashboard-title mt-2">
                                 Pick up where your event left off
                             </h1>
-                            <p class="mt-2 text-sm leading-6 text-zinc-600">
+                            <p class="dashboard-body mt-2">
                                 {{ ownerName }}, open the workspace you need and keep moving.
                             </p>
                         </div>
@@ -122,16 +122,16 @@ const workspaceLabel = (event: DashboardEvent): string =>
                             <div
                                 v-for="card in compactStats"
                                 :key="card.label"
-                                class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
+                                class="dashboard-divider-left"
                             >
-                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                    <component :is="card.icon" class="size-3.5 text-zinc-400" />
+                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                                    <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
                                     {{ card.label }}
                                 </dt>
-                                <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                                <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
                                     {{ card.value }}
                                 </dd>
-                                <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                <p class="dashboard-meta mt-1">
                                     {{ card.detail }}
                                 </p>
                             </div>
@@ -150,7 +150,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 Finish onboarding, then manage it here with the rest of your events.
                             </p>
                         </div>
-                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                        <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                             <Link :href="continueSetupEvent.primaryAction.url">
                                 Continue setup
                             </Link>
@@ -160,38 +160,38 @@ const workspaceLabel = (event: DashboardEvent): string =>
                 </section>
 
                 <div class="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.9fr)]">
-                    <section id="events" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                        <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                    <section id="events" class="dashboard-panel">
+                        <div class="dashboard-panel-divider flex flex-col gap-2 pb-4 sm:flex-row sm:items-end sm:justify-between">
                             <div>
-                                <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                                <h2 class="dashboard-section-title">
                                     Your events
                                 </h2>
-                                <p class="mt-1 text-sm text-zinc-600">
+                                <p class="dashboard-body mt-1">
                                     Open the right workspace, media view, or settings page fast.
                                 </p>
                             </div>
-                            <p class="text-sm text-zinc-500">
+                            <p class="text-sm text-brand-muted">
                                 {{ totalAccessibleEvents }} total
                             </p>
                         </div>
 
                         <div
                             v-if="ownedEvents.length === 0 && collaboratorEvents.length === 0"
-                            class="py-10 text-sm leading-6 text-zinc-600"
+                            class="dashboard-body py-10"
                         >
                             No events are linked to this account yet.
                         </div>
 
                         <div v-else class="space-y-5 pt-5">
                             <div v-if="ownedEvents.length > 0" class="space-y-3">
-                                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                <p class="dashboard-eyebrow">
                                     Your events
                                 </p>
 
                                 <article
                                     v-for="event in ownedEvents"
                                     :key="`owner-${event.id}`"
-                                    class="border-b border-black/5 py-4 last:border-b-0"
+                                    class="border-b border-brand-border/70 py-4 last:border-b-0"
                                 >
                                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                         <div class="min-w-0 space-y-2">
@@ -208,22 +208,22 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                                 >
                                                     {{ event.billingLabel }}
                                                 </span>
-                                                <span class="text-xs text-zinc-500">
+                                                <span class="text-xs text-brand-muted">
                                                     {{ event.plan }}
                                                 </span>
                                             </div>
 
                                             <div>
-                                                <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
+                                                <h3 class="text-sm font-semibold text-brand-ink sm:text-base">
                                                     {{ event.name }}
                                                 </h3>
-                                                <p class="mt-1 text-sm text-zinc-600">
+                                                <p class="mt-1 text-sm text-brand-muted">
                                                     {{ formatDateOnly(event.eventDate) }} ·
                                                     {{ event.guestCount }} guests ·
                                                     {{ event.assetCount }} uploads ·
                                                     {{ event.processingCount }} pending
                                                 </p>
-                                                <p class="mt-1 text-xs text-zinc-500">
+                                                <p class="dashboard-meta mt-1">
                                                     {{
                                                         event.lastUploadAt
                                                             ? `Last upload ${formatDateTime(event.lastUploadAt)}`
@@ -237,7 +237,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                             <Button
                                                 as-child
                                                 size="sm"
-                                                class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                                class="bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                                             >
                                                 <Link :href="event.primaryAction.url">
                                                     {{ workspaceLabel(event) }}
@@ -259,14 +259,14 @@ const workspaceLabel = (event: DashboardEvent): string =>
                             </div>
 
                             <div v-if="collaboratorEvents.length > 0" class="space-y-3">
-                                <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                <p class="dashboard-eyebrow">
                                     Shared with you
                                 </p>
 
                                 <article
                                     v-for="event in collaboratorEvents"
                                     :key="`collab-${event.id}`"
-                                    class="border-b border-black/5 py-4 last:border-b-0"
+                                    class="border-b border-brand-border/70 py-4 last:border-b-0"
                                 >
                                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                         <div class="min-w-0 space-y-2">
@@ -286,10 +286,10 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                             </div>
 
                                             <div>
-                                                <h3 class="text-sm font-semibold text-[#171411] sm:text-base">
+                                                <h3 class="text-sm font-semibold text-brand-ink sm:text-base">
                                                     {{ event.name }}
                                                 </h3>
-                                                <p class="mt-1 text-sm text-zinc-600">
+                                                <p class="mt-1 text-sm text-brand-muted">
                                                     {{ formatDateOnly(event.eventDate) }} ·
                                                     {{ event.assetCount }} uploads ·
                                                     {{ event.processingCount }} pending
@@ -298,7 +298,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                         </div>
 
                                         <div class="flex flex-wrap gap-2">
-                                            <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                            <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                                 <Link :href="event.links.dashboard">
                                                     Workspace
                                                 </Link>
@@ -320,18 +320,18 @@ const workspaceLabel = (event: DashboardEvent): string =>
                         </div>
                     </section>
 
-                    <aside id="activity" class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <aside id="activity" class="dashboard-panel flex min-h-0">
                         <div class="flex min-h-0 w-full flex-col">
-                        <div class="flex flex-col gap-2 border-b border-black/5 pb-4">
-                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                        <div class="dashboard-panel-divider flex flex-col gap-2 pb-4">
+                            <h2 class="dashboard-section-title">
                                 Recent activity
                             </h2>
-                            <p class="text-sm text-zinc-600">
+                            <p class="dashboard-body">
                                 Quick updates from your guest uploads.
                             </p>
                         </div>
 
-                        <div v-if="recentActivity.length === 0" class="py-8 text-sm text-zinc-600">
+                        <div v-if="recentActivity.length === 0" class="dashboard-body py-8">
                             No recent uploads yet.
                         </div>
 
@@ -344,15 +344,15 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 class="flex flex-col gap-2 py-3 transition hover:bg-black/[0.015]"
                             >
                                 <div class="min-w-0">
-                                    <p class="text-sm text-[#171411]">
+                                    <p class="text-sm text-brand-ink">
                                         <span class="font-semibold">{{ activity.guestName }}</span>
                                         in
                                         <span class="font-medium">{{ activity.eventName }}</span>
                                     </p>
-                                    <p class="mt-1 text-sm text-zinc-600">
+                                    <p class="mt-1 text-sm text-brand-muted">
                                         {{ activity.summary }}
                                     </p>
-                                    <p class="mt-1 text-xs text-zinc-500">
+                                    <p class="dashboard-meta mt-1">
                                         {{ formatDateTime(activity.createdAt) }}
                                     </p>
                                 </div>
@@ -364,7 +364,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                     >
                                         {{ activity.moderationStatus }}
                                     </span>
-                                    <ExternalLink class="size-4 text-zinc-400" />
+                                    <ExternalLink class="size-4 text-brand-muted/70" />
                                 </div>
                             </Link>
                             </div>
@@ -384,7 +384,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                     </DialogHeader>
                     <Button
                         as-child
-                        class="mt-2 bg-[#171411] text-white hover:bg-[#2b2621]"
+                        class="mt-2 bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                     >
                         <Link
                             :href="

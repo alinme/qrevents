@@ -13,8 +13,8 @@ import {
     Square,
     X,
 } from 'lucide-vue-next';
-import { computed, ref, watch  } from 'vue';
-import type {Component} from 'vue';
+import { computed, ref, watch } from 'vue';
+import type { Component } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -123,10 +123,10 @@ type RowActionLink = {
 
 const actionButtonClass = (tone: QuickAction['tone']): string => {
     if (tone === 'dark') {
-        return 'bg-[#171411] text-white hover:bg-[#2b2621]';
+        return 'bg-brand-ink text-brand-inverse hover:bg-brand-accent';
     }
 
-    return 'border border-black/10 bg-white text-[#171411] hover:bg-[#faf7f1]';
+    return 'border border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/25';
 };
 
 const latestWalletEntry = computed(() => props.walletActivity[0] ?? null);
@@ -529,18 +529,18 @@ watch([selectedEventIds, allFilteredSelected], () => {
     <Head title="Business Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full bg-[#faf7f2]">
-            <div class="mx-auto flex max-w-7xl flex-col gap-5 p-4 md:p-6">
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-4 border-b border-black/5 pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div class="dashboard-page">
+            <div class="dashboard-shell flex max-w-7xl flex-col gap-5">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                            <p class="dashboard-eyebrow">
                                 Business
                             </p>
-                            <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                            <h1 class="dashboard-title mt-2">
                                 Create and run client events
                             </h1>
-                            <p class="mt-2 text-sm leading-6 text-zinc-600">
+                            <p class="dashboard-body mt-2">
                                 Wallet, billing, exports, and live workspaces in one calm home.
                             </p>
                         </div>
@@ -590,36 +590,36 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             <div
                                 v-for="card in businessHealthCards"
                                 :key="card.label"
-                                class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
+                                class="dashboard-divider-left"
                             >
-                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                    <component :is="card.icon" class="size-3.5 text-zinc-400" />
+                                <dt class="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
+                                    <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
                                     {{ card.label }}
                                 </dt>
-                                <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                                <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
                                     {{ card.value }}
                                 </dd>
-                                <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                <p class="dashboard-meta mt-1">
                                     {{ card.detail }}
                                 </p>
                             </div>
                         </dl>
 
-                        <div class="border-t border-black/5 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                        <div class="border-t border-brand-border/70 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
+                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
                                 Wallet
                             </p>
-                            <p class="mt-2 text-2xl font-semibold tracking-tight text-[#171411]">
+                            <p class="mt-2 text-2xl font-semibold tracking-tight text-brand-ink">
                                 {{ businessOverview.walletCredits }} credits
                             </p>
-                            <p class="mt-1 text-sm leading-6 text-zinc-600">
+                            <p class="dashboard-body mt-1">
                                 One credit equals one euro in wallet value.
                             </p>
 
-                            <div class="mt-4 space-y-2 text-sm text-zinc-600">
-                                <p v-if="latestWalletEntry" class="text-[#171411]">
+                            <div class="mt-4 space-y-2 text-sm text-brand-muted">
+                                <p v-if="latestWalletEntry" class="text-brand-ink">
                                     <span class="font-semibold">{{ walletActivityLabel(latestWalletEntry) }}</span>
-                                    <span class="text-zinc-500">
+                                    <span class="text-brand-muted">
                                         · {{ formatDateTime(latestWalletEntry.createdAt) }}
                                     </span>
                                 </p>
@@ -640,29 +640,29 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex items-start justify-between gap-3 pb-4">
                         <div>
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            <p class="dashboard-eyebrow">
                                 Attention
                             </p>
-                            <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
+                            <h2 class="dashboard-section-title mt-2">
                                 What needs you first
                             </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
+                            <p class="dashboard-body mt-1">
                                 Billing follow-up, overdue workspaces, and the next places to open.
                             </p>
                         </div>
-                        <span class="inline-flex rounded-full bg-[#fbfaf7] px-2.5 py-1 text-xs font-semibold text-zinc-600">
+                        <span class="dashboard-chip">
                             {{ businessAttentionSummary.visibleCount }}
                         </span>
                     </div>
 
-                    <div v-if="businessAttentionEvents.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
+                    <div v-if="businessAttentionEvents.length === 0" class="dashboard-body py-8">
                         Nothing urgent right now.
                     </div>
 
-                    <div v-else class="divide-y divide-black/5 pt-2">
+                    <div v-else class="divide-y divide-brand-border/70 pt-2">
                         <article
                             v-for="event in businessAttentionEvents"
                             :key="event.id"
@@ -677,19 +677,19 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
                                             {{ event.billingLabel }}
                                         </span>
-                                        <span class="inline-flex rounded-full bg-[#171411] px-2.5 py-1 text-[0.68rem] font-semibold text-white">
+                                        <span class="inline-flex rounded-full bg-brand-ink px-2.5 py-1 text-[0.68rem] font-semibold text-brand-inverse">
                                             {{ event.attentionLabel }}
                                         </span>
                                     </div>
 
                                     <div class="mt-2.5">
-                                        <h3 class="text-[0.97rem] font-semibold text-[#171411]">
+                                        <h3 class="text-[0.97rem] font-semibold text-brand-ink">
                                             {{ event.name }}
                                         </h3>
-                                        <p class="mt-1 text-sm text-zinc-600">
+                                        <p class="mt-1 text-sm text-brand-muted">
                                             {{ event.plan }} · {{ event.attentionDetail }}
                                         </p>
-                                        <p class="mt-1 text-sm text-zinc-500">
+                                        <p class="mt-1 text-sm text-brand-muted">
                                             {{
                                                 event.paymentDueAt
                                                     ? `Due ${formatDateOnly(event.paymentDueAt)}`
@@ -702,7 +702,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
-                                    <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                    <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                         <Link :href="event.links.dashboard">
                                             Open workspace
                                         </Link>
@@ -717,7 +717,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         <DropdownMenuTrigger as-child>
                                             <button
                                                 type="button"
-                                                class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                class="inline-flex size-9 items-center justify-center rounded-full border border-brand-border bg-brand-inverse text-brand-muted transition hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink"
                                                 aria-label="More attention actions"
                                             >
                                                 <MoreHorizontal class="size-4" />
@@ -742,17 +742,17 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-3 border-b border-black/5 pb-4 md:flex-row md:items-end md:justify-between">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex flex-col gap-3 pb-4 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                            <h2 class="dashboard-section-title">
                                 Event portfolio
                             </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
+                            <p class="dashboard-body mt-1">
                                 Find the right workspace fast, then jump into the next action.
                             </p>
                         </div>
-                        <p class="text-sm text-zinc-500">
+                        <p class="text-sm text-brand-muted">
                             {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
                         </p>
                     </div>
@@ -761,16 +761,16 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <form class="flex w-full flex-col gap-3 md:max-w-xl md:flex-row" @submit.prevent="applyFilters">
                                 <div class="relative flex-1">
-                                    <Search class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-zinc-400" />
+                                    <Search class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-brand-muted/70" />
                                     <Input
                                         v-model="search"
                                         type="search"
                                         placeholder="Search events, plans, billing, or status"
-                                        class="h-11 rounded-full border-black/10 bg-white pr-4 pl-10"
+                                        class="h-11 rounded-full border-brand-border bg-brand-inverse pr-4 pl-10"
                                     />
                                 </div>
                                 <div class="flex gap-2">
-                                    <Button type="submit" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                    <Button type="submit" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                         Apply
                                     </Button>
                                     <Button
@@ -794,8 +794,8 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition"
                                 :class="
                                     option.value === filters.status
-                                        ? 'border-[#171411] bg-[#171411] text-white'
-                                        : 'border-black/10 bg-white text-zinc-700 hover:border-black/20 hover:bg-[#faf7f1]'
+                                        ? 'border-brand-ink bg-brand-ink text-brand-inverse'
+                                        : 'border-brand-border bg-brand-inverse text-brand-muted hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink'
                                 "
                             >
                                 <span>{{ option.label }}</span>
@@ -803,8 +803,8 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     class="rounded-full px-2 py-0.5 text-xs"
                                     :class="
                                         option.value === filters.status
-                                            ? 'bg-white/12 text-white'
-                                            : 'bg-[#fbfaf7] text-zinc-500'
+                                            ? 'bg-white/12 text-brand-inverse'
+                                            : 'bg-brand-panel-strong/35 text-brand-muted'
                                     "
                                 >
                                     {{ option.count }}
@@ -814,13 +814,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
 
                         <div
                             v-if="hasSelection"
-                            class="flex flex-col gap-3 border-t border-black/5 pt-4 lg:flex-row lg:items-center lg:justify-between"
+                            class="flex flex-col gap-3 border-t border-brand-border/70 pt-4 lg:flex-row lg:items-center lg:justify-between"
                         >
                             <div>
-                                <p class="text-sm font-medium text-zinc-600">
-                                    <span class="font-semibold text-[#171411]">{{ selectionLabel }}</span>
+                                <p class="text-sm font-medium text-brand-muted">
+                                    <span class="font-semibold text-brand-ink">{{ selectionLabel }}</span>
                                 </p>
-                                <p v-if="allFilteredSelected" class="mt-1 text-xs text-zinc-500">
+                                <p v-if="allFilteredSelected" class="dashboard-meta mt-1">
                                     Clear selection to go back to page-by-page picks.
                                 </p>
                             </div>
@@ -856,7 +856,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 <Button
                                     v-if="hasSelection"
                                     type="button"
-                                    class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    class="bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                                     @click="startBulkExports"
                                 >
                                     <Download class="size-4" />
@@ -879,10 +879,10 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="max-h-[32rem] overflow-y-auto overscroll-contain pt-1 pr-1 sm:max-h-[36rem]">
                         <div v-if="ownedEvents.length === 0" class="py-12 text-center">
                             <div class="mx-auto max-w-md space-y-2">
-                                <h3 class="text-lg font-semibold text-[#171411]">
+                                <h3 class="text-lg font-semibold text-brand-ink">
                                     {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
                                 </h3>
-                                <p class="text-sm leading-6 text-zinc-600">
+                                <p class="dashboard-body">
                                     {{
                                         filters.hasActiveFilters
                                             ? 'Try a broader search or switch back to all workspaces.'
@@ -892,7 +892,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </div>
                         </div>
 
-                        <div v-else class="divide-y divide-black/5 pt-3">
+                        <div v-else class="divide-y divide-brand-border/70 pt-3">
                             <article
                                 v-for="event in ownedEvents"
                                 :key="event.id"
@@ -915,19 +915,19 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
                                                 {{ event.billingLabel }}
                                             </span>
-                                            <span class="text-xs text-zinc-500">
+                                            <span class="text-xs text-brand-muted">
                                                 {{ event.plan }}
                                             </span>
                                         </div>
 
                                         <div class="mt-2.5">
-                                            <h3 class="text-[0.97rem] font-semibold text-[#171411]">
+                                            <h3 class="text-[0.97rem] font-semibold text-brand-ink">
                                                 {{ event.name }}
                                             </h3>
-                                            <p class="mt-1 text-sm text-zinc-600">
+                                            <p class="mt-1 text-sm text-brand-muted">
                                                 {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
                                             </p>
-                                            <p class="mt-1 text-sm text-zinc-500">
+                                            <p class="mt-1 text-sm text-brand-muted">
                                                 {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
                                                 <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
                                                 <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
@@ -936,7 +936,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     </div>
 
                                     <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
-                                        <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
+                                        <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                             <Link :href="event.primaryAction.url">
                                                 {{ event.primaryAction.label }}
                                             </Link>
@@ -951,7 +951,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <DropdownMenuTrigger as-child>
                                                 <button
                                                     type="button"
-                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-black/10 bg-white text-zinc-600 transition hover:border-black/20 hover:bg-[#faf7f1] hover:text-[#171411]"
+                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-brand-border bg-brand-inverse text-brand-muted transition hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink"
                                                     aria-label="More workspace actions"
                                                 >
                                                     <MoreHorizontal class="size-4" />
@@ -977,9 +977,9 @@ watch([selectedEventIds, allFilteredSelected], () => {
 
                         <div
                             v-if="ownedEventsPagination.lastPage > 1"
-                            class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
+                            class="mt-4 flex flex-col gap-3 border-t border-brand-border/70 pt-4 md:flex-row md:items-center md:justify-between"
                         >
-                            <p class="text-sm text-zinc-600">
+                            <p class="text-sm text-brand-muted">
                                 Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
                             </p>
 
@@ -992,7 +992,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 <Button v-else variant="outline" disabled>
                                     Previous
                                 </Button>
-                                <span class="text-sm font-medium text-zinc-600">
+                                <span class="text-sm font-medium text-brand-muted">
                                     Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
                                 </span>
                                 <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
@@ -1008,16 +1008,16 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex items-start justify-between gap-3 pb-4">
                         <div>
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            <p class="dashboard-eyebrow">
                                 Wallet
                             </p>
-                            <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
+                            <h2 class="dashboard-section-title mt-2">
                                 Recent activity
                             </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
+                            <p class="dashboard-body mt-1">
                                 The latest credit changes for this business account.
                             </p>
                         </div>
@@ -1028,12 +1028,12 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </Button>
                     </div>
 
-                    <div v-if="walletActivity.length === 0" class="py-8 text-sm leading-6 text-zinc-600">
+                    <div v-if="walletActivity.length === 0" class="dashboard-body py-8">
                         No credit activity yet.
                     </div>
 
                     <div v-else class="max-h-[18rem] overflow-y-auto overscroll-contain pt-2 pr-1 sm:max-h-[20rem]">
-                        <div class="divide-y divide-black/5">
+                        <div class="divide-y divide-brand-border/70">
                             <article
                                 v-for="item in walletActivity"
                                 :key="item.id"
@@ -1041,17 +1041,17 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             >
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
-                                        <p class="text-sm font-semibold text-[#171411]">
+                                        <p class="text-sm font-semibold text-brand-ink">
                                             {{ walletActivityLabel(item) }}
                                         </p>
-                                        <p class="mt-1 text-sm text-zinc-600">
+                                        <p class="mt-1 text-sm text-brand-muted">
                                             {{ item.description }}
                                             <span v-if="item.eventName">
                                                 ·
                                                 <Link
                                                     v-if="item.eventUrl"
                                                     :href="item.eventUrl"
-                                                    class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                                    class="font-medium text-brand-ink hover:text-brand-accent"
                                                 >
                                                     {{ item.eventName }}
                                                 </Link>
@@ -1059,7 +1059,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             </span>
                                         </p>
                                     </div>
-                                    <p class="shrink-0 text-xs text-zinc-500">
+                                    <p class="shrink-0 text-xs text-brand-muted">
                                         {{ formatDateTime(item.createdAt) }}
                                     </p>
                                 </div>

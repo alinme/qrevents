@@ -127,18 +127,18 @@ const submitTopUp = (): void => {
     <Head title="Wallet History" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full bg-[#faf7f2]">
-            <div class="mx-auto max-w-7xl space-y-5 p-4 md:p-6">
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-4 border-b border-black/5 pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div class="dashboard-page">
+            <div class="dashboard-shell max-w-7xl">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                            <p class="dashboard-eyebrow">
                                 Business wallet
                             </p>
-                            <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
+                            <h1 class="dashboard-title mt-2">
                                 Wallet history
                             </h1>
-                            <p class="mt-2 text-sm leading-6 text-zinc-600">
+                            <p class="dashboard-body mt-2">
                                 A full ledger for top-ups, bonus credits, and event spend.
                             </p>
                         </div>
@@ -149,15 +149,15 @@ const submitTopUp = (): void => {
                             <div
                                 v-for="metric in compactMetrics"
                                 :key="metric.label"
-                                class="border-l border-black/8 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0"
+                                class="dashboard-divider-left"
                             >
-                                <dt class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                <dt class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
                                     {{ metric.label }}
                                 </dt>
-                                <dd class="mt-2 text-lg font-semibold tracking-tight text-[#171411]">
+                                <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
                                     {{ metric.value }}
                                 </dd>
-                                <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                <p class="dashboard-meta mt-1">
                                     {{ metric.detail }}
                                 </p>
                                 <div
@@ -167,7 +167,7 @@ const submitTopUp = (): void => {
                                     <Button
                                         type="button"
                                         variant="link"
-                                        class="h-auto px-0 text-sm font-medium text-[#171411]"
+                                        class="h-auto px-0 text-sm font-medium text-brand-ink"
                                         @click="topUpModalOpen = true"
                                     >
                                         Top up credits
@@ -175,7 +175,7 @@ const submitTopUp = (): void => {
                                     <Button
                                         type="button"
                                         variant="link"
-                                        class="h-auto px-0 text-sm font-medium text-zinc-500"
+                                        class="h-auto px-0 text-sm font-medium text-brand-muted"
                                         @click="howItWorksModalOpen = true"
                                     >
                                         How it works
@@ -186,27 +186,27 @@ const submitTopUp = (): void => {
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-                    <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                <section class="dashboard-panel">
+                    <div class="dashboard-panel-divider flex flex-col gap-2 pb-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
+                            <h2 class="dashboard-section-title">
                                 All activity
                             </h2>
-                            <p class="mt-1 text-sm text-zinc-600">
+                            <p class="dashboard-body mt-1">
                                 {{ walletTransactionsPagination.total }} transactions recorded.
                             </p>
                         </div>
-                        <p class="text-sm text-zinc-500">
+                        <p class="text-sm text-brand-muted">
                             Balance now {{ walletSummary.currentBalance }} credits
                         </p>
                     </div>
 
                     <div v-if="walletTransactions.length === 0" class="py-12 text-center">
                         <div class="mx-auto max-w-md space-y-2">
-                            <h3 class="text-lg font-semibold text-[#171411]">
+                            <h3 class="text-lg font-semibold text-brand-ink">
                                 No wallet activity yet
                             </h3>
-                            <p class="text-sm leading-6 text-zinc-600">
+                            <p class="dashboard-body">
                                 Your next top-up will appear here first, followed by bonus credits and event debits.
                             </p>
                         </div>
@@ -226,26 +226,26 @@ const submitTopUp = (): void => {
                                     >
                                         {{ walletActivityKindLabel(item.kind) }}
                                     </span>
-                                    <p class="mt-2 text-xs text-zinc-500">
+                                    <p class="dashboard-meta mt-2">
                                         {{ formatDateTime(item.createdAt) }}
                                     </p>
                                 </div>
 
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-[#171411]">
+                                    <p class="text-sm font-semibold text-brand-ink">
                                         {{ item.description }}
                                     </p>
-                                    <p class="mt-1 text-sm text-zinc-600">
+                                    <p class="mt-1 text-sm text-brand-muted">
                                         <template v-if="item.eventName">
                                             Event
                                             <Link
                                                 v-if="item.eventUrl"
                                                 :href="item.eventUrl"
-                                                class="font-medium text-[#171411] hover:text-[#2b2621]"
+                                                class="font-medium text-brand-ink hover:text-brand-accent"
                                             >
                                                 {{ item.eventName }}
                                             </Link>
-                                            <span v-else class="font-medium text-[#171411]">{{ item.eventName }}</span>
+                                            <span v-else class="font-medium text-brand-ink">{{ item.eventName }}</span>
                                         </template>
                                         <template v-else>
                                             Business wallet activity
@@ -260,7 +260,7 @@ const submitTopUp = (): void => {
                                     >
                                         {{ formatCreditDelta(item.credits) }}
                                     </p>
-                                    <p class="mt-1 text-xs text-zinc-500">
+                                    <p class="dashboard-meta mt-1">
                                         {{ item.credits >= 0 ? 'Added to wallet' : 'Used from wallet' }}
                                     </p>
                                 </div>
@@ -270,9 +270,9 @@ const submitTopUp = (): void => {
 
                     <div
                         v-if="walletTransactionsPagination.lastPage > 1"
-                        class="mt-4 flex flex-col gap-3 border-t border-black/5 pt-4 md:flex-row md:items-center md:justify-between"
+                        class="mt-4 flex flex-col gap-3 border-t border-brand-border/70 pt-4 md:flex-row md:items-center md:justify-between"
                     >
-                        <p class="text-sm text-zinc-600">
+                        <p class="text-sm text-brand-muted">
                             Showing {{ walletTransactionsPagination.from ?? 0 }} to {{ walletTransactionsPagination.to ?? 0 }} of {{ walletTransactionsPagination.total }} transactions
                         </p>
 
@@ -285,7 +285,7 @@ const submitTopUp = (): void => {
                             <Button v-else variant="outline" disabled>
                                 Previous
                             </Button>
-                            <span class="text-sm font-medium text-zinc-600">
+                            <span class="text-sm font-medium text-brand-muted">
                                 Page {{ walletTransactionsPagination.currentPage }} of {{ walletTransactionsPagination.lastPage }}
                             </span>
                             <Button v-if="walletTransactionsPagination.nextPageUrl" as-child variant="outline">
@@ -328,8 +328,8 @@ const submitTopUp = (): void => {
                         class="rounded-[1.15rem] border px-3 py-3 text-left transition"
                         :class="
                             pack.credits === topUpForm.credits
-                                ? 'border-[#171411] bg-[#171411] text-white'
-                                : 'border-black/10 bg-[#fbfaf7] text-[#171411] hover:border-black/20 hover:bg-white'
+                                ? 'border-brand-ink bg-brand-ink text-brand-inverse'
+                                : 'border-brand-border bg-brand-panel text-brand-ink hover:border-brand-accent/30 hover:bg-brand-highlight/20'
                         "
                         @click="topUpForm.credits = pack.credits"
                     >
@@ -341,7 +341,7 @@ const submitTopUp = (): void => {
                             :class="
                                 pack.credits === topUpForm.credits
                                     ? 'text-white/75'
-                                    : 'text-zinc-500'
+                                    : 'text-brand-muted'
                             "
                         >
                             {{
@@ -354,25 +354,25 @@ const submitTopUp = (): void => {
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px]">
-                    <div class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3">
-                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    <div class="rounded-[1.15rem] border border-brand-border bg-brand-panel px-4 py-3">
+                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
                             You receive
                         </p>
-                        <p class="mt-1 text-base font-semibold text-[#171411]">
+                        <p class="mt-1 text-base font-semibold text-brand-ink">
                             {{ selectedPack?.total_credits ?? 0 }} credits
                         </p>
-                        <p class="mt-1 text-xs text-zinc-500">
+                        <p class="dashboard-meta mt-1">
                             {{ selectedPriceLabel ?? 'Price unavailable' }}
                         </p>
                     </div>
 
-                    <label class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3 text-sm text-zinc-600">
-                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    <label class="rounded-[1.15rem] border border-brand-border bg-brand-panel px-4 py-3 text-sm text-brand-muted">
+                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-brand-muted">
                             Currency
                         </span>
                         <select
                             v-model="topUpForm.currency"
-                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-[#171411] focus:ring-0"
+                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-brand-ink focus:ring-0"
                         >
                             <option
                                 v-for="currency in businessTopUp.supportedCheckoutCurrencies"
@@ -391,7 +391,7 @@ const submitTopUp = (): void => {
                     </Button>
                     <Button
                         type="submit"
-                        class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                        class="bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                         :disabled="topUpForm.processing"
                     >
                         <Plus class="size-4" />
@@ -411,23 +411,23 @@ const submitTopUp = (): void => {
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="space-y-4 text-sm leading-6 text-zinc-600">
+            <div class="space-y-4 text-sm leading-6 text-brand-muted">
                 <div>
-                    <p class="font-semibold text-[#171411]">Top up once</p>
+                    <p class="font-semibold text-brand-ink">Top up once</p>
                     <p class="mt-1">
                         Add credits in advance, then reuse that balance whenever you create a new paid business event.
                     </p>
                 </div>
 
                 <div>
-                    <p class="font-semibold text-[#171411]">Bonus credits stay in the same balance</p>
+                    <p class="font-semibold text-brand-ink">Bonus credits stay in the same balance</p>
                     <p class="mt-1">
                         Any bonus from a larger top-up lands in the same wallet, so you only need to track one credit balance.
                     </p>
                 </div>
 
                 <div>
-                    <p class="font-semibold text-[#171411]">Events deduct from that wallet</p>
+                    <p class="font-semibold text-brand-ink">Events deduct from that wallet</p>
                     <p class="mt-1">
                         When you create a Plus or Pro business event, the required credits are subtracted automatically and recorded in the ledger below.
                     </p>

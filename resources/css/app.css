@@ -114,6 +114,52 @@
     }
 }
 
+@layer components {
+    .dashboard-page {
+        @apply min-h-full bg-brand-canvas;
+    }
+
+    .dashboard-shell {
+        @apply mx-auto space-y-5 p-4 md:p-6;
+    }
+
+    .dashboard-panel {
+        @apply rounded-[1.75rem] border border-brand-border/70 bg-brand-panel p-5 shadow-sm md:p-6;
+    }
+
+    .dashboard-panel-divider {
+        @apply border-b border-brand-border/70;
+    }
+
+    .dashboard-divider-left {
+        @apply border-l border-brand-border/80 pl-4 first:border-l-0 first:pl-0 sm:first:border-l sm:first:pl-4 xl:first:border-l-0 xl:first:pl-0;
+    }
+
+    .dashboard-eyebrow {
+        @apply text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brand-muted;
+    }
+
+    .dashboard-title {
+        @apply text-xl font-semibold tracking-tight text-brand-ink sm:text-2xl;
+    }
+
+    .dashboard-section-title {
+        @apply text-base font-semibold text-brand-ink sm:text-lg;
+    }
+
+    .dashboard-body {
+        @apply text-sm leading-6 text-brand-muted;
+    }
+
+    .dashboard-meta {
+        @apply text-xs leading-5 text-brand-muted;
+    }
+
+    .dashboard-chip {
+        @apply inline-flex rounded-full bg-brand-panel-strong/35 px-2.5 py-1 text-xs font-semibold text-brand-muted;
+    }
+}
+
 :root {
     --safe-area-inset-top: env(safe-area-inset-top, 0px);
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
