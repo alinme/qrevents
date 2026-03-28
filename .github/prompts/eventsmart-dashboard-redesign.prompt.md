@@ -55,6 +55,11 @@ It must not feel:
 21. When a screen is operational, design it for the real job it serves. A public guest list is an entrance desk tool, not a passive report.
 22. Ledger screens are bookkeeping tools, not attendance consoles. Attendance actions belong in the guest list or entrance flow, while ledger screens focus on gifts, money, notes, totals, export, and print.
 23. When a standalone owner page exists, make it slimmer than the dashboard version. It should feel printable, calm, and archival.
+24. Business and account dashboards must share the same visual grammar: one calm header, one compact metrics strip, one main working list, one slim support rail.
+25. If a section already has a border and background, do not place bordered cards inside it. Use rows, dividers, strips, or split columns instead.
+26. Filters, controls, and batch actions should live as flat toolbars inside the section they affect, never as a secondary boxed panel.
+27. Event lists should default to clean rows, not tiled cards, unless the content truly needs a visual preview.
+28. A dashboard should never read like a newspaper: cut the copy, shrink the headings, and keep support text to one short sentence when possible.
 
 ## Information architecture goals
 
@@ -100,6 +105,10 @@ For owner ledger pages:
 - Replace large stat cards with compact stat strips or inline blocks
 - Replace stacked panels with simple sections and rows
 - Replace bulky event cards with clean list rows and clear action buttons
+- Keep every top-level screen to a small number of surfaces with clear jobs:
+  - header
+  - main list
+  - support rail
 - Keep badges small and useful
 - Avoid more than one level of visual nesting
 - Use dividers, spacing, and quiet background shifts before introducing another border box

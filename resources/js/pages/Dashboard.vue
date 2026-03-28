@@ -109,13 +109,13 @@ const workspaceLabel = (event: DashboardEvent): string =>
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                                Your space
+                                Events
                             </p>
                             <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
-                                Open the event you need
+                                Pick up where your event left off
                             </h1>
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
-                                {{ ownerName }}, everything starts here. Pick your event, then go straight to workspace, media, or settings.
+                                {{ ownerName }}, open the workspace you need and keep moving.
                             </p>
                         </div>
                         <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -164,10 +164,10 @@ const workspaceLabel = (event: DashboardEvent): string =>
                         <div class="flex flex-col gap-2 border-b border-black/5 pb-4 sm:flex-row sm:items-end sm:justify-between">
                             <div>
                                 <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                    Events
+                                    Your events
                                 </h2>
                                 <p class="mt-1 text-sm text-zinc-600">
-                                    Pick one and continue where you left off.
+                                    Open the right workspace, media view, or settings page fast.
                                 </p>
                             </div>
                             <p class="text-sm text-zinc-500">
@@ -339,7 +339,7 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                 v-for="activity in recentActivity"
                                 :key="activity.id"
                                 :href="activity.activityUrl"
-                                class="flex flex-col gap-2 rounded-[1rem] px-1 py-3 transition hover:bg-black/[0.015]"
+                                class="flex flex-col gap-2 py-3 transition hover:bg-black/[0.015]"
                             >
                                 <div class="min-w-0">
                                     <p class="text-sm text-[#171411]">
@@ -370,12 +370,12 @@ const workspaceLabel = (event: DashboardEvent): string =>
                 </div>
             </div>
 
-            <Dialog :open="modalOpen" @update:open="modalOpen = $event">
+                <Dialog :open="modalOpen" @update:open="modalOpen = $event">
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Event ready</DialogTitle>
                         <DialogDescription>
-                            Everything now lives on the Events page. Open the workspace when you need detail, or jump straight into media or settings.
+                            Everything now starts from your event list. Open the workspace you need and keep going.
                         </DialogDescription>
                     </DialogHeader>
                     <Button
