@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,7 +83,15 @@ class EventOnboardingController extends Controller
         abort_unless($user->hasCompletedBusinessOnboarding(), 403);
 
         $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null, true);
-        abort_unless($businessWalletManager->canAffordPlan($user, $plan), 422, 'Not enough business credits to create this event.');
+        if (! $businessWalletManager->canAffordPlan($user, $plan)) {
+            $availableCredits = (int) $user->business_wallet_credits;
+            $requiredCredits = $businessWalletManager->planCreditCost($plan);
+            $missingCredits = max($requiredCredits - $availableCredits, 0);
+
+            throw ValidationException::withMessages([
+                'plan_slug' => "This {$plan->name} event needs {$requiredCredits} credits. Your wallet has {$availableCredits}, so top up {$missingCredits} more first.",
+            ]);
+        }
 
         $event = DB::transaction(function () use ($user, $validated, $plan, $businessWalletManager): Event {
             $event = $this->createEventFromValidatedData($user, $validated, $plan, true);
@@ -465,6 +474,9 @@ class EventOnboardingController extends Controller
             'businessMode' => $businessMode,
             'businessWalletCredits' => $businessMode && $request->user() !== null
                 ? (int) $request->user()->business_wallet_credits
+                : null,
+            'businessTopUpUrl' => $businessMode
+                ? route('businesses')
                 : null,
             'submitUrl' => $businessMode
                 ? route('dashboard.business.events.store')

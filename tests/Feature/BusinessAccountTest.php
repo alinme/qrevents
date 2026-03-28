@@ -113,3 +113,39 @@ test('business wallet checkout locks the latest fx rate at session creation', fu
         ->and((float) $purchase?->locked_fx_rate)->toBe(4.95)
         ->and($purchase?->stripe_checkout_session_id)->toBe('cs_business_wallet_123');
 });
+
+test('business page exposes localized top-up prices and the right entry points', function () {
+    ExchangeRate::query()->create([
+        'base_currency' => 'EUR',
+        'quote_currency' => 'RON',
+        'rate' => 4.95,
+        'fetched_at' => now(),
+    ]);
+
+    ExchangeRate::query()->create([
+        'base_currency' => 'EUR',
+        'quote_currency' => 'GBP',
+        'rate' => 0.86,
+        'fetched_at' => now(),
+    ]);
+
+    $user = User::factory()->business()->create([
+        'business_onboarded_at' => now(),
+        'business_wallet_credits' => 125,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('businesses'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Businesses')
+            ->where('supportedCheckoutCurrencies', ['EUR', 'RON', 'GBP'])
+            ->where('businessPacks.2.credits', 100)
+            ->where('businessPacks.2.total_credits', 125)
+            ->where('businessPacks.2.priceLabels.EUR', 'EUR 100.00')
+            ->where('businessPacks.2.priceLabels.RON', 'RON 495.00')
+            ->where('businessPacks.2.priceLabels.GBP', 'GBP 86.00')
+            ->where('topUpUrl', route('dashboard.business.wallet.checkout'))
+            ->where('dashboardUrl', route('dashboard.business'))
+        );
+});

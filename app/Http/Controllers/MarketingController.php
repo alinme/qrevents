@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Support\BusinessWalletManager;
+use App\Support\ExchangeRateManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,14 +23,18 @@ class MarketingController extends Controller
         ]);
     }
 
-    public function businesses(Request $request, BusinessWalletManager $businessWalletManager): Response
-    {
+    public function businesses(
+        Request $request,
+        BusinessWalletManager $businessWalletManager,
+        ExchangeRateManager $exchangeRateManager,
+    ): Response {
         $user = $request->user();
 
         return Inertia::render('Businesses', [
             'canRegister' => Features::enabled(Features::registration()),
-            'businessPacks' => $businessWalletManager->topUpPacks(),
+            'businessPacks' => $this->businessTopUpPacks($businessWalletManager, $exchangeRateManager),
             'businessPlans' => $this->businessPlans(),
+            'supportedCheckoutCurrencies' => $exchangeRateManager->supportedCheckoutCurrencies(),
             'activateUrl' => $user !== null && ! $user->isBusinessAccount() ? route('dashboard.business.activate') : null,
             'onboardingUrl' => $user !== null && $user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()
                 ? route('dashboard.business.onboarding')
@@ -133,6 +138,41 @@ class MarketingController extends Controller
                 'businessCreditCost' => (int) ($plan->business_credit_cost ?? 0),
                 'consumerPriceLabel' => $this->moneyLabel($plan->currency, (int) $plan->price_cents),
             ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function businessTopUpPacks(
+        BusinessWalletManager $businessWalletManager,
+        ExchangeRateManager $exchangeRateManager,
+    ): array {
+        return collect($businessWalletManager->topUpPacks())
+            ->map(function (array $pack) use ($exchangeRateManager): array {
+                $baseAmountCents = ((int) $pack['credits']) * 100;
+                $priceLabels = collect($exchangeRateManager->supportedCheckoutCurrencies())
+                    ->mapWithKeys(function (string $currency) use ($exchangeRateManager, $baseAmountCents): array {
+                        $localizedAmountCents = $exchangeRateManager->convertEuroCentsToCurrencyCents(
+                            $baseAmountCents,
+                            $currency,
+                        );
+
+                        return [
+                            $currency => $this->moneyLabel($currency, $localizedAmountCents),
+                        ];
+                    })
+                    ->all();
+
+                return [
+                    'credits' => (int) $pack['credits'],
+                    'bonus_percent' => (int) $pack['bonus_percent'],
+                    'bonus_credits' => (int) $pack['bonus_credits'],
+                    'total_credits' => (int) $pack['total_credits'],
+                    'priceLabels' => $priceLabels,
+                ];
+            })
             ->values()
             ->all();
     }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowRight, BriefcaseBusiness, Building2, LayoutPanelTop, MonitorPlay, Repeat2, ShieldCheck, Sparkles, Users } from 'lucide-vue-next';
 import MarketingFeatureCard from '@/components/marketing/MarketingFeatureCard.vue';
@@ -9,13 +10,14 @@ import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
 import { pricing } from '@/routes';
 
-defineProps<{
+const props = defineProps<{
     canRegister: boolean;
     businessPacks: Array<{
         credits: number;
         bonus_percent: number;
         bonus_credits: number;
         total_credits: number;
+        priceLabels: Record<string, string>;
     }>;
     businessPlans: Array<{
         slug: string;
@@ -23,6 +25,7 @@ defineProps<{
         businessCreditCost: number;
         consumerPriceLabel: string;
     }>;
+    supportedCheckoutCurrencies: string[];
     activateUrl: string | null;
     onboardingUrl: string | null;
     topUpUrl: string | null;
@@ -115,6 +118,31 @@ const businessSteps = [
 
 const businessUser = page.props.auth?.user;
 const isBusinessUser = businessUser?.accountType === 'business' || businessUser?.accountType === 'super_admin';
+const selectedPack = computed(
+    () => props.businessPacks.find((pack) => pack.credits === topUpForm.credits) ?? props.businessPacks[0] ?? null,
+);
+const selectedPackPriceLabel = computed(() => {
+    if (!selectedPack.value) {
+        return null;
+    }
+
+    return selectedPack.value.priceLabels[topUpForm.currency] ?? selectedPack.value.priceLabels.EUR ?? null;
+});
+const businessPrimaryCtaLabel = computed(() => {
+    if (topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded) {
+        return `Top up ${topUpForm.credits} credits`;
+    }
+
+    if (activateUrl) {
+        return 'Switch to business first';
+    }
+
+    if (onboardingUrl) {
+        return 'Finish profile first';
+    }
+
+    return 'Sign in to top up';
+});
 </script>
 
 <template>
@@ -290,7 +318,7 @@ const isBusinessUser = businessUser?.accountType === 'business' || businessUser?
                     </div>
 
                     <div class="rounded-[24px] border border-promo-line bg-white p-5">
-                        <div class="flex items-center justify-between gap-3">
+                        <div class="flex flex-col gap-4 border-b border-promo-line pb-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-promo-ink">Launch top-up packs</p>
                                 <p class="mt-1 text-sm text-promo-muted">
@@ -299,9 +327,9 @@ const isBusinessUser = businessUser?.accountType === 'business' || businessUser?
                             </div>
 
                             <select v-model="topUpForm.currency" class="rounded-full border border-promo-line bg-white px-3 py-2 text-sm text-promo-ink">
-                                <option value="EUR">EUR</option>
-                                <option value="RON">RON</option>
-                                <option value="GBP">GBP</option>
+                                <option v-for="currency in supportedCheckoutCurrencies" :key="currency" :value="currency">
+                                    {{ currency }}
+                                </option>
                             </select>
                         </div>
 
@@ -310,12 +338,28 @@ const isBusinessUser = businessUser?.accountType === 'business' || businessUser?
                                 v-for="pack in businessPacks"
                                 :key="pack.credits"
                                 type="button"
-                                class="rounded-[20px] border border-promo-line bg-promo-bg px-4 py-4 text-left transition hover:border-promo-primary/30 hover:bg-white"
+                                class="rounded-[20px] border px-4 py-4 text-left transition"
+                                :class="
+                                    topUpForm.credits === pack.credits
+                                        ? 'border-promo-primary bg-white shadow-[0_16px_34px_rgba(232,79,154,0.12)]'
+                                        : 'border-promo-line bg-promo-bg hover:border-promo-primary/30 hover:bg-white'
+                                "
                                 @click="topUpForm.credits = pack.credits"
                             >
-                                <p class="text-lg font-semibold text-promo-ink">{{ pack.credits }} credits</p>
+                                <div class="flex items-start justify-between gap-3">
+                                    <p class="text-lg font-semibold text-promo-ink">{{ pack.credits }} credits</p>
+                                    <span
+                                        v-if="topUpForm.credits === pack.credits"
+                                        class="rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary"
+                                    >
+                                        Selected
+                                    </span>
+                                </div>
                                 <p class="mt-1 text-sm text-promo-muted">
                                     {{ pack.bonus_percent > 0 ? `+${pack.bonus_credits} bonus (${pack.bonus_percent}%)` : 'No bonus' }}
+                                </p>
+                                <p class="mt-3 text-sm font-medium text-promo-ink">
+                                    {{ pack.priceLabels[topUpForm.currency] ?? pack.priceLabels.EUR }}
                                 </p>
                                 <p class="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-promo-primary">
                                     Total granted: {{ pack.total_credits }}
@@ -323,14 +367,30 @@ const isBusinessUser = businessUser?.accountType === 'business' || businessUser?
                             </button>
                         </div>
 
+                        <div
+                            v-if="selectedPack"
+                            class="mt-5 rounded-[20px] border border-promo-line bg-promo-surface/45 px-4 py-4"
+                        >
+                            <p class="text-sm font-semibold text-promo-ink">
+                                {{ selectedPackPriceLabel ?? selectedPack.priceLabels.EUR }} for {{ selectedPack.credits }} credits
+                            </p>
+                            <p class="mt-1 text-sm leading-6 text-promo-muted">
+                                You will receive {{ selectedPack.total_credits }} total credits in your wallet after payment.
+                                <span v-if="selectedPack.bonus_credits > 0">
+                                    That includes {{ selectedPack.bonus_credits }} bonus credits.
+                                </span>
+                            </p>
+                        </div>
+
                         <div class="mt-5 flex flex-wrap gap-3">
                             <Button
                                 v-if="topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded"
                                 type="button"
                                 class="bg-promo-primary text-white hover:bg-promo-primary-strong"
+                                :disabled="topUpForm.processing"
                                 @click="topUpForm.post(topUpUrl)"
                             >
-                                Top up {{ topUpForm.credits }} credits
+                                {{ businessPrimaryCtaLabel }}
                             </Button>
                             <Link
                                 v-else-if="activateUrl"
@@ -339,21 +399,29 @@ const isBusinessUser = businessUser?.accountType === 'business' || businessUser?
                                 as="button"
                                 class="inline-flex items-center justify-center rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                             >
-                                Switch to business first
+                                {{ businessPrimaryCtaLabel }}
                             </Link>
                             <Link
                                 v-else-if="onboardingUrl"
                                 :href="onboardingUrl"
                                 class="inline-flex items-center justify-center rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                             >
-                                Finish profile first
+                                {{ businessPrimaryCtaLabel }}
                             </Link>
                             <Link
                                 v-else
                                 href="/login"
                                 class="inline-flex items-center justify-center rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                             >
-                                Sign in to top up
+                                {{ businessPrimaryCtaLabel }}
+                            </Link>
+
+                            <Link
+                                v-if="dashboardUrl"
+                                :href="dashboardUrl"
+                                class="inline-flex items-center justify-center rounded-full border border-promo-line bg-white px-5 py-3 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                            >
+                                Open business dashboard
                             </Link>
                         </div>
                     </div>

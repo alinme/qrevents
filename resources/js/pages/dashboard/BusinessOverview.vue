@@ -131,6 +131,13 @@ const actionButtonClass = (tone: QuickAction['tone']): string => {
 const latestWalletEntry = computed(() => props.walletActivity[0] ?? null);
 
 const page = usePage();
+const walletCheckoutStatus = computed(() => {
+    const query = page.url.split('?')[1] ?? '';
+    const params = new URLSearchParams(query);
+    const status = params.get('wallet_checkout');
+
+    return status === 'success' || status === 'cancelled' ? status : null;
+});
 
 const parseSelectedEventIdsFromUrl = (url: string): number[] => {
     const query = url.split('?')[1] ?? '';
@@ -550,6 +557,31 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </Link>
                             </Button>
                         </div>
+                    </div>
+
+                    <div
+                        v-if="walletCheckoutStatus"
+                        class="mt-5 rounded-[20px] border px-4 py-4 text-sm"
+                        :class="
+                            walletCheckoutStatus === 'success'
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                                : 'border-amber-200 bg-amber-50 text-amber-900'
+                        "
+                    >
+                        <p class="font-semibold">
+                            {{
+                                walletCheckoutStatus === 'success'
+                                    ? 'Top-up checkout completed.'
+                                    : 'Top-up checkout was cancelled.'
+                            }}
+                        </p>
+                        <p class="mt-1 leading-6">
+                            {{
+                                walletCheckoutStatus === 'success'
+                                    ? 'If Stripe has already confirmed the payment, your credits should appear here. Refresh once if they do not show up right away.'
+                                    : 'Your wallet balance did not change. You can try again whenever you are ready.'
+                            }}
+                        </p>
                     </div>
 
                     <div class="grid gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_320px]">

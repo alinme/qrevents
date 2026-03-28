@@ -273,6 +273,7 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
             ->component('onboarding/Create')
             ->where('businessMode', true)
             ->where('businessWalletCredits', 100)
+            ->where('businessTopUpUrl', route('businesses'))
         );
 
     $response = $this->actingAs($user)->post(route('dashboard.business.events.store'), [
@@ -311,6 +312,71 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
         ->and($event->payment_due_at)->toBeNull()
         ->and($event->paid_at)->not->toBeNull()
         ->and($user->fresh()->business_wallet_credits)->toBe(75);
+});
+
+it('shows a validation error when a business wallet cannot afford the selected plan', function () {
+    Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'currency' => 'EUR',
+        'price_cents' => 4900,
+        'business_enabled' => true,
+        'business_credit_cost' => 25,
+        'storage_limit_bytes' => 12884901888,
+        'upload_limit' => 500,
+        'retention_days' => 90,
+        'grace_days' => 7,
+        'upload_window_days' => 30,
+        'customization_tier' => 'better',
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'video_max_duration_seconds' => 45,
+        'photo_max_size_bytes' => 26214400,
+        'video_max_size_bytes' => 524288000,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->business()->create([
+        'business_wallet_credits' => 10,
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('dashboard.business.events.create'))
+        ->post(route('dashboard.business.events.store'), [
+            'plan_slug' => 'plus',
+            'type' => 'wedding',
+            'name' => 'Studio Wedding',
+            'wedding_partner_one_first_name' => 'Ana',
+            'wedding_partner_two_first_name' => 'Mihai',
+            'wedding_family_name' => 'Ionescu',
+            'attendee_estimate' => 140,
+            'event_dates' => [
+                [
+                    'label' => 'Main day',
+                    'date' => now()->addMonth()->toDateString(),
+                ],
+            ],
+            'sub_events' => [
+                [
+                    'key' => 'reception',
+                    'label' => 'Reception',
+                    'date' => now()->addMonth()->toDateString(),
+                    'start_time' => '18:00',
+                    'address' => '12 Garden Lane, Bucharest, Romania',
+                    'no_address' => false,
+                ],
+            ],
+            'timezone' => 'Europe/Bucharest',
+        ])
+        ->assertRedirect(route('dashboard.business.events.create'))
+        ->assertSessionHasErrors([
+            'plan_slug' => 'This Plus event needs 25 credits. Your wallet has 10, so top up 15 more first.',
+        ]);
+
+    expect(Event::query()->count())->toBe(0)
+        ->and($user->fresh()->business_wallet_credits)->toBe(10);
 });
 
 it('blocks business accounts from creating free plan events', function () {
