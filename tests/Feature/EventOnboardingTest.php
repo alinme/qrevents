@@ -280,7 +280,7 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
             ->where('accountNavigation.1.title', 'Create event')
             ->where('accountNavigation.1.href', route('dashboard.business.events.create'))
             ->where('accountNavigation.3.title', 'Events')
-            ->where('accountNavigation.3.href', route('dashboard.events'))
+            ->where('accountNavigation.3.href', route('dashboard.business.events.index'))
         );
 
     $response = $this->actingAs($user)->post(route('dashboard.business.events.store'), [

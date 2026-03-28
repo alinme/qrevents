@@ -422,7 +422,7 @@ test('business accounts can open the dedicated business dashboard', function () 
             ->where('accountNavigation.1.title', 'Create event')
             ->where('accountNavigation.2.title', 'Wallet')
             ->where('accountNavigation.3.title', 'Events')
-            ->where('accountNavigation.3.href', route('dashboard.events'))
+            ->where('accountNavigation.3.href', route('dashboard.business.events.index'))
             ->where('businessOverview.hasOwnedEvents', true)
             ->where('businessOverview.overdueEventCount', 1)
             ->where('businessOverview.readyExportCount', 1)
@@ -485,7 +485,7 @@ test('business accounts can open a dedicated wallet history page', function () {
             ->where('accountNavigation.1.title', 'Create event')
             ->where('accountNavigation.2.title', 'Wallet')
             ->where('accountNavigation.3.title', 'Events')
-            ->where('accountNavigation.3.href', route('dashboard.events'))
+            ->where('accountNavigation.3.href', route('dashboard.business.events.index'))
             ->where('dashboardLinks.business', route('dashboard.business'))
             ->where('businessTopUp.submitUrl', route('dashboard.business.wallet.checkout'))
             ->where('businessTopUp.defaultCredits', 100)
@@ -866,7 +866,25 @@ test('business accounts open the account events page from the events shortcut', 
 
     $this->actingAs($owner)
         ->get(route('dashboard.events'))
-        ->assertRedirect(route('dashboard.account').'#events');
+        ->assertRedirect(route('dashboard.business.events.index'));
+});
+
+test('business accounts can open a dedicated business events page', function () {
+    $owner = User::factory()->business()->create();
+    Event::factory()->count(2)->for($owner)->create([
+        'name' => 'Business Workspace',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.business.events.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard/BusinessEvents')
+            ->where('sidebarLabel', 'Business')
+            ->where('accountNavigation.3.href', route('dashboard.business.events.index'))
+            ->where('dashboardLinks.ownedEvents', route('dashboard.business.events.index'))
+            ->where('ownedEventsPagination.total', 2)
+        );
 });
 
 test('recent activity page links directly to the matching asset in media', function () {

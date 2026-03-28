@@ -137,6 +137,42 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function businessEvents(BusinessDashboardRequest $request): Response
+    {
+        abort_unless($request->user()->canAccessBusinessDashboard(), 403);
+
+        $data = $this->accountData($request);
+        $filters = $this->businessFilters($request);
+        $filteredOwnedEvents = $this->filterBusinessOwnedEvents(
+            collect($data['ownedEvents']),
+            $filters,
+        );
+        $ownedEventsPaginator = $this->paginateBusinessOwnedEvents(
+            $filteredOwnedEvents,
+            $request,
+        );
+
+        return Inertia::render('dashboard/BusinessEvents', [
+            'summary' => $data['summary'],
+            'businessOverview' => $data['businessOverview'],
+            'filters' => $this->businessFilterMeta(
+                collect($data['ownedEvents']),
+                collect($data['businessAttentionEvents']),
+                $filters,
+            ),
+            'accountNavigation' => $data['accountNavigation'],
+            'dashboardLinks' => [
+                'overview' => route('dashboard.account'),
+                'business' => route('dashboard.business'),
+                'ownedEvents' => route('dashboard.business.events.index'),
+                'recentActivity' => route('dashboard.activity'),
+            ],
+            'sidebarLabel' => 'Business',
+            'ownedEvents' => $ownedEventsPaginator->items(),
+            'ownedEventsPagination' => $this->paginationMeta($ownedEventsPaginator),
+        ]);
+    }
+
     public function walletHistory(
         Request $request,
         BusinessWalletManager $businessWalletManager,
@@ -332,6 +368,10 @@ class DashboardController extends Controller
 
     public function ownedEvents(Request $request): RedirectResponse
     {
+        if ($request->user()->canAccessBusinessDashboard()) {
+            return to_route('dashboard.business.events.index');
+        }
+
         return redirect()->to($this->accountOverviewUrl($request).'#events');
     }
 
@@ -466,7 +506,7 @@ class DashboardController extends Controller
                 ] : null,
                 $canAccessBusinessDashboard ? [
                     'title' => 'Events',
-                    'href' => route('dashboard.events'),
+                    'href' => route('dashboard.business.events.index'),
                 ] : null,
                 $isSuperAdmin ? [
                     'title' => 'Admin',

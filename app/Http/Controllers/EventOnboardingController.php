@@ -501,7 +501,7 @@ class EventOnboardingController extends Controller
                 ],
                 [
                     'title' => 'Events',
-                    'href' => route('dashboard.events'),
+                    'href' => route('dashboard.business.events.index'),
                 ],
             ] : [],
             'dashboardLinks' => $businessMode ? [
