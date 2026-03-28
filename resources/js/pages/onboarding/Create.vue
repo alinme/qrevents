@@ -626,23 +626,19 @@ const submit = (): void => {
                 </div>
             </header>
 
-            <main :class="isBusinessMode ? 'grid flex-1 gap-6 py-2 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-3' : 'grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8'">
-                <aside class="lg:sticky lg:top-8 lg:self-start">
-                    <div :class="isBusinessMode ? 'overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm' : 'overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]'">
-                        <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-5 py-5' : 'border-b border-promo-line bg-promo-surface/70 px-5 py-5'">
-                            <p :class="isBusinessMode ? 'inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-muted' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary'">
+            <main :class="isBusinessMode ? 'flex-1 py-2 lg:py-3' : 'grid flex-1 gap-6 py-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:py-8'">
+                <aside v-if="!isBusinessMode" class="lg:sticky lg:top-8 lg:self-start">
+                    <div class="overflow-hidden rounded-[30px] border border-promo-line bg-white shadow-[0_22px_60px_rgba(120,86,255,0.08)]">
+                        <div class="border-b border-promo-line bg-promo-surface/70 px-5 py-5">
+                            <p class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-promo-primary">
                                 <Sparkles class="size-3.5" />
-                                {{ isBusinessMode ? 'Business flow' : 'Why this matters' }}
+                                Why this matters
                             </p>
-                            <h1 :class="isBusinessMode ? 'mt-4 text-xl font-semibold tracking-tight text-brand-ink' : 'mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink'">
-                                {{ isBusinessMode ? 'Create the next client event' : 'Plan it once. Use it everywhere.' }}
+                            <h1 class="mt-4 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink">
+                                Plan it once. Use it everywhere.
                             </h1>
-                            <p :class="isBusinessMode ? 'dashboard-body mt-3' : 'mt-3 text-sm leading-7 text-promo-muted'">
-                                {{
-                                    isBusinessMode
-                                        ? 'Choose the paid plan this event should use, then finish the event setup. Your business profile and wallet stay at the account level.'
-                                        : 'This wizard is for event setup, not account access. The details here will later support invitations, menus, guest flows, supplier suggestions, and smarter event tools.'
-                                }}
+                            <p class="mt-3 text-sm leading-7 text-promo-muted">
+                                This wizard is for event setup, not account access. The details here will later support invitations, menus, guest flows, supplier suggestions, and smarter event tools.
                             </p>
                         </div>
 
@@ -650,27 +646,15 @@ const submit = (): void => {
                             <article
                                 v-for="stepItem in stepItems"
                                 :key="stepItem.number"
-                                :class="
-                                    isBusinessMode
-                                        ? `flex gap-4 border-b border-brand-border/70 py-4 last:border-b-0 ${stepItem.number <= step ? 'text-brand-ink' : 'text-brand-muted'}`
-                                        : `flex gap-4 border-b border-promo-line py-4 last:border-b-0 ${stepItem.number <= step ? 'text-promo-ink' : 'text-promo-muted'}`
-                                "
+                                :class="`flex gap-4 border-b border-promo-line py-4 last:border-b-0 ${stepItem.number <= step ? 'text-promo-ink' : 'text-promo-muted'}`"
                             >
                                 <div
                                     class="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.18em]"
-                                    :class="
-                                        isBusinessMode
-                                            ? (stepItem.number === step
-                                                ? 'bg-brand-ink text-brand-inverse'
-                                                : stepItem.number < step
-                                                  ? 'bg-brand-highlight/30 text-brand-ink'
-                                                  : 'bg-brand-panel-strong/35 text-brand-muted')
-                                            : (stepItem.number === step
-                                                ? 'bg-promo-primary text-white'
-                                                : stepItem.number < step
-                                                  ? 'bg-promo-surface text-promo-primary'
-                                                  : 'bg-promo-surface/70 text-promo-muted')
-                                    "
+                                    :class="stepItem.number === step
+                                        ? 'bg-promo-primary text-white'
+                                        : stepItem.number < step
+                                          ? 'bg-promo-surface text-promo-primary'
+                                          : 'bg-promo-surface/70 text-promo-muted'"
                                 >
                                     0{{ stepItem.number }}
                                 </div>
@@ -678,14 +662,14 @@ const submit = (): void => {
                                 <div class="min-w-0">
                                     <p
                                         class="text-[0.68rem] font-semibold uppercase tracking-[0.22em]"
-                                        :class="isBusinessMode ? (stepItem.number <= step ? 'text-brand-ink' : 'text-brand-muted') : (stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted')"
+                                        :class="stepItem.number <= step ? 'text-promo-primary' : 'text-promo-muted'"
                                     >
                                         {{ stepItem.label }}
                                     </p>
-                                    <h2 :class="isBusinessMode ? 'mt-1 text-sm font-semibold text-brand-ink' : 'mt-1 text-sm font-semibold text-promo-ink'">
+                                    <h2 class="mt-1 text-sm font-semibold text-promo-ink">
                                         {{ stepItem.title }}
                                     </h2>
-                                    <p :class="isBusinessMode ? 'dashboard-body mt-1.5' : 'mt-1.5 text-sm leading-6 text-promo-muted'">
+                                    <p class="mt-1.5 text-sm leading-6 text-promo-muted">
                                         {{ stepItem.description }}
                                     </p>
                                 </div>
@@ -699,6 +683,27 @@ const submit = (): void => {
                     :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line bg-white shadow-[0_26px_70px_rgba(232,79,154,0.10)] lg:scroll-mt-8'"
                 >
                     <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-6 py-6 sm:px-8' : 'border-b border-promo-line px-6 py-6 sm:px-8'">
+                        <div
+                            v-if="isBusinessMode"
+                            class="mb-5 flex flex-wrap gap-2 border-b border-brand-border/70 pb-5"
+                        >
+                            <div
+                                v-for="stepItem in stepItems"
+                                :key="`business-step-${stepItem.number}`"
+                                class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium"
+                                :class="stepItem.number === step
+                                    ? 'border-brand-ink bg-brand-ink text-brand-inverse'
+                                    : stepItem.number < step
+                                      ? 'border-brand-border bg-brand-highlight/25 text-brand-ink'
+                                      : 'border-brand-border bg-brand-inverse text-brand-muted'"
+                            >
+                                <span class="text-[0.68rem] font-semibold uppercase tracking-[0.2em]">
+                                    0{{ stepItem.number }}
+                                </span>
+                                <span>{{ stepItem.label }}</span>
+                            </div>
+                        </div>
+
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div>
                                 <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary'">
