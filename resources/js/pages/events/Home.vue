@@ -97,6 +97,9 @@ type EventLinks = {
     mediaExportDownload: string;
     settings: string;
     album: string;
+    albumAccessCode: string;
+    albumEntry: string;
+    albumEntryShortcut: string;
     wall: string;
     albumQrDataUrl: string;
     wallQrDataUrl: string;
@@ -672,6 +675,12 @@ onUnmounted(() => {
                                         <p class="mt-1 text-sm text-zinc-600">
                                             Guests upload and browse from here.
                                         </p>
+                                        <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                            Album code {{ eventLinks.albumAccessCode }}
+                                        </p>
+                                        <p class="mt-1 text-xs text-zinc-500">
+                                            Guests without a QR reader can visit {{ eventLinks.albumEntryShortcut }} and enter the code.
+                                        </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
@@ -687,6 +696,14 @@ onUnmounted(() => {
                                                     <Download class="mr-2 size-4" />
                                                     QR
                                                 </a>
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="copyText(eventLinks.albumAccessCode, 'Album code copied.')"
+                                            >
+                                                <Copy class="mr-2 size-4" />
+                                                Code
                                             </Button>
                                         </div>
                                     </div>
@@ -755,12 +772,27 @@ onUnmounted(() => {
         <DialogContent
             class="max-w-fit border-0 bg-transparent p-0 shadow-none"
         >
-            <img
+            <div
                 v-if="qrPreviewData"
-                :src="qrPreviewData.image"
-                :alt="qrPreviewData.alt"
-                class="w-[min(88vw,30rem)] rounded-[1.75rem] bg-white p-3 shadow-2xl"
-            />
+                class="rounded-[1.75rem] bg-white p-4 text-center shadow-2xl"
+            >
+                <img
+                    :src="qrPreviewData.image"
+                    :alt="qrPreviewData.alt"
+                    class="w-[min(88vw,30rem)] rounded-[1.5rem] bg-white"
+                />
+                <template v-if="qrPreview === 'album'">
+                    <p class="mt-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                        Album code
+                    </p>
+                    <p class="mt-2 text-3xl font-semibold tracking-[0.32em] text-[#171411]">
+                        {{ eventLinks.albumAccessCode }}
+                    </p>
+                    <p class="mt-2 text-sm text-zinc-500">
+                        No QR reader? Visit {{ eventLinks.albumEntryShortcut }} and enter the code.
+                    </p>
+                </template>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

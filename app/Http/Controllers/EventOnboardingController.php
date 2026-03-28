@@ -140,15 +140,17 @@ class EventOnboardingController extends Controller
 
         $request->session()->flash('show_dashboard_modal', true);
 
-        $albumUrl = route('events.album', $event->share_token);
+        $albumUrl = route('events.album', $event->publicAlbumCode());
         $wallUrl = route('events.wall', $event->share_token);
 
         return Inertia::render('onboarding/FirstPhotos', [
             'eventName' => $event->name,
             'albumUrl' => $albumUrl,
+            'albumAccessCode' => $event->publicAlbumCode(),
+            'albumAccessEntryUrl' => route('events.album.access.show'),
+            'albumAccessShortcutUrl' => 'https://is.gd/evsmrt',
             'wallUrl' => $wallUrl,
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
-            'readyUrl' => route('onboarding.ready', $event),
             'businessMode' => $businessMode,
             'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard'),
         ]);

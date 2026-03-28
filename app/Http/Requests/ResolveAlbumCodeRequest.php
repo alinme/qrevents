@@ -30,7 +30,7 @@ class ResolveAlbumCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'alpha_num', 'size:32'],
+            'code' => ['required', 'string', 'alpha_num', 'size:4'],
         ];
     }
 
@@ -39,7 +39,7 @@ class ResolveAlbumCodeRequest extends FormRequest
         return [
             'code.required' => 'Enter the album code from the QR card or short link.',
             'code.alpha_num' => 'Use only the letters and numbers from the album code.',
-            'code.size' => 'Album codes use 32 letters and numbers. Keep going until every block is filled.',
+            'code.size' => 'Album codes use 4 letters or numbers. Fill all 4 boxes and we will open the album.',
         ];
     }
 

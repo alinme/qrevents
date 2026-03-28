@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 defineProps<{
     eventName: string;
     albumUrl: string;
+    albumAccessCode: string;
+    albumAccessEntryUrl: string;
+    albumAccessShortcutUrl: string;
     wallUrl: string;
     qrCodeDataUrl: string;
     readyUrl?: string | null;
@@ -38,6 +41,18 @@ defineProps<{
                         alt="Album QR code"
                         class="w-full max-w-[320px]"
                     />
+                </div>
+
+                <div class="mt-5 space-y-2 text-center">
+                    <p class="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-brand-muted">
+                        Album code
+                    </p>
+                    <p class="text-3xl font-semibold tracking-[0.32em] text-brand-ink">
+                        {{ albumAccessCode }}
+                    </p>
+                    <p class="mx-auto max-w-md text-sm leading-6 text-brand-muted">
+                        No QR reader? Visit {{ albumAccessShortcutUrl }} and enter this code.
+                    </p>
                 </div>
 
                 <div class="mx-auto mt-8 flex max-w-md flex-col gap-3">
@@ -78,6 +93,17 @@ defineProps<{
                                 <Download class="size-4" />
                                 Download QR code
                             </span>
+                            <ArrowRight class="size-4" />
+                        </a>
+                    </Button>
+
+                    <Button as-child variant="outline" class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20">
+                        <a
+                            :href="albumAccessEntryUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <span>Open code entry page</span>
                             <ArrowRight class="size-4" />
                         </a>
                     </Button>

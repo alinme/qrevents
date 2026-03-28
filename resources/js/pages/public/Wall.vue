@@ -82,6 +82,8 @@ const props = defineProps<{
     eventName: string;
     status: string;
     albumUrl: string;
+    albumAccessCode: string;
+    albumEntryShortcutUrl: string;
     albumQrDataUrl: string;
     showPoweredBy: boolean;
     branding: WallBranding;
@@ -571,6 +573,12 @@ watch(
                             </p>
                             <p class="mt-1 text-xs text-white/80">
                                 {{ t('public.wall.open_digital_album') }}
+                            </p>
+                            <p class="mt-2 text-xs font-semibold tracking-[0.18em] text-white">
+                                {{ albumAccessCode }}
+                            </p>
+                            <p class="mt-1 text-[11px] text-white/75">
+                                Visit {{ albumEntryShortcutUrl }} if you need to type the code instead.
                             </p>
                             <a
                                 :href="albumUrl"

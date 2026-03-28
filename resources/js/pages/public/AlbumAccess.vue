@@ -10,7 +10,7 @@ const props = defineProps<{
     submitUrl: string;
     homeUrl: string;
     segmentCount: number;
-    segmentLength: number;
+    entryShortcutUrl: string;
 }>();
 
 const segmentRefs = ref<Array<HTMLInputElement | null>>([]);
@@ -20,14 +20,13 @@ const form = useForm({
     code: '',
 });
 
-const totalCodeLength = computed(() => props.segmentCount * props.segmentLength);
-const isComplete = computed(() => segments.value.every((segment) => segment.length === props.segmentLength));
+const isComplete = computed(() => segments.value.every((segment) => segment.length === 1));
 
 const normalizeCode = (value: string): string => {
     const albumMatch = value.match(/\/a\/([A-Za-z0-9]+)/i);
     const source = albumMatch?.[1] ?? value;
 
-    return source.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, totalCodeLength.value);
+    return source.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, props.segmentCount);
 };
 
 const focusSegment = (index: number): void => {
@@ -41,8 +40,7 @@ const fillSegmentsFromCode = (value: string): void => {
     const normalized = normalizeCode(value);
 
     for (let index = 0; index < props.segmentCount; index += 1) {
-        const start = index * props.segmentLength;
-        segments.value[index] = normalized.slice(start, start + props.segmentLength);
+        segments.value[index] = normalized[index] ?? '';
     }
 };
 
@@ -62,7 +60,7 @@ const submit = (): void => {
         preserveState: true,
         onError: () => {
             lastSubmittedCode.value = '';
-            const firstIncompleteIndex = segments.value.findIndex((segment) => segment.length < props.segmentLength);
+            const firstIncompleteIndex = segments.value.findIndex((segment) => segment.length < 1);
             focusSegment(firstIncompleteIndex === -1 ? 0 : firstIncompleteIndex);
         },
     });
@@ -70,11 +68,11 @@ const submit = (): void => {
 
 const handleInput = (index: number, event: Event): void => {
     const target = event.target as HTMLInputElement;
-    const value = normalizeCode(target.value).slice(0, props.segmentLength);
+    const value = normalizeCode(target.value).slice(0, 1);
 
     segments.value[index] = value;
 
-    if (value.length === props.segmentLength && index < props.segmentCount - 1) {
+    if (value.length === 1 && index < props.segmentCount - 1) {
         focusSegment(index + 1);
     }
 };
@@ -109,7 +107,7 @@ const handlePaste = (event: ClipboardEvent): void => {
     event.preventDefault();
     fillSegmentsFromCode(pastedCode);
 
-    const firstIncompleteIndex = segments.value.findIndex((segment) => segment.length < props.segmentLength);
+    const firstIncompleteIndex = segments.value.findIndex((segment) => segment.length < 1);
     focusSegment(firstIncompleteIndex === -1 ? props.segmentCount - 1 : firstIncompleteIndex);
 };
 
@@ -156,21 +154,21 @@ watch(
                         Enter the album code
                     </h1>
                     <p class="mx-auto max-w-lg text-sm leading-7 text-promo-muted sm:text-base">
-                        Type or paste the code from the QR card. As soon as the full code is correct, we will open the album for you.
+                        Enter the 4-character code from the QR card. We will open the album automatically as soon as it is complete.
                     </p>
                 </div>
 
                 <form class="mt-8 space-y-5" @submit.prevent="submit">
                     <input type="hidden" name="code" :value="form.code">
 
-                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div class="grid grid-cols-4 gap-3">
                         <label
                             v-for="(_, index) in segments"
                             :key="`segment-${index}`"
                             class="space-y-2"
                         >
                             <span class="block text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-promo-muted">
-                                {{ `Block ${index + 1}` }}
+                                {{ `Code ${index + 1}` }}
                             </span>
                             <input
                                 :ref="(element) => { segmentRefs[index] = element as HTMLInputElement | null; }"
@@ -179,9 +177,9 @@ watch(
                                 :autofocus="index === 0"
                                 autocapitalize="characters"
                                 inputmode="text"
-                                maxlength="4"
+                                maxlength="1"
                                 spellcheck="false"
-                                class="h-16 w-full rounded-[1.25rem] border border-promo-line bg-white px-3 text-center text-2xl font-semibold uppercase tracking-[0.16em] text-promo-ink shadow-[0_14px_30px_rgba(232,79,154,0.06)] outline-none transition focus:border-promo-primary focus:ring-4 focus:ring-promo-primary/10 sm:h-[4.5rem]"
+                                class="h-20 w-full rounded-[1.35rem] border border-promo-line bg-white px-0 text-center text-4xl font-semibold uppercase tracking-[0.08em] text-promo-ink shadow-[0_14px_30px_rgba(232,79,154,0.06)] outline-none transition focus:border-promo-primary focus:ring-4 focus:ring-promo-primary/10 sm:h-24 sm:text-5xl"
                                 @input="handleInput(index, $event)"
                                 @keydown="handleKeydown(index, $event)"
                                 @paste="handlePaste"
@@ -201,7 +199,7 @@ watch(
                         </Button>
 
                         <p class="text-sm text-promo-muted">
-                            You can also paste the full code or the full album link into any block.
+                            No QR reader? Visit {{ entryShortcutUrl }} and enter the 4-character code.
                         </p>
                     </div>
                 </form>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -77,6 +78,7 @@ class Event extends Model
         'branding',
         'invitation_settings',
         'share_token',
+        'album_access_code',
         'public_invitation_token',
         'media_export_status',
         'media_export_token',
@@ -126,6 +128,15 @@ class Event extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Event $event): void {
+            if (! is_string($event->album_access_code) || trim($event->album_access_code) === '') {
+                $event->album_access_code = self::generateAlbumAccessCode();
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -164,5 +175,25 @@ class Event extends Model
     public function guestLedgerReminderLogs(): HasMany
     {
         return $this->hasMany(EventGuestLedgerReminderLog::class);
+    }
+
+    public function publicAlbumCode(): string
+    {
+        return (string) ($this->album_access_code ?: $this->share_token);
+    }
+
+    public static function generateAlbumAccessCode(): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        do {
+            $code = '';
+
+            for ($index = 0; $index < 4; $index += 1) {
+                $code .= $characters[random_int(0, strlen($characters) - 1)];
+            }
+        } while (self::query()->withTrashed()->where('album_access_code', $code)->exists());
+
+        return Str::upper($code);
     }
 }

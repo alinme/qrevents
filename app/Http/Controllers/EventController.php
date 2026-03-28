@@ -77,24 +77,14 @@ class EventController extends Controller
         return Inertia::render('public/AlbumAccess', [
             'submitUrl' => route('events.album.access.resolve'),
             'homeUrl' => route('home'),
-            'segmentCount' => 8,
-            'segmentLength' => 4,
+            'segmentCount' => 4,
+            'entryShortcutUrl' => 'https://is.gd/evsmrt',
         ]);
     }
 
     public function resolveAlbumAccess(ResolveAlbumCodeRequest $request): RedirectResponse
     {
-        $normalizedCode = $request->normalizedCode();
-
-        $event = Event::query()
-            ->where('share_token', $normalizedCode)
-            ->first();
-
-        if ($event === null) {
-            $event = Event::query()
-                ->whereRaw('LOWER(share_token) = ?', [Str::lower($normalizedCode)])
-                ->first();
-        }
+        $event = $this->resolvePublicAlbumEvent($request->normalizedCode());
 
         if ($event === null) {
             throw ValidationException::withMessages([
@@ -102,7 +92,7 @@ class EventController extends Controller
             ]);
         }
 
-        return redirect()->route('events.album', $event->share_token);
+        return redirect()->route('events.album', $event->publicAlbumCode());
     }
 
     public function show(Request $request, Event $event): Response
@@ -1463,12 +1453,8 @@ class EventController extends Controller
 
     public function album(Request $request, string $shareToken): Response
     {
-        $event = Event::query()
-            ->where('share_token', $shareToken)
-            ->with([
-                'guests' => fn ($query) => $query->latest('updated_at')->limit(500),
-            ])
-            ->firstOrFail();
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: true);
+        abort_if($event === null, 404);
         $isUploadOpen = $this->isUploadWindowOpen($event);
         $isPaymentLocked = $this->isPaymentLocked($event);
         $isPreEventTestMode = $this->isPreEventTestUploadMode($event);
@@ -1482,7 +1468,7 @@ class EventController extends Controller
         if (! in_array($captionTheme, ['dark', 'light'], true)) {
             $captionTheme = 'dark';
         }
-        $albumUrl = route('events.album', $event->share_token);
+        $albumUrl = $this->publicAlbumUrl($event);
         $assetPage = $canViewAlbumMedia
             ? $this->publicAlbumAssetPagePayload(
                 $event,
@@ -1498,6 +1484,7 @@ class EventController extends Controller
 
         return Inertia::render('public/Album', [
             'shareToken' => $event->share_token,
+            'albumAccessCode' => $event->publicAlbumCode(),
             'eventName' => $event->name,
             'eventDate' => $event->event_date?->toDateString(),
             'uploadWindowStartsAt' => $event->upload_window_starts_at?->toIso8601String(),
@@ -1521,6 +1508,8 @@ class EventController extends Controller
             'links' => [
                 'album' => $albumUrl,
                 'wall' => route('events.wall', $event->share_token),
+                'albumEntry' => route('events.album.access.show'),
+                'albumEntryShortcut' => 'https://is.gd/evsmrt',
             ],
             'assetFeedUrl' => route('events.album.assets', $event->share_token),
             'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
@@ -2264,36 +2253,36 @@ class EventController extends Controller
 
     public function wall(Request $request, string $shareToken): Response
     {
-        $event = Event::query()
-            ->where('share_token', $shareToken)
-            ->with([
-                'assets' => fn ($query) => $query
-                    ->whereIn('kind', ['photo', 'video', 'text'])
-                    ->where('moderation_status', 'approved')
-                    ->withCount(['likes', 'comments'])
-                    ->with([
-                        'comments' => fn ($commentQuery) => $commentQuery
-                            ->latest('id')
-                            ->limit(6)
-                            ->with('guest')
-                            ->withCount('likes'),
-                    ])
-                    ->latest('id')
-                    ->limit(480),
-            ])
-            ->firstOrFail();
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: false, extraRelations: [
+            'assets' => fn ($query) => $query
+                ->whereIn('kind', ['photo', 'video', 'text'])
+                ->where('moderation_status', 'approved')
+                ->withCount(['likes', 'comments'])
+                ->with([
+                    'comments' => fn ($commentQuery) => $commentQuery
+                        ->latest('id')
+                        ->limit(6)
+                        ->with('guest')
+                        ->withCount('likes'),
+                ])
+                ->latest('id')
+                ->limit(480),
+        ]);
+        abort_if($event === null, 404);
         $branding = $this->resolvedEventBranding($event);
         app()->setLocale(FrontendLocalization::resolveEventLocale($request, $branding));
         $captionTheme = (string) ($branding['caption_theme'] ?? 'dark');
         if (! in_array($captionTheme, ['dark', 'light'], true)) {
             $captionTheme = 'dark';
         }
-        $albumUrl = route('events.album', $event->share_token);
+        $albumUrl = $this->publicAlbumUrl($event);
 
         return Inertia::render('public/Wall', [
             'eventName' => $event->name,
             'status' => $event->status,
             'albumUrl' => $albumUrl,
+            'albumAccessCode' => $event->publicAlbumCode(),
+            'albumEntryShortcutUrl' => 'https://is.gd/evsmrt',
             'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'showPoweredBy' => ! $this->eventRemovesAppBranding($event),
             'branding' => [
@@ -2320,12 +2309,42 @@ class EventController extends Controller
     }
 
     /**
+     * @param  array<string, mixed>  $extraRelations
+     */
+    private function resolvePublicAlbumEvent(string $code, bool $withGuests = false, array $extraRelations = []): ?Event
+    {
+        $normalizedCode = Str::upper(trim($code));
+
+        $relations = $extraRelations;
+
+        if ($withGuests) {
+            $relations['guests'] = fn ($query) => $query->latest('updated_at')->limit(500);
+        }
+
+        $query = Event::query();
+
+        if ($relations !== []) {
+            $query->with($relations);
+        }
+
+        return $query
+            ->where('album_access_code', $normalizedCode)
+            ->orWhere('share_token', $code)
+            ->first();
+    }
+
+    private function publicAlbumUrl(Event $event): string
+    {
+        return route('events.album', $event->publicAlbumCode());
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function eventProps(Request $request, Event $event): array
     {
         $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
-        $albumUrl = route('events.album', $event->share_token);
+        $albumUrl = $this->publicAlbumUrl($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
         $planFeatures = $this->planFeaturePayload($event);
@@ -2510,6 +2529,9 @@ class EventController extends Controller
                 'businessActivate' => route('dashboard.business.activate'),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
                 'album' => $albumUrl,
+                'albumAccessCode' => $event->publicAlbumCode(),
+                'albumEntry' => route('events.album.access.show'),
+                'albumEntryShortcut' => 'https://is.gd/evsmrt',
                 'wall' => route('events.wall', $event->share_token),
                 'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
                 'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->share_token)),
@@ -3229,7 +3251,7 @@ class EventController extends Controller
                 'respond' => $isPublicInvite
                     ? route('events.guests.public-invitation.respond', $token)
                     : route('events.guests.invitation.respond', $token),
-                'album' => route('events.album', $event->share_token),
+                'album' => $this->publicAlbumUrl($event),
             ],
             'branding' => [
                 'primaryColor' => (string) ($branding['primary_color'] ?? '#0F172A'),

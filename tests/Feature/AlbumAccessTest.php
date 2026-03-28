@@ -8,26 +8,27 @@ it('renders the album access page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/AlbumAccess')
-            ->where('segmentCount', 8)
-            ->where('segmentLength', 4)
+            ->where('segmentCount', 4)
             ->where('submitUrl', route('events.album.access.resolve'))
+            ->where('entryShortcutUrl', 'https://is.gd/evsmrt')
         );
 });
 
 it('redirects to the album for a matching code', function () {
     $event = Event::factory()->create([
         'share_token' => 'Ab12Cd34Ef56Gh78Ij90Kl12Mn34Op56',
+        'album_access_code' => 'AB12',
     ]);
 
     $this->post(route('events.album.access.resolve'), [
-        'code' => 'ab12-cd34 ef56-gh78 ij90-kl12 mn34-op56',
-    ])->assertRedirect(route('events.album', $event->share_token));
+        'code' => 'ab12',
+    ])->assertRedirect(route('events.album', $event->publicAlbumCode()));
 });
 
 it('returns an error when the code does not match an album', function () {
     $this->from(route('events.album.access.show'))
         ->post(route('events.album.access.resolve'), [
-            'code' => 'AA11BB22CC33DD44EE55FF66GG77HH88',
+            'code' => 'ZZ99',
         ])
         ->assertRedirect(route('events.album.access.show'))
         ->assertSessionHasErrors([
@@ -42,6 +43,20 @@ it('validates the album code length', function () {
         ])
         ->assertRedirect(route('events.album.access.show'))
         ->assertSessionHasErrors([
-            'code' => 'Album codes use 32 letters and numbers. Keep going until every block is filled.',
+            'code' => 'Album codes use 4 letters or numbers. Fill all 4 boxes and we will open the album.',
         ]);
+});
+
+it('opens the public album when the short access code is used in the album route', function () {
+    $event = Event::factory()->create([
+        'album_access_code' => 'Q7R2',
+    ]);
+
+    $this->get(route('events.album', $event->publicAlbumCode()))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Album')
+            ->where('albumAccessCode', 'Q7R2')
+            ->where('links.albumEntryShortcut', 'https://is.gd/evsmrt')
+        );
 });

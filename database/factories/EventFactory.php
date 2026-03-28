@@ -77,6 +77,7 @@ class EventFactory extends Factory
             'branding' => null,
             'invitation_settings' => null,
             'share_token' => Str::random(32),
+            'album_access_code' => Event::generateAlbumAccessCode(),
             'public_invitation_token' => Str::lower((string) Str::uuid()),
         ];
     }

@@ -214,6 +214,8 @@ type WelcomeScreenConfig = {
 type PublicLinks = {
     album: string;
     wall: string;
+    albumEntry: string;
+    albumEntryShortcut: string;
 };
 
 type AppearanceConfig = {
@@ -243,6 +245,7 @@ type GuestProfilePayload = {
 
 const props = defineProps<{
     shareToken: string;
+    albumAccessCode: string;
     eventName: string;
     eventDate: string | null;
     uploadWindowStartsAt: string | null;
@@ -1872,7 +1875,7 @@ const persistGuestAlbumHint = (): void => {
         guestAlbumHintStorageKey,
         JSON.stringify({
             shareToken: props.shareToken,
-            albumUrl: `${window.location.origin}/a/${props.shareToken}`,
+            albumUrl: window.location.href,
             eventName: props.eventName,
             guestName: guestName.value.trim() || null,
             guestToken: guestToken.value.trim() || null,
@@ -3947,6 +3950,12 @@ const onAlbumTouchCancel = (): void => {
                                             </p>
                                             <p class="mt-1 text-xs text-white/80">
                                                 {{ t('public.album.menu.share_album_hint') }}
+                                            </p>
+                                            <p class="mt-2 text-xs font-semibold tracking-[0.18em] text-white">
+                                                {{ props.albumAccessCode }}
+                                            </p>
+                                            <p class="mt-1 text-[11px] text-white/75">
+                                                No QR reader? Visit {{ links.albumEntryShortcut }} and enter this code.
                                             </p>
                                             <a
                                                 :href="links.wall"
