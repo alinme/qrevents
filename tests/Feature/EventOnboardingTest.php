@@ -273,7 +273,7 @@ it('lets onboarded business accounts create paid events from wallet credits', fu
             ->component('onboarding/Create')
             ->where('businessMode', true)
             ->where('businessWalletCredits', 100)
-            ->where('businessTopUpUrl', route('businesses'))
+            ->where('businessTopUpUrl', route('dashboard.business.wallet.history'))
         );
 
     $response = $this->actingAs($user)->post(route('dashboard.business.events.store'), [

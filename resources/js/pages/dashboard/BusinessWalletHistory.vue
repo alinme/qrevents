@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowUpRight, CreditCard, FolderKanban, Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     badgeClass,
     formatCreditDelta,
@@ -84,6 +91,7 @@ const topUpForm = useForm({
     credits: props.businessTopUp.defaultCredits,
     currency: props.businessTopUp.defaultCurrency,
 });
+const topUpModalOpen = ref(false);
 
 const selectedPack = computed(
     () =>
@@ -107,6 +115,9 @@ const selectedPriceLabel = computed(() => {
 const submitTopUp = (): void => {
     topUpForm.post(props.businessTopUp.submitUrl, {
         preserveScroll: true,
+        onSuccess: () => {
+            topUpModalOpen.value = false;
+        },
     });
 };
 </script>
@@ -148,95 +159,28 @@ const submitTopUp = (): void => {
                                 <p class="mt-1 text-xs leading-5 text-zinc-500">
                                     {{ metric.detail }}
                                 </p>
+                                <Button
+                                    v-if="metric.label === 'Balance'"
+                                    type="button"
+                                    variant="link"
+                                    class="mt-2 h-auto px-0 text-sm font-medium text-[#171411]"
+                                    @click="topUpModalOpen = true"
+                                >
+                                    Top up credits
+                                </Button>
                             </div>
                         </dl>
 
                         <div class="border-t border-black/5 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                Top up
+                                How it works
                             </p>
                             <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
-                                Add credits without leaving the dashboard
+                                Keep credits and spend in one place
                             </h2>
                             <p class="mt-1 text-sm leading-6 text-zinc-600">
-                                Pick a pack, choose checkout currency, and Stripe will return you here when it is done.
+                                The wallet keeps every top-up, bonus, and event debit together so you can follow the balance without leaving the business area.
                             </p>
-
-                            <form class="mt-4 space-y-4" @submit.prevent="submitTopUp">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button
-                                        v-for="pack in businessTopUp.packs"
-                                        :key="pack.credits"
-                                        type="button"
-                                        class="rounded-[1.15rem] border px-3 py-3 text-left transition"
-                                        :class="
-                                            pack.credits === topUpForm.credits
-                                                ? 'border-[#171411] bg-[#171411] text-white'
-                                                : 'border-black/10 bg-[#fbfaf7] text-[#171411] hover:border-black/20 hover:bg-white'
-                                        "
-                                        @click="topUpForm.credits = pack.credits"
-                                    >
-                                        <p class="text-sm font-semibold">
-                                            {{ pack.credits }} credits
-                                        </p>
-                                        <p
-                                            class="mt-1 text-xs"
-                                            :class="
-                                                pack.credits === topUpForm.credits
-                                                    ? 'text-white/75'
-                                                    : 'text-zinc-500'
-                                            "
-                                        >
-                                            {{
-                                                pack.bonus_credits > 0
-                                                    ? `+${pack.bonus_credits} bonus`
-                                                    : 'No bonus'
-                                            }}
-                                        </p>
-                                    </button>
-                                </div>
-
-                                <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
-                                    <div class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3">
-                                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                            You receive
-                                        </p>
-                                        <p class="mt-1 text-base font-semibold text-[#171411]">
-                                            {{ selectedPack?.total_credits ?? 0 }} credits
-                                        </p>
-                                        <p class="mt-1 text-xs text-zinc-500">
-                                            {{ selectedPriceLabel ?? 'Price unavailable' }}
-                                        </p>
-                                    </div>
-
-                                    <label class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3 text-sm text-zinc-600">
-                                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                            Currency
-                                        </span>
-                                        <select
-                                            v-model="topUpForm.currency"
-                                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-[#171411] focus:ring-0"
-                                        >
-                                            <option
-                                                v-for="currency in businessTopUp.supportedCheckoutCurrencies"
-                                                :key="currency"
-                                                :value="currency"
-                                            >
-                                                {{ currency }}
-                                            </option>
-                                        </select>
-                                    </label>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    class="w-full bg-[#171411] text-white hover:bg-[#2b2621]"
-                                    :disabled="topUpForm.processing"
-                                >
-                                    <Plus class="size-4" />
-                                    {{ topUpForm.processing ? 'Opening Stripe…' : `Top up ${topUpForm.credits} credits` }}
-                                </Button>
-                            </form>
 
                             <div class="mt-4 space-y-3 border-t border-black/5 pt-4 text-sm text-zinc-600">
                                 <p class="flex items-start gap-3">
@@ -252,6 +196,16 @@ const submitTopUp = (): void => {
                                     Each debit in the ledger links back to the event when one exists.
                                 </p>
                             </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="mt-4"
+                                @click="topUpModalOpen = true"
+                            >
+                                <Plus class="size-4" />
+                                Top up credits
+                            </Button>
                         </div>
                     </div>
                 </section>
@@ -370,4 +324,96 @@ const submitTopUp = (): void => {
             </div>
         </div>
     </AppLayout>
+
+    <Dialog v-model:open="topUpModalOpen">
+        <DialogContent class="sm:max-w-xl">
+            <DialogHeader class="text-left">
+                <DialogTitle>Top up credits</DialogTitle>
+                <DialogDescription>
+                    Pick a pack, choose checkout currency, and Stripe will bring you back to the wallet when payment is done.
+                </DialogDescription>
+            </DialogHeader>
+
+            <form class="space-y-4" @submit.prevent="submitTopUp">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <button
+                        v-for="pack in businessTopUp.packs"
+                        :key="pack.credits"
+                        type="button"
+                        class="rounded-[1.15rem] border px-3 py-3 text-left transition"
+                        :class="
+                            pack.credits === topUpForm.credits
+                                ? 'border-[#171411] bg-[#171411] text-white'
+                                : 'border-black/10 bg-[#fbfaf7] text-[#171411] hover:border-black/20 hover:bg-white'
+                        "
+                        @click="topUpForm.credits = pack.credits"
+                    >
+                        <p class="text-sm font-semibold">
+                            {{ pack.credits }} credits
+                        </p>
+                        <p
+                            class="mt-1 text-xs"
+                            :class="
+                                pack.credits === topUpForm.credits
+                                    ? 'text-white/75'
+                                    : 'text-zinc-500'
+                            "
+                        >
+                            {{
+                                pack.bonus_credits > 0
+                                    ? `+${pack.bonus_credits} bonus`
+                                    : 'No bonus'
+                            }}
+                        </p>
+                    </button>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px]">
+                    <div class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3">
+                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            You receive
+                        </p>
+                        <p class="mt-1 text-base font-semibold text-[#171411]">
+                            {{ selectedPack?.total_credits ?? 0 }} credits
+                        </p>
+                        <p class="mt-1 text-xs text-zinc-500">
+                            {{ selectedPriceLabel ?? 'Price unavailable' }}
+                        </p>
+                    </div>
+
+                    <label class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3 text-sm text-zinc-600">
+                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            Currency
+                        </span>
+                        <select
+                            v-model="topUpForm.currency"
+                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-[#171411] focus:ring-0"
+                        >
+                            <option
+                                v-for="currency in businessTopUp.supportedCheckoutCurrencies"
+                                :key="currency"
+                                :value="currency"
+                            >
+                                {{ currency }}
+                            </option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button type="button" variant="outline" @click="topUpModalOpen = false">
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        class="bg-[#171411] text-white hover:bg-[#2b2621]"
+                        :disabled="topUpForm.processing"
+                    >
+                        <Plus class="size-4" />
+                        {{ topUpForm.processing ? 'Opening Stripe…' : `Top up ${topUpForm.credits} credits` }}
+                    </Button>
+                </div>
+            </form>
+        </DialogContent>
+    </Dialog>
 </template>

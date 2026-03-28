@@ -476,7 +476,7 @@ class EventOnboardingController extends Controller
                 ? (int) $request->user()->business_wallet_credits
                 : null,
             'businessTopUpUrl' => $businessMode
-                ? route('businesses')
+                ? route('dashboard.business.wallet.history')
                 : null,
             'submitUrl' => $businessMode
                 ? route('dashboard.business.events.store')
