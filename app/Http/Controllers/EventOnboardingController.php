@@ -6,6 +6,7 @@ use App\Http\Requests\StoreEventOnboardingRequest;
 use App\Models\Event;
 use App\Models\Plan;
 use App\Models\User;
+use App\Support\BusinessPlanCatalog;
 use App\Support\BusinessWalletManager;
 use App\Support\EventLifecycleWindows;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -22,6 +23,10 @@ use Inertia\Response;
 
 class EventOnboardingController extends Controller
 {
+    public function __construct(
+        private BusinessPlanCatalog $businessPlanCatalog,
+    ) {}
+
     public function create(Request $request): Response|RedirectResponse
     {
         if ($request->user() === null) {
@@ -205,11 +210,12 @@ class EventOnboardingController extends Controller
         $normalizedSlug = is_string($slug) ? Str::lower(trim($slug)) : '';
 
         if ($normalizedSlug !== '') {
-            $selectedPlan = Plan::query()
-                ->where('slug', $normalizedSlug)
-                ->where('is_active', true)
-                ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
-                ->first();
+            $selectedPlan = $businessMode
+                ? $this->businessPlanCatalog->query()->where('slug', $normalizedSlug)->first()
+                : Plan::query()
+                    ->where('slug', $normalizedSlug)
+                    ->where('is_active', true)
+                    ->first();
 
             if ($selectedPlan !== null) {
                 return $selectedPlan;
@@ -218,28 +224,30 @@ class EventOnboardingController extends Controller
             abort_if($businessMode, 422, 'Choose an available business plan.');
         }
 
-        $activeDefaultPlan = Plan::query()
-            ->where('is_active', true)
-            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
-            ->where('is_default', true)
-            ->orderBy('price_cents')
-            ->first();
+        $activeDefaultPlan = $businessMode
+            ? $this->businessPlanCatalog->query()->where('is_default', true)->first()
+            : Plan::query()
+                ->where('is_active', true)
+                ->where('is_default', true)
+                ->orderBy('price_cents')
+                ->first();
 
         if ($activeDefaultPlan !== null) {
             return $activeDefaultPlan;
         }
 
-        $fallbackActivePlan = Plan::query()
-            ->where('is_active', true)
-            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
-            ->orderBy('price_cents')
-            ->first();
+        $fallbackActivePlan = $businessMode
+            ? $this->businessPlanCatalog->query()->first()
+            : Plan::query()
+                ->where('is_active', true)
+                ->orderBy('price_cents')
+                ->first();
 
         if ($fallbackActivePlan !== null) {
             return $fallbackActivePlan;
         }
 
-        abort_if($businessMode, 404);
+        abort_if($businessMode, 500, 'Business plans are not configured.');
 
         return tap(
             Plan::query()->firstOrNew(['slug' => 'free']),
@@ -644,10 +652,13 @@ class EventOnboardingController extends Controller
      */
     private function pricingPlansPayload(bool $businessMode = false): array
     {
-        return Plan::query()
-            ->where('is_active', true)
-            ->when($businessMode, fn ($query) => $query->where('business_enabled', true))
-            ->orderBy('price_cents')
+        $planQuery = $businessMode
+            ? $this->businessPlanCatalog->query()
+            : Plan::query()
+                ->where('is_active', true)
+                ->orderBy('price_cents');
+
+        return $planQuery
             ->get()
             ->map(function (Plan $plan) use ($businessMode): array {
                 return [

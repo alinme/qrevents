@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Support\BusinessPlanCatalog;
 use App\Support\BusinessWalletManager;
 use App\Support\ExchangeRateManager;
 use Illuminate\Http\Request;
@@ -12,6 +13,10 @@ use Laravel\Fortify\Features;
 
 class MarketingController extends Controller
 {
+    public function __construct(
+        private BusinessPlanCatalog $businessPlanCatalog,
+    ) {}
+
     public function pricing(): Response
     {
         return Inertia::render('Pricing', [
@@ -127,10 +132,8 @@ class MarketingController extends Controller
      */
     private function businessPlans(): array
     {
-        return Plan::query()
-            ->where('is_active', true)
-            ->where('business_enabled', true)
-            ->orderBy('price_cents')
+        return $this->businessPlanCatalog
+            ->query()
             ->get()
             ->map(fn (Plan $plan): array => [
                 'slug' => $plan->slug,

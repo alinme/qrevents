@@ -447,6 +447,60 @@ it('blocks business accounts from creating free plan events', function () {
         ->and($user->fresh()->business_wallet_credits)->toBe(100);
 });
 
+it('repairs legacy business plan flags before rendering the business create page', function () {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'business_enabled' => false,
+        'business_credit_cost' => null,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'price_cents' => 4900,
+        'business_enabled' => false,
+        'business_credit_cost' => null,
+        'is_active' => true,
+        'is_default' => false,
+    ]);
+
+    Plan::factory()->create([
+        'name' => 'Pro',
+        'slug' => 'pro',
+        'price_cents' => 9900,
+        'business_enabled' => false,
+        'business_credit_cost' => null,
+        'is_active' => true,
+        'is_default' => false,
+    ]);
+
+    $user = User::factory()->business()->create([
+        'business_wallet_credits' => 100,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard.business.events.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/Create')
+            ->where('businessMode', true)
+            ->where('defaultPlanSlug', 'plus')
+            ->where('pricingPlans.0.slug', 'plus')
+            ->where('pricingPlans.0.businessCreditCost', 25)
+            ->where('pricingPlans.1.slug', 'pro')
+            ->where('pricingPlans.1.businessCreditCost', 50)
+        );
+
+    expect(Plan::query()->where('slug', 'plus')->value('business_enabled'))->toBeTrue()
+        ->and(Plan::query()->where('slug', 'plus')->value('business_credit_cost'))->toBe(25)
+        ->and(Plan::query()->where('slug', 'pro')->value('business_enabled'))->toBeTrue()
+        ->and(Plan::query()->where('slug', 'pro')->value('business_credit_cost'))->toBe(50);
+});
+
 it('blocks event dates too far in the future', function () {
     CarbonImmutable::setTestNow('2026-03-10 12:00:00');
 
