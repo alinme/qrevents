@@ -60,6 +60,8 @@ It must not feel:
 26. Filters, controls, and batch actions should live as flat toolbars inside the section they affect, never as a secondary boxed panel.
 27. Event lists should default to clean rows, not tiled cards, unless the content truly needs a visual preview.
 28. A dashboard should never read like a newspaper: cut the copy, shrink the headings, and keep support text to one short sentence when possible.
+29. Never show the same primary action twice on the same screen.
+30. Never repeat the same stat in multiple places unless the second instance adds new context or changes the job of the screen.
 
 ## Information architecture goals
 
@@ -109,6 +111,7 @@ For owner ledger pages:
   - header
   - main list
   - support rail
+- If an aside can grow long, keep the heading fixed and make only the body scroll.
 - Keep badges small and useful
 - Avoid more than one level of visual nesting
 - Use dividers, spacing, and quiet background shifts before introducing another border box

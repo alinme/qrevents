@@ -320,7 +320,8 @@ const workspaceLabel = (event: DashboardEvent): string =>
                         </div>
                     </section>
 
-                    <aside id="activity" class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                    <aside id="activity" class="flex min-h-0 rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
+                        <div class="flex min-h-0 w-full flex-col">
                         <div class="flex flex-col gap-2 border-b border-black/5 pb-4">
                             <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
                                 Recent activity
@@ -334,7 +335,8 @@ const workspaceLabel = (event: DashboardEvent): string =>
                             No recent uploads yet.
                         </div>
 
-                        <div v-else class="divide-y divide-black/5 pt-2">
+                        <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2">
+                            <div class="divide-y divide-black/5 pr-1">
                             <Link
                                 v-for="activity in recentActivity"
                                 :key="activity.id"
@@ -365,6 +367,8 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                     <ExternalLink class="size-4 text-zinc-400" />
                                 </div>
                             </Link>
+                            </div>
+                        </div>
                         </div>
                     </aside>
                 </div>

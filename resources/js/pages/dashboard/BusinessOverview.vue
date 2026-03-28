@@ -71,25 +71,25 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const businessHealthCards = computed(() => [
     {
-        label: 'Total events',
+        label: 'Events',
         value: props.filters.ownedEventTotalCount,
         detail: 'Everything in your owned-event portfolio.',
         icon: FolderKanban,
     },
     {
-        label: 'Live now',
+        label: 'Live',
         value: props.businessOverview.liveEventCount,
         detail: 'Events currently open for guest uploads.',
         icon: ArrowRight,
     },
     {
-        label: 'Need setup',
+        label: 'Setup',
         value: props.summary.pendingSetupCount,
         detail: 'Events still going through onboarding.',
         icon: Settings,
     },
     {
-        label: 'Billing attention',
+        label: 'Attention',
         value:
             props.businessOverview.overdueEventCount > 0
                 ? `${props.businessOverview.overdueEventCount} overdue`
@@ -114,36 +114,6 @@ const actionButtonClass = (tone: QuickAction['tone']): string => {
 
     return 'border border-black/10 bg-white text-[#171411] hover:bg-[#faf7f1]';
 };
-
-const shortcutLinks = computed(() => [
-    {
-        label: 'Needs attention',
-        href: buildBusinessUrl({
-            search: '',
-            status: 'attention',
-            page: null,
-        }),
-        count: props.filters.attentionTotalCount,
-    },
-    {
-        label: 'Overdue billing',
-        href: buildBusinessUrl({
-            search: '',
-            status: 'overdue',
-            page: null,
-        }),
-        count: props.businessOverview.overdueEventCount,
-    },
-    {
-        label: 'Ready exports',
-        href: buildBusinessUrl({
-            search: '',
-            status: 'export_ready',
-            page: null,
-        }),
-        count: props.businessOverview.readyExportCount,
-    },
-]);
 
 const latestWalletEntry = computed(() => props.walletActivity[0] ?? null);
 
@@ -524,24 +494,6 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 </p>
                             </div>
 
-                            <div class="mt-4 flex flex-wrap gap-2">
-                                <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                    <Link :href="businessActionLinks.topUpWallet">
-                                        Top up credits
-                                    </Link>
-                                </Button>
-                                <Button
-                                    v-for="shortcut in shortcutLinks"
-                                    :key="shortcut.label"
-                                    as-child
-                                    size="sm"
-                                    variant="outline"
-                                >
-                                    <Link :href="shortcut.href">
-                                        {{ shortcut.label }} · {{ shortcut.count }}
-                                    </Link>
-                                </Button>
-                            </div>
                         </div>
                     </div>
                 </section>
@@ -557,11 +509,9 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     Create events, filter the portfolio, and jump straight into the right workspace.
                                 </p>
                             </div>
-                            <Button as-child size="sm" class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                <Link :href="businessActionLinks.createEvent">
-                                    Create event
-                                </Link>
-                            </Button>
+                            <p class="text-sm text-zinc-500">
+                                {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
+                            </p>
                         </div>
 
                         <div class="space-y-4 pt-5">
@@ -592,9 +542,6 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     </div>
                                 </form>
 
-                                <p class="text-sm text-zinc-500">
-                                    {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
-                                </p>
                             </div>
 
                             <div class="flex flex-wrap gap-2">
@@ -723,9 +670,6 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.billingTone)">
                                                 {{ event.billingLabel }}
                                             </span>
-                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[0.68rem] font-semibold" :class="badgeClass(event.mediaExportTone)">
-                                                {{ event.mediaExportLabel }}
-                                            </span>
                                         </div>
 
                                         <div class="mt-3">
@@ -737,6 +681,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             </p>
                                             <p class="mt-1 text-sm text-zinc-500">
                                                 {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending review
+                                                <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
                                                 <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
                                             </p>
                                         </div>
@@ -752,12 +697,6 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <Link :href="event.links.media">
                                                 <Camera class="size-4" />
                                                 Media
-                                            </Link>
-                                        </Button>
-                                        <Button as-child size="sm" variant="outline">
-                                            <Link :href="event.links.settings">
-                                                <Settings class="size-4" />
-                                                Settings
                                             </Link>
                                         </Button>
                                         <Button v-if="!event.isPaid" as-child size="sm" variant="outline">
