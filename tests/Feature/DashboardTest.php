@@ -5,6 +5,7 @@ use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\EventCollaborator;
 use App\Models\EventGuest;
+use App\Models\ExchangeRate;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -434,6 +435,19 @@ test('business accounts can open the dedicated business dashboard', function () 
 });
 
 test('business accounts can open a dedicated wallet history page', function () {
+    ExchangeRate::query()->create([
+        'base_currency' => 'EUR',
+        'quote_currency' => 'RON',
+        'rate' => 4.95,
+        'fetched_at' => now(),
+    ]);
+    ExchangeRate::query()->create([
+        'base_currency' => 'EUR',
+        'quote_currency' => 'GBP',
+        'rate' => 0.86,
+        'fetched_at' => now(),
+    ]);
+
     $owner = User::factory()->business()->create([
         'business_wallet_credits' => 80,
         'business_wallet_currency' => 'EUR',
@@ -470,8 +484,13 @@ test('business accounts can open a dedicated wallet history page', function () {
             ->where('accountNavigation.2.title', 'Wallet')
             ->where('accountNavigation.3.title', 'Portfolio')
             ->where('dashboardLinks.business', route('dashboard.business'))
-            ->where('businessActionLinks.createEvent', route('dashboard.business.events.create'))
-            ->where('businessActionLinks.topUpWallet', route('businesses'))
+            ->where('businessTopUp.submitUrl', route('dashboard.business.wallet.checkout'))
+            ->where('businessTopUp.defaultCredits', 100)
+            ->where('businessTopUp.defaultCurrency', 'EUR')
+            ->where('businessTopUp.supportedCheckoutCurrencies', ['EUR', 'RON', 'GBP'])
+            ->where('businessTopUp.packs.2.credits', 100)
+            ->where('businessTopUp.packs.2.total_credits', 125)
+            ->where('businessTopUp.packs.2.priceLabels.RON', 'RON 495.00')
             ->where('walletSummary.currentBalance', 80)
             ->where('walletSummary.currency', 'EUR')
             ->where('walletSummary.totalTransactions', 3)

@@ -9,6 +9,8 @@ use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\EventCollaborator;
 use App\Support\AuthOnboardingRedirector;
+use App\Support\BusinessWalletManager;
+use App\Support\ExchangeRateManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -135,8 +137,11 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function walletHistory(Request $request): Response
-    {
+    public function walletHistory(
+        Request $request,
+        BusinessWalletManager $businessWalletManager,
+        ExchangeRateManager $exchangeRateManager,
+    ): Response {
         abort_unless($request->user()->canAccessBusinessDashboard(), 403);
 
         $data = $this->accountData($request);
@@ -168,9 +173,14 @@ class DashboardController extends Controller
                 'recentActivity' => route('dashboard.account').'#activity',
             ],
             'businessActionLinks' => [
-                'createEvent' => route('dashboard.business.events.create'),
-                'topUpWallet' => route('businesses'),
                 'walletHistory' => route('dashboard.business.wallet.history'),
+            ],
+            'businessTopUp' => [
+                'submitUrl' => route('dashboard.business.wallet.checkout'),
+                'defaultCredits' => 100,
+                'defaultCurrency' => $exchangeRateManager->baseCurrency(),
+                'supportedCheckoutCurrencies' => $exchangeRateManager->supportedCheckoutCurrencies(),
+                'packs' => $this->businessTopUpPacks($businessWalletManager, $exchangeRateManager),
             ],
             'walletSummary' => [
                 'currentBalance' => (int) ($request->user()->business_wallet_credits ?? 0),
@@ -1353,5 +1363,49 @@ class DashboardController extends Controller
             'media_export_failed_at' => null,
             'media_export_error' => null,
         ])->save();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function businessTopUpPacks(
+        BusinessWalletManager $businessWalletManager,
+        ExchangeRateManager $exchangeRateManager,
+    ): array {
+        return collect($businessWalletManager->topUpPacks())
+            ->map(function (array $pack) use ($exchangeRateManager): array {
+                $baseAmountCents = ((int) $pack['credits']) * 100;
+                $priceLabels = collect($exchangeRateManager->supportedCheckoutCurrencies())
+                    ->mapWithKeys(function (string $currency) use ($exchangeRateManager, $baseAmountCents): array {
+                        $localizedAmountCents = $exchangeRateManager->convertEuroCentsToCurrencyCents(
+                            $baseAmountCents,
+                            $currency,
+                        );
+
+                        return [
+                            $currency => $this->moneyLabel($currency, $localizedAmountCents),
+                        ];
+                    })
+                    ->all();
+
+                return [
+                    'credits' => (int) $pack['credits'],
+                    'bonus_percent' => (int) $pack['bonus_percent'],
+                    'bonus_credits' => (int) $pack['bonus_credits'],
+                    'total_credits' => (int) $pack['total_credits'],
+                    'priceLabels' => $priceLabels,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function moneyLabel(string $currency, int $priceCents): string
+    {
+        if ($priceCents === 0) {
+            return 'Free';
+        }
+
+        return sprintf('%s %.2f', strtoupper($currency), $priceCents / 100);
     }
 }

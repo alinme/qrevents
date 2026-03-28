@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowUpRight, CreditCard, FolderKanban, Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,9 +22,20 @@ import type {
 const props = defineProps<{
     dashboardLinks: DashboardLinks;
     businessActionLinks: {
-        createEvent: string;
-        topUpWallet: string;
         walletHistory: string;
+    };
+    businessTopUp: {
+        submitUrl: string;
+        defaultCredits: number;
+        defaultCurrency: string;
+        supportedCheckoutCurrencies: string[];
+        packs: Array<{
+            credits: number;
+            bonus_percent: number;
+            bonus_credits: number;
+            total_credits: number;
+            priceLabels: Record<string, string>;
+        }>;
     };
     walletSummary: BusinessWalletSummary;
     walletTransactions: BusinessWalletActivity[];
@@ -67,6 +79,36 @@ const compactMetrics = [
         detail: 'Total ledger movements.',
     },
 ];
+
+const topUpForm = useForm({
+    credits: props.businessTopUp.defaultCredits,
+    currency: props.businessTopUp.defaultCurrency,
+});
+
+const selectedPack = computed(
+    () =>
+        props.businessTopUp.packs.find(
+            (pack) => pack.credits === topUpForm.credits,
+        ) ?? props.businessTopUp.packs[0] ?? null,
+);
+
+const selectedPriceLabel = computed(() => {
+    if (!selectedPack.value) {
+        return null;
+    }
+
+    return (
+        selectedPack.value.priceLabels[topUpForm.currency] ??
+        selectedPack.value.priceLabels.EUR ??
+        null
+    );
+});
+
+const submitTopUp = (): void => {
+    topUpForm.post(props.businessTopUp.submitUrl, {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -87,20 +129,6 @@ const compactMetrics = [
                             <p class="mt-2 text-sm leading-6 text-zinc-600">
                                 A full ledger for top-ups, bonus credits, and event spend.
                             </p>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2">
-                            <Button as-child class="bg-[#171411] text-white hover:bg-[#2b2621]">
-                                <Link :href="businessActionLinks.topUpWallet">
-                                    <Plus class="size-4" />
-                                    Top up credits
-                                </Link>
-                            </Button>
-                            <Button as-child variant="outline">
-                                <Link :href="businessActionLinks.createEvent">
-                                    Create event
-                                </Link>
-                            </Button>
                         </div>
                     </div>
 
@@ -125,25 +153,105 @@ const compactMetrics = [
 
                         <div class="border-t border-black/5 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                How it works
+                                Top up
                             </p>
-                            <div class="mt-3 space-y-3 text-sm text-zinc-600">
+                            <h2 class="mt-2 text-base font-semibold text-[#171411] sm:text-lg">
+                                Add credits without leaving the dashboard
+                            </h2>
+                            <p class="mt-1 text-sm leading-6 text-zinc-600">
+                                Pick a pack, choose checkout currency, and Stripe will return you here when it is done.
+                            </p>
+
+                            <form class="mt-4 space-y-4" @submit.prevent="submitTopUp">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                        v-for="pack in businessTopUp.packs"
+                                        :key="pack.credits"
+                                        type="button"
+                                        class="rounded-[1.15rem] border px-3 py-3 text-left transition"
+                                        :class="
+                                            pack.credits === topUpForm.credits
+                                                ? 'border-[#171411] bg-[#171411] text-white'
+                                                : 'border-black/10 bg-[#fbfaf7] text-[#171411] hover:border-black/20 hover:bg-white'
+                                        "
+                                        @click="topUpForm.credits = pack.credits"
+                                    >
+                                        <p class="text-sm font-semibold">
+                                            {{ pack.credits }} credits
+                                        </p>
+                                        <p
+                                            class="mt-1 text-xs"
+                                            :class="
+                                                pack.credits === topUpForm.credits
+                                                    ? 'text-white/75'
+                                                    : 'text-zinc-500'
+                                            "
+                                        >
+                                            {{
+                                                pack.bonus_credits > 0
+                                                    ? `+${pack.bonus_credits} bonus`
+                                                    : 'No bonus'
+                                            }}
+                                        </p>
+                                    </button>
+                                </div>
+
+                                <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
+                                    <div class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3">
+                                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                            You receive
+                                        </p>
+                                        <p class="mt-1 text-base font-semibold text-[#171411]">
+                                            {{ selectedPack?.total_credits ?? 0 }} credits
+                                        </p>
+                                        <p class="mt-1 text-xs text-zinc-500">
+                                            {{ selectedPriceLabel ?? 'Price unavailable' }}
+                                        </p>
+                                    </div>
+
+                                    <label class="rounded-[1.15rem] border border-black/10 bg-[#fbfaf7] px-4 py-3 text-sm text-zinc-600">
+                                        <span class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                                            Currency
+                                        </span>
+                                        <select
+                                            v-model="topUpForm.currency"
+                                            class="mt-2 block w-full border-0 bg-transparent px-0 text-sm font-medium text-[#171411] focus:ring-0"
+                                        >
+                                            <option
+                                                v-for="currency in businessTopUp.supportedCheckoutCurrencies"
+                                                :key="currency"
+                                                :value="currency"
+                                            >
+                                                {{ currency }}
+                                            </option>
+                                        </select>
+                                    </label>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    class="w-full bg-[#171411] text-white hover:bg-[#2b2621]"
+                                    :disabled="topUpForm.processing"
+                                >
+                                    <Plus class="size-4" />
+                                    {{ topUpForm.processing ? 'Opening Stripe…' : `Top up ${topUpForm.credits} credits` }}
+                                </Button>
+                            </form>
+
+                            <div class="mt-4 space-y-3 border-t border-black/5 pt-4 text-sm text-zinc-600">
                                 <p class="flex items-start gap-3">
                                     <CreditCard class="mt-0.5 size-4 shrink-0 text-zinc-400" />
                                     Top-ups and bonus credits land in the same balance.
                                 </p>
                                 <p class="flex items-start gap-3">
                                     <FolderKanban class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                    Creating a Plus or Pro event subtracts credits from this wallet.
+                                    Plus and Pro events deduct credits from this wallet.
                                 </p>
                                 <p class="flex items-start gap-3">
                                     <ArrowUpRight class="mt-0.5 size-4 shrink-0 text-zinc-400" />
-                                    Each debit links back to its event when one is available.
+                                    Each debit in the ledger links back to the event when one exists.
                                 </p>
                             </div>
-                            <p class="mt-4 text-sm text-zinc-500">
-                                Latest {{ formatDateTime(walletSummary.latestActivityAt, 'No activity yet') }}
-                            </p>
                         </div>
                     </div>
                 </section>
@@ -169,7 +277,7 @@ const compactMetrics = [
                                 No wallet activity yet
                             </h3>
                             <p class="text-sm leading-6 text-zinc-600">
-                                Top up credits or create your first business event and the ledger will start here.
+                                Your next top-up will appear here first, followed by bonus credits and event debits.
                             </p>
                         </div>
                     </div>

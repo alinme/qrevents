@@ -743,7 +743,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             </div>
                         </div>
 
-                        <div class="min-w-0 border-t border-black/5 pt-5 xl:flex xl:max-h-[22rem] xl:min-h-0 xl:flex-col xl:overflow-hidden xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
+                        <div class="min-w-0 border-t border-black/5 pt-5 xl:flex xl:h-[22rem] xl:min-h-0 xl:flex-col xl:overflow-hidden xl:border-t-0 xl:border-l xl:pl-6 xl:pt-0">
                             <div class="flex items-start justify-between gap-3 border-b border-black/5 pb-4">
                                 <div>
                                     <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -939,7 +939,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         </div>
                     </div>
 
-                    <div class="max-h-[36rem] overflow-y-auto pt-1 pr-1">
+                    <div class="lg:h-[36rem] lg:overflow-y-auto lg:pt-1 lg:pr-1">
                         <div v-if="ownedEvents.length === 0" class="py-12 text-center">
                             <div class="mx-auto max-w-md space-y-2">
                                 <h3 class="text-lg font-semibold text-[#171411]">
