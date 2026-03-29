@@ -4215,8 +4215,208 @@ downloadPublicAssetForm.head = (args: { shareToken: string | number, asset: numb
 downloadPublicAsset.form = downloadPublicAssetForm
 
 /**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+export const publicAssetPreview = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: publicAssetPreview.url(args, options),
+    method: 'get',
+})
+
+publicAssetPreview.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/assets/{asset}/preview',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+publicAssetPreview.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return publicAssetPreview.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+publicAssetPreview.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: publicAssetPreview.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+publicAssetPreview.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: publicAssetPreview.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+const publicAssetPreviewForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetPreview.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+publicAssetPreviewForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetPreview.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetPreview
+* @see app/Http/Controllers/EventController.php:2233
+* @route '/a/{shareToken}/assets/{asset}/preview'
+*/
+publicAssetPreviewForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetPreview.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+publicAssetPreview.form = publicAssetPreviewForm
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+export const publicAssetThumbnail = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: publicAssetThumbnail.url(args, options),
+    method: 'get',
+})
+
+publicAssetThumbnail.definition = {
+    methods: ["get","head"],
+    url: '/a/{shareToken}/assets/{asset}/thumbnail',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+publicAssetThumbnail.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+    if (Array.isArray(args)) {
+        args = {
+            shareToken: args[0],
+            asset: args[1],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        shareToken: args.shareToken,
+        asset: typeof args.asset === 'object'
+        ? args.asset.id
+        : args.asset,
+    }
+
+    return publicAssetThumbnail.definition.url
+            .replace('{shareToken}', parsedArgs.shareToken.toString())
+            .replace('{asset}', parsedArgs.asset.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+publicAssetThumbnail.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: publicAssetThumbnail.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+publicAssetThumbnail.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: publicAssetThumbnail.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+const publicAssetThumbnailForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetThumbnail.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+publicAssetThumbnailForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetThumbnail.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\EventController::publicAssetThumbnail
+* @see app/Http/Controllers/EventController.php:2249
+* @route '/a/{shareToken}/assets/{asset}/thumbnail'
+*/
+publicAssetThumbnailForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: publicAssetThumbnail.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+publicAssetThumbnail.form = publicAssetThumbnailForm
+
+/**
 * @see \App\Http\Controllers\EventController::deletePublicAsset
-* @see app/Http/Controllers/EventController.php:2234
+* @see app/Http/Controllers/EventController.php:2265
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 export const deletePublicAsset = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -4231,7 +4431,7 @@ deletePublicAsset.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::deletePublicAsset
-* @see app/Http/Controllers/EventController.php:2234
+* @see app/Http/Controllers/EventController.php:2265
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 deletePublicAsset.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -4259,7 +4459,7 @@ deletePublicAsset.url = (args: { shareToken: string | number, asset: number | { 
 
 /**
 * @see \App\Http\Controllers\EventController::deletePublicAsset
-* @see app/Http/Controllers/EventController.php:2234
+* @see app/Http/Controllers/EventController.php:2265
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 deletePublicAsset.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -4269,7 +4469,7 @@ deletePublicAsset.post = (args: { shareToken: string | number, asset: number | {
 
 /**
 * @see \App\Http\Controllers\EventController::deletePublicAsset
-* @see app/Http/Controllers/EventController.php:2234
+* @see app/Http/Controllers/EventController.php:2265
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 const deletePublicAssetForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -4279,7 +4479,7 @@ const deletePublicAssetForm = (args: { shareToken: string | number, asset: numbe
 
 /**
 * @see \App\Http\Controllers\EventController::deletePublicAsset
-* @see app/Http/Controllers/EventController.php:2234
+* @see app/Http/Controllers/EventController.php:2265
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
 deletePublicAssetForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -4291,7 +4491,7 @@ deletePublicAsset.form = deletePublicAssetForm
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 export const wall = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -4306,7 +4506,7 @@ wall.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -4333,7 +4533,7 @@ wall.url = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -4343,7 +4543,7 @@ wall.get = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -4353,7 +4553,7 @@ wall.head = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 const wallForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -4363,7 +4563,7 @@ const wallForm = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wallForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -4373,7 +4573,7 @@ wallForm.get = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wallForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -4388,6 +4588,6 @@ wallForm.head = (args: { shareToken: string | number } | [shareToken: string | n
 
 wall.form = wallForm
 
-const EventController = { show, guests, guestReport, storeGuestParty, importGuestParties, exportGuestLedger, bulkUpdateGuestInvitations, updateInvitationSettings, updateGuestParty, destroyGuestParty, storeEventTable, updateEventTable, destroyEventTable, media, startMediaExport, downloadMediaExport, bulkDestroyAssets, bulkUpdateAssetModeration, destroyAsset, updateAssetModeration, updateAssetWallVisibility, settings, updateSettings, updateBilling, createBillingCheckout, storeCollaborator, acceptCollaboratorInvite, completeCollaboratorInviteRegistration, completeCollaboratorInviteLogin, guestInvitation, respondToGuestInvitation, publicInvitation, respondToPublicInvitation, publicGuestList, updatePublicGuestListAttendance, albumAccess, resolveAlbumAccess, album, albumAssets, guestProfile, upsertGuestProfile, upload, postText, toggleAssetLike, assetComments, storeAssetComment, toggleAssetCommentLike, downloadPublicAsset, deletePublicAsset, wall }
+const EventController = { show, guests, guestReport, storeGuestParty, importGuestParties, exportGuestLedger, bulkUpdateGuestInvitations, updateInvitationSettings, updateGuestParty, destroyGuestParty, storeEventTable, updateEventTable, destroyEventTable, media, startMediaExport, downloadMediaExport, bulkDestroyAssets, bulkUpdateAssetModeration, destroyAsset, updateAssetModeration, updateAssetWallVisibility, settings, updateSettings, updateBilling, createBillingCheckout, storeCollaborator, acceptCollaboratorInvite, completeCollaboratorInviteRegistration, completeCollaboratorInviteLogin, guestInvitation, respondToGuestInvitation, publicInvitation, respondToPublicInvitation, publicGuestList, updatePublicGuestListAttendance, albumAccess, resolveAlbumAccess, album, albumAssets, guestProfile, upsertGuestProfile, upload, postText, toggleAssetLike, assetComments, storeAssetComment, toggleAssetCommentLike, downloadPublicAsset, publicAssetPreview, publicAssetThumbnail, deletePublicAsset, wall }
 
 export default EventController

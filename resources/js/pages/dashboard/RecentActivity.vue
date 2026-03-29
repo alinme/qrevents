@@ -7,8 +7,8 @@ import {
     Video,
 } from 'lucide-vue-next';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
-import { formatDateTime, moderationBadgeClass } from '@/lib/dashboard';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatDateTime, moderationBadgeClass } from '@/lib/dashboard';
 import type {
     BreadcrumbItem,
     DashboardLinks,

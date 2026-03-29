@@ -2,11 +2,12 @@
 import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
-    type InvitationTemplateDetailsConfig,
-    invitationTemplateMap,
-    type InvitationTemplateTextBlockConfig,
-    type InvitationTemplateId,
+    
+    invitationTemplateMap
+    
+    
 } from '@/lib/invitation-templates';
+import type {InvitationTemplateDetailsConfig, InvitationTemplateTextBlockConfig, InvitationTemplateId} from '@/lib/invitation-templates';
 
 const props = withDefaults(defineProps<{
     template: InvitationTemplateId;

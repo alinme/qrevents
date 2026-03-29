@@ -25,6 +25,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
+import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -52,16 +53,17 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    invitationTemplateDefinitions,
-    type InvitationTemplateId,
-} from '@/lib/invitation-templates';
-import {
-    composeInvitationPaperPresentation,
-    type InvitationWeddingDetails,
-} from '@/lib/invitation-presentation';
-import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import {
+    composeInvitationPaperPresentation
+    
+} from '@/lib/invitation-presentation';
+import type {InvitationWeddingDetails} from '@/lib/invitation-presentation';
+import {
+    invitationTemplateDefinitions
+    
+} from '@/lib/invitation-templates';
+import type {InvitationTemplateId} from '@/lib/invitation-templates';
 import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 export const pricing = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ pricing.definition = {
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 pricing.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ pricing.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 pricing.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ pricing.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 pricing.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ pricing.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 const pricingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ const pricingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =>
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 pricingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -65,7 +65,7 @@ pricingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\MarketingController::pricing
-* @see app/Http/Controllers/MarketingController.php:15
+* @see app/Http/Controllers/MarketingController.php:20
 * @route '/pricing'
 */
 pricingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -82,7 +82,7 @@ pricing.form = pricingForm
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 export const businesses = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -97,7 +97,7 @@ businesses.definition = {
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 businesses.url = (options?: RouteQueryOptions) => {
@@ -106,7 +106,7 @@ businesses.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 businesses.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -116,7 +116,7 @@ businesses.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 businesses.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -126,7 +126,7 @@ businesses.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 const businessesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -136,7 +136,7 @@ const businessesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'>
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 businessesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -146,7 +146,7 @@ businessesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =
 
 /**
 * @see \App\Http\Controllers\MarketingController::businesses
-* @see app/Http/Controllers/MarketingController.php:26
+* @see app/Http/Controllers/MarketingController.php:31
 * @route '/businesses'
 */
 businessesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

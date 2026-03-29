@@ -529,7 +529,7 @@ album.form = albumForm
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 export const wall = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -544,7 +544,7 @@ wall.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -571,7 +571,7 @@ wall.url = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -581,7 +581,7 @@ wall.get = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wall.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -591,7 +591,7 @@ wall.head = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 const wallForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -601,7 +601,7 @@ const wallForm = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wallForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -611,7 +611,7 @@ wallForm.get = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::wall
-* @see app/Http/Controllers/EventController.php:2256
+* @see app/Http/Controllers/EventController.php:2286
 * @route '/w/{shareToken}'
 */
 wallForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

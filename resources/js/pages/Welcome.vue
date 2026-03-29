@@ -41,32 +41,32 @@ const resumeGuestAlbum = ref<StoredGuestAlbumHint | null>(null);
 const resumeGuestAlbumOpen = ref(false);
 
 const quickProof = [
-    'Guests join with a QR code or 4-character album code.',
-    'The live wall opens on a TV faster with short wall links.',
-    'Business teams can top up credits and launch client events from one dashboard.',
+    t('marketing.home.simple.proof.1'),
+    t('marketing.home.simple.proof.2'),
+    t('marketing.home.simple.proof.3'),
 ];
 
 const walkthrough = [
     {
-        step: 'Step 1',
-        title: 'Create the event fast',
-        body: 'Choose a plan, set the date, and get your album plus wall ready in one flow.',
+        step: t('marketing.shared.step', { number: '1' }),
+        title: t('marketing.home.simple.steps.1.title'),
+        body: t('marketing.home.simple.steps.1.body'),
         label: 'Screenshot placeholder',
         visualTitle: 'Add screenshot: create event screen',
         visualDescription: 'Show the simplified event setup with title, date, plan, and short code information visible.',
     },
     {
-        step: 'Step 2',
-        title: 'Guests join without downloading an app',
-        body: 'Share the QR or the short album code. Guests land straight in the upload flow on mobile.',
+        step: t('marketing.shared.step', { number: '2' }),
+        title: t('marketing.home.simple.steps.2.title'),
+        body: t('marketing.home.simple.steps.2.body'),
         label: 'Short video placeholder',
         visualTitle: 'Add 10s video: guest scans QR and opens album',
         visualDescription: 'Show phone camera scan, the code fallback, and the upload page opening in one quick sequence.',
     },
     {
-        step: 'Step 3',
-        title: 'Photos land in the album and on the wall',
-        body: 'Hosts keep the dashboard, guests keep the upload flow, and the TV wall stays easy to open with the short wall link.',
+        step: t('marketing.shared.step', { number: '3' }),
+        title: t('marketing.home.simple.steps.3.title'),
+        body: t('marketing.home.simple.steps.3.body'),
         label: 'Short video placeholder',
         visualTitle: 'Add 10s video: upload appears on wall',
         visualDescription: 'Show one guest upload and the same photo appearing on the live wall a moment later.',
@@ -76,24 +76,24 @@ const walkthrough = [
 const visualExamples = [
     {
         icon: QrCode,
-        title: 'Album access',
-        body: 'Explain the 4-character album code and show the exact mobile entry screen.',
+        title: t('marketing.home.simple.examples.1.title'),
+        body: t('marketing.home.simple.examples.1.body'),
         label: 'Mobile screenshot placeholder',
         visualTitle: 'Add screenshot: /album code entry',
         visualDescription: 'Use a real phone screenshot of the PIN-style album access page with the album/wall switch.',
     },
     {
         icon: MonitorPlay,
-        title: 'Wall access',
-        body: 'Show the short wall link and the TV-friendly wall screen so people understand the new flow immediately.',
+        title: t('marketing.home.simple.examples.2.title'),
+        body: t('marketing.home.simple.examples.2.body'),
         label: 'TV browser placeholder',
         visualTitle: 'Add screenshot: wall opened with short link',
         visualDescription: 'Use a TV or laptop browser example showing the wall opened from the short wall URL.',
     },
     {
         icon: BriefcaseBusiness,
-        title: 'Business billing',
-        body: 'Show how credit top-ups, billing history, and multi-event creation work for professional users.',
+        title: t('marketing.home.simple.examples.3.title'),
+        body: t('marketing.home.simple.examples.3.body'),
         label: 'Dashboard screenshot placeholder',
         visualTitle: 'Add screenshot: business billing and event list',
         visualDescription: 'Show balance, billing history, and event creation in one clean dashboard capture.',
@@ -102,35 +102,35 @@ const visualExamples = [
 
 const serviceUpdates = [
     {
-        title: 'Album codes are now easier to share',
-        description: 'Guests can use a short code instead of typing a long album URL.',
+        title: t('marketing.home.simple.updates.1.title'),
+        description: t('marketing.home.simple.updates.1.description'),
     },
     {
-        title: 'Wall links are shorter for TVs',
-        description: 'The wall can open from a shorter route, which is easier to type into a TV browser.',
+        title: t('marketing.home.simple.updates.2.title'),
+        description: t('marketing.home.simple.updates.2.description'),
     },
     {
-        title: 'Business now uses billing credits',
-        description: 'Multi-event teams top up once, then spend credits on each Plus or Pro event they create.',
+        title: t('marketing.home.simple.updates.3.title'),
+        description: t('marketing.home.simple.updates.3.description'),
     },
 ];
 
 const faqItems = [
     {
-        question: 'Do guests need an app?',
-        answer: 'No. Guests open a link, scan a QR code, or enter the album code in the browser.',
+        question: t('marketing.home.simple.faq.1.question'),
+        answer: t('marketing.home.simple.faq.1.answer'),
     },
     {
-        question: 'Can I still use the live wall on a TV?',
-        answer: 'Yes. The wall is now easier to open with the shorter wall route and the same event code.',
+        question: t('marketing.home.simple.faq.2.question'),
+        answer: t('marketing.home.simple.faq.2.answer'),
     },
     {
-        question: 'What changed for business users?',
-        answer: 'Business now uses prepaid billing credits, event-by-event spending, and a dedicated billing dashboard.',
+        question: t('marketing.home.simple.faq.3.question'),
+        answer: t('marketing.home.simple.faq.3.answer'),
     },
     {
-        question: 'Can I start simple and upgrade later?',
-        answer: 'Yes. You can start with the normal plans and switch into business mode when you need multi-event billing.',
+        question: t('marketing.home.simple.faq.4.question'),
+        answer: t('marketing.home.simple.faq.4.answer'),
     },
 ];
 
@@ -308,14 +308,13 @@ onMounted(() => {
             <div class="max-w-2xl">
                 <p class="marketing-kicker inline-flex items-center gap-2">
                     <BadgeCheck class="size-4" />
-                    Photo sharing for events
+                    {{ t('marketing.home.simple.hero.kicker') }}
                 </p>
                 <h1 class="marketing-display mt-6 text-[3.2rem] sm:text-[4rem] lg:text-[4.8rem]">
-                    Show the product fast. Explain it in one glance.
+                    {{ t('marketing.home.simple.hero.title') }}
                 </h1>
                 <p class="marketing-copy mt-6 max-w-xl">
-                    EventSmart helps guests join quickly, upload from their phones, and see photos in the album and on the live wall.
-                    The public site should prove that visually, not bury it in text.
+                    {{ t('marketing.home.simple.hero.description') }}
                 </p>
 
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -323,14 +322,14 @@ onMounted(() => {
                         :href="onboardingCreate({ query: { plan: 'free' } })"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Create an event
+                        {{ t('marketing.actions.create_event') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <a
                         href="#how-it-works"
                         class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                     >
-                        See the flow
+                        {{ t('marketing.home.simple.hero.secondary_cta') }}
                         <CirclePlay class="size-4" />
                     </a>
                 </div>
@@ -356,9 +355,9 @@ onMounted(() => {
 
         <section id="how-it-works" class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="How it works"
-                title="Three short steps. Real screens. No extra story."
-                description="Keep the homepage focused on the actual flow people need to understand before they buy."
+                :eyebrow="t('marketing.home.simple.sections.flow.eyebrow')"
+                :title="t('marketing.home.simple.sections.flow.title')"
+                :description="t('marketing.home.simple.sections.flow.description')"
             />
 
             <div class="mt-14 divide-y divide-promo-line border-y border-promo-line">
@@ -391,9 +390,9 @@ onMounted(() => {
         <section id="proof" class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Product examples"
-                    title="Show what changed in the app"
-                    description="These blocks should become real screenshots or short loops from the actual product, not lifestyle photos."
+                    :eyebrow="t('marketing.home.simple.sections.examples.eyebrow')"
+                    :title="t('marketing.home.simple.sections.examples.title')"
+                    :description="t('marketing.home.simple.sections.examples.description')"
                     centered
                 />
 
@@ -423,9 +422,9 @@ onMounted(() => {
 
         <section id="services" class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="What changed"
-                title="The new service model needs a clear public explanation"
-                description="This section replaces long copy blocks with short updates people can scan in a few seconds."
+                :eyebrow="t('marketing.home.simple.sections.updates.eyebrow')"
+                :title="t('marketing.home.simple.sections.updates.title')"
+                :description="t('marketing.home.simple.sections.updates.description')"
             />
 
             <div class="mt-14 grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
@@ -456,8 +455,8 @@ onMounted(() => {
         <section id="faq" class="bg-white">
             <div class="mx-auto max-w-5xl px-4 py-18 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="FAQ"
-                    title="Keep the answers short too"
+                    :eyebrow="t('marketing.home.simple.sections.faq.eyebrow')"
+                    :title="t('marketing.home.simple.sections.faq.title')"
                     centered
                 />
 
@@ -482,13 +481,13 @@ onMounted(() => {
             <div class="grid gap-8 border-y border-promo-line py-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
                 <div class="max-w-xl">
                     <p class="marketing-kicker">
-                        Start here
+                        {{ t('marketing.home.simple.sections.cta.eyebrow') }}
                     </p>
                     <h2 class="marketing-display mt-3 text-[2.5rem] sm:text-[3rem]">
-                        One page for guests. One page for pricing. One page for business.
+                        {{ t('marketing.home.simple.sections.cta.title') }}
                     </h2>
                     <p class="marketing-copy mt-4">
-                        That is enough for launch. Use the screenshots and short clips to do the explaining, then let the app do the rest.
+                        {{ t('marketing.home.simple.sections.cta.description') }}
                     </p>
 
                     <div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -496,14 +495,14 @@ onMounted(() => {
                             :href="pricing()"
                             class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
-                            View pricing
+                            {{ t('marketing.shared.view_pricing') }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             :href="businesses().url"
                             class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            Explore business
+                            {{ t('marketing.home.simple.sections.cta.secondary_cta') }}
                         </Link>
                     </div>
                 </div>

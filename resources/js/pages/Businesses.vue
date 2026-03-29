@@ -60,18 +60,18 @@ const selectedPackPriceLabel = computed(() => {
 });
 const businessPrimaryCtaLabel = computed(() => {
     if (props.topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded) {
-        return `Top up ${topUpForm.credits} credits`;
+        return t('marketing.businesses.simple.billing.top_up_selected', { credits: topUpForm.credits });
     }
 
     if (props.activateUrl) {
-        return 'Switch to business first';
+        return t('marketing.businesses.simple.actions.switch_first');
     }
 
     if (props.onboardingUrl) {
-        return 'Finish profile first';
+        return t('marketing.businesses.simple.actions.finish_profile_first');
     }
 
-    return 'Sign in to top up';
+    return t('marketing.businesses.simple.actions.sign_in_to_top_up');
 });
 
 const plusPlan = computed(() => props.businessPlans.find((plan) => plan.slug === 'plus') ?? null);
@@ -81,24 +81,24 @@ const hundredCreditPack = computed(() => props.businessPacks.find((pack) => pack
 const businessFlow = [
     {
         icon: BriefcaseBusiness,
-        title: 'Switch into business mode once',
-        description: 'The account becomes multi-event, keeps the same paid event model, and unlocks billing credits.',
+        title: t('marketing.businesses.simple.flow.1.title'),
+        description: t('marketing.businesses.simple.flow.1.description'),
         label: 'Dashboard placeholder',
         visualTitle: 'Add screenshot: business dashboard home',
         visualDescription: 'Show the business dashboard with events, billing, and credits visible at a glance.',
     },
     {
         icon: Repeat2,
-        title: 'Top up billing credits',
-        description: 'Teams preload credits, then spend them per event instead of paying a consumer checkout every time.',
+        title: t('marketing.businesses.simple.flow.2.title'),
+        description: t('marketing.businesses.simple.flow.2.description'),
         label: 'Billing screenshot placeholder',
         visualTitle: 'Add screenshot: billing page with history',
         visualDescription: 'Show credit balance, top-up history, and one event debit so the model is obvious instantly.',
     },
     {
         icon: ShieldCheck,
-        title: 'Create paid events for clients',
-        description: 'Each new Plus or Pro event consumes credits, which keeps usage aligned with the real event cost.',
+        title: t('marketing.businesses.simple.flow.3.title'),
+        description: t('marketing.businesses.simple.flow.3.description'),
         label: 'Create-event placeholder',
         visualTitle: 'Add screenshot: business event creation',
         visualDescription: 'Show the business create-event step where the plan cost and remaining credits are visible.',
@@ -107,22 +107,31 @@ const businessFlow = [
 
 const creditExamples = computed(() => [
     {
-        title: '100 credits for repeat planners',
+        title: t('marketing.businesses.simple.examples.1.title'),
         description: plusPlan.value
-            ? `At ${plusPlan.value.businessCreditCost} credits per ${plusPlan.value.name} event, 100 credits covers about ${Math.floor(100 / plusPlan.value.businessCreditCost)} events before bonuses.`
-            : 'Use this space to show what a 100-credit pack covers for your most common event type.',
+            ? t('marketing.businesses.simple.examples.1.description_with_plan', {
+                cost: plusPlan.value.businessCreditCost,
+                plan: plusPlan.value.name,
+                count: Math.floor(100 / plusPlan.value.businessCreditCost),
+            })
+            : t('marketing.businesses.simple.examples.1.description'),
     },
     {
-        title: 'Bonus credits make the math easier',
+        title: t('marketing.businesses.simple.examples.2.title'),
         description: hundredCreditPack.value
-            ? `A 100-credit top-up currently grants ${hundredCreditPack.value.total_credits} total credits with the launch bonus.`
-            : 'Use this space to explain the current launch bonus and how it changes the effective event count.',
+            ? t('marketing.businesses.simple.examples.2.description_with_bonus', {
+                total: hundredCreditPack.value.total_credits,
+            })
+            : t('marketing.businesses.simple.examples.2.description'),
     },
     {
-        title: 'Pro stays clear too',
+        title: t('marketing.businesses.simple.examples.3.title'),
         description: proPlan.value
-            ? `${proPlan.value.name} costs ${proPlan.value.businessCreditCost} credits per event, so teams can forecast spend without another pricing model.`
-            : 'Use this space to explain the Pro credit cost with one simple example.',
+            ? t('marketing.businesses.simple.examples.3.description_with_plan', {
+                plan: proPlan.value.name,
+                cost: proPlan.value.businessCreditCost,
+            })
+            : t('marketing.businesses.simple.examples.3.description'),
     },
 ]);
 </script>
@@ -137,14 +146,13 @@ const creditExamples = computed(() => [
             <div class="max-w-2xl">
                 <p class="marketing-kicker inline-flex items-center gap-2">
                     <Sparkles class="size-4" />
-                    Business
+                    {{ t('marketing.businesses.simple.hero.kicker') }}
                 </p>
                 <h1 class="marketing-display mt-6 text-[3.1rem] sm:text-[3.9rem] lg:text-[4.5rem]">
-                    Explain business billing with examples, not a wall of text.
+                    {{ t('marketing.businesses.simple.hero.title') }}
                 </h1>
                 <p class="marketing-copy mt-6 max-w-xl">
-                    Business should feel simple: top up credits, create events, and keep the same event-based cost model as everyone else.
-                    Show the dashboard, the billing page, and the event flow clearly.
+                    {{ t('marketing.businesses.simple.hero.description') }}
                 </p>
 
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -153,7 +161,7 @@ const creditExamples = computed(() => [
                         :href="dashboardUrl"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Open business dashboard
+                        {{ t('marketing.businesses.simple.actions.open_dashboard') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <Link
@@ -163,7 +171,7 @@ const creditExamples = computed(() => [
                         as="button"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Switch to business
+                        {{ t('marketing.businesses.simple.actions.switch_to_business') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <Link
@@ -171,7 +179,7 @@ const creditExamples = computed(() => [
                         :href="onboardingUrl"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Finish business profile
+                        {{ t('marketing.businesses.simple.actions.finish_business_profile') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <Link
@@ -179,7 +187,7 @@ const creditExamples = computed(() => [
                         href="/login"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Sign in to use business mode
+                        {{ t('marketing.businesses.simple.actions.sign_in_to_use_business') }}
                         <ArrowRight class="size-4" />
                     </Link>
 
@@ -187,7 +195,7 @@ const creditExamples = computed(() => [
                         :href="pricing()"
                         class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                     >
-                        View consumer pricing
+                        {{ t('marketing.businesses.simple.actions.view_consumer_pricing') }}
                     </Link>
                 </div>
             </div>
@@ -202,9 +210,9 @@ const creditExamples = computed(() => [
 
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="How business works"
-                title="Three things teams need to understand immediately"
-                description="No nested promo cards. Just the model, the screenshots, and the action."
+                :eyebrow="t('marketing.businesses.simple.sections.flow.eyebrow')"
+                :title="t('marketing.businesses.simple.sections.flow.title')"
+                :description="t('marketing.businesses.simple.sections.flow.description')"
             />
 
             <div class="mt-14 divide-y divide-promo-line border-y border-promo-line">
@@ -237,9 +245,9 @@ const creditExamples = computed(() => [
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Examples"
-                    title="Do the credit math in public"
-                    description="Give teams one or two concrete scenarios so they understand the wallet model without reading a policy page."
+                    :eyebrow="t('marketing.businesses.simple.sections.examples.eyebrow')"
+                    :title="t('marketing.businesses.simple.sections.examples.title')"
+                    :description="t('marketing.businesses.simple.sections.examples.description')"
                     centered
                 />
 
@@ -262,19 +270,19 @@ const creditExamples = computed(() => [
 
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="Client and guest side"
-                title="Show the final experience too"
-                description="Business buyers still need to see what guests and clients will actually open."
+                :eyebrow="t('marketing.businesses.simple.sections.experience.eyebrow')"
+                :title="t('marketing.businesses.simple.sections.experience.title')"
+                :description="t('marketing.businesses.simple.sections.experience.description')"
             />
 
             <div class="mt-14 grid gap-8 lg:grid-cols-2">
                 <article class="space-y-4">
                     <div class="flex items-center gap-3 text-promo-ink">
                         <Users class="size-5 text-promo-primary" />
-                        <h3 class="text-lg font-semibold">Album access for guests</h3>
+                        <h3 class="text-lg font-semibold">{{ t('marketing.businesses.simple.experience.album_title') }}</h3>
                     </div>
                     <p class="marketing-copy">
-                        Show the 4-character album code screen and the mobile upload page so teams know guests can still join quickly.
+                        {{ t('marketing.businesses.simple.experience.album_description') }}
                     </p>
                     <MarketingVisualPlaceholder
                         label="Mobile screenshot placeholder"
@@ -287,10 +295,10 @@ const creditExamples = computed(() => [
                 <article class="space-y-4">
                     <div class="flex items-center gap-3 text-promo-ink">
                         <MonitorPlay class="size-5 text-promo-primary" />
-                        <h3 class="text-lg font-semibold">Wall access for venues and TVs</h3>
+                        <h3 class="text-lg font-semibold">{{ t('marketing.businesses.simple.experience.wall_title') }}</h3>
                     </div>
                     <p class="marketing-copy">
-                        Show the shorter wall route and the live wall itself so the venue setup looks easy and fast.
+                        {{ t('marketing.businesses.simple.experience.wall_description') }}
                     </p>
                     <MarketingVisualPlaceholder
                         label="TV screenshot placeholder"
@@ -305,15 +313,15 @@ const creditExamples = computed(() => [
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Billing"
-                    title="Keep the top-up area simple too"
-                    description="Choose a pack, show the current payout clearly, and let the user move forward."
-                />
+                :eyebrow="t('marketing.businesses.simple.sections.billing.eyebrow')"
+                :title="t('marketing.businesses.simple.sections.billing.title')"
+                :description="t('marketing.businesses.simple.sections.billing.description')"
+            />
 
                 <div class="mt-14 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
                     <div class="max-w-lg">
                         <p class="marketing-copy">
-                            One credit equals one euro. Business events use credits against Plus and Pro, so the billing page should feel predictable, not special-case or unlimited.
+                            {{ t('marketing.businesses.simple.billing.intro') }}
                         </p>
 
                         <div class="mt-8 divide-y divide-promo-line border-y border-promo-line">
@@ -327,7 +335,7 @@ const creditExamples = computed(() => [
                                         {{ plan.name }}
                                     </p>
                                     <p class="mt-1 text-promo-muted">
-                                        Consumer price: {{ plan.consumerPriceLabel }}
+                                        {{ t('marketing.businesses.simple.billing.consumer_price', { price: plan.consumerPriceLabel }) }}
                                     </p>
                                 </div>
                                 <p class="font-semibold text-promo-primary">
@@ -352,7 +360,11 @@ const creditExamples = computed(() => [
                                 </option>
                             </select>
                             <p class="text-sm text-promo-muted">
-                                {{ isBusinessUser ? `Current balance: ${businessUser?.businessWalletCredits ?? 0} credits` : 'Switch to business mode first, then top up.' }}
+                                {{
+                                    isBusinessUser
+                                        ? t('marketing.businesses.simple.billing.current_balance', { credits: businessUser?.businessWalletCredits ?? 0 })
+                                        : t('marketing.businesses.simple.billing.switch_first')
+                                }}
                             </p>
                         </div>
 
@@ -369,7 +381,7 @@ const creditExamples = computed(() => [
                                 "
                                 @click="topUpForm.credits = pack.credits"
                             >
-                                {{ pack.credits }} credits
+                                {{ t('marketing.businesses.simple.billing.pack_credits', { credits: pack.credits }) }}
                             </button>
                         </div>
 
@@ -378,9 +390,9 @@ const creditExamples = computed(() => [
                                 {{ selectedPackPriceLabel ?? selectedPack.priceLabels.EUR }}
                             </p>
                             <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                You receive {{ selectedPack.total_credits }} total credits.
+                                {{ t('marketing.businesses.simple.billing.receive_total', { total: selectedPack.total_credits }) }}
                                 <span v-if="selectedPack.bonus_credits > 0">
-                                    That includes {{ selectedPack.bonus_credits }} bonus credits.
+                                    {{ t('marketing.businesses.simple.billing.receive_bonus', { bonus: selectedPack.bonus_credits }) }}
                                 </span>
                             </p>
                         </div>

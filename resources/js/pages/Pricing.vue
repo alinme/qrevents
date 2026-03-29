@@ -51,24 +51,24 @@ const pageDescription = computed(() => t('marketing.pricing.meta.description'));
 
 const serviceExamples = [
     {
-        title: 'Private birthday',
-        description: 'Use this example space for a simple event with album, wall, and fast guest upload.',
+        title: t('marketing.pricing.simple.examples.1.title'),
+        description: t('marketing.pricing.simple.examples.1.description'),
     },
     {
-        title: 'Wedding weekend',
-        description: 'Use this space to show a fuller setup with branded wall, album, and sharing moments.',
+        title: t('marketing.pricing.simple.examples.2.title'),
+        description: t('marketing.pricing.simple.examples.2.description'),
     },
     {
-        title: 'Client event',
-        description: 'Use this space to explain why a team would move into Business and billing credits.',
+        title: t('marketing.pricing.simple.examples.3.title'),
+        description: t('marketing.pricing.simple.examples.3.description'),
     },
 ];
 
 const comparisonRows = computed(() => [
-    { label: 'Uploads', values: props.plans.map((plan) => plan.uploadLabel) },
-    { label: 'Retention', values: props.plans.map((plan) => plan.retentionLabel) },
-    { label: 'Active window', values: props.plans.map((plan) => plan.activeWindowLabel) },
-    { label: 'Customisation', values: props.plans.map((plan) => plan.customizationLabel) },
+    { label: t('marketing.pricing.simple.compare.uploads'), values: props.plans.map((plan) => plan.uploadLabel) },
+    { label: t('marketing.pricing.simple.compare.retention'), values: props.plans.map((plan) => plan.retentionLabel) },
+    { label: t('marketing.pricing.simple.compare.active_window'), values: props.plans.map((plan) => plan.activeWindowLabel) },
+    { label: t('marketing.pricing.simple.compare.customisation'), values: props.plans.map((plan) => plan.customizationLabel) },
 ]);
 </script>
 
@@ -82,13 +82,13 @@ const comparisonRows = computed(() => [
             <div class="max-w-2xl">
                 <p class="marketing-kicker inline-flex items-center gap-2">
                     <Sparkles class="size-4" />
-                    Pricing
+                    {{ t('marketing.pricing.simple.hero.kicker') }}
                 </p>
                 <h1 class="marketing-display mt-6 text-[3.1rem] sm:text-[3.9rem] lg:text-[4.5rem]">
-                    Pick the plan in seconds, then show what guests actually get.
+                    {{ t('marketing.pricing.simple.hero.title') }}
                 </h1>
                 <p class="marketing-copy mt-6 max-w-xl">
-                    Keep this page simple: one clean plan comparison, one visual example for each use case, and one clear path into business billing when people need multiple events.
+                    {{ t('marketing.pricing.simple.hero.description') }}
                 </p>
 
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -96,14 +96,14 @@ const comparisonRows = computed(() => [
                         :href="onboardingCreate({ query: { plan: 'free' } })"
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Create an event
+                        {{ t('marketing.actions.create_event') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <Link
                         :href="businessTeaser.href || businesses().url"
                         class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                     >
-                        Explore business billing
+                        {{ t('marketing.pricing.simple.hero.secondary_cta') }}
                     </Link>
                 </div>
             </div>
@@ -118,9 +118,9 @@ const comparisonRows = computed(() => [
 
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="Plans"
-                title="Keep the plan cards clean"
-                description="One headline, one short summary, a few proof points, and one action each."
+                :eyebrow="t('marketing.pricing.simple.sections.plans.eyebrow')"
+                :title="t('marketing.pricing.simple.sections.plans.title')"
+                :description="t('marketing.pricing.simple.sections.plans.description')"
                 centered
             />
 
@@ -167,8 +167,8 @@ const comparisonRows = computed(() => [
         <section class="bg-white">
             <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    eyebrow="Examples"
-                    title="Use examples instead of more sales text"
+                    :eyebrow="t('marketing.pricing.simple.sections.examples.eyebrow')"
+                    :title="t('marketing.pricing.simple.sections.examples.title')"
                     centered
                 />
 
@@ -197,9 +197,9 @@ const comparisonRows = computed(() => [
 
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <MarketingSectionHeading
-                eyebrow="Comparison"
-                title="One flat comparison is enough"
-                description="This should stay scannable on desktop and mobile without extra dialogs or explanation cards."
+                :eyebrow="t('marketing.pricing.simple.sections.compare.eyebrow')"
+                :title="t('marketing.pricing.simple.sections.compare.title')"
+                :description="t('marketing.pricing.simple.sections.compare.description')"
             />
 
             <div class="mt-12 divide-y divide-promo-line border-y border-promo-line">
@@ -207,7 +207,7 @@ const comparisonRows = computed(() => [
                     class="hidden gap-4 py-4 text-sm font-semibold text-promo-ink lg:grid"
                     :style="{ gridTemplateColumns: `1.1fr repeat(${plans.length}, minmax(0, 1fr))` }"
                 >
-                    <div>Capability</div>
+                    <div>{{ t('marketing.pricing.simple.compare.capability') }}</div>
                     <div v-for="plan in plans" :key="plan.id">{{ plan.name }}</div>
                 </div>
 
@@ -235,20 +235,20 @@ const comparisonRows = computed(() => [
             <div class="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
                 <div class="max-w-xl">
                     <p class="marketing-kicker">
-                        Business
+                        {{ t('marketing.pricing.simple.sections.business.eyebrow') }}
                     </p>
                     <h2 class="marketing-display mt-3 text-[2.7rem] sm:text-[3.1rem]">
-                        Teams need billing, examples, and a real dashboard preview.
+                        {{ t('marketing.pricing.simple.sections.business.title') }}
                     </h2>
                     <p class="marketing-copy mt-4">
-                        The business page should show credit billing, event-by-event usage, and what the team dashboard looks like. Keep it practical and visual.
+                        {{ t('marketing.pricing.simple.sections.business.description') }}
                     </p>
 
                     <Link
                         :href="businessTeaser.href || businesses().url"
                         class="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
                     >
-                        Open business page
+                        {{ t('marketing.pricing.simple.sections.business.cta') }}
                         <ArrowRight class="size-4" />
                     </Link>
                 </div>

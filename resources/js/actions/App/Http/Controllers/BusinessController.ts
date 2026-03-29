@@ -137,8 +137,64 @@ onboardingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> 
 onboarding.form = onboardingForm
 
 /**
+* @see \App\Http\Controllers\BusinessController::cancelOnboarding
+* @see app/Http/Controllers/BusinessController.php:61
+* @route '/dashboard/business/onboarding/cancel'
+*/
+export const cancelOnboarding = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: cancelOnboarding.url(options),
+    method: 'post',
+})
+
+cancelOnboarding.definition = {
+    methods: ["post"],
+    url: '/dashboard/business/onboarding/cancel',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\BusinessController::cancelOnboarding
+* @see app/Http/Controllers/BusinessController.php:61
+* @route '/dashboard/business/onboarding/cancel'
+*/
+cancelOnboarding.url = (options?: RouteQueryOptions) => {
+    return cancelOnboarding.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\BusinessController::cancelOnboarding
+* @see app/Http/Controllers/BusinessController.php:61
+* @route '/dashboard/business/onboarding/cancel'
+*/
+cancelOnboarding.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: cancelOnboarding.url(options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BusinessController::cancelOnboarding
+* @see app/Http/Controllers/BusinessController.php:61
+* @route '/dashboard/business/onboarding/cancel'
+*/
+const cancelOnboardingForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: cancelOnboarding.url(options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BusinessController::cancelOnboarding
+* @see app/Http/Controllers/BusinessController.php:61
+* @route '/dashboard/business/onboarding/cancel'
+*/
+cancelOnboardingForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: cancelOnboarding.url(options),
+    method: 'post',
+})
+
+cancelOnboarding.form = cancelOnboardingForm
+
+/**
 * @see \App\Http\Controllers\BusinessController::storeOnboarding
-* @see app/Http/Controllers/BusinessController.php:60
+* @see app/Http/Controllers/BusinessController.php:77
 * @route '/dashboard/business/onboarding'
 */
 export const storeOnboarding = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -153,7 +209,7 @@ storeOnboarding.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::storeOnboarding
-* @see app/Http/Controllers/BusinessController.php:60
+* @see app/Http/Controllers/BusinessController.php:77
 * @route '/dashboard/business/onboarding'
 */
 storeOnboarding.url = (options?: RouteQueryOptions) => {
@@ -162,7 +218,7 @@ storeOnboarding.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::storeOnboarding
-* @see app/Http/Controllers/BusinessController.php:60
+* @see app/Http/Controllers/BusinessController.php:77
 * @route '/dashboard/business/onboarding'
 */
 storeOnboarding.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +228,7 @@ storeOnboarding.post = (options?: RouteQueryOptions): RouteDefinition<'post'> =>
 
 /**
 * @see \App\Http\Controllers\BusinessController::storeOnboarding
-* @see app/Http/Controllers/BusinessController.php:60
+* @see app/Http/Controllers/BusinessController.php:77
 * @route '/dashboard/business/onboarding'
 */
 const storeOnboardingForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -182,7 +238,7 @@ const storeOnboardingForm = (options?: RouteQueryOptions): RouteFormDefinition<'
 
 /**
 * @see \App\Http\Controllers\BusinessController::storeOnboarding
-* @see app/Http/Controllers/BusinessController.php:60
+* @see app/Http/Controllers/BusinessController.php:77
 * @route '/dashboard/business/onboarding'
 */
 storeOnboardingForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -194,7 +250,7 @@ storeOnboarding.form = storeOnboardingForm
 
 /**
 * @see \App\Http\Controllers\BusinessController::createWalletCheckout
-* @see app/Http/Controllers/BusinessController.php:92
+* @see app/Http/Controllers/BusinessController.php:109
 * @route '/dashboard/business/wallet/checkout'
 */
 export const createWalletCheckout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -209,7 +265,7 @@ createWalletCheckout.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::createWalletCheckout
-* @see app/Http/Controllers/BusinessController.php:92
+* @see app/Http/Controllers/BusinessController.php:109
 * @route '/dashboard/business/wallet/checkout'
 */
 createWalletCheckout.url = (options?: RouteQueryOptions) => {
@@ -218,7 +274,7 @@ createWalletCheckout.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::createWalletCheckout
-* @see app/Http/Controllers/BusinessController.php:92
+* @see app/Http/Controllers/BusinessController.php:109
 * @route '/dashboard/business/wallet/checkout'
 */
 createWalletCheckout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -228,7 +284,7 @@ createWalletCheckout.post = (options?: RouteQueryOptions): RouteDefinition<'post
 
 /**
 * @see \App\Http\Controllers\BusinessController::createWalletCheckout
-* @see app/Http/Controllers/BusinessController.php:92
+* @see app/Http/Controllers/BusinessController.php:109
 * @route '/dashboard/business/wallet/checkout'
 */
 const createWalletCheckoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -238,7 +294,7 @@ const createWalletCheckoutForm = (options?: RouteQueryOptions): RouteFormDefinit
 
 /**
 * @see \App\Http\Controllers\BusinessController::createWalletCheckout
-* @see app/Http/Controllers/BusinessController.php:92
+* @see app/Http/Controllers/BusinessController.php:109
 * @route '/dashboard/business/wallet/checkout'
 */
 createWalletCheckoutForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -248,6 +304,6 @@ createWalletCheckoutForm.post = (options?: RouteQueryOptions): RouteFormDefiniti
 
 createWalletCheckout.form = createWalletCheckoutForm
 
-const BusinessController = { activate, onboarding, storeOnboarding, createWalletCheckout }
+const BusinessController = { activate, onboarding, cancelOnboarding, storeOnboarding, createWalletCheckout }
 
 export default BusinessController

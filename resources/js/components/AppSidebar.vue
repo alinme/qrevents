@@ -26,6 +26,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -49,10 +50,35 @@ type PageProps = {
 };
 
 const page = usePage<PageProps>();
+const { t } = useTranslations();
 
 const eventNavigation = computed(() => page.props.eventNavigation ?? []);
 const adminNavigation = computed(() => page.props.adminNavigation ?? []);
 const businessNavigation = computed(() => page.props.businessNavigation ?? []);
+
+const translatedNavTitle = (title: string): string => {
+    const knownLabels: Record<string, string> = {
+        Dashboard: t('app.nav.dashboard'),
+        Events: t('app.nav.events'),
+        Workspace: t('app.nav.workspace'),
+        Media: t('app.nav.media'),
+        Guests: t('app.nav.guests'),
+        Settings: t('app.nav.settings'),
+        Overview: t('app.nav.overview'),
+        Users: t('app.nav.users'),
+        Plans: t('app.nav.plans'),
+        Billing: t('app.nav.billing'),
+        Cleanup: t('app.nav.cleanup'),
+        Business: t('app.nav.business'),
+        'Owned Events': t('app.nav.owned_events'),
+        'Shared Events': t('app.nav.shared_events'),
+        'Recent Activity': t('app.nav.recent_activity'),
+        Admin: t('app.nav.admin'),
+        Account: t('app.nav.account'),
+    };
+
+    return knownLabels[title] ?? title;
+};
 
 const footerBackItem = computed<NavItem | null>(() => {
     const eventBackItem = eventNavigation.value.find(
@@ -61,7 +87,7 @@ const footerBackItem = computed<NavItem | null>(() => {
 
     if (eventBackItem) {
         return {
-            title: eventBackItem.title,
+            title: translatedNavTitle(eventBackItem.title),
             href: eventBackItem.href,
             icon: ArrowLeft,
         };
@@ -69,7 +95,7 @@ const footerBackItem = computed<NavItem | null>(() => {
 
     if (page.props.backNavigation) {
         return {
-            title: page.props.backNavigation.title,
+            title: translatedNavTitle(page.props.backNavigation.title),
             href: page.props.backNavigation.href,
             icon: ArrowLeft,
         };
@@ -83,7 +109,7 @@ const mainNavItems = computed<NavItem[]>(() => {
         return eventNavigation.value
             .filter((item) => item.title !== 'Dashboard')
             .map((item) => ({
-                title: item.title,
+                title: translatedNavTitle(item.title),
                 href: item.href,
                 icon:
                     item.title === 'Workspace'
@@ -100,7 +126,7 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     if (adminNavigation.value.length > 0) {
         return adminNavigation.value.map((item) => ({
-            title: item.title,
+            title: translatedNavTitle(item.title),
             href: item.href,
             icon:
                 item.title === 'Overview'
@@ -121,7 +147,7 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     if (businessNavigation.value.length > 0) {
         return businessNavigation.value.map((item) => ({
-            title: item.title,
+            title: translatedNavTitle(item.title),
             href: item.href,
             icon:
                 item.title === 'Business'
@@ -137,7 +163,7 @@ const mainNavItems = computed<NavItem[]>(() => {
     const accountNavigation = page.props.accountNavigation ?? [];
     if (accountNavigation.length > 0) {
         return accountNavigation.map((item) => ({
-            title: item.title,
+            title: translatedNavTitle(item.title),
             href: item.href,
             icon:
                 item.title === 'Overview'
@@ -162,7 +188,7 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     return [
         {
-            title: 'Dashboard',
+            title: t('app.nav.dashboard'),
             href: dashboard().url,
             icon: LayoutGrid,
         },
@@ -170,7 +196,7 @@ const mainNavItems = computed<NavItem[]>(() => {
 });
 
 const eventTitle = computed(
-    () => page.props.sidebarLabel ?? page.props.currentEvent?.name ?? 'Account',
+    () => translatedNavTitle(page.props.sidebarLabel ?? page.props.currentEvent?.name ?? 'Account'),
 );
 </script>
 

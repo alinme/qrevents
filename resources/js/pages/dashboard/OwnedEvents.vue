@@ -10,8 +10,8 @@ import {
     Users,
 } from 'lucide-vue-next';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
-import { badgeClass, formatDateOnly, formatDateTime } from '@/lib/dashboard';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { badgeClass, formatDateOnly, formatDateTime } from '@/lib/dashboard';
 import type {
     BreadcrumbItem,
     DashboardEvent,

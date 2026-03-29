@@ -49,18 +49,18 @@ const localeOptions = [
 ] as const;
 
 const primaryNavItems = computed(() => [
-    { label: 'How it works', href: `${homeUrl}#how-it-works` },
-    { label: 'Examples', href: `${homeUrl}#proof` },
+    { label: t('marketing.nav.how_it_works_simple'), href: `${homeUrl}#how-it-works` },
+    { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
     { label: t('marketing.nav.pricing'), href: pricing().url },
-    { label: 'Business', href: businesses().url },
+    { label: t('marketing.nav.business'), href: businesses().url },
 ]);
 
 const footerProductLinks = computed(() => [
     { label: t('marketing.footer.how_it_works'), href: `${homeUrl}#how-it-works` },
-    { label: 'Examples', href: `${homeUrl}#proof` },
-    { label: 'What changed', href: `${homeUrl}#services` },
+    { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
+    { label: t('marketing.nav.what_changed'), href: `${homeUrl}#services` },
     { label: t('marketing.nav.pricing'), href: pricing().url },
-    { label: 'Business', href: businesses().url },
+    { label: t('marketing.nav.business'), href: businesses().url },
 ]);
 
 const footerUseCaseLinks = computed(() => [
@@ -71,7 +71,7 @@ const footerUseCaseLinks = computed(() => [
 ]);
 
 const footerSupportLinks = computed(() => [
-    { label: 'Album access', href: '/album' },
+    { label: t('marketing.footer.album_access'), href: '/album' },
     { label: t('marketing.footer.faq'), href: `${homeUrl}#faq` },
     { label: t('marketing.footer.support'), href: `${homeUrl}#cta` },
 ]);
