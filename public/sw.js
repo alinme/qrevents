@@ -1,16 +1,19 @@
-const CACHE_NAME = 'qrevents-static-v2';
+const CACHE_NAME = 'qrevents-static-v3';
 const APP_SHELL = [
     '/',
     '/launch',
-    '/manifest.webmanifest',
-    '/apple-touch-icon.png',
-    '/favicon.ico',
-    '/favicon.svg',
-    '/icons/192.png',
-    '/icons/512.png',
-    '/icons/launchericon-192x192.png',
-    '/icons/launchericon-512x512.png',
-    '/og_image.png',
+    '/manifest.webmanifest?v=20260329-6',
+    '/apple-touch-icon.png?v=20260329-6',
+    '/favicon.ico?v=20260329-6',
+    '/favicon.svg?v=20260329-6',
+    '/favicon-96x96.png?v=20260329-6',
+    '/icons/16.png?v=20260329-6',
+    '/icons/32.png?v=20260329-6',
+    '/icons/192.png?v=20260329-6',
+    '/icons/512.png?v=20260329-6',
+    '/icons/launchericon-192x192.png?v=20260329-6',
+    '/icons/launchericon-512x512.png?v=20260329-6',
+    '/og_image.png?v=20260329-6',
 ];
 
 self.addEventListener('install', (event) => {

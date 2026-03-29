@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+        @php($brandAssetVersion = '20260329-6')
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -20,14 +21,14 @@
 
         <title inertia>EventSmart</title>
 
-        <link rel="shortcut icon" href="/favicon.ico">
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
-        <link rel="icon" href="/icons/32.png" type="image/png" sizes="32x32">
-        <link rel="icon" href="/icons/16.png" type="image/png" sizes="16x16">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="shortcut icon" href="/favicon.ico?v={{ $brandAssetVersion }}">
+        <link rel="icon" href="/favicon.ico?v={{ $brandAssetVersion }}" sizes="any">
+        <link rel="icon" href="/favicon.svg?v={{ $brandAssetVersion }}" type="image/svg+xml">
+        <link rel="icon" href="/favicon-96x96.png?v={{ $brandAssetVersion }}" type="image/png" sizes="96x96">
+        <link rel="icon" href="/icons/32.png?v={{ $brandAssetVersion }}" type="image/png" sizes="32x32">
+        <link rel="icon" href="/icons/16.png?v={{ $brandAssetVersion }}" type="image/png" sizes="16x16">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v={{ $brandAssetVersion }}">
+        <link rel="manifest" href="/manifest.webmanifest?v={{ $brandAssetVersion }}">
         <meta name="application-name" content="EventSmart">
         <meta name="apple-mobile-web-app-title" content="EventSmart">
         <meta name="description" content="Collect guest photos, videos, and wishes with QR codes, short links, and a live event wall.">
@@ -39,13 +40,13 @@
         <meta property="og:site_name" content="EventSmart">
         <meta property="og:title" content="EventSmart">
         <meta property="og:description" content="Collect guest photos, videos, and wishes with QR codes, short links, and a live event wall.">
-        <meta property="og:image" content="{{ url('/og_image.png') }}">
+        <meta property="og:image" content="{{ url('/og_image.png?v='.$brandAssetVersion) }}">
         <meta property="og:image:alt" content="EventSmart preview image">
         <meta property="og:url" content="{{ url()->current() }}">
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="EventSmart">
         <meta name="twitter:description" content="Collect guest photos, videos, and wishes with QR codes, short links, and a live event wall.">
-        <meta name="twitter:image" content="{{ url('/og_image.png') }}">
+        <meta name="twitter:image" content="{{ url('/og_image.png?v='.$brandAssetVersion) }}">
         <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/iPhone_17_Pro_Max__iPhone_16_Pro_Max_landscape.png">
         <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/iPhone_17_Pro__iPhone_17__iPhone_16_Pro_landscape.png">
         <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_landscape.png">
