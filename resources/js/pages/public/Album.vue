@@ -5098,52 +5098,67 @@ const onAlbumTouchCancel = (): void => {
             class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40 px-3 pb-3"
             aria-label="Guest album actions"
         >
-            <div class="mx-auto flex max-w-2xl items-center justify-between gap-2 rounded-[2rem] border border-slate-200/80 bg-white/96 px-3 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+            <div class="mx-auto flex max-w-2xl items-end justify-between gap-1 rounded-[2rem] border border-slate-200/75 bg-white/95 px-2.5 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.18)] backdrop-blur-xl">
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
+                    class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-slate-100"
                     :aria-label="t('public.album.nav.language')"
-                    :class="isLanguagePickerOpen ? 'bg-slate-900 text-white' : ''"
+                    :class="isLanguagePickerOpen ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
                     @click="openLanguagePicker"
                 >
                     <IconLanguage class="size-6" />
+                    <span>{{ t('public.album.nav.language') }}</span>
                 </button>
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
-                    :class="isComposerOpen && activeView === 'video_testimonial' ? 'bg-slate-900 text-white' : ''"
+                    class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-slate-100"
+                    :class="
+                        isComposerOpen && activeView === 'video_testimonial'
+                            ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                            : ''
+                    "
                     :aria-label="t('public.album.nav.video')"
                     @click="setActiveView('video_testimonial')"
                 >
                     <Film class="size-6" />
+                    <span>{{ t('public.album.nav.video') }}</span>
                 </button>
                 <button
                     type="button"
-                    class="-mt-4 inline-flex size-16 shrink-0 items-center justify-center rounded-[1.45rem] text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
+                    class="-mt-5 inline-flex size-[4.35rem] shrink-0 flex-col items-center justify-center gap-1 rounded-[1.6rem] text-white shadow-[0_16px_28px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5"
                     :style="heroAccentStyle"
                     :aria-label="t('public.album.nav.camera')"
                     @click="triggerQuickUpload"
                 >
                     <Camera class="size-7" />
+                    <span class="text-[10px] font-semibold uppercase tracking-[0.14em]">
+                        {{ t('public.album.nav.camera') }}
+                    </span>
                 </button>
                 <button
                     v-if="props.allowTextPosts"
                     type="button"
-                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
-                    :class="isComposerOpen && activeView === 'text_wish' ? 'bg-slate-900 text-white' : ''"
+                    class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-slate-100"
+                    :class="
+                        isComposerOpen && activeView === 'text_wish'
+                            ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                            : ''
+                    "
                     :aria-label="t('public.album.nav.text')"
                     @click="setActiveView('text_wish')"
                 >
                     <MessageSquareText class="size-6" />
+                    <span>{{ t('public.album.nav.text') }}</span>
                 </button>
                 <button
                     type="button"
-                    class="flex min-w-0 flex-1 items-center justify-center rounded-[1.35rem] px-2 py-3 text-slate-600 transition hover:bg-slate-100"
-                    :class="menuOpen ? 'bg-slate-900 text-white' : ''"
+                    class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-slate-100"
+                    :class="menuOpen ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
                     :aria-label="t('public.album.nav.settings')"
                     @click="openGuestSettings"
                 >
                     <Menu class="size-6" />
+                    <span>{{ t('public.album.nav.settings') }}</span>
                 </button>
             </div>
         </nav>
