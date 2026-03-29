@@ -115,6 +115,46 @@
 }
 
 @layer components {
+    .marketing-shell {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .marketing-kicker {
+        font-family: 'Cinzel', serif;
+        @apply text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-promo-primary;
+    }
+
+    .marketing-display {
+        font-family: 'Cormorant Garamond', serif;
+        @apply font-semibold leading-[0.94] tracking-[-0.04em] text-promo-ink;
+    }
+
+    .marketing-copy {
+        @apply text-[0.98rem] leading-7 text-promo-muted;
+    }
+
+    .marketing-placeholder {
+        @apply flex h-full w-full items-center justify-center overflow-hidden rounded-[2rem] border border-promo-line bg-white px-6 py-6 text-center shadow-sm;
+        background-image:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 246, 251, 0.96)),
+            radial-gradient(circle at top left, rgba(232, 79, 154, 0.08), transparent 55%),
+            radial-gradient(circle at bottom right, rgba(196, 150, 88, 0.08), transparent 50%);
+    }
+
+    .marketing-placeholder-label {
+        font-family: 'Cinzel', serif;
+        @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary;
+    }
+
+    .marketing-placeholder-title {
+        font-family: 'Cormorant Garamond', serif;
+        @apply mt-3 text-[1.7rem] font-semibold leading-[0.95] tracking-[-0.03em] text-promo-ink;
+    }
+
+    .marketing-placeholder-copy {
+        @apply mt-3 max-w-sm text-sm leading-6 text-promo-muted;
+    }
+
     .dashboard-page {
         @apply min-h-full bg-brand-canvas;
     }

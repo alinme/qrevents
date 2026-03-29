@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowRight, BriefcaseBusiness, Building2, LayoutPanelTop, MonitorPlay, Repeat2, ShieldCheck, Sparkles, Users } from 'lucide-vue-next';
+import { ArrowRight, BriefcaseBusiness, MonitorPlay, Repeat2, ShieldCheck, Sparkles, Users } from 'lucide-vue-next';
+import { computed } from 'vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
+import MarketingVisualPlaceholder from '@/components/marketing/MarketingVisualPlaceholder.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
@@ -45,90 +46,6 @@ const topUpForm = useForm({
     currency: 'EUR',
 });
 
-const businessImages = [
-    '/fake-media/503748303_1048043510209927_1182952490263678396_n.jpg',
-    '/fake-media/503058833_1256500452532301_4806283181595489701_n.jpg',
-    '/fake-media/500454456_707421155099931_505239495313893019_n.jpg',
-    '/fake-media/503096688_1013285264308603_8150632900022158723_n.jpg',
-];
-
-const businessFeatures = [
-    {
-        icon: Building2,
-        title: t('marketing.businesses.features.1.title'),
-        description: t('marketing.businesses.features.1.description'),
-    },
-    {
-        icon: BriefcaseBusiness,
-        title: t('marketing.businesses.features.2.title'),
-        description: t('marketing.businesses.features.2.description'),
-    },
-    {
-        icon: Repeat2,
-        title: t('marketing.businesses.features.3.title'),
-        description: t('marketing.businesses.features.3.description'),
-    },
-    {
-        icon: ShieldCheck,
-        title: t('marketing.businesses.features.4.title'),
-        description: t('marketing.businesses.features.4.description'),
-    },
-];
-
-const businessOperationNotes = [
-    {
-        title: 'One credit equals one euro',
-        description: 'Top-ups stay simple. The wallet always stores EUR-based credits, even if checkout happens in RON or GBP.',
-    },
-    {
-        title: 'Business uses paid plans only',
-        description: 'Business events use Plus or Pro. Free is kept for consumer accounts, so resource usage stays fair.',
-    },
-    {
-        title: 'Top up once, create as needed',
-        description: 'Your team can add credit in advance, then launch new events without repeating a full checkout every time.',
-    },
-];
-
-const businessSteps = [
-    {
-        step: t('marketing.shared.step', { number: '01' }),
-        title: t('marketing.businesses.steps.1.title'),
-        description: t('marketing.businesses.steps.1.description'),
-        image: businessImages[0],
-        imageAlt: t('marketing.businesses.steps.1.image_alt'),
-        highlights: [
-            t('marketing.businesses.steps.1.highlights.1'),
-            t('marketing.businesses.steps.1.highlights.2'),
-            t('marketing.businesses.steps.1.highlights.3'),
-        ],
-    },
-    {
-        step: t('marketing.shared.step', { number: '02' }),
-        title: t('marketing.businesses.steps.2.title'),
-        description: t('marketing.businesses.steps.2.description'),
-        image: businessImages[1],
-        imageAlt: t('marketing.businesses.steps.2.image_alt'),
-        highlights: [
-            t('marketing.businesses.steps.2.highlights.1'),
-            t('marketing.businesses.steps.2.highlights.2'),
-            t('marketing.businesses.steps.2.highlights.3'),
-        ],
-    },
-    {
-        step: t('marketing.shared.step', { number: '03' }),
-        title: t('marketing.businesses.steps.3.title'),
-        description: t('marketing.businesses.steps.3.description'),
-        image: businessImages[2],
-        imageAlt: t('marketing.businesses.steps.3.image_alt'),
-        highlights: [
-            t('marketing.businesses.steps.3.highlights.1'),
-            t('marketing.businesses.steps.3.highlights.2'),
-            t('marketing.businesses.steps.3.highlights.3'),
-        ],
-    },
-];
-
 const businessUser = page.props.auth?.user;
 const isBusinessUser = businessUser?.accountType === 'business' || businessUser?.accountType === 'super_admin';
 const selectedPack = computed(
@@ -142,20 +59,72 @@ const selectedPackPriceLabel = computed(() => {
     return selectedPack.value.priceLabels[topUpForm.currency] ?? selectedPack.value.priceLabels.EUR ?? null;
 });
 const businessPrimaryCtaLabel = computed(() => {
-    if (topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded) {
+    if (props.topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded) {
         return `Top up ${topUpForm.credits} credits`;
     }
 
-    if (activateUrl) {
+    if (props.activateUrl) {
         return 'Switch to business first';
     }
 
-    if (onboardingUrl) {
+    if (props.onboardingUrl) {
         return 'Finish profile first';
     }
 
     return 'Sign in to top up';
 });
+
+const plusPlan = computed(() => props.businessPlans.find((plan) => plan.slug === 'plus') ?? null);
+const proPlan = computed(() => props.businessPlans.find((plan) => plan.slug === 'pro') ?? null);
+const hundredCreditPack = computed(() => props.businessPacks.find((pack) => pack.credits === 100) ?? props.businessPacks[0] ?? null);
+
+const businessFlow = [
+    {
+        icon: BriefcaseBusiness,
+        title: 'Switch into business mode once',
+        description: 'The account becomes multi-event, keeps the same paid event model, and unlocks billing credits.',
+        label: 'Dashboard placeholder',
+        visualTitle: 'Add screenshot: business dashboard home',
+        visualDescription: 'Show the business dashboard with events, billing, and credits visible at a glance.',
+    },
+    {
+        icon: Repeat2,
+        title: 'Top up billing credits',
+        description: 'Teams preload credits, then spend them per event instead of paying a consumer checkout every time.',
+        label: 'Billing screenshot placeholder',
+        visualTitle: 'Add screenshot: billing page with history',
+        visualDescription: 'Show credit balance, top-up history, and one event debit so the model is obvious instantly.',
+    },
+    {
+        icon: ShieldCheck,
+        title: 'Create paid events for clients',
+        description: 'Each new Plus or Pro event consumes credits, which keeps usage aligned with the real event cost.',
+        label: 'Create-event placeholder',
+        visualTitle: 'Add screenshot: business event creation',
+        visualDescription: 'Show the business create-event step where the plan cost and remaining credits are visible.',
+    },
+];
+
+const creditExamples = computed(() => [
+    {
+        title: '100 credits for repeat planners',
+        description: plusPlan.value
+            ? `At ${plusPlan.value.businessCreditCost} credits per ${plusPlan.value.name} event, 100 credits covers about ${Math.floor(100 / plusPlan.value.businessCreditCost)} events before bonuses.`
+            : 'Use this space to show what a 100-credit pack covers for your most common event type.',
+    },
+    {
+        title: 'Bonus credits make the math easier',
+        description: hundredCreditPack.value
+            ? `A 100-credit top-up currently grants ${hundredCreditPack.value.total_credits} total credits with the launch bonus.`
+            : 'Use this space to explain the current launch bonus and how it changes the effective event count.',
+    },
+    {
+        title: 'Pro stays clear too',
+        description: proPlan.value
+            ? `${proPlan.value.name} costs ${proPlan.value.businessCreditCost} credits per event, so teams can forecast spend without another pricing model.`
+            : 'Use this space to explain the Pro credit cost with one simple example.',
+    },
+]);
 </script>
 
 <template>
@@ -164,280 +133,259 @@ const businessPrimaryCtaLabel = computed(() => {
         :description="t('marketing.businesses.meta.description')"
         :can-register="canRegister"
     >
-        <section class="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-16">
-            <div class="grid items-center gap-14 lg:grid-cols-[0.94fr_1.06fr]">
-                <div class="max-w-2xl">
-                    <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.08)]">
-                        <Sparkles class="size-3.5" />
-                        {{ t('marketing.businesses.hero.badge') }}
-                    </p>
+        <section class="mx-auto grid max-w-7xl gap-12 px-4 pb-18 pt-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-24 lg:pt-16">
+            <div class="max-w-2xl">
+                <p class="marketing-kicker inline-flex items-center gap-2">
+                    <Sparkles class="size-4" />
+                    Business
+                </p>
+                <h1 class="marketing-display mt-6 text-[3.1rem] sm:text-[3.9rem] lg:text-[4.5rem]">
+                    Explain business billing with examples, not a wall of text.
+                </h1>
+                <p class="marketing-copy mt-6 max-w-xl">
+                    Business should feel simple: top up credits, create events, and keep the same event-based cost model as everyone else.
+                    Show the dashboard, the billing page, and the event flow clearly.
+                </p>
 
-                    <h1 class="mt-6 text-[2rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-promo-ink sm:text-[2.3rem]">
-                        {{ t('marketing.businesses.hero.title') }}
-                    </h1>
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <Link
+                        v-if="dashboardUrl"
+                        :href="dashboardUrl"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        Open business dashboard
+                        <ArrowRight class="size-4" />
+                    </Link>
+                    <Link
+                        v-else-if="activateUrl"
+                        :href="activateUrl"
+                        method="post"
+                        as="button"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        Switch to business
+                        <ArrowRight class="size-4" />
+                    </Link>
+                    <Link
+                        v-else-if="onboardingUrl"
+                        :href="onboardingUrl"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        Finish business profile
+                        <ArrowRight class="size-4" />
+                    </Link>
+                    <Link
+                        v-else
+                        href="/login"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        Sign in to use business mode
+                        <ArrowRight class="size-4" />
+                    </Link>
 
-                    <p class="mt-6 text-base leading-7 text-promo-muted sm:text-lg">
-                        {{ t('marketing.businesses.hero.description') }}
-                    </p>
-
-                    <div class="mt-9 flex flex-col gap-3 sm:flex-row">
-                        <Link
-                            v-if="dashboardUrl"
-                            :href="dashboardUrl"
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
-                        >
-                            Open business dashboard
-                            <ArrowRight class="size-4" />
-                        </Link>
-
-                        <Link
-                            v-else-if="activateUrl"
-                            :href="activateUrl"
-                            method="post"
-                            as="button"
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
-                        >
-                            Switch to business
-                            <ArrowRight class="size-4" />
-                        </Link>
-
-                        <Link
-                            v-else-if="onboardingUrl"
-                            :href="onboardingUrl"
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
-                        >
-                            Finish business profile
-                            <ArrowRight class="size-4" />
-                        </Link>
-
-                        <Link
-                            v-else
-                            href="/login"
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
-                        >
-                            Sign in to use business mode
-                            <ArrowRight class="size-4" />
-                        </Link>
-
-                        <Link
-                            :href="pricing()"
-                            class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
-                        >
-                            {{ t('marketing.businesses.hero.secondary_cta') }}
-                        </Link>
-                    </div>
-
-                    <div class="mt-10 grid gap-4 border-t border-promo-line pt-6 sm:grid-cols-3">
-                        <div class="sm:pr-4">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                Wallet
-                            </p>
-                            <p class="mt-2 text-sm font-semibold text-promo-ink">
-                                Prepaid credits
-                            </p>
-                            <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                Buy once, spend across future paid events.
-                            </p>
-                        </div>
-                        <div class="border-t border-promo-line pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                Plans
-                            </p>
-                            <p class="mt-2 text-sm font-semibold text-promo-ink">
-                                Plus and Pro
-                            </p>
-                            <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                Business mode stays on the same paid resource model as every other event.
-                            </p>
-                        </div>
-                        <div class="border-t border-promo-line pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                Fit
-                            </p>
-                            <p class="mt-2 text-sm font-semibold text-promo-ink">
-                                Repeatable delivery
-                            </p>
-                            <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                Built for venues, planners, agencies, and event teams running multiple client events.
-                            </p>
-                        </div>
-                    </div>
+                    <Link
+                        :href="pricing()"
+                        class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                    >
+                        View consumer pricing
+                    </Link>
                 </div>
+            </div>
 
-                <div class="grid gap-4">
-                    <div class="grid gap-4 sm:grid-cols-[0.84fr_1.16fr]">
-                        <div class="border border-promo-line bg-white px-5 py-5">
-                            <div class="flex items-start gap-4">
-                                <div class="flex size-11 shrink-0 items-center justify-center rounded-[18px] bg-promo-surface text-promo-primary">
-                                    <LayoutPanelTop class="size-5" />
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-promo-primary">
-                                        {{ t('marketing.businesses.hero.operations_title') }}
-                                    </p>
-                                    <p class="mt-2 text-sm leading-7 text-promo-muted">
-                                        {{ t('marketing.businesses.hero.operations_description') }}
-                                    </p>
-                                </div>
-                            </div>
+            <MarketingVisualPlaceholder
+                label="Hero video placeholder"
+                title="Add 12s business overview video"
+                description="Show one team topping up credits, creating a client event, then opening the album and wall so the business model feels concrete."
+                aspect-class="aspect-[5/4]"
+            />
+        </section>
+
+        <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <MarketingSectionHeading
+                eyebrow="How business works"
+                title="Three things teams need to understand immediately"
+                description="No nested promo cards. Just the model, the screenshots, and the action."
+            />
+
+            <div class="mt-14 divide-y divide-promo-line border-y border-promo-line">
+                <article
+                    v-for="item in businessFlow"
+                    :key="item.title"
+                    class="grid gap-8 py-8 lg:grid-cols-[0.76fr_1.24fr] lg:items-center"
+                >
+                    <div class="max-w-md">
+                        <div class="flex items-center gap-3 text-promo-ink">
+                            <component :is="item.icon" class="size-5 text-promo-primary" />
+                            <h3 class="text-lg font-semibold">
+                                {{ item.title }}
+                            </h3>
                         </div>
-                        <img
-                            :src="businessImages[0]"
-                            :alt="t('marketing.businesses.hero.main_image_alt')"
-                            class="aspect-[5/4] w-full object-cover"
-                        />
+                        <p class="marketing-copy mt-4">
+                            {{ item.description }}
+                        </p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="border border-promo-line bg-white px-5 py-5">
-                            <div class="flex items-start gap-4">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
-                                    <Users class="size-4" />
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-promo-ink">
-                                        {{ t('marketing.businesses.hero.guest_album_title') }}
-                                    </p>
-                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        {{ t('marketing.businesses.hero.guest_album_description') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-promo-line bg-white px-5 py-5">
-                            <div class="flex items-start gap-4">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
-                                    <MonitorPlay class="size-4" />
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-promo-ink">
-                                        {{ t('marketing.businesses.hero.live_wall_title') }}
-                                    </p>
-                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        {{ t('marketing.businesses.hero.live_wall_description') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <MarketingVisualPlaceholder
+                        :label="item.label"
+                        :title="item.visualTitle"
+                        :description="item.visualDescription"
+                    />
+                </article>
             </div>
         </section>
 
         <section class="bg-white">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-                <div class="grid gap-10 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
-                    <div>
-                        <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                            Business wallet
+            <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                <MarketingSectionHeading
+                    eyebrow="Examples"
+                    title="Do the credit math in public"
+                    description="Give teams one or two concrete scenarios so they understand the wallet model without reading a policy page."
+                    centered
+                />
+
+                <div class="mt-14 grid gap-6 lg:grid-cols-3">
+                    <article
+                        v-for="item in creditExamples"
+                        :key="item.title"
+                        class="border border-promo-line bg-white px-6 py-6"
+                    >
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ item.title }}
+                        </h3>
+                        <p class="marketing-copy mt-3">
+                            {{ item.description }}
                         </p>
-                        <h2 class="mt-3 text-2xl font-semibold tracking-tight text-promo-ink">
-                            Top up credits once, use them across paid events
-                        </h2>
-                        <p class="mt-3 text-sm leading-6 text-promo-muted">
-                            One credit is one euro. Business events consume credits instead of going through the normal consumer checkout every time.
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <MarketingSectionHeading
+                eyebrow="Client and guest side"
+                title="Show the final experience too"
+                description="Business buyers still need to see what guests and clients will actually open."
+            />
+
+            <div class="mt-14 grid gap-8 lg:grid-cols-2">
+                <article class="space-y-4">
+                    <div class="flex items-center gap-3 text-promo-ink">
+                        <Users class="size-5 text-promo-primary" />
+                        <h3 class="text-lg font-semibold">Album access for guests</h3>
+                    </div>
+                    <p class="marketing-copy">
+                        Show the 4-character album code screen and the mobile upload page so teams know guests can still join quickly.
+                    </p>
+                    <MarketingVisualPlaceholder
+                        label="Mobile screenshot placeholder"
+                        title="Add screenshot: album code + upload"
+                        description="Use one or two real mobile screens showing the album code entry and the guest upload interface."
+                        aspect-class="aspect-[4/3]"
+                    />
+                </article>
+
+                <article class="space-y-4">
+                    <div class="flex items-center gap-3 text-promo-ink">
+                        <MonitorPlay class="size-5 text-promo-primary" />
+                        <h3 class="text-lg font-semibold">Wall access for venues and TVs</h3>
+                    </div>
+                    <p class="marketing-copy">
+                        Show the shorter wall route and the live wall itself so the venue setup looks easy and fast.
+                    </p>
+                    <MarketingVisualPlaceholder
+                        label="TV screenshot placeholder"
+                        title="Add screenshot: short wall link + live wall"
+                        description="Use a real wall screen example with the shorter wall URL visible somewhere in the composition."
+                        aspect-class="aspect-[4/3]"
+                    />
+                </article>
+            </div>
+        </section>
+
+        <section class="bg-white">
+            <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                <MarketingSectionHeading
+                    eyebrow="Billing"
+                    title="Keep the top-up area simple too"
+                    description="Choose a pack, show the current payout clearly, and let the user move forward."
+                />
+
+                <div class="mt-14 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+                    <div class="max-w-lg">
+                        <p class="marketing-copy">
+                            One credit equals one euro. Business events use credits against Plus and Pro, so the billing page should feel predictable, not special-case or unlimited.
                         </p>
 
-                        <div class="mt-8 space-y-4 border-t border-promo-line pt-6">
+                        <div class="mt-8 divide-y divide-promo-line border-y border-promo-line">
                             <div
-                                v-for="note in businessOperationNotes"
-                                :key="note.title"
-                                class="grid gap-2 border-b border-promo-line pb-4 last:border-b-0 last:pb-0"
+                                v-for="plan in businessPlans"
+                                :key="plan.slug"
+                                class="flex items-start justify-between gap-4 py-4 text-sm"
                             >
-                                <p class="text-sm font-semibold text-promo-ink">
-                                    {{ note.title }}
-                                </p>
-                                <p class="text-sm leading-6 text-promo-muted">
-                                    {{ note.description }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="mt-8 border-t border-promo-line pt-6">
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                Event costs
-                            </p>
-                            <div class="mt-4 divide-y divide-promo-line border-y border-promo-line">
-                                <div
-                                    v-for="plan in businessPlans"
-                                    :key="plan.slug"
-                                    class="flex items-start justify-between gap-4 py-4 text-sm"
-                                >
-                                    <div>
-                                        <p class="font-semibold text-promo-ink">{{ plan.name }}</p>
-                                        <p class="mt-1 text-promo-muted">Consumer price: {{ plan.consumerPriceLabel }}</p>
-                                    </div>
-                                    <p class="text-sm font-semibold text-promo-primary">
-                                        {{ plan.businessCreditCost }} credits
+                                <div>
+                                    <p class="font-semibold text-promo-ink">
+                                        {{ plan.name }}
+                                    </p>
+                                    <p class="mt-1 text-promo-muted">
+                                        Consumer price: {{ plan.consumerPriceLabel }}
                                     </p>
                                 </div>
+                                <p class="font-semibold text-promo-primary">
+                                    {{ plan.businessCreditCost }} credits
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="border border-promo-line bg-promo-bg px-5 py-5 sm:px-6 sm:py-6">
-                        <div class="flex flex-col gap-4 border-b border-promo-line pb-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <p class="text-sm font-semibold text-promo-ink">Launch top-up packs</p>
-                                <p class="mt-1 text-sm text-promo-muted">
-                                    {{ isBusinessUser ? `Current wallet: ${businessUser?.businessWalletCredits ?? 0} credits` : 'Switch to business mode, complete the profile, then top up credits.' }}
-                                </p>
-                            </div>
-
-                            <select v-model="topUpForm.currency" class="rounded-full border border-promo-line bg-white px-3 py-2 text-sm text-promo-ink">
-                                <option v-for="currency in supportedCheckoutCurrencies" :key="currency" :value="currency">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <select
+                                v-model="topUpForm.currency"
+                                class="rounded-full border border-promo-line bg-white px-4 py-3 text-sm text-promo-ink"
+                            >
+                                <option
+                                    v-for="currency in supportedCheckoutCurrencies"
+                                    :key="currency"
+                                    :value="currency"
+                                >
                                     {{ currency }}
                                 </option>
                             </select>
+                            <p class="text-sm text-promo-muted">
+                                {{ isBusinessUser ? `Current balance: ${businessUser?.businessWalletCredits ?? 0} credits` : 'Switch to business mode first, then top up.' }}
+                            </p>
                         </div>
 
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        <div class="mt-5 flex flex-wrap gap-3">
                             <button
                                 v-for="pack in businessPacks"
                                 :key="pack.credits"
                                 type="button"
-                                class="border px-4 py-4 text-left transition"
+                                class="rounded-full border px-4 py-3 text-sm font-semibold transition"
                                 :class="
                                     topUpForm.credits === pack.credits
-                                        ? 'border-promo-primary bg-white'
-                                        : 'border-promo-line bg-white/75 hover:border-promo-primary/30'
+                                        ? 'border-promo-primary bg-promo-primary text-white'
+                                        : 'border-promo-line bg-white text-promo-ink hover:bg-promo-surface'
                                 "
                                 @click="topUpForm.credits = pack.credits"
                             >
-                                <div class="flex items-start justify-between gap-3">
-                                    <p class="text-lg font-semibold text-promo-ink">{{ pack.credits }} credits</p>
-                                    <span
-                                        v-if="topUpForm.credits === pack.credits"
-                                        class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary"
-                                    >
-                                        Selected
-                                    </span>
-                                </div>
-                                <p class="mt-1 text-sm text-promo-muted">
-                                    {{ pack.bonus_percent > 0 ? `+${pack.bonus_credits} bonus (${pack.bonus_percent}%)` : 'No bonus' }}
-                                </p>
-                                <p class="mt-3 text-sm font-medium text-promo-ink">
-                                    {{ pack.priceLabels[topUpForm.currency] ?? pack.priceLabels.EUR }}
-                                </p>
-                                <p class="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-promo-primary">
-                                    Total granted: {{ pack.total_credits }}
-                                </p>
+                                {{ pack.credits }} credits
                             </button>
                         </div>
 
-                        <div v-if="selectedPack" class="mt-5 border-t border-promo-line pt-4">
+                        <div v-if="selectedPack" class="mt-6 border-t border-promo-line pt-4">
                             <p class="text-sm font-semibold text-promo-ink">
-                                {{ selectedPackPriceLabel ?? selectedPack.priceLabels.EUR }} for {{ selectedPack.credits }} credits
+                                {{ selectedPackPriceLabel ?? selectedPack.priceLabels.EUR }}
                             </p>
-                            <p class="mt-1 text-sm leading-6 text-promo-muted">
-                                You will receive {{ selectedPack.total_credits }} total credits in your wallet after payment.
+                            <p class="mt-2 text-sm leading-6 text-promo-muted">
+                                You receive {{ selectedPack.total_credits }} total credits.
                                 <span v-if="selectedPack.bonus_credits > 0">
                                     That includes {{ selectedPack.bonus_credits }} bonus credits.
                                 </span>
                             </p>
                         </div>
 
-                        <div class="mt-5 flex flex-wrap gap-3">
+                        <div class="mt-6 flex flex-wrap gap-3">
                             <Button
                                 v-if="topUpUrl && isBusinessUser && businessUser?.isBusinessOnboarded"
                                 type="button"
@@ -472,81 +420,6 @@ const businessPrimaryCtaLabel = computed(() => {
                             </Link>
                         </div>
                     </div>
-                </div>
-
-                <MarketingSectionHeading
-                    :eyebrow="t('marketing.businesses.why.eyebrow')"
-                    :title="t('marketing.businesses.why.title')"
-                    :description="t('marketing.businesses.why.description')"
-                />
-
-                <div class="mt-14 divide-y divide-promo-line border-y border-promo-line">
-                    <div
-                        v-for="feature in businessFeatures"
-                        :key="feature.title"
-                        class="grid gap-4 py-5 md:grid-cols-[180px_minmax(0,1fr)] md:items-start"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div class="flex size-10 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary">
-                                <component :is="feature.icon" class="size-4" />
-                            </div>
-                            <p class="text-sm font-semibold text-promo-ink">
-                                {{ feature.title }}
-                            </p>
-                        </div>
-                        <p class="text-sm leading-6 text-promo-muted">
-                            {{ feature.description }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-promo-surface/55">
-            <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-                <MarketingSectionHeading
-                    :eyebrow="t('marketing.businesses.flow.eyebrow')"
-                    :title="t('marketing.businesses.flow.title')"
-                    :description="t('marketing.businesses.flow.description')"
-                    centered
-                />
-
-                <div class="mt-14 divide-y divide-promo-line border-y border-promo-line bg-white">
-                    <article
-                        v-for="item in businessSteps"
-                        :key="item.step"
-                        class="grid gap-5 px-5 py-5 lg:grid-cols-[150px_minmax(0,1fr)_220px] lg:items-start"
-                    >
-                        <div>
-                            <p class="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                {{ item.step }}
-                            </p>
-                            <p class="mt-2 text-base font-semibold text-promo-ink">
-                                {{ item.title }}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p class="text-sm leading-6 text-promo-muted">
-                                {{ item.description }}
-                            </p>
-                            <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-promo-ink">
-                                <li
-                                    v-for="highlight in item.highlights"
-                                    :key="highlight"
-                                    class="font-medium"
-                                >
-                                    {{ highlight }}
-                                </li>
-                            </ul>
-                        </div>
-
-                        <img
-                            :src="item.image"
-                            :alt="item.imageAlt"
-                            class="aspect-[4/3] w-full object-cover"
-                        />
-                    </article>
                 </div>
             </div>
         </section>

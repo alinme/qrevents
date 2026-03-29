@@ -2,16 +2,13 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
-    ChevronDown,
     CircleHelp,
     Languages,
     Instagram,
     Menu,
-    Newspaper,
     Star,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -28,7 +25,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
-import { dashboard, home, login, pricing } from '@/routes';
+import { businesses, dashboard, home, login, pricing } from '@/routes';
 import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
@@ -51,37 +48,31 @@ const localeOptions = [
     { code: 'el', label: 'Greek', nativeLabel: 'Eλληνικα', flag: '🇬🇷' },
 ] as const;
 
-const useCaseLinks = computed(() => [
-    { label: t('marketing.nav.weddings'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.parties'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.corporate_events'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.conferences'), href: `${homeUrl}#use-cases` },
-]);
-
 const primaryNavItems = computed(() => [
+    { label: 'How it works', href: `${homeUrl}#how-it-works` },
+    { label: 'Examples', href: `${homeUrl}#proof` },
     { label: t('marketing.nav.pricing'), href: pricing().url },
-    { label: t('marketing.nav.reviews'), href: `${homeUrl}#reviews` },
-    { label: t('marketing.nav.blog'), href: `${homeUrl}#blog` },
+    { label: 'Business', href: businesses().url },
 ]);
 
 const footerProductLinks = computed(() => [
     { label: t('marketing.footer.how_it_works'), href: `${homeUrl}#how-it-works` },
-    { label: t('marketing.footer.capabilities'), href: `${homeUrl}#capabilities` },
-    { label: t('marketing.footer.photo_wall'), href: `${homeUrl}#steps` },
+    { label: 'Examples', href: `${homeUrl}#proof` },
+    { label: 'What changed', href: `${homeUrl}#services` },
     { label: t('marketing.nav.pricing'), href: pricing().url },
+    { label: 'Business', href: businesses().url },
 ]);
 
 const footerUseCaseLinks = computed(() => [
-    { label: t('marketing.nav.weddings'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.birthdays'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.corporate'), href: `${homeUrl}#use-cases` },
-    { label: t('marketing.nav.public_events'), href: `${homeUrl}#use-cases` },
+    { label: t('marketing.nav.weddings'), href: pricing().url },
+    { label: t('marketing.nav.birthdays'), href: pricing().url },
+    { label: t('marketing.nav.corporate'), href: businesses().url },
+    { label: t('marketing.nav.public_events'), href: businesses().url },
 ]);
 
 const footerSupportLinks = computed(() => [
-    { label: t('marketing.footer.wall_of_love'), href: `${homeUrl}#reviews` },
+    { label: 'Album access', href: '/album' },
     { label: t('marketing.footer.faq'), href: `${homeUrl}#faq` },
-    { label: t('marketing.nav.blog'), href: `${homeUrl}#blog` },
     { label: t('marketing.footer.support'), href: `${homeUrl}#cta` },
 ]);
 
@@ -105,7 +96,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
         <meta v-if="description" name="description" :content="description" />
     </Head>
 
-    <div class="min-h-screen bg-promo-bg text-promo-ink">
+    <div class="marketing-shell min-h-screen bg-promo-bg text-promo-ink">
         <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-[1400px]">
                 <div class="relative h-[34rem]">
@@ -129,24 +120,6 @@ const switchMarketingLocale = (nextLocale: string): void => {
                 </Link>
 
                 <nav class="hidden items-center gap-6 lg:flex">
-                    <div class="group relative">
-                        <button class="inline-flex items-center gap-2 text-sm font-medium text-promo-ink/82 transition hover:text-promo-ink">
-                            {{ t('marketing.nav.use_cases') }}
-                            <ChevronDown class="size-4 transition group-hover:rotate-180" />
-                        </button>
-
-                        <div class="invisible absolute left-0 top-full mt-4 w-64 rounded-[20px] border border-promo-line/80 bg-white p-3 opacity-0 shadow-[0_14px_32px_rgba(120,86,255,0.08)] transition duration-200 group-hover:visible group-hover:opacity-100">
-                            <Link
-                                v-for="item in useCaseLinks"
-                                :key="item.label"
-                                :href="item.href"
-                                class="block rounded-[16px] px-4 py-3 text-sm text-promo-ink/82 transition hover:bg-promo-surface hover:text-promo-ink"
-                            >
-                                {{ item.label }}
-                            </Link>
-                        </div>
-                    </div>
-
                     <Link
                         v-for="item in primaryNavItems"
                         :key="item.label"
@@ -289,20 +262,6 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             </div>
 
                             <div class="grid gap-2">
-                                <div class="px-1 text-xs font-semibold uppercase tracking-[0.24em] text-promo-primary">
-                                    {{ t('marketing.nav.use_cases') }}
-                                </div>
-                                <Link
-                                    v-for="item in useCaseLinks"
-                                    :key="`mobile-${item.label}`"
-                                    :href="item.href"
-                                    class="rounded-[16px] border border-promo-line/80 bg-white px-4 py-3 text-sm text-promo-ink transition hover:bg-promo-surface"
-                                >
-                                    {{ item.label }}
-                                </Link>
-                            </div>
-
-                            <div class="grid gap-2">
                                 <Link
                                     v-for="item in primaryNavItems"
                                     :key="`primary-${item.label}`"
@@ -350,17 +309,13 @@ const switchMarketingLocale = (nextLocale: string): void => {
                 <div class="grid gap-12 border-b border-promo-line pb-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
                     <div>
                         <div class="flex items-center gap-3">
-                            <div class="flex size-11 items-center justify-center rounded-[18px] bg-white ring-1 ring-promo-line/70">
-                                <AppLogoIcon class="size-8" />
-                            </div>
-                            <div>
-                                <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
-                                    {{ t('marketing.brand.title', { appName }) }}
-                                </div>
-                                <div class="text-sm text-promo-muted">
-                                    {{ t('marketing.footer.tagline') }}
-                                </div>
-                            </div>
+                            <img
+                                :src="`/logo.png?v=${brandAssetVersion}`"
+                                :alt="t('marketing.brand.title', { appName })"
+                                width="154"
+                                height="45"
+                                class="h-9 w-[9.625rem] max-w-none object-contain object-left"
+                            >
                         </div>
 
                         <p class="mt-5 max-w-sm text-sm leading-6 text-promo-muted">
@@ -379,12 +334,6 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
                                 <CircleHelp class="size-4" />
-                            </a>
-                            <a
-                                href="#blog"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
-                            >
-                                <Newspaper class="size-4" />
                             </a>
                         </div>
                     </div>
