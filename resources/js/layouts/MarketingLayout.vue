@@ -122,7 +122,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     <img
                         :src="`/logo.svg?v=${brandAssetVersion}`"
                         :alt="t('marketing.brand.title', { appName })"
-                        class="h-9 w-auto sm:h-10"
+                        width="154"
+                        height="45"
+                        class="h-9 w-[9.625rem] max-w-none object-contain object-left sm:h-10 sm:w-[10.75rem]"
                     >
                 </Link>
 
