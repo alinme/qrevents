@@ -84,6 +84,8 @@ it('includes live reaction data for approved wall assets', function () {
         'path' => 'events/test/wall-photo.jpg',
         'preview_path' => 'events/test/wall-preview.jpg',
         'thumbnail_path' => 'events/test/wall-thumb.jpg',
+        'width' => 1080,
+        'height' => 1920,
         'moderation_status' => 'approved',
         'metadata' => [
             'guest_name' => 'Elena',
@@ -107,6 +109,8 @@ it('includes live reaction data for approved wall assets', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/Wall')
             ->where('assets.0.id', $asset->id)
+            ->where('assets.0.width', 1080)
+            ->where('assets.0.height', 1920)
             ->where('assets.0.likeCount', 1)
             ->where('assets.0.commentCount', 1)
             ->where('assets.0.recentComments.0.body', "Can't wait to see this on the wall.")

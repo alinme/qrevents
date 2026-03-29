@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ChevronLeft, ChevronRight, Heart, Images, LoaderCircle, QrCode } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/components/ui/empty';
-import { Separator } from '@/components/ui/separator';
+import { Heart, LoaderCircle } from 'lucide-vue-next';
+import type { Swiper as SwiperInstance } from 'swiper';
+import { EffectFade } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTranslations } from '@/composables/useTranslations';
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 
 type WallBranding = {
     primaryColor: string | null;
@@ -30,6 +27,8 @@ type WallBranding = {
 type WallAsset = {
     id: number;
     kind: 'photo' | 'video' | 'text';
+    width: number | null;
+    height: number | null;
     thumbnailUrl: string | null;
     previewUrl: string | null;
     videoProcessing: boolean;
@@ -65,19 +64,6 @@ type WallHeartBurst = {
     rotation: string;
 };
 
-type WallReactionNote = WallAssetComment & {
-    style: Record<string, string>;
-    delayMs: number;
-};
-
-type WallReactionNoteVariant = {
-    top?: string;
-    right?: string;
-    bottom?: string;
-    left?: string;
-    rotate: string;
-};
-
 const props = defineProps<{
     eventName: string;
     status: string;
@@ -90,19 +76,25 @@ const props = defineProps<{
     assets: WallAsset[];
 }>();
 
+const modules = [EffectFade];
+
 const page = usePage();
 const { locale, t } = useTranslations();
 const appName = computed(() => page.props.name ?? 'EventSmart');
 const inertiaVersion = computed(() => page.version ?? null);
 
-const activeIndex = ref(0);
-const autoplayId = ref<number | null>(null);
 const wallAssets = ref<WallAsset[]>([...props.assets]);
+const activeIndex = ref(0);
+const swiperInstance = ref<SwiperInstance | null>(null);
 const wallHeartBursts = ref<WallHeartBurst[]>([]);
 const wallUpdatePollId = ref<number | null>(null);
+const advanceTimerId = ref<number | null>(null);
 const isWallRefreshing = ref(false);
 const wallLiveStatus = ref<'live' | 'updating'>('live');
+const foregroundVideoElements = new Map<number, HTMLVideoElement>();
+const backdropVideoElements = new Map<number, HTMLVideoElement>();
 let wallHeartSequence = 0;
+let activeVideoCleanup: (() => void) | null = null;
 
 const displayAssets = computed<WallAsset[]>(() =>
     wallAssets.value.filter((asset) => {
@@ -133,57 +125,11 @@ const wallTitle = computed(
 const wallLogoUrl = computed(() => props.branding.logoUrl);
 const captionVisible = computed(() => !props.branding.hideCaption);
 const qrVisible = computed(() => !props.branding.hideQrCode);
-const captionPanelClasses = computed(() =>
-    props.branding.captionTheme === 'light'
-        ? 'border-slate-200/90 bg-white/90 text-slate-900'
-        : 'border-white/20 bg-black/48 text-white',
-);
 
-const surfaceStyle = computed((): Record<string, string> => {
-    const primary = props.branding.primaryColor || '#F59E0B';
-    const accent = props.branding.accentColor || '#F97316';
-    const style: Record<string, string> = {
-        '--wall-primary': primary,
-        '--wall-accent': accent,
-    };
-
-    if (
-        props.branding.albumBackgroundEnabled &&
-        props.branding.albumBackgroundMode === 'solid'
-    ) {
-        style.backgroundColor =
-            props.branding.albumBackgroundColor || '#0f172a';
-
-        return style;
-    }
-
-    if (
-        props.branding.albumBackgroundEnabled &&
-        props.branding.albumBackgroundMode === 'image' &&
-        props.branding.albumBackgroundImageUrl
-    ) {
-        style.backgroundImage = `url(${props.branding.albumBackgroundImageUrl})`;
-        style.backgroundSize = 'cover';
-        style.backgroundPosition = 'center';
-
-        return style;
-    }
-
-    style.backgroundImage = `linear-gradient(135deg, ${primary} 0%, ${accent} 60%, #0f172a 100%)`;
-
-    return style;
-});
-
-const formatDateTime = (value: string | null): string => {
-    if (!value) {
-        return t('public.wall.now');
-    }
-
-    return new Intl.DateTimeFormat(locale.value || 'en', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    }).format(new Date(value));
-};
+const wallVars = computed((): Record<string, string> => ({
+    '--wall-primary': props.branding.primaryColor || '#f59e0b',
+    '--wall-accent': props.branding.accentColor || '#fb7185',
+}));
 
 const slideTitle = computed(() => {
     if (!currentAsset.value) {
@@ -208,6 +154,10 @@ const slideSubtitle = computed(() => {
     );
 });
 
+const currentReactionNotes = computed(() =>
+    (currentAsset.value?.recentComments ?? []).slice(-3).reverse(),
+);
+
 const currentAssetBackdropUrl = computed(() => {
     if (!currentAsset.value) {
         return null;
@@ -224,19 +174,41 @@ const currentAssetBackdropUrl = computed(() => {
     return currentAsset.value.textThemeImageUrl;
 });
 
-const currentReactionNotes = computed<WallReactionNote[]>(() => {
-    const comments = currentAsset.value?.recentComments ?? [];
+const currentAssetIsPortrait = computed(() => {
+    const asset = currentAsset.value;
 
-    return comments.slice(-4).map((comment, index) => ({
-        ...comment,
-        style: wallReactionNoteStyle(comment.id, index),
-        delayMs: index * 80,
-    }));
+    if (!asset || asset.kind === 'text') {
+        return false;
+    }
+
+    if (!asset.width || !asset.height) {
+        return false;
+    }
+
+    return asset.height > asset.width * 1.05;
 });
+
+const emptyStateStyle = computed<Record<string, string>>(() => ({
+    background:
+        'radial-gradient(circle at top, color-mix(in srgb, var(--wall-primary) 55%, transparent), transparent 46%), linear-gradient(180deg, rgba(12,12,18,0.92) 0%, rgba(3,4,6,0.98) 100%)',
+}));
+
+const poweredByLabel = computed(() => `Made possible by ${appName.value.toLowerCase()}.app`);
+
+const formatDateTime = (value: string | null): string => {
+    if (!value) {
+        return t('public.wall.now');
+    }
+
+    return new Intl.DateTimeFormat(locale.value || 'en', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
+};
 
 const textPostSurfaceStyle = (asset: WallAsset): Record<string, string> => {
     const style: Record<string, string> = {
-        backgroundColor: asset.textThemeBackgroundColor || '#0f172a',
+        backgroundColor: asset.textThemeBackgroundColor || '#101118',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
     };
@@ -250,70 +222,41 @@ const textPostSurfaceStyle = (asset: WallAsset): Record<string, string> => {
 
 const textPostTextStyle = (asset: WallAsset): Record<string, string> => ({
     color: asset.textThemeTextColor || '#ffffff',
-    opacity: '0.94',
 });
-
-const nextAsset = (): void => {
-    if (displayAssets.value.length === 0) {
-        return;
-    }
-
-    activeIndex.value = (activeIndex.value + 1) % displayAssets.value.length;
-};
-
-const previousAsset = (): void => {
-    if (displayAssets.value.length === 0) {
-        return;
-    }
-
-    activeIndex.value =
-        (activeIndex.value - 1 + displayAssets.value.length) %
-        displayAssets.value.length;
-};
 
 const latestWallAssetId = (assets: WallAsset[]): number =>
     assets.reduce((max, asset) => Math.max(max, asset.id), 0);
 
-const wallReactionNoteStyle = (commentId: number, index: number): Record<string, string> => {
-    const variants: WallReactionNoteVariant[] = [
-        { top: '5.5%', left: '3.5%', rotate: '-7deg' },
-        { top: '10%', right: '4.5%', rotate: '6deg' },
-        { bottom: '15%', left: '5.5%', rotate: '-5deg' },
-        { bottom: '20%', right: '6%', rotate: '7deg' },
-    ];
-    const variant = variants[index % variants.length] ?? variants[0];
-    const jitter = ((commentId % 7) - 3) * 0.35;
-
-    return {
-        ...(variant.top !== undefined ? { top: `calc(${variant.top} + ${jitter}%)` } : {}),
-        ...(variant.bottom !== undefined ? { bottom: `calc(${variant.bottom} + ${jitter}%)` } : {}),
-        ...(variant.left !== undefined ? { left: `calc(${variant.left} + ${jitter}%)` } : {}),
-        ...(variant.right !== undefined ? { right: `calc(${variant.right} + ${jitter}%)` } : {}),
-        transform: `rotate(${variant.rotate})`,
-    };
-};
-
-const totalPositiveLikeGain = (previousAssets: WallAsset[], nextAssets: WallAsset[]): number => {
-    const previousAssetsById = new Map(previousAssets.map((asset) => [asset.id, asset]));
+const totalPositiveLikeGain = (
+    previousAssets: WallAsset[],
+    nextAssets: WallAsset[],
+): number => {
+    const previousAssetsById = new Map(
+        previousAssets.map((asset) => [asset.id, asset]),
+    );
 
     return nextAssets.reduce((carry, asset) => {
-        const previousLikeCount = previousAssetsById.get(asset.id)?.likeCount ?? 0;
+        const previousLikeCount =
+            previousAssetsById.get(asset.id)?.likeCount ?? 0;
 
         return carry + Math.max(0, asset.likeCount - previousLikeCount);
     }, 0);
 };
 
-const wallAssetHasChanged = (previousAsset: WallAsset | undefined, nextAsset: WallAsset): boolean => {
+const wallAssetHasChanged = (
+    previousAsset: WallAsset | undefined,
+    nextAsset: WallAsset,
+): boolean => {
     if (previousAsset === undefined) {
         return true;
     }
 
     if (
-        previousAsset.previewUrl !== nextAsset.previewUrl
-        || previousAsset.thumbnailUrl !== nextAsset.thumbnailUrl
-        || previousAsset.videoProcessing !== nextAsset.videoProcessing
-        || previousAsset.likeCount !== nextAsset.likeCount
-        || previousAsset.commentCount !== nextAsset.commentCount
+        previousAsset.previewUrl !== nextAsset.previewUrl ||
+        previousAsset.thumbnailUrl !== nextAsset.thumbnailUrl ||
+        previousAsset.videoProcessing !== nextAsset.videoProcessing ||
+        previousAsset.likeCount !== nextAsset.likeCount ||
+        previousAsset.commentCount !== nextAsset.commentCount
     ) {
         return true;
     }
@@ -328,6 +271,223 @@ const wallAssetHasChanged = (previousAsset: WallAsset | undefined, nextAsset: Wa
     return previousCommentSignature !== nextCommentSignature;
 };
 
+const clearAdvanceTimer = (): void => {
+    if (typeof window === 'undefined' || advanceTimerId.value === null) {
+        return;
+    }
+
+    window.clearTimeout(advanceTimerId.value);
+    advanceTimerId.value = null;
+};
+
+const clearActiveVideoPlayback = (): void => {
+    if (activeVideoCleanup) {
+        activeVideoCleanup();
+        activeVideoCleanup = null;
+    }
+
+    foregroundVideoElements.forEach((video) => {
+        video.pause();
+        video.currentTime = 0;
+    });
+
+    backdropVideoElements.forEach((video) => {
+        video.pause();
+        video.currentTime = 0;
+    });
+};
+
+const nextAsset = (): void => {
+    const swiper = swiperInstance.value;
+
+    if (swiper && displayAssets.value.length > 1) {
+        swiper.slideNext(900);
+
+        return;
+    }
+
+    if (displayAssets.value.length > 1) {
+        activeIndex.value = (activeIndex.value + 1) % displayAssets.value.length;
+    }
+};
+
+const queueNextSlide = (delayMs: number): void => {
+    clearAdvanceTimer();
+
+    if (typeof window === 'undefined' || displayAssets.value.length <= 1) {
+        return;
+    }
+
+    advanceTimerId.value = window.setTimeout(() => {
+        nextAsset();
+    }, delayMs);
+};
+
+const playActiveVideoSlide = (attempt = 0): void => {
+    const asset = currentAsset.value;
+
+    if (
+        asset === null ||
+        asset.kind !== 'video' ||
+        asset.previewUrl === null ||
+        asset.videoProcessing
+    ) {
+        return;
+    }
+
+    nextTick(() => {
+        const foreground = foregroundVideoElements.get(asset.id);
+        const backdrop = backdropVideoElements.get(asset.id) ?? null;
+
+        if (!foreground) {
+            if (typeof window !== 'undefined' && attempt < 6) {
+                window.setTimeout(() => playActiveVideoSlide(attempt + 1), 140);
+            } else {
+                queueNextSlide(9000);
+            }
+
+            return;
+        }
+
+        clearActiveVideoPlayback();
+
+        foreground.currentTime = 0;
+        foreground.loop = false;
+        foreground.muted = true;
+
+        if (backdrop) {
+            backdrop.currentTime = 0;
+            backdrop.loop = false;
+            backdrop.muted = true;
+        }
+
+        const syncBackdrop = (): void => {
+            if (
+                backdrop &&
+                Math.abs(backdrop.currentTime - foreground.currentTime) > 0.2
+            ) {
+                backdrop.currentTime = foreground.currentTime;
+            }
+        };
+
+        const handleEnded = (): void => {
+            if (currentAsset.value?.id === asset.id) {
+                nextAsset();
+            }
+        };
+
+        foreground.addEventListener('timeupdate', syncBackdrop);
+        foreground.addEventListener('ended', handleEnded);
+
+        activeVideoCleanup = () => {
+            foreground.removeEventListener('timeupdate', syncBackdrop);
+            foreground.removeEventListener('ended', handleEnded);
+        };
+
+        if (backdrop) {
+            void backdrop.play().catch(() => {});
+        }
+
+        void foreground.play().catch(() => {
+            queueNextSlide(9000);
+        });
+    });
+};
+
+const startSlideLifecycle = (): void => {
+    clearAdvanceTimer();
+
+    if (displayAssets.value.length <= 1 && currentAsset.value?.kind !== 'video') {
+        return;
+    }
+
+    const asset = currentAsset.value;
+
+    if (!asset) {
+        return;
+    }
+
+    if (asset.kind === 'video') {
+        if (asset.videoProcessing || asset.previewUrl === null) {
+            queueNextSlide(5000);
+
+            return;
+        }
+
+        playActiveVideoSlide();
+
+        return;
+    }
+
+    clearActiveVideoPlayback();
+    queueNextSlide(asset.kind === 'text' ? 12000 : 9000);
+};
+
+const setForegroundVideoElement =
+    (assetId: number) =>
+    (element: Element | null): void => {
+        if (element instanceof HTMLVideoElement) {
+            foregroundVideoElements.set(assetId, element);
+
+            return;
+        }
+
+        foregroundVideoElements.delete(assetId);
+    };
+
+const setBackdropVideoElement =
+    (assetId: number) =>
+    (element: Element | null): void => {
+        if (element instanceof HTMLVideoElement) {
+            backdropVideoElements.set(assetId, element);
+
+            return;
+        }
+
+        backdropVideoElements.delete(assetId);
+    };
+
+const applyWallAssets = (nextAssets: WallAsset[]): void => {
+    const currentAssetId = currentAsset.value?.id ?? null;
+
+    wallAssets.value = [...nextAssets];
+
+    if (displayAssets.value.length === 0) {
+        activeIndex.value = 0;
+        clearAdvanceTimer();
+        clearActiveVideoPlayback();
+
+        return;
+    }
+
+    let nextIndex = Math.min(
+        activeIndex.value,
+        Math.max(0, displayAssets.value.length - 1),
+    );
+
+    if (currentAssetId !== null) {
+        const matchedIndex = displayAssets.value.findIndex(
+            (asset) => asset.id === currentAssetId,
+        );
+
+        if (matchedIndex >= 0) {
+            nextIndex = matchedIndex;
+        }
+    }
+
+    activeIndex.value = nextIndex;
+
+    nextTick(() => {
+        const swiper = swiperInstance.value;
+
+        if (swiper && swiper.activeIndex !== nextIndex) {
+            swiper.slideTo(nextIndex, 0);
+        }
+
+        startSlideLifecycle();
+    });
+};
+
 const spawnWallHeartBursts = (count: number): void => {
     if (typeof window === 'undefined' || count <= 0) {
         return;
@@ -339,53 +499,28 @@ const spawnWallHeartBursts = (count: number): void => {
         return {
             id: wallHeartSequence,
             left: `${12 + Math.random() * 76}%`,
-            bottom: `${6 + Math.random() * 12}%`,
-            size: `${20 + Math.random() * 26}px`,
-            durationMs: 1800 + Math.round(Math.random() * 1600),
-            delayMs: Math.round(Math.random() * 420),
-            rotation: `${-18 + Math.random() * 36}deg`,
+            bottom: `${8 + Math.random() * 12}%`,
+            size: `${18 + Math.random() * 22}px`,
+            durationMs: 1800 + Math.round(Math.random() * 1500),
+            delayMs: Math.round(Math.random() * 360),
+            rotation: `${-16 + Math.random() * 32}deg`,
         } satisfies WallHeartBurst;
     });
 
     wallHeartBursts.value = [...wallHeartBursts.value, ...nextBursts];
 
     const burstIds = new Set(nextBursts.map((burst) => burst.id));
-    const removalDelay = Math.max(
-        ...nextBursts.map((burst) => burst.durationMs + burst.delayMs),
-        0,
-    ) + 500;
+    const removalDelay =
+        Math.max(
+            ...nextBursts.map((burst) => burst.durationMs + burst.delayMs),
+            0,
+        ) + 500;
 
     window.setTimeout(() => {
         wallHeartBursts.value = wallHeartBursts.value.filter(
             (burst) => !burstIds.has(burst.id),
         );
     }, removalDelay);
-};
-
-const applyWallAssets = (nextAssets: WallAsset[]): void => {
-    const currentAssetId = currentAsset.value?.id ?? null;
-    wallAssets.value = [...nextAssets];
-
-    if (displayAssets.value.length === 0) {
-        activeIndex.value = 0;
-        return;
-    }
-
-    if (currentAssetId !== null) {
-        const nextIndex = displayAssets.value.findIndex(
-            (asset) => asset.id === currentAssetId,
-        );
-
-        if (nextIndex >= 0) {
-            activeIndex.value = nextIndex;
-            return;
-        }
-    }
-
-    activeIndex.value = Math.min(
-        activeIndex.value,
-        Math.max(0, displayAssets.value.length - 1),
-    );
 };
 
 const refreshWallAssets = async (): Promise<void> => {
@@ -428,16 +563,16 @@ const refreshWallAssets = async (): Promise<void> => {
             ? payload.props.assets
             : [];
         const previousAssets = [...wallAssets.value];
-        const previousLatestAssetId = latestWallAssetId(wallAssets.value);
+        const previousLatestAssetId = latestWallAssetId(previousAssets);
         const nextLatestAssetId = latestWallAssetId(nextAssets);
         const newApprovedCount = nextAssets.filter(
             (asset) => asset.id > previousLatestAssetId,
         ).length;
         const likeGainCount = totalPositiveLikeGain(previousAssets, nextAssets);
         const hasWallChanged =
-            nextAssets.length !== previousAssets.length
-            || nextLatestAssetId !== previousLatestAssetId
-            || nextAssets.some((asset) =>
+            nextAssets.length !== previousAssets.length ||
+            nextLatestAssetId !== previousLatestAssetId ||
+            nextAssets.some((asset) =>
                 wallAssetHasChanged(
                     previousAssets.find((candidate) => candidate.id === asset.id),
                     asset,
@@ -448,46 +583,41 @@ const refreshWallAssets = async (): Promise<void> => {
             applyWallAssets(nextAssets);
 
             if (newApprovedCount > 0) {
-                startAutoplay();
-                spawnWallHeartBursts(Math.min(12, Math.max(4, newApprovedCount * 3)));
+                spawnWallHeartBursts(
+                    Math.min(10, Math.max(4, newApprovedCount * 2)),
+                );
             } else if (likeGainCount > 0) {
-                spawnWallHeartBursts(Math.min(10, Math.max(3, likeGainCount * 2)));
+                spawnWallHeartBursts(
+                    Math.min(8, Math.max(2, likeGainCount * 2)),
+                );
             }
         }
     } catch {
-        // Silent background refresh for TVs/projectors.
+        // silent for passive wall displays
     } finally {
         isWallRefreshing.value = false;
         wallLiveStatus.value = 'live';
     }
 };
 
-const startAutoplay = (): void => {
-    if (typeof window === 'undefined' || displayAssets.value.length <= 1) {
-        return;
+const handleSwiperReady = (swiper: SwiperInstance): void => {
+    swiperInstance.value = swiper;
+
+    if (displayAssets.value.length > 0 && swiper.activeIndex !== activeIndex.value) {
+        swiper.slideTo(activeIndex.value, 0);
     }
 
-    if (autoplayId.value !== null) {
-        window.clearInterval(autoplayId.value);
-    }
-
-    autoplayId.value = window.setInterval(() => {
-        nextAsset();
-    }, 9000);
+    startSlideLifecycle();
 };
 
-const stopAutoplay = (): void => {
-    if (typeof window === 'undefined' || autoplayId.value === null) {
-        return;
-    }
-
-    window.clearInterval(autoplayId.value);
-    autoplayId.value = null;
+const handleSlideChange = (swiper: SwiperInstance): void => {
+    activeIndex.value = swiper.activeIndex;
+    startSlideLifecycle();
 };
 
 onMounted(() => {
     applyWallAssets(props.assets);
-    startAutoplay();
+
     if (typeof window !== 'undefined') {
         wallUpdatePollId.value = window.setInterval(() => {
             void refreshWallAssets();
@@ -496,7 +626,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    stopAutoplay();
+    clearAdvanceTimer();
+    clearActiveVideoPlayback();
+
     if (typeof window !== 'undefined' && wallUpdatePollId.value !== null) {
         window.clearInterval(wallUpdatePollId.value);
         wallUpdatePollId.value = null;
@@ -507,7 +639,6 @@ watch(
     () => props.assets,
     (nextAssets) => {
         applyWallAssets(nextAssets);
-        startAutoplay();
     },
 );
 </script>
@@ -516,39 +647,91 @@ watch(
     <Head :title="t('public.wall.page_title', { eventName })" />
 
     <main
-        class="relative min-h-screen overflow-hidden text-white"
-        :style="surfaceStyle"
+        class="relative h-screen w-screen overflow-hidden bg-[#040507] text-white"
+        :style="wallVars"
     >
-        <div class="absolute inset-0 bg-black/55" />
+        <div
+            v-if="currentAsset?.kind === 'text'"
+            class="absolute inset-0"
+            :style="textPostSurfaceStyle(currentAsset)"
+        />
+        <div
+            v-else-if="currentAssetBackdropUrl"
+            class="absolute inset-0"
+        >
+            <img
+                v-if="
+                    currentAsset?.kind !== 'video' ||
+                    currentAsset?.videoProcessing ||
+                    !currentAsset?.previewUrl
+                "
+                :src="currentAssetBackdropUrl"
+                alt=""
+                class="h-full w-full object-cover"
+                :class="currentAssetIsPortrait ? 'scale-110 blur-2xl opacity-55' : 'opacity-92'"
+            />
+            <video
+                v-else-if="currentAssetIsPortrait && currentAsset?.previewUrl"
+                :ref="setBackdropVideoElement(currentAsset.id)"
+                :src="currentAsset.previewUrl"
+                :poster="currentAsset.thumbnailUrl ?? undefined"
+                class="h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+                autoplay
+                muted
+                playsinline
+                aria-hidden="true"
+            />
+        </div>
 
-        <div class="relative z-20 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-20 pt-5 lg:px-12">
-            <header class="mb-4 flex items-start justify-between gap-4">
-                <div class="flex min-w-0 items-center gap-3">
-                    <div class="size-11 overflow-hidden rounded-full border border-white/25 bg-white/10">
+        <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.7)_0%,rgba(3,4,6,0.14)_22%,rgba(3,4,6,0.14)_78%,rgba(3,4,6,0.78)_100%)]" />
+
+        <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+            <Heart
+                v-for="burst in wallHeartBursts"
+                :key="burst.id"
+                class="wall-heart-burst absolute fill-pink-400/60 text-pink-300/85 drop-shadow-[0_8px_20px_rgba(244,114,182,0.34)]"
+                :style="{
+                    left: burst.left,
+                    bottom: burst.bottom,
+                    width: burst.size,
+                    height: burst.size,
+                    animationDuration: `${burst.durationMs}ms`,
+                    animationDelay: `${burst.delayMs}ms`,
+                    rotate: burst.rotation,
+                }"
+            />
+        </div>
+
+        <div class="pointer-events-none absolute inset-x-[clamp(0.75rem,2vw,1.5rem)] top-[clamp(0.75rem,2vw,1.5rem)] z-30 flex items-start justify-between gap-4">
+            <div class="wall-strip max-w-[min(70vw,38rem)] px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/12">
                         <img
                             v-if="wallLogoUrl"
                             :src="wallLogoUrl"
                             :alt="t('public.shared.alt.event_logo')"
                             class="h-full w-full object-cover"
                         />
-                        <div
+                        <span
                             v-else
-                            class="flex h-full w-full items-center justify-center text-sm font-semibold text-white"
+                            class="text-sm font-semibold uppercase tracking-[0.12em] text-white/90"
                         >
-                            {{ wallTitle.charAt(0).toUpperCase() }}
-                        </div>
+                            {{ wallTitle.charAt(0) }}
+                        </span>
                     </div>
+
                     <div class="min-w-0">
-                        <h1 class="truncate text-sm font-semibold text-white lg:text-base">
+                        <p class="truncate text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
+                            {{ t('public.wall.live_photo_wall') }}
+                        </p>
+                        <h1 class="truncate text-base font-semibold text-white sm:text-lg">
                             {{ wallTitle }}
                         </h1>
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-white/75">
-                            <p class="truncate">
-                                {{ t('public.wall.live_photo_wall') }} • {{ status }}
-                            </p>
-                            <span class="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/90">
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/72">
+                            <span>{{ status }}</span>
+                            <span class="inline-flex items-center gap-1.5">
                                 <span
-                                    class="size-1.5 rounded-full"
+                                    class="size-2 rounded-full"
                                     :class="wallLiveStatus === 'updating' ? 'bg-amber-300' : 'bg-emerald-300'"
                                 />
                                 {{ wallLiveStatus === 'updating' ? t('public.wall.updating') : t('public.wall.auto_updating') }}
@@ -556,249 +739,217 @@ watch(
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div
-                    v-if="qrVisible"
-                    class="shrink-0 rounded-2xl border border-white/20 bg-black/55 p-3 text-white shadow-[0_18px_44px_rgba(0,0,0,0.24)] backdrop-blur"
-                >
-                    <div class="flex items-center gap-3">
+            <div
+                v-if="qrVisible"
+                class="wall-strip max-w-[min(34vw,19rem)] px-4 py-3 text-right"
+            >
+                <div class="flex items-start justify-end gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
+                            {{ t('public.wall.scan_to_upload') }}
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-white">
+                            {{ albumAccessCode }}
+                        </p>
+                        <p class="mt-1 text-xs text-white/72">
+                            Visit {{ albumEntryShortcutUrl }}
+                        </p>
+                        <p class="mt-2 text-[11px] text-white/58">
+                            {{ t('public.wall.open_digital_album') }}
+                        </p>
+                    </div>
+
+                    <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
                         <img
                             :src="albumQrDataUrl"
                             :alt="t('public.shared.alt.album_qr_code')"
-                            class="size-16 rounded-md bg-white p-1"
+                            class="h-full w-full object-cover"
                         />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-[0.14em]">
-                                {{ t('public.wall.scan_to_upload') }}
-                            </p>
-                            <p class="mt-1 text-xs text-white/80">
-                                {{ t('public.wall.open_digital_album') }}
-                            </p>
-                            <p class="mt-2 text-xs font-semibold tracking-[0.18em] text-white">
-                                {{ albumAccessCode }}
-                            </p>
-                            <p class="mt-1 text-[11px] text-white/75">
-                                Visit {{ albumEntryShortcutUrl }} if you need to type the code instead.
-                            </p>
-                            <a
-                                :href="albumUrl"
-                                class="mt-2 inline-flex items-center gap-1 text-xs font-medium text-white underline underline-offset-4"
-                            >
-                                <QrCode class="size-3.5" />
-                                {{ t('public.wall.album_link') }}
-                            </a>
-                        </div>
                     </div>
                 </div>
-            </header>
+            </div>
+        </div>
 
-            <section class="relative flex flex-1 items-center justify-center">
-                <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-                    <Heart
-                        v-for="burst in wallHeartBursts"
-                        :key="burst.id"
-                        class="wall-heart-burst absolute fill-pink-400/65 text-pink-300/90 drop-shadow-[0_10px_24px_rgba(244,114,182,0.35)]"
-                        :style="{
-                            left: burst.left,
-                            bottom: burst.bottom,
-                            width: burst.size,
-                            height: burst.size,
-                            animationDuration: `${burst.durationMs}ms`,
-                            animationDelay: `${burst.delayMs}ms`,
-                            rotate: burst.rotation,
-                        }"
-                    />
-                </div>
-
-                <div
-                    v-if="currentAsset"
-                    class="relative w-full overflow-hidden rounded-3xl border border-white/25 bg-black/40 shadow-2xl backdrop-blur"
+        <section class="relative z-10 h-full w-full">
+            <Swiper
+                class="h-full w-full"
+                :modules="modules"
+                effect="fade"
+                :fade-effect="{ crossFade: true }"
+                :allow-touch-move="false"
+                :simulate-touch="false"
+                :speed="900"
+                @swiper="handleSwiperReady"
+                @slide-change="handleSlideChange"
+            >
+                <SwiperSlide
+                    v-for="asset in displayAssets"
+                    :key="asset.id"
+                    class="!h-full !w-full"
                 >
-                    <div
-                        v-if="currentAssetBackdropUrl"
-                        class="pointer-events-none absolute inset-0"
-                    >
-                        <img
-                            :src="currentAssetBackdropUrl"
-                            alt=""
-                            class="h-full w-full scale-105 object-cover opacity-80 blur-md"
-                        />
-                        <div class="absolute inset-0 bg-black/18" />
-                    </div>
+                    <article class="relative h-full w-full overflow-hidden">
+                        <template v-if="asset.kind === 'photo' && asset.previewUrl">
+                            <img
+                                v-if="asset.height && asset.width && asset.height > asset.width * 1.05"
+                                :src="asset.previewUrl"
+                                :alt="t('public.shared.alt.wall_photo')"
+                                class="absolute inset-0 m-auto h-full w-full object-contain px-[max(3vw,1rem)] py-[max(8vh,3rem)]"
+                            />
+                            <img
+                                v-else
+                                :src="asset.previewUrl"
+                                :alt="t('public.shared.alt.wall_photo')"
+                                class="h-full w-full object-cover"
+                            />
+                        </template>
 
-                    <img
-                        v-if="currentAsset.kind === 'photo' && currentAsset.previewUrl"
-                        :src="currentAsset.previewUrl"
-                        :alt="t('public.shared.alt.wall_photo')"
-                        class="relative z-10 h-[60vh] w-full object-contain lg:h-[72vh]"
-                    />
-
-                    <video
-                        v-else-if="
-                            currentAsset.kind === 'video' && currentAsset.previewUrl
-                        "
-                        :src="currentAsset.previewUrl"
-                        :poster="currentAsset.thumbnailUrl ?? undefined"
-                        class="relative z-10 h-[60vh] w-full object-contain lg:h-[72vh]"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                    />
-                    <div
-                        v-else-if="
-                            currentAsset.kind === 'video' &&
-                            currentAsset.videoProcessing
-                        "
-                        class="relative z-10 flex h-[60vh] w-full flex-col items-center justify-center gap-4 px-8 text-center text-white/85 lg:h-[72vh]"
-                    >
-                        <LoaderCircle class="size-10 animate-spin text-white/80" />
-                        <div class="space-y-1">
-                            <p class="text-lg font-semibold">
-                                {{ t('public.shared.processing_video') }}
-                            </p>
-                            <p class="text-sm text-white/70">
-                                {{ t('public.shared.processing_video_hint') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div
-                        v-else
-                        class="relative z-10 flex h-[60vh] w-full items-center justify-center px-8 text-center lg:h-[72vh]"
-                        :style="textPostSurfaceStyle(currentAsset)"
-                    >
-                        <p
-                            class="max-w-5xl whitespace-pre-wrap text-[2.6rem] font-semibold leading-[1.16] sm:text-[3.4rem] lg:text-[4.6rem]"
-                            :style="textPostTextStyle(currentAsset)"
+                        <template
+                            v-else-if="asset.kind === 'video' && asset.previewUrl"
                         >
-                            {{ currentAsset.text || t('public.wall.text_post') }}
-                        </p>
-                    </div>
+                            <video
+                                :ref="setForegroundVideoElement(asset.id)"
+                                :src="asset.previewUrl"
+                                :poster="asset.thumbnailUrl ?? undefined"
+                                class="h-full w-full"
+                                :class="
+                                    asset.height && asset.width && asset.height > asset.width * 1.05
+                                        ? 'object-contain px-[max(3vw,1rem)] py-[max(8vh,3rem)]'
+                                        : 'object-cover'
+                                "
+                                muted
+                                playsinline
+                                preload="auto"
+                            />
+                        </template>
 
-                    <div
-                        v-if="captionVisible"
-                        class="absolute inset-x-3 bottom-3 z-20 rounded-2xl border p-3 backdrop-blur"
-                        :class="captionPanelClasses"
-                    >
-                        <p class="text-sm font-semibold">
-                            {{ slideTitle }}
-                        </p>
-                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs opacity-85">
-                            <p>
-                                {{ slideSubtitle }}
-                            </p>
-                            <span class="inline-flex items-center gap-1">
-                                <Heart class="size-3.5" />
-                                {{ currentAsset.likeCount }}
-                            </span>
-                            <span class="inline-flex items-center gap-1">
-                                <span class="text-[0.95rem] leading-none">💬</span>
-                                {{ currentAsset.commentCount }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="currentReactionNotes.length > 0"
-                        class="pointer-events-none absolute inset-0 z-10 hidden sm:block"
-                    >
-                        <article
-                            v-for="note in currentReactionNotes"
-                            :key="`wall-note-${note.id}`"
-                            class="wall-note-card absolute w-40 rounded-[1.15rem] border border-[#e8d5a6] bg-[#fff4c9]/94 p-3 text-left text-[#3f3318] shadow-[0_18px_34px_rgba(62,41,12,0.24)] backdrop-blur"
-                            :style="{
-                                ...note.style,
-                                animationDelay: `${note.delayMs}ms`,
-                            }"
+                        <div
+                            v-else-if="asset.kind === 'video' && asset.videoProcessing"
+                            class="flex h-full w-full flex-col items-center justify-center gap-4 text-center"
                         >
-                            <p class="line-clamp-4 whitespace-pre-wrap text-[0.8rem] font-medium leading-5">
-                                {{ note.body }}
-                            </p>
-                            <div class="mt-2 flex items-center justify-between gap-2 text-[0.68rem] uppercase tracking-[0.14em] text-[#70521f]/85">
-                                <span class="truncate">{{ note.guestName }}</span>
-                                <span
-                                    v-if="note.likeCount > 0"
-                                    class="inline-flex items-center gap-1 text-[#c44569]"
-                                >
-                                    <Heart class="size-3 fill-current" />
-                                    {{ note.likeCount }}
-                                </span>
+                            <LoaderCircle class="size-12 animate-spin text-white/80" />
+                            <div class="space-y-2">
+                                <p class="text-xl font-semibold text-white">
+                                    {{ t('public.shared.processing_video') }}
+                                </p>
+                                <p class="text-sm text-white/68">
+                                    {{ t('public.shared.processing_video_hint') }}
+                                </p>
                             </div>
-                        </article>
-                    </div>
-                </div>
+                        </div>
 
-                <div
-                    v-else
-                    class="w-full max-w-3xl"
-                >
-                    <Empty class="rounded-3xl border border-white/20 bg-white/10 p-10 text-white backdrop-blur">
-                        <EmptyHeader>
-                            <EmptyMedia
-                                variant="icon"
-                                class="size-14 rounded-2xl border border-white/20 bg-white/10 text-white [&_svg]:size-7"
+                        <div
+                            v-else
+                            class="flex h-full w-full items-center justify-center px-[max(8vw,2rem)] text-center"
+                            :style="textPostSurfaceStyle(asset)"
+                        >
+                            <p
+                                class="max-w-5xl whitespace-pre-wrap text-[clamp(2rem,5vw,5rem)] font-semibold leading-[1.06]"
+                                :style="textPostTextStyle(asset)"
                             >
-                                <Images />
-                            </EmptyMedia>
-                            <EmptyTitle class="text-base font-semibold text-white sm:text-lg">
-                                {{ t('public.wall.waiting_title') }}
-                            </EmptyTitle>
-                            <EmptyDescription class="text-white/80">
-                                {{ t('public.wall.waiting_description') }}
-                            </EmptyDescription>
-                        </EmptyHeader>
-                    </Empty>
+                                {{ asset.text || t('public.wall.text_post') }}
+                            </p>
+                        </div>
+                    </article>
+                </SwiperSlide>
+            </Swiper>
+
+            <div
+                v-if="displayAssets.length === 0"
+                class="absolute inset-0 flex items-center justify-center px-8 text-center"
+                :style="emptyStateStyle"
+            >
+                <div class="space-y-3">
+                    <p class="text-[0.75rem] font-medium uppercase tracking-[0.24em] text-white/55">
+                        {{ t('public.wall.live_photo_wall') }}
+                    </p>
+                    <h2 class="text-[clamp(1.8rem,4vw,3.6rem)] font-semibold text-white">
+                        {{ t('public.wall.waiting_title') }}
+                    </h2>
+                    <p class="mx-auto max-w-2xl text-sm text-white/68 sm:text-base">
+                        {{ t('public.wall.waiting_description') }}
+                    </p>
                 </div>
+            </div>
+        </section>
 
-                <button
-                    v-if="displayAssets.length > 1"
-                    type="button"
-                    class="absolute left-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/45 text-white transition hover:bg-black/60"
-                    :aria-label="t('public.shared.actions.previous_media')"
-                    @click="previousAsset"
+        <div
+            v-if="currentReactionNotes.length > 0"
+            class="pointer-events-none absolute left-[clamp(0.75rem,2vw,1.5rem)] top-[clamp(5.8rem,14vh,7.5rem)] z-30 hidden max-w-[min(38vw,26rem)] gap-2 lg:flex lg:flex-col"
+        >
+            <div
+                v-for="note in currentReactionNotes"
+                :key="`wall-note-${note.id}`"
+                class="wall-strip flex items-start justify-between gap-3 px-3 py-2.5"
+            >
+                <div class="min-w-0">
+                    <p class="line-clamp-2 text-sm text-white/90">
+                        {{ note.body }}
+                    </p>
+                    <p class="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/54">
+                        {{ note.guestName }}
+                    </p>
+                </div>
+                <span
+                    v-if="note.likeCount > 0"
+                    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/8 px-2 py-1 text-xs text-white/78"
                 >
-                    <ChevronLeft class="size-5" />
-                </button>
+                    <Heart class="size-3.5 fill-current text-pink-300/90" />
+                    {{ note.likeCount }}
+                </span>
+            </div>
+        </div>
 
-                <button
-                    v-if="displayAssets.length > 1"
-                    type="button"
-                    class="absolute right-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/45 text-white transition hover:bg-black/60"
-                    :aria-label="t('public.shared.actions.next_media')"
-                    @click="nextAsset"
-                >
-                    <ChevronRight class="size-5" />
-                </button>
-            </section>
+        <div
+            class="pointer-events-none absolute inset-x-[clamp(0.75rem,2vw,1.5rem)] bottom-[clamp(0.75rem,2vw,1.5rem)] z-30 flex flex-wrap items-end justify-between gap-4"
+        >
+            <div
+                v-if="captionVisible && currentAsset"
+                class="wall-strip max-w-[min(78vw,44rem)] px-4 py-3"
+            >
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <p class="text-sm font-semibold text-white">
+                        {{ slideTitle }}
+                    </p>
+                    <span class="text-sm text-white/64">
+                        {{ slideSubtitle }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-sm text-white/72">
+                        <Heart class="size-3.5 fill-current text-pink-300/90" />
+                        {{ currentAsset.likeCount }}
+                    </span>
+                    <span class="text-sm text-white/72">
+                        💬 {{ currentAsset.commentCount }}
+                    </span>
+                </div>
+            </div>
+
+            <div
+                v-if="showPoweredBy"
+                class="wall-strip ml-auto px-3 py-2 text-xs text-white/62"
+            >
+                {{ poweredByLabel }}
+            </div>
         </div>
     </main>
-
-    <footer
-        v-if="showPoweredBy"
-        class="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55"
-    >
-        <Separator class="bg-white/12" />
-        <div class="px-3 py-2 text-center text-xs text-white/55">
-            © {{ new Date().getFullYear() }} {{ appName }}. {{ t('public.wall.footer') }}
-        </div>
-    </footer>
 </template>
 
 <style scoped>
+.wall-strip {
+    background: linear-gradient(180deg, rgb(7 8 11 / 74%), rgb(7 8 11 / 46%));
+    backdrop-filter: blur(18px);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.22);
+}
+
 .wall-heart-burst {
     animation-name: wall-heart-float;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     animation-fill-mode: forwards;
     opacity: 0;
     transform: translate3d(0, 0, 0) scale(0.72);
-}
-
-.wall-note-card {
-    animation-name: wall-note-drift;
-    animation-duration: 520ms;
-    animation-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1);
-    animation-fill-mode: both;
 }
 
 @keyframes wall-heart-float {
@@ -820,18 +971,6 @@ watch(
     100% {
         opacity: 0;
         transform: translate3d(-14px, -184px, 0) scale(0.9);
-    }
-}
-
-@keyframes wall-note-drift {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 20px, 0) scale(0.84);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
     }
 }
 </style>

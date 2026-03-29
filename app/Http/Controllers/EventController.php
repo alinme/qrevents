@@ -4338,6 +4338,8 @@ class EventController extends Controller
         return [
             'id' => $asset->id,
             'kind' => $asset->kind,
+            'width' => $asset->width,
+            'height' => $asset->height,
             'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
             'previewUrl' => $this->assetPublicPreviewUrl($asset),
             'videoProcessing' => $this->videoVariantsPending($asset, true),
