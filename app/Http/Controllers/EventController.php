@@ -4301,6 +4301,8 @@ class EventController extends Controller
             'id' => $asset->id,
             'kind' => $asset->kind,
             'moderationStatus' => $asset->moderation_status,
+            'width' => $asset->width,
+            'height' => $asset->height,
             'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
             'previewUrl' => $this->assetPublicPreviewUrl($asset),
             'videoProcessing' => $this->videoVariantsPending($asset, true),

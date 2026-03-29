@@ -12,8 +12,6 @@ import {
     AlertTriangle,
     CalendarDays,
     Camera,
-    ChevronLeft,
-    ChevronRight,
     CheckCircle2,
     Clock3,
     Columns2,
@@ -37,6 +35,9 @@ import {
     UploadCloud,
     X,
 } from 'lucide-vue-next';
+import type { Swiper as SwiperInstance } from 'swiper';
+import { EffectFade } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -83,6 +84,8 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 
 const page = usePage<{
     name?: string;
@@ -110,6 +113,8 @@ type AssetItem = {
     id: number;
     kind: 'photo' | 'video' | 'text';
     moderationStatus: string;
+    width: number | null;
+    height: number | null;
     thumbnailUrl: string | null;
     previewUrl: string | null;
     videoProcessing: boolean;
@@ -320,6 +325,7 @@ const commentDraft = ref('');
 const commentError = ref<string | null>(null);
 const activeStackKey = ref<string | null>(null);
 const activeStackSlideIndex = ref(0);
+const viewerSwiper = ref<SwiperInstance | null>(null);
 const activeInfoStackKey = ref<string | null>(null);
 const activeInfoSlideIndex = ref(0);
 const activeCommentsStackKey = ref<string | null>(null);
@@ -333,10 +339,7 @@ const heroSectionRef = ref<HTMLElement | null>(null);
 const heroGlassCardRef = ref<HTMLElement | null>(null);
 const isTextComposerFocused = ref(false);
 const loadedPhotoAssetIds = ref<Record<number, boolean>>({});
-const viewerTouchStartX = ref<number | null>(null);
-const viewerTouchStartY = ref<number | null>(null);
-const viewerTouchCurrentX = ref<number | null>(null);
-const viewerTouchCurrentY = ref<number | null>(null);
+const viewerProgressPercent = ref(0);
 const isAlbumRefreshing = ref(false);
 const isLoadingMoreAssets = ref(false);
 const hasPendingAlbumUpdate = ref(false);
@@ -360,7 +363,11 @@ let albumUpdatePollId: number | null = null;
 let processingVideoPollId: number | null = null;
 let loadMoreObserver: IntersectionObserver | null = null;
 let composerOpenTimeoutId: number | null = null;
+let viewerAdvanceTimerId: number | null = null;
+let viewerProgressFrameId: number | null = null;
+let activeViewerVideoCleanup: (() => void) | null = null;
 let lockedScrollY = 0;
+const viewerVideoElements = new Map<number, HTMLVideoElement>();
 const commentEmojiOptions = [
     '❤️',
     '👏',
@@ -592,6 +599,32 @@ const selectedInfoAsset = computed(() => {
 const hasMultipleInSelectedStack = computed(
     () => selectedStackAssets.value.length > 1,
 );
+const selectedAssetIsPortrait = computed(() => {
+    const asset = selectedAsset.value;
+
+    if (!asset || asset.kind === 'text' || !asset.width || !asset.height) {
+        return false;
+    }
+
+    return asset.height > asset.width * 1.05;
+});
+const selectedAssetBackdropUrl = computed(() => {
+    const asset = selectedAsset.value;
+
+    if (!asset) {
+        return null;
+    }
+
+    if (asset.kind === 'photo') {
+        return asset.previewUrl;
+    }
+
+    if (asset.kind === 'video') {
+        return asset.thumbnailUrl || asset.previewUrl;
+    }
+
+    return asset.textThemeImageUrl;
+});
 const selectedAssetCanDelete = computed(() =>
     canDeleteAsset(selectedAsset.value),
 );
@@ -1976,6 +2009,7 @@ onUnmounted(() => {
         return;
     }
 
+    clearViewerLifecycle();
     heroGlassCardResizeObserver?.disconnect();
     if (morphingHeaderFrameId !== null) {
         window.cancelAnimationFrame(morphingHeaderFrameId);
@@ -2020,6 +2054,29 @@ watch(heroSectionRef, () => {
 watch(loadMoreSentinelRef, () => {
     syncLoadMoreObserver();
 });
+
+watch(
+    [activeStackKey, activeStackSlideIndex],
+    ([stackKey, slideIndex]) => {
+        if (stackKey === null) {
+            clearViewerLifecycle();
+            viewerSwiper.value = null;
+
+            return;
+        }
+
+        nextTick(() => {
+            if (
+                viewerSwiper.value &&
+                viewerSwiper.value.activeIndex !== slideIndex
+            ) {
+                viewerSwiper.value.slideTo(slideIndex, 0);
+            }
+
+            startSelectedAssetLifecycle();
+        });
+    },
+);
 
 watch(hasProcessingVideoAssets, () => {
     syncProcessingVideoPoll();
@@ -2393,9 +2450,181 @@ watch(
     },
 );
 
+const clearViewerAdvanceTimer = (): void => {
+    if (typeof window === 'undefined' || viewerAdvanceTimerId === null) {
+        return;
+    }
+
+    window.clearTimeout(viewerAdvanceTimerId);
+    viewerAdvanceTimerId = null;
+};
+
+const clearViewerProgressFrame = (): void => {
+    if (typeof window === 'undefined' || viewerProgressFrameId === null) {
+        return;
+    }
+
+    window.cancelAnimationFrame(viewerProgressFrameId);
+    viewerProgressFrameId = null;
+};
+
+const clearViewerVideoPlayback = (): void => {
+    if (activeViewerVideoCleanup) {
+        activeViewerVideoCleanup();
+        activeViewerVideoCleanup = null;
+    }
+
+    viewerVideoElements.forEach((video) => {
+        video.pause();
+        video.currentTime = 0;
+    });
+};
+
+const clearViewerLifecycle = (): void => {
+    clearViewerAdvanceTimer();
+    clearViewerProgressFrame();
+    clearViewerVideoPlayback();
+    viewerProgressPercent.value = 0;
+};
+
+const animateViewerProgress = (durationMs: number, onComplete: () => void): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    clearViewerAdvanceTimer();
+    clearViewerProgressFrame();
+    viewerProgressPercent.value = 0;
+
+    const startedAt = window.performance.now();
+
+    const tick = (timestamp: number): void => {
+        const elapsed = Math.min(durationMs, timestamp - startedAt);
+        viewerProgressPercent.value = Math.max(
+            0,
+            Math.min(100, (elapsed / durationMs) * 100),
+        );
+
+        if (elapsed >= durationMs) {
+            viewerProgressFrameId = null;
+            onComplete();
+
+            return;
+        }
+
+        viewerProgressFrameId = window.requestAnimationFrame(tick);
+    };
+
+    viewerAdvanceTimerId = window.setTimeout(() => {
+        clearViewerProgressFrame();
+        viewerProgressPercent.value = 100;
+        onComplete();
+    }, durationMs);
+
+    viewerProgressFrameId = window.requestAnimationFrame(tick);
+};
+
+const setViewerVideoElement =
+    (assetId: number) =>
+    (element: Element | null): void => {
+        if (element instanceof HTMLVideoElement) {
+            viewerVideoElements.set(assetId, element);
+
+            return;
+        }
+
+        viewerVideoElements.delete(assetId);
+    };
+
+const startSelectedAssetLifecycle = (attempt = 0): void => {
+    const asset = selectedAsset.value;
+
+    clearViewerLifecycle();
+
+    if (!asset) {
+        return;
+    }
+
+    if (asset.kind === 'video') {
+        if (asset.videoProcessing || asset.previewUrl === null) {
+            animateViewerProgress(3200, () => {
+                showNextInStack();
+            });
+
+            return;
+        }
+
+        nextTick(() => {
+            const video = viewerVideoElements.get(asset.id);
+
+            if (!video) {
+                if (typeof window !== 'undefined' && attempt < 6) {
+                    window.setTimeout(() => startSelectedAssetLifecycle(attempt + 1), 120);
+                }
+
+                return;
+            }
+
+            video.currentTime = 0;
+
+            const syncProgress = (): void => {
+                const duration = video.duration;
+
+                if (Number.isFinite(duration) && duration > 0) {
+                    viewerProgressPercent.value = Math.max(
+                        0,
+                        Math.min(100, (video.currentTime / duration) * 100),
+                    );
+                }
+            };
+
+            const handleEnded = (): void => {
+                viewerProgressPercent.value = 100;
+                showNextInStack();
+            };
+
+            video.addEventListener('timeupdate', syncProgress);
+            video.addEventListener('ended', handleEnded);
+
+            activeViewerVideoCleanup = () => {
+                video.removeEventListener('timeupdate', syncProgress);
+                video.removeEventListener('ended', handleEnded);
+            };
+
+            void video.play().catch(() => {
+                animateViewerProgress(6500, () => {
+                    showNextInStack();
+                });
+            });
+        });
+
+        return;
+    }
+
+    animateViewerProgress(asset.kind === 'text' ? 9000 : 6500, () => {
+        showNextInStack();
+    });
+};
+
+const handleViewerSwiperReady = (swiper: SwiperInstance): void => {
+    viewerSwiper.value = swiper;
+
+    if (swiper.activeIndex !== activeStackSlideIndex.value) {
+        swiper.slideTo(activeStackSlideIndex.value, 0);
+    }
+};
+
+const handleViewerSlideChange = (swiper: SwiperInstance): void => {
+    activeStackSlideIndex.value = swiper.activeIndex;
+};
+
 const openAssetViewer = (stackKey: string, slideIndex = 0): void => {
     activeStackKey.value = stackKey;
     activeStackSlideIndex.value = slideIndex;
+
+    nextTick(() => {
+        viewerSwiper.value?.slideTo(slideIndex, 0);
+    });
 };
 
 const openAssetInfo = (stackKey: string, slideIndex = 0): void => {
@@ -2405,12 +2634,9 @@ const openAssetInfo = (stackKey: string, slideIndex = 0): void => {
 };
 
 const closeAssetViewer = (): void => {
+    clearViewerLifecycle();
     activeStackKey.value = null;
     activeStackSlideIndex.value = 0;
-    viewerTouchStartX.value = null;
-    viewerTouchStartY.value = null;
-    viewerTouchCurrentX.value = null;
-    viewerTouchCurrentY.value = null;
 };
 
 const closeAssetInfo = (): void => {
@@ -2560,6 +2786,12 @@ const showNextInStack = (): void => {
         return;
     }
 
+    if (viewerSwiper.value) {
+        viewerSwiper.value.slideNext(380);
+
+        return;
+    }
+
     activeStackSlideIndex.value =
         (activeStackSlideIndex.value + 1) % selectedStackAssets.value.length;
 };
@@ -2569,69 +2801,15 @@ const showPreviousInStack = (): void => {
         return;
     }
 
+    if (viewerSwiper.value) {
+        viewerSwiper.value.slidePrev(380);
+
+        return;
+    }
+
     activeStackSlideIndex.value =
         (activeStackSlideIndex.value - 1 + selectedStackAssets.value.length) %
         selectedStackAssets.value.length;
-};
-
-const onViewerTouchStart = (event: TouchEvent): void => {
-    const touch = event.changedTouches[0];
-
-    viewerTouchStartX.value = touch?.clientX ?? null;
-    viewerTouchStartY.value = touch?.clientY ?? null;
-    viewerTouchCurrentX.value = touch?.clientX ?? null;
-    viewerTouchCurrentY.value = touch?.clientY ?? null;
-};
-
-const onViewerTouchMove = (event: TouchEvent): void => {
-    const touch = event.changedTouches[0];
-
-    viewerTouchCurrentX.value = touch?.clientX ?? null;
-    viewerTouchCurrentY.value = touch?.clientY ?? null;
-};
-
-const resetViewerTouchGesture = (): void => {
-    viewerTouchStartX.value = null;
-    viewerTouchStartY.value = null;
-    viewerTouchCurrentX.value = null;
-    viewerTouchCurrentY.value = null;
-};
-
-const onViewerTouchEnd = (event: TouchEvent): void => {
-    const startX = viewerTouchStartX.value;
-    const startY = viewerTouchStartY.value;
-    const endX =
-        viewerTouchCurrentX.value ?? event.changedTouches[0]?.clientX ?? null;
-    const endY =
-        viewerTouchCurrentY.value ?? event.changedTouches[0]?.clientY ?? null;
-
-    resetViewerTouchGesture();
-
-    if (startX === null || endX === null || !hasMultipleInSelectedStack.value) {
-        return;
-    }
-
-    if (startY === null || endY === null) {
-        return;
-    }
-
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-
-    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) <= Math.abs(deltaY)) {
-        return;
-    }
-
-    if (deltaX < 0) {
-        showNextInStack();
-        return;
-    }
-
-    showPreviousInStack();
-};
-
-const onViewerTouchCancel = (): void => {
-    resetViewerTouchGesture();
 };
 
 const deleteAsset = (asset: AssetItem): void => {
@@ -5731,14 +5909,54 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="selectedAsset"
-                class="fixed inset-0 z-50 bg-black text-white"
+                class="fixed inset-0 z-50 overflow-hidden bg-[#040507] text-white"
             >
-                <header class="absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-black/90 px-3 py-2.5">
+                <div
+                    v-if="selectedAssetBackdropUrl"
+                    class="absolute inset-0"
+                >
+                    <img
+                        v-if="
+                            selectedAsset.kind !== 'video' ||
+                            selectedAsset.videoProcessing ||
+                            !selectedAsset.previewUrl
+                        "
+                        :src="selectedAssetBackdropUrl"
+                        alt=""
+                        class="h-full w-full object-cover"
+                        :class="selectedAssetIsPortrait ? 'scale-110 blur-2xl opacity-50' : 'opacity-88'"
+                    />
+                </div>
+
+                <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.82)_0%,rgba(3,4,6,0.18)_18%,rgba(3,4,6,0.18)_78%,rgba(3,4,6,0.84)_100%)]" />
+
+                <header class="pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-4">
+                    <div class="mb-3 flex items-center gap-1.5">
+                        <span
+                            v-for="(asset, index) in selectedStackAssets"
+                            :key="`story-progress-${asset.id}`"
+                            class="h-1 flex-1 overflow-hidden rounded-full bg-white/18"
+                        >
+                            <span
+                                class="block h-full rounded-full bg-white transition-[width] duration-200 ease-out"
+                                :style="{
+                                    width: `${
+                                        index < activeStackSlideIndex
+                                            ? 100
+                                            : index === activeStackSlideIndex
+                                                ? viewerProgressPercent
+                                                : 0
+                                    }%`,
+                                }"
+                            />
+                        </span>
+                    </div>
+
                     <div class="flex items-center justify-between gap-3">
-                        <div class="flex min-w-0 items-center gap-2">
+                        <div class="pointer-events-auto flex min-w-0 items-center gap-2">
                             <button
                                 type="button"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
+                                class="inline-flex size-10 items-center justify-center rounded-full border border-white/12 bg-black/34 text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur"
                                 :aria-label="t('public.album.actions.close_viewer')"
                                 @click="closeAssetViewer"
                             >
@@ -5757,7 +5975,7 @@ const onAlbumTouchCancel = (): void => {
                         <button
                             v-if="selectedAssetCanDelete"
                             type="button"
-                            class="inline-flex size-10 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white disabled:opacity-50"
+                            class="pointer-events-auto inline-flex size-10 items-center justify-center rounded-full border border-white/12 bg-black/34 text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur disabled:opacity-50"
                             :disabled="deleteAssetForm.processing"
                             :aria-label="t('public.album.actions.delete_upload')"
                             @click="deleteSelectedAsset"
@@ -5768,82 +5986,106 @@ const onAlbumTouchCancel = (): void => {
                 </header>
 
                 <div
-                    class="box-border flex h-[100dvh] w-screen touch-pan-y items-center justify-center overflow-hidden px-3 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))]"
-                    @touchstart.passive="onViewerTouchStart"
-                    @touchmove.passive="onViewerTouchMove"
-                    @touchend.passive="onViewerTouchEnd"
-                    @touchcancel.passive="onViewerTouchCancel"
+                    class="relative box-border flex h-[100dvh] w-screen items-center justify-center overflow-hidden pb-[calc(8rem+env(safe-area-inset-bottom))] pt-[calc(4.5rem+env(safe-area-inset-top))]"
                 >
-                    <div class="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
-                        <img
-                            v-if="selectedAsset.kind === 'photo' && selectedAsset.previewUrl"
-                            :src="selectedAsset.previewUrl"
-                            :alt="t('public.shared.alt.selected_event_photo')"
-                            class="block max-h-full max-w-full object-contain object-center"
-                        />
-                        <video
-                            v-else-if="selectedAsset.kind === 'video' && selectedAsset.previewUrl"
-                            :src="selectedAsset.previewUrl"
-                            :poster="selectedAsset.thumbnailUrl ?? undefined"
-                            class="block max-h-full max-w-full object-contain object-center"
-                            controls
-                            autoplay
-                            playsinline
-                        />
-                        <div
-                            v-else-if="
-                                selectedAsset.kind === 'video' &&
-                                selectedAsset.videoProcessing
-                            "
-                            class="flex aspect-video w-full max-w-[min(92vw,1100px)] flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/20 bg-white/10 px-8 text-center text-white backdrop-blur"
+                    <Swiper
+                        class="h-full w-full"
+                        :modules="[EffectFade]"
+                        effect="fade"
+                        :fade-effect="{ crossFade: true }"
+                        :allow-touch-move="hasMultipleInSelectedStack"
+                        :simulate-touch="hasMultipleInSelectedStack"
+                        :speed="420"
+                        @swiper="handleViewerSwiperReady"
+                        @slide-change="handleViewerSlideChange"
+                    >
+                        <SwiperSlide
+                            v-for="asset in selectedStackAssets"
+                            :key="`story-slide-${asset.id}`"
+                            class="!h-full !w-full"
                         >
-                            <LoaderCircle class="size-10 animate-spin text-white/80" />
-                            <div class="space-y-1">
-                                <p class="text-base font-semibold">
-                                    {{ t('public.album.labels.processing_video') }}
-                                </p>
-                                <p class="text-sm text-white/75">
-                                    {{ t('public.album.labels.upload_preparing') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div
-                            v-else-if="selectedAsset.kind === 'text'"
-                            class="flex max-h-full w-full max-w-[min(90vw,80vh)] items-center justify-center rounded-[2rem] p-8 shadow-2xl"
-                            :style="textPostSurfaceStyle(selectedAsset)"
-                        >
-                            <p
-                                class="max-w-[78%] whitespace-pre-wrap text-center text-[2.8rem] font-semibold leading-[1.22] sm:text-[3.4rem]"
-                                :style="textPostContentStyle(selectedAsset)"
-                            >
-                                {{ selectedAsset.text ?? t('public.album.labels.text_post') }}
-                            </p>
-                        </div>
-                    </div>
+                            <article class="relative h-full w-full overflow-hidden">
+                                <template v-if="asset.kind === 'photo' && asset.previewUrl">
+                                    <img
+                                        v-if="asset.height && asset.width && asset.height > asset.width * 1.05"
+                                        :src="asset.previewUrl"
+                                        :alt="t('public.shared.alt.selected_event_photo')"
+                                        class="absolute inset-0 m-auto h-full w-full object-contain px-[max(3vw,0.75rem)] py-[max(6vh,3.25rem)]"
+                                    />
+                                    <img
+                                        v-else
+                                        :src="asset.previewUrl"
+                                        :alt="t('public.shared.alt.selected_event_photo')"
+                                        class="h-full w-full object-cover"
+                                    />
+                                </template>
+
+                                <video
+                                    v-else-if="asset.kind === 'video' && asset.previewUrl"
+                                    :ref="setViewerVideoElement(asset.id)"
+                                    :src="asset.previewUrl"
+                                    :poster="asset.thumbnailUrl ?? undefined"
+                                    class="h-full w-full"
+                                    :class="
+                                        asset.height && asset.width && asset.height > asset.width * 1.05
+                                            ? 'object-contain px-[max(3vw,0.75rem)] py-[max(6vh,3.25rem)]'
+                                            : 'object-cover'
+                                    "
+                                    muted
+                                    playsinline
+                                    preload="auto"
+                                />
+
+                                <div
+                                    v-else-if="asset.kind === 'video' && asset.videoProcessing"
+                                    class="flex h-full w-full flex-col items-center justify-center gap-4 text-center"
+                                >
+                                    <LoaderCircle class="size-10 animate-spin text-white/80" />
+                                    <div class="space-y-1">
+                                        <p class="text-base font-semibold">
+                                            {{ t('public.album.labels.processing_video') }}
+                                        </p>
+                                        <p class="text-sm text-white/75">
+                                            {{ t('public.album.labels.upload_preparing') }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-else-if="asset.kind === 'text'"
+                                    class="flex h-full w-full items-center justify-center px-[max(8vw,2rem)] text-center"
+                                    :style="textPostSurfaceStyle(asset)"
+                                >
+                                    <p
+                                        class="max-w-5xl whitespace-pre-wrap text-center text-[clamp(2rem,5vw,4.6rem)] font-semibold leading-[1.1]"
+                                        :style="textPostContentStyle(asset)"
+                                    >
+                                        {{ asset.text ?? t('public.album.labels.text_post') }}
+                                    </p>
+                                </div>
+                            </article>
+                        </SwiperSlide>
+                    </Swiper>
 
                     <button
                         v-if="hasMultipleInSelectedStack"
                         type="button"
-                        class="absolute left-2 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white"
+                        class="absolute inset-y-0 left-0 z-10 w-[24%] min-w-16"
                         :aria-label="t('public.album.actions.previous_in_stack')"
                         @click="showPreviousInStack"
-                    >
-                        <ChevronLeft class="size-5" />
-                    </button>
+                    />
                     <button
                         v-if="hasMultipleInSelectedStack"
                         type="button"
-                        class="absolute right-2 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white"
+                        class="absolute inset-y-0 right-0 z-10 w-[24%] min-w-16"
                         :aria-label="t('public.album.actions.next_in_stack')"
                         @click="showNextInStack"
-                    >
-                        <ChevronRight class="size-5" />
-                    </button>
+                    />
                 </div>
                 <div
                     class="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4"
                 >
-                    <div class="inline-flex items-center gap-4 rounded-full border border-white/20 bg-black/58 px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                    <div class="inline-flex items-center gap-4 rounded-full border border-white/12 bg-black/50 px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur-md">
                         <span class="inline-flex items-center gap-2">
                             <Heart class="size-4 text-rose-400" />
                             {{ formatLikeCount(selectedAsset.likeCount) }}
@@ -5860,13 +6102,14 @@ const onAlbumTouchCancel = (): void => {
                         (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
                     "
                     class="pointer-events-none absolute inset-x-0 bottom-40 z-20 flex justify-center"
-                >
-                    <span class="rounded-full border border-white/35 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                        {{ t('public.album.labels.preview_only_payment_required') }}
-                    </span>
-                </div>
+                    >
+                        <span class="rounded-full border border-white/35 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                            {{ t('public.album.labels.preview_only_payment_required') }}
+                        </span>
+                    </div>
 
-                <footer class="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/90 px-3 py-2.5">
+                <footer class="absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2.5">
+                    <div class="rounded-[1.75rem] border border-white/12 bg-black/46 px-3 py-2.5 shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur">
                     <div class="flex flex-wrap items-center justify-center gap-2">
                         <button
                             type="button"
@@ -5938,6 +6181,7 @@ const onAlbumTouchCancel = (): void => {
                                     : 'bg-white/30'
                             "
                         />
+                    </div>
                     </div>
                 </footer>
             </div>

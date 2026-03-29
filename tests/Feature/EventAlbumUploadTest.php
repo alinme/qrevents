@@ -616,6 +616,8 @@ it('groups album media collections by upload batch', function () {
         'original_filename' => 'elena-b-1.jpg',
         'mime_type' => 'image/jpeg',
         'size_bytes' => 2048,
+        'width' => 1080,
+        'height' => 1920,
         'moderation_status' => 'approved',
         'metadata' => [
             'guest_name' => 'Elena',
@@ -633,6 +635,8 @@ it('groups album media collections by upload batch', function () {
             ->where('assets.1.guestName', 'Elena')
             ->where('assets.2.guestName', 'Elena')
             ->where('assets.3.guestName', 'Adrian')
+            ->where('assets.0.width', 1080)
+            ->where('assets.0.height', 1920)
             ->where('assets.0.galleryGroupKey', 'batch:batch-elena-b')
             ->where('assets.1.galleryGroupKey', 'batch:batch-elena-a')
             ->where('assets.2.galleryGroupKey', 'batch:batch-elena-a')
