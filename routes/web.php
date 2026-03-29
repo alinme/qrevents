@@ -165,6 +165,12 @@ Route::post('a/{shareToken}/assets/{asset}/comments/{comment}/likes/toggle', [Ev
 Route::get('a/{shareToken}/assets/{asset}/download', [EventController::class, 'downloadPublicAsset'])
     ->middleware('throttle:public-album-read')
     ->name('events.album.asset-download');
+Route::get('a/{shareToken}/assets/{asset}/preview', [EventController::class, 'publicAssetPreview'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.album.asset-preview');
+Route::get('a/{shareToken}/assets/{asset}/thumbnail', [EventController::class, 'publicAssetThumbnail'])
+    ->middleware('throttle:public-album-read')
+    ->name('events.album.asset-thumbnail');
 Route::post('a/{shareToken}/assets/{asset}/delete', [EventController::class, 'deletePublicAsset'])
     ->middleware('throttle:public-album-write')
     ->name('events.album.asset-delete');

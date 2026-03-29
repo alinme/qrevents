@@ -2215,9 +2215,8 @@ class EventController extends Controller
 
     public function downloadPublicAsset(string $shareToken, EventAsset $asset): StreamedResponse|RedirectResponse
     {
-        $event = Event::query()
-            ->where('share_token', $shareToken)
-            ->firstOrFail();
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: false);
+        abort_if($event === null, 404);
 
         abort_unless($asset->event_id === $event->id, 404);
         abort_unless($this->publicAlbumAllowsViewingMedia($event), 403);
@@ -2231,11 +2230,42 @@ class EventController extends Controller
         return $this->downloadStorageAsset($asset->disk, $downloadPath, $filename);
     }
 
+    public function publicAssetPreview(string $shareToken, EventAsset $asset): StreamedResponse|RedirectResponse
+    {
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: false);
+        abort_if($event === null, 404);
+
+        abort_unless($asset->event_id === $event->id, 404);
+        abort_unless($this->publicAlbumAllowsViewingMedia($event), 403);
+        abort_unless($asset->moderation_status === 'approved', 404);
+        abort_unless(! $this->videoVariantsPending($asset, true), 409);
+
+        $previewPath = $this->assetPublicPreviewPath($asset);
+        abort_unless($previewPath !== null, 404);
+
+        return $this->streamStorageAsset($asset->disk, $previewPath);
+    }
+
+    public function publicAssetThumbnail(string $shareToken, EventAsset $asset): StreamedResponse|RedirectResponse
+    {
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: false);
+        abort_if($event === null, 404);
+
+        abort_unless($asset->event_id === $event->id, 404);
+        abort_unless($this->publicAlbumAllowsViewingMedia($event), 403);
+        abort_unless($asset->moderation_status === 'approved', 404);
+        abort_unless(! $this->videoVariantsPending($asset, true), 409);
+
+        $thumbnailPath = $this->assetPublicThumbnailPath($asset);
+        abort_unless($thumbnailPath !== null, 404);
+
+        return $this->streamStorageAsset($asset->disk, $thumbnailPath);
+    }
+
     public function deletePublicAsset(Request $request, string $shareToken, EventAsset $asset): RedirectResponse
     {
-        $event = Event::query()
-            ->where('share_token', $shareToken)
-            ->firstOrFail();
+        $event = $this->resolvePublicAlbumEvent($shareToken, withGuests: false);
+        abort_if($event === null, 404);
 
         abort_unless($asset->event_id === $event->id, 404);
 
@@ -2305,7 +2335,7 @@ class EventController extends Controller
                 ->filter(fn (EventAsset $asset): bool => $this->assetVisibleOnWall($asset))
                 ->take(240)
                 ->values()
-                ->map(fn (EventAsset $asset): array => $this->wallAssetProps($asset))
+                ->map(fn (EventAsset $asset): array => $this->wallAssetProps($event, $asset))
                 ->all(),
         ]);
     }
@@ -4169,40 +4199,16 @@ class EventController extends Controller
 
     private function assetPublicPreviewUrl(EventAsset $asset): ?string
     {
-        if ($asset->kind === 'video') {
-            $path = $asset->video_preview_path;
+        $path = $this->assetPublicPreviewPath($asset);
 
-            if ($path === null || $path === '') {
-                return null;
-            }
-
-            return $this->storageUrl($asset->disk, $path);
-        }
-
-        $path = $asset->watermarked_preview_path ?: $asset->preview_path ?: $asset->path;
-
-        return $this->storageUrl($asset->disk, $path);
+        return $path === null ? null : $this->storageUrl($asset->disk, $path);
     }
 
     private function assetPublicThumbnailUrl(EventAsset $asset): ?string
     {
-        if ($asset->kind === 'video') {
-            $path = $asset->video_thumbnail_path;
+        $path = $this->assetPublicThumbnailPath($asset);
 
-            if ($path === null || $path === '') {
-                return null;
-            }
-
-            return $this->storageUrl($asset->disk, $path);
-        }
-
-        $path = $asset->watermarked_thumbnail_path
-            ?: $asset->thumbnail_path
-            ?: $asset->watermarked_preview_path
-            ?: $asset->preview_path
-            ?: $asset->path;
-
-        return $this->storageUrl($asset->disk, $path);
+        return $path === null ? null : $this->storageUrl($asset->disk, $path);
     }
 
     private function assetPublicDownloadPath(EventAsset $asset): string
@@ -4303,8 +4309,8 @@ class EventController extends Controller
             'moderationStatus' => $asset->moderation_status,
             'width' => $asset->width,
             'height' => $asset->height,
-            'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
-            'previewUrl' => $this->assetPublicPreviewUrl($asset),
+            'thumbnailUrl' => route('events.album.asset-thumbnail', [$event->publicAlbumCode(), $asset]),
+            'previewUrl' => route('events.album.asset-preview', [$event->publicAlbumCode(), $asset]),
             'videoProcessing' => $this->videoVariantsPending($asset, true),
             'downloadUrl' => route('events.album.asset-download', [$event->share_token, $asset]),
             'deleteUrl' => route('events.album.asset-delete', [$event->share_token, $asset]),
@@ -4333,7 +4339,7 @@ class EventController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function wallAssetProps(EventAsset $asset): array
+    private function wallAssetProps(Event $event, EventAsset $asset): array
     {
         $metadata = is_array($asset->metadata) ? $asset->metadata : [];
 
@@ -4342,8 +4348,8 @@ class EventController extends Controller
             'kind' => $asset->kind,
             'width' => $asset->width,
             'height' => $asset->height,
-            'thumbnailUrl' => $this->assetPublicThumbnailUrl($asset),
-            'previewUrl' => $this->assetPublicPreviewUrl($asset),
+            'thumbnailUrl' => route('events.album.asset-thumbnail', [$event->publicAlbumCode(), $asset]),
+            'previewUrl' => route('events.album.asset-preview', [$event->publicAlbumCode(), $asset]),
             'videoProcessing' => $this->videoVariantsPending($asset, true),
             'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
             ...$this->textPostThemeAssetProps($metadata),
@@ -5257,6 +5263,52 @@ class EventController extends Controller
         } catch (\Throwable) {
             return Storage::disk($disk)->download($path, $filename);
         }
+    }
+
+    private function streamStorageAsset(string $disk, string $path): StreamedResponse|RedirectResponse
+    {
+        if ($this->shouldCheckStoragePathExists($disk)) {
+            return Storage::disk($disk)->response($path);
+        }
+
+        try {
+            return redirect()->away(Storage::disk($disk)->temporaryUrl(
+                $path,
+                now()->addMinutes((int) config('events.upload_temporary_url_ttl_minutes', 30)),
+            ));
+        } catch (\Throwable) {
+            return Storage::disk($disk)->response($path);
+        }
+    }
+
+    private function assetPublicPreviewPath(EventAsset $asset): ?string
+    {
+        if ($asset->kind === 'video') {
+            $path = $asset->video_preview_path;
+
+            return is_string($path) && trim($path) !== '' ? $path : null;
+        }
+
+        $path = $asset->watermarked_preview_path ?: $asset->preview_path ?: $asset->path;
+
+        return is_string($path) && trim($path) !== '' ? $path : null;
+    }
+
+    private function assetPublicThumbnailPath(EventAsset $asset): ?string
+    {
+        if ($asset->kind === 'video') {
+            $path = $asset->video_thumbnail_path;
+
+            return is_string($path) && trim($path) !== '' ? $path : null;
+        }
+
+        $path = $asset->watermarked_thumbnail_path
+            ?: $asset->thumbnail_path
+            ?: $asset->watermarked_preview_path
+            ?: $asset->preview_path
+            ?: $asset->path;
+
+        return is_string($path) && trim($path) !== '' ? $path : null;
     }
 
     private function normalizeCollaboratorStatus(string $status): string

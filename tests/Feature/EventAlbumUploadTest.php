@@ -109,6 +109,8 @@ it('includes live reaction data for approved wall assets', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/Wall')
             ->where('assets.0.id', $asset->id)
+            ->where('assets.0.previewUrl', route('events.album.asset-preview', [$event->publicAlbumCode(), $asset]))
+            ->where('assets.0.thumbnailUrl', route('events.album.asset-thumbnail', [$event->publicAlbumCode(), $asset]))
             ->where('assets.0.width', 1080)
             ->where('assets.0.height', 1920)
             ->where('assets.0.likeCount', 1)
@@ -145,8 +147,37 @@ it('includes duration data for approved wall video assets', function () {
             ->component('public/Wall')
             ->where('assets.0.id', $asset->id)
             ->where('assets.0.kind', 'video')
+            ->where('assets.0.previewUrl', route('events.album.asset-preview', [$event->publicAlbumCode(), $asset]))
+            ->where('assets.0.thumbnailUrl', route('events.album.asset-thumbnail', [$event->publicAlbumCode(), $asset]))
             ->where('assets.0.durationSeconds', 17),
         );
+});
+
+it('serves public asset previews and thumbnails through stable album routes', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    Storage::disk('public')->put('events/test/preview-photo.jpg', 'photo-preview');
+    Storage::disk('public')->put('events/test/preview-thumb.jpg', 'photo-thumb');
+
+    /** @var EventAsset $asset */
+    $asset = EventAsset::factory()->for($event)->for($owner)->create([
+        'kind' => 'photo',
+        'disk' => 'public',
+        'path' => 'events/test/original-photo.jpg',
+        'preview_path' => 'events/test/preview-photo.jpg',
+        'thumbnail_path' => 'events/test/preview-thumb.jpg',
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'wall_visibility' => 'approved',
+        ],
+    ]);
+
+    $this->get(route('events.album.asset-preview', [$event->publicAlbumCode(), $asset]))
+        ->assertOk();
+
+    $this->get(route('events.album.asset-thumbnail', [$event->publicAlbumCode(), $asset]))
+        ->assertOk();
 });
 
 it('uploads photos and videos when the upload window is open', function () {
