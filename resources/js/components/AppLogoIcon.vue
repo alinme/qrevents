@@ -16,7 +16,7 @@ defineProps<Props>();
 
 <template>
     <img
-        :src="`/apple-touch-icon.png?v=${BRAND_ASSET_VERSION}`"
+        :src="`/favicon.svg?v=${BRAND_ASSET_VERSION}`"
         alt="EventSmart logo"
         :class="['object-contain', className]"
         loading="eager"
