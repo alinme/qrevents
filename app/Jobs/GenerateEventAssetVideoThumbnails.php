@@ -46,11 +46,8 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         $baseDirectory = sprintf('events/%d/variants/%d', $asset->event_id, $asset->id);
         $format = $this->normalizedFormat();
         $thumbnailPath = sprintf('%s/video-thumb.%s', $baseDirectory, $format);
-        $watermarkedThumbnailPath = sprintf('%s/video-thumb-watermarked.%s', $baseDirectory, $format);
         $previewPath = sprintf('%s/video-preview.mp4', $baseDirectory);
-        $watermarkedPreviewPath = sprintf('%s/video-preview-watermarked.mp4', $baseDirectory);
-        $watermarkedDownloadPath = sprintf('%s/video-download-watermarked.mp4', $baseDirectory);
-        $watermarkText = trim((string) config('events.image_variants.watermark_text', 'QREVENTS'));
+        $watermarkText = trim((string) config('app.name', 'EventSmart'));
 
         try {
             $posterBlob = $this->extractPosterBlob($inputPath, $asset);
@@ -63,35 +60,14 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
                 max(200, (int) config('events.video_variants.thumbnail_max_pixels', 960)),
                 $format,
             );
-            $watermarkedThumbnailBlob = $this->variantBlob(
-                $posterBlob,
-                max(200, (int) config('events.video_variants.thumbnail_max_pixels', 960)),
-                $format,
-                $watermarkText,
-            );
-
             $previewVideoPath = $this->transcodeVariant(
                 $inputPath,
                 max(640, (int) config('events.video_variants.preview_max_width', 1280)),
-                false,
-                null,
-                max(18, min(36, (int) config('events.video_variants.crf', 28))),
-            );
-            $watermarkedPreviewVideoPath = $this->transcodeVariant(
-                $inputPath,
-                max(640, (int) config('events.video_variants.preview_max_width', 1280)),
                 true,
                 $watermarkText,
-                max(18, min(36, (int) config('events.video_variants.crf', 28))),
+                $this->normalizedCrf(),
             );
-            $watermarkedDownloadVideoPath = $this->transcodeVariant(
-                $inputPath,
-                max(960, (int) config('events.video_variants.watermarked_download_max_width', 1920)),
-                true,
-                $watermarkText,
-                max(18, min(34, (int) config('events.video_variants.watermarked_download_crf', 24))),
-            );
-            if ($previewVideoPath === null || $watermarkedPreviewVideoPath === null || $watermarkedDownloadVideoPath === null) {
+            if ($previewVideoPath === null) {
                 return;
             }
         } catch (ImagickException|Throwable) {
@@ -103,20 +79,15 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
 
         $previewVideoBlob = File::get($previewVideoPath);
-        $watermarkedPreviewVideoBlob = File::get($watermarkedPreviewVideoPath);
-        $watermarkedDownloadVideoBlob = File::get($watermarkedDownloadVideoPath);
 
-        if (! is_string($previewVideoBlob) || ! is_string($watermarkedPreviewVideoBlob) || ! is_string($watermarkedDownloadVideoBlob)) {
+        if (! is_string($previewVideoBlob)) {
             return;
         }
 
         $writtenPaths = [];
         foreach ([
             $thumbnailPath => $thumbnailBlob,
-            $watermarkedThumbnailPath => $watermarkedThumbnailBlob,
             $previewPath => $previewVideoBlob,
-            $watermarkedPreviewPath => $watermarkedPreviewVideoBlob,
-            $watermarkedDownloadPath => $watermarkedDownloadVideoBlob,
         ] as $path => $contents) {
             if (! $this->writeVariantToStorage($asset->disk, $path, $contents)) {
                 $disk->delete($writtenPaths);
@@ -130,19 +101,13 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         if (is_file($previewVideoPath)) {
             @unlink($previewVideoPath);
         }
-        if (is_file($watermarkedPreviewVideoPath)) {
-            @unlink($watermarkedPreviewVideoPath);
-        }
-        if (is_file($watermarkedDownloadVideoPath)) {
-            @unlink($watermarkedDownloadVideoPath);
-        }
 
         $asset->forceFill([
             'video_thumbnail_path' => $thumbnailPath,
-            'watermarked_video_thumbnail_path' => $watermarkedThumbnailPath,
+            'watermarked_video_thumbnail_path' => null,
             'video_preview_path' => $previewPath,
-            'watermarked_video_preview_path' => $watermarkedPreviewPath,
-            'watermarked_video_download_path' => $watermarkedDownloadPath,
+            'watermarked_video_preview_path' => null,
+            'watermarked_video_download_path' => null,
         ])->save();
     }
 
@@ -281,7 +246,7 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         if ($watermarkOverlayPath !== null) {
             $command[] = '-filter_complex';
             $command[] = sprintf(
-                '[0:v]scale=min(%d\\,iw):-2[scaled];[scaled][1:v]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2',
+                '[0:v]scale=min(%d\\,iw):-2[scaled];[scaled][1:v]overlay=main_w-overlay_w-36:main_h-overlay_h-28',
                 $maxWidth,
             );
         } else {
@@ -333,6 +298,16 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
 
         return $outputMp4Path;
+    }
+
+    private function normalizedCrf(): int
+    {
+        $qualityPercent = max(
+            1,
+            min(100, (int) config('events.video_variants.quality_percent', 76)),
+        );
+
+        return (int) round(36 - (($qualityPercent / 100) * 18));
     }
 
     /**
@@ -470,9 +445,9 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
 
         $pngPath = $path.'.png';
-        $width = max(800, min(2200, $maxWidth));
-        $height = max(220, (int) round($width * 0.22));
-        $fontSize = max(48, (int) round($height * 0.34));
+        $width = max(240, min(640, (int) round($maxWidth * 0.26)));
+        $height = max(72, (int) round($width * 0.24));
+        $fontSize = max(18, (int) round($height * 0.36));
 
         $shadowDraw = new ImagickDraw;
         $fontPath = $this->watermarkFontPath();
@@ -480,27 +455,25 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
             $shadowDraw->setFont($fontPath);
         }
         $shadowDraw->setFontSize($fontSize);
-        $shadowDraw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $shadowDraw->setGravity(Imagick::GRAVITY_CENTER);
-        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.16)'));
+        $shadowDraw->setTextAlignment(Imagick::ALIGN_RIGHT);
+        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.18)'));
 
         $draw = new ImagickDraw;
         if ($fontPath !== null) {
             $draw->setFont($fontPath);
         }
         $draw->setFontSize($fontSize);
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->setGravity(Imagick::GRAVITY_CENTER);
-        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.18)'));
-        $draw->setStrokeColor(new ImagickPixel('rgba(255,255,255,0.30)'));
-        $draw->setStrokeWidth(max(1, $fontSize / 30));
+        $draw->setTextAlignment(Imagick::ALIGN_RIGHT);
+        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.20)'));
 
         $overlay = new Imagick;
         $overlay->newImage($width, $height, new ImagickPixel('transparent'));
         $overlay->setImageFormat('png');
-        $overlay->annotateImage($shadowDraw, 0, 4, 0, $text);
-        $overlay->annotateImage($draw, 0, 0, 0, $text);
-        $overlay->gaussianBlurImage(0.7, 0.5);
+        $baseline = (int) round($height * 0.72);
+        $rightInset = max(12, (int) round($width * 0.08));
+        $overlay->annotateImage($shadowDraw, $width - $rightInset + 2, $baseline + 2, 0, $text);
+        $overlay->annotateImage($draw, $width - $rightInset, $baseline, 0, $text);
+        $overlay->gaussianBlurImage(0.5, 0.4);
         $overlay->writeImage($pngPath);
         $overlay->clear();
         $overlay->destroy();

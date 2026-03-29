@@ -22,6 +22,7 @@ return [
         'poster_timestamp_seconds' => (float) env('EVENTS_VIDEO_POSTER_TIMESTAMP_SECONDS', 1.2),
         'thumbnail_max_pixels' => (int) env('EVENTS_VIDEO_THUMBNAIL_MAX_PIXELS', 960),
         'preview_max_width' => (int) env('EVENTS_VIDEO_PREVIEW_MAX_WIDTH', 1280),
+        'quality_percent' => (int) env('EVENTS_VIDEO_QUALITY_PERCENT', 76),
         'watermarked_download_max_width' => (int) env('EVENTS_VIDEO_WATERMARKED_DOWNLOAD_MAX_WIDTH', 1920),
         'quality' => (int) env('EVENTS_VIDEO_VARIANT_QUALITY', 80),
         'format' => env('EVENTS_VIDEO_VARIANT_FORMAT', 'jpg'),

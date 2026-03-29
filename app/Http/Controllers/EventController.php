@@ -4170,8 +4170,7 @@ class EventController extends Controller
     private function assetPublicPreviewUrl(EventAsset $asset): ?string
     {
         if ($asset->kind === 'video') {
-            $path = $asset->watermarked_video_preview_path
-                ?: $asset->video_preview_path;
+            $path = $asset->video_preview_path;
 
             if ($path === null || $path === '') {
                 return null;
@@ -4188,8 +4187,7 @@ class EventController extends Controller
     private function assetPublicThumbnailUrl(EventAsset $asset): ?string
     {
         if ($asset->kind === 'video') {
-            $path = $asset->watermarked_video_thumbnail_path
-                ?: $asset->video_thumbnail_path;
+            $path = $asset->video_thumbnail_path;
 
             if ($path === null || $path === '') {
                 return null;
@@ -4210,9 +4208,7 @@ class EventController extends Controller
     private function assetPublicDownloadPath(EventAsset $asset): string
     {
         if ($asset->kind === 'video') {
-            return $asset->watermarked_video_download_path
-                ?: $asset->watermarked_video_preview_path
-                ?: $asset->video_preview_path
+            return $asset->video_preview_path
                 ?: $asset->path;
         }
 
@@ -4242,13 +4238,6 @@ class EventController extends Controller
     {
         if ($asset->kind !== 'video') {
             return false;
-        }
-
-        if ($public) {
-            return ! is_string($asset->watermarked_video_thumbnail_path)
-                || trim((string) $asset->watermarked_video_thumbnail_path) === ''
-                || ! is_string($asset->watermarked_video_preview_path)
-                || trim((string) $asset->watermarked_video_preview_path) === '';
         }
 
         return ! is_string($asset->video_thumbnail_path)

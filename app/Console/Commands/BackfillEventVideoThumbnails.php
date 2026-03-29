@@ -43,10 +43,7 @@ class BackfillEventVideoThumbnails extends Command
             $query->where(function ($builder): void {
                 $builder
                     ->whereNull('video_thumbnail_path')
-                    ->orWhereNull('watermarked_video_thumbnail_path')
-                    ->orWhereNull('video_preview_path')
-                    ->orWhereNull('watermarked_video_preview_path')
-                    ->orWhereNull('watermarked_video_download_path');
+                    ->orWhereNull('video_preview_path');
             });
         }
 

@@ -297,7 +297,7 @@ it('generates thumbnail, preview, and watermarked variants for photo assets', fu
     $thumb->destroy();
 });
 
-it('generates poster, preview, and guest-safe video variants', function () {
+it('generates one thumbnail and one watermarked preview video variant', function () {
     $ffmpegBinary = trim((string) shell_exec('command -v ffmpeg'));
     if ($ffmpegBinary === '') {
         test()->markTestSkipped('ffmpeg is not installed.');
@@ -350,16 +350,13 @@ it('generates poster, preview, and guest-safe video variants', function () {
     $asset->refresh();
 
     expect($asset->video_thumbnail_path)->not->toBeNull()
-        ->and($asset->watermarked_video_thumbnail_path)->not->toBeNull()
         ->and($asset->video_preview_path)->not->toBeNull()
-        ->and($asset->watermarked_video_preview_path)->not->toBeNull()
-        ->and($asset->watermarked_video_download_path)->not->toBeNull();
+        ->and($asset->watermarked_video_thumbnail_path)->toBeNull()
+        ->and($asset->watermarked_video_preview_path)->toBeNull()
+        ->and($asset->watermarked_video_download_path)->toBeNull();
 
     Storage::disk('public')->assertExists((string) $asset->video_thumbnail_path);
-    Storage::disk('public')->assertExists((string) $asset->watermarked_video_thumbnail_path);
     Storage::disk('public')->assertExists((string) $asset->video_preview_path);
-    Storage::disk('public')->assertExists((string) $asset->watermarked_video_preview_path);
-    Storage::disk('public')->assertExists((string) $asset->watermarked_video_download_path);
 
     $thumb = new Imagick;
     $thumb->readImageBlob(Storage::disk('public')->get((string) $asset->video_thumbnail_path));
@@ -372,9 +369,7 @@ it('generates poster, preview, and guest-safe video variants', function () {
     $thumb->clear();
     $thumb->destroy();
 
-    expect(Storage::disk('public')->size((string) $asset->video_preview_path))->toBeGreaterThan(0)
-        ->and(Storage::disk('public')->size((string) $asset->watermarked_video_preview_path))->toBeGreaterThan(0)
-        ->and(Storage::disk('public')->size((string) $asset->watermarked_video_download_path))->toBeGreaterThan(0);
+    expect(Storage::disk('public')->size((string) $asset->video_preview_path))->toBeGreaterThan(0);
 
     @unlink($videoPath);
     @unlink($videoMp4Path);
