@@ -41,6 +41,7 @@ const page = usePage();
 const authedUser = page.props.auth?.user ?? null;
 const { locale, t } = useTranslations();
 const appName = computed(() => page.props.name ?? 'EventSmart');
+const brandAssetVersion = '20260329-6';
 
 const homeUrl = home().url;
 
@@ -117,18 +118,12 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
         <header class="sticky top-0 z-40 border-b border-promo-line/60 bg-promo-bg/92 backdrop-blur-md">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-                <Link :href="home()" class="flex items-center gap-3">
-                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-white shadow-[0_8px_18px_rgba(23,20,17,0.08)] ring-1 ring-promo-line/70">
-                        <AppLogoIcon class="size-7" />
-                    </div>
-                    <div>
-                        <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
-                            {{ t('marketing.brand.title', { appName }) }}
-                        </div>
-                        <div class="text-[11px] font-medium uppercase tracking-[0.18em] text-promo-muted">
-                            {{ t('marketing.brand.subtitle') }}
-                        </div>
-                    </div>
+                <Link :href="home()" class="flex items-center">
+                    <img
+                        :src="`/logo.svg?v=${brandAssetVersion}`"
+                        :alt="t('marketing.brand.title', { appName })"
+                        class="h-9 w-auto sm:h-10"
+                    >
                 </Link>
 
                 <nav class="hidden items-center gap-6 lg:flex">
