@@ -547,11 +547,6 @@ const applyWallAssets = (nextAssets: WallAsset[]): void => {
         }
 
         if (shouldPreserveCurrentVideoPlayback) {
-            queueVideoFallbackAdvance(
-                nextCurrentAsset,
-                foregroundVideoElements.get(nextCurrentAsset.id),
-            );
-
             return;
         }
 
