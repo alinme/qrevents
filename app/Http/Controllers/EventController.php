@@ -1526,7 +1526,7 @@ class EventController extends Controller
                 'albumBackgroundEnabled' => (bool) ($branding['album_background_enabled'] ?? false),
                 'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                 'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
-                'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
+                'albumBackgroundImageUrl' => $this->effectiveAlbumBackgroundUrl($event, $branding),
             ],
             'welcomeScreen' => [
                 'enabled' => (bool) ($branding['welcome_screen_enabled'] ?? false),
@@ -2329,7 +2329,7 @@ class EventController extends Controller
                 'albumBackgroundEnabled' => (bool) ($branding['album_background_enabled'] ?? false),
                 'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                 'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
-                'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
+                'albumBackgroundImageUrl' => $this->effectiveAlbumBackgroundUrl($event, $branding),
             ],
             'assets' => $event->assets
                 ->filter(fn (EventAsset $asset): bool => $this->assetVisibleOnWall($asset))
@@ -2533,7 +2533,7 @@ class EventController extends Controller
                     'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                     'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
                     'albumBackgroundPresetThemeId' => $this->albumBackgroundPresetThemeId($branding),
-                    'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
+                    'albumBackgroundImageUrl' => $this->effectiveAlbumBackgroundUrl($event, $branding),
                     'textPostsBackgroundsEnabled' => (bool) ($branding['text_posts_backgrounds_enabled'] ?? false),
                     'textPostsBackgroundPalette' => $this->textPostsBackgroundPalette($branding),
                     'albumPermission' => $albumPermission,
@@ -3296,7 +3296,7 @@ class EventController extends Controller
                 'logoUrl' => $this->brandingLogoUrl($branding),
                 'albumBackgroundMode' => $this->albumBackgroundMode($branding),
                 'albumBackgroundColor' => (string) ($branding['album_background_color'] ?? '#0F172A'),
-                'albumBackgroundImageUrl' => $this->brandingAlbumBackgroundUrl($branding),
+                'albumBackgroundImageUrl' => $this->effectiveAlbumBackgroundUrl($event, $branding),
             ],
             'appName' => config('app.name'),
             'showPoweredBy' => ! $this->eventRemovesAppBranding($event),
@@ -4934,6 +4934,32 @@ class EventController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $branding
+     */
+    private function effectiveAlbumBackgroundUrl(Event $event, array $branding): string
+    {
+        return $this->brandingAlbumBackgroundUrl($branding) ?? $this->defaultAlbumBackgroundUrl($event);
+    }
+
+    private function defaultAlbumBackgroundUrl(Event $event): string
+    {
+        $backgrounds = [
+            'alvin-bg-md.jpg',
+            'beatriz-bg-md.jpg',
+            'drew-bg-md.jpg',
+            'jeremy-bg-md.jpg',
+            'nathan-bg-md.jpg',
+            'sandy-bg-md.jpg',
+        ];
+
+        $seed = $event->album_access_code ?: $event->share_token ?: (string) $event->getKey();
+        $hash = (int) sprintf('%u', crc32((string) $seed));
+        $background = $backgrounds[$hash % count($backgrounds)] ?? $backgrounds[0];
+
+        return asset("images/album/{$background}");
     }
 
     /**

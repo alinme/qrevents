@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import {
+    IconDownload,
+    IconEye,
+    IconFileText,
+    IconPhoto,
+    IconUpload,
+    IconVideo,
+} from '@tabler/icons-vue';
+import {
     Asterisk,
     Calendar as CalendarIcon,
     Camera,
@@ -21,14 +29,6 @@ import {
     WandSparkles,
     X,
 } from 'lucide-vue-next';
-import {
-    IconDownload,
-    IconEye,
-    IconFileText,
-    IconPhoto,
-    IconUpload,
-    IconVideo,
-} from '@tabler/icons-vue';
 import type { DateValue } from 'reka-ui';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
@@ -65,6 +65,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { DEFAULT_ALBUM_LOGO_URL } from '@/lib/album-defaults';
 import type { BreadcrumbItem } from '@/types';
 
 type EventSettingsPayload = {
@@ -255,7 +256,9 @@ const props = defineProps<{
 }>();
 
 const page = usePage<PageProps>();
-const currentAccountType = computed(() => page.props.auth?.user?.accountType ?? 'user');
+const currentAccountType = computed(
+    () => page.props.auth?.user?.accountType ?? 'user',
+);
 const checkoutState = computed(() => {
     const query = page.url.split('?')[1] ?? '';
 
@@ -422,9 +425,15 @@ const allTabItems: Array<{ id: TabId; label: string; icon: unknown }> = [
 ];
 
 const planFeatures = computed(() => props.currentEvent.planFeatures);
-const canEditLogo = computed(() => planFeatures.value.allowsBetterCustomization);
-const canEditAdvancedAppearance = computed(() => planFeatures.value.allowsAdvancedCustomization);
-const canUseModeration = computed(() => planFeatures.value.allowsModerationTools);
+const canEditLogo = computed(
+    () => planFeatures.value.allowsBetterCustomization,
+);
+const canEditAdvancedAppearance = computed(
+    () => planFeatures.value.allowsAdvancedCustomization,
+);
+const canUseModeration = computed(
+    () => planFeatures.value.allowsModerationTools,
+);
 const isWeddingEventType = computed(() => form.type === 'wedding');
 const hasWeddingDetails = computed(() => {
     const details = form.wedding_details;
@@ -773,6 +782,10 @@ const currentLogoUrl = computed(() => {
 
     return props.currentEvent.branding.logoUrl;
 });
+
+const currentPreviewLogoUrl = computed(
+    () => currentLogoUrl.value ?? DEFAULT_ALBUM_LOGO_URL,
+);
 
 const logoFileName = computed(() => {
     if (form.logo_file instanceof File) {
@@ -1839,9 +1852,8 @@ function resolveSupportedTimezones(): string[] {
                                     </div>
                                     <p class="text-sm text-muted-foreground">
                                         Keep this light for now. These names
-                                        will help us prepare wedding
-                                        invitations later, and you can refine
-                                        them anytime.
+                                        will help us prepare wedding invitations
+                                        later, and you can refine them anytime.
                                     </p>
                                     <p
                                         v-if="!hasWeddingDetails"
@@ -1865,7 +1877,8 @@ function resolveSupportedTimezones(): string[] {
                                             <Input
                                                 id="partner-one-name"
                                                 v-model="
-                                                    form.wedding_details.partner_one_name
+                                                    form.wedding_details
+                                                        .partner_one_name
                                                 "
                                                 class="h-11 bg-white"
                                                 placeholder="Ana"
@@ -1888,7 +1901,8 @@ function resolveSupportedTimezones(): string[] {
                                             <Input
                                                 id="partner-two-name"
                                                 v-model="
-                                                    form.wedding_details.partner_two_name
+                                                    form.wedding_details
+                                                        .partner_two_name
                                                 "
                                                 class="h-11 bg-white"
                                                 placeholder="Andrei"
@@ -1932,7 +1946,8 @@ function resolveSupportedTimezones(): string[] {
                                             <Switch
                                                 id="show-family-name"
                                                 v-model="
-                                                    form.wedding_details.show_family_name
+                                                    form.wedding_details
+                                                        .show_family_name
                                                 "
                                             />
                                             <span class="min-w-0">
@@ -1945,8 +1960,8 @@ function resolveSupportedTimezones(): string[] {
                                                 <span
                                                     class="block text-xs text-muted-foreground"
                                                 >
-                                                    Example: Jessica &amp;
-                                                    Simon Miller
+                                                    Example: Jessica &amp; Simon
+                                                    Miller
                                                 </span>
                                             </span>
                                         </label>
@@ -1976,7 +1991,8 @@ function resolveSupportedTimezones(): string[] {
                                         <Input
                                             id="bride-parents"
                                             v-model="
-                                                form.wedding_details.bride_parents
+                                                form.wedding_details
+                                                    .bride_parents
                                             "
                                             class="h-11 bg-white"
                                             placeholder="Maria and Ion Popescu"
@@ -2000,7 +2016,8 @@ function resolveSupportedTimezones(): string[] {
                                         <Input
                                             id="groom-parents"
                                             v-model="
-                                                form.wedding_details.groom_parents
+                                                form.wedding_details
+                                                    .groom_parents
                                             "
                                             class="h-11 bg-white"
                                             placeholder="Elena and Mihai Ionescu"
@@ -2063,7 +2080,9 @@ function resolveSupportedTimezones(): string[] {
                                         type="button"
                                         class="rounded-xl border p-4 text-left transition"
                                         :class="
-                                            albumPermissionSelection[permission.value]
+                                            albumPermissionSelection[
+                                                permission.value
+                                            ]
                                                 ? 'border-primary bg-primary/10 text-primary shadow-sm'
                                                 : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                         "
@@ -2077,7 +2096,9 @@ function resolveSupportedTimezones(): string[] {
                                             :is="permission.icon"
                                             class="mb-3 size-5"
                                             :class="
-                                                albumPermissionSelection[permission.value]
+                                                albumPermissionSelection[
+                                                    permission.value
+                                                ]
                                                     ? 'text-primary'
                                                     : 'text-slate-400'
                                             "
@@ -2113,8 +2134,8 @@ function resolveSupportedTimezones(): string[] {
                                     </div>
                                     <p class="text-sm text-muted-foreground">
                                         Choose which guest upload actions stay
-                                        available in the public album,
-                                        including text wishes.
+                                        available in the public album, including
+                                        text wishes.
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -2185,31 +2206,43 @@ function resolveSupportedTimezones(): string[] {
                                         </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Badge variant="secondary">
-                                                {{ props.currentEvent.billing.planFeatures.customizationTier }}
+                                                {{
+                                                    props.currentEvent.billing
+                                                        .planFeatures
+                                                        .customizationTier
+                                                }}
                                                 customization
                                             </Badge>
                                             <Badge
                                                 :variant="
-                                                    props.currentEvent.billing.planFeatures.allowsDownloadAll
+                                                    props.currentEvent.billing
+                                                        .planFeatures
+                                                        .allowsDownloadAll
                                                         ? 'secondary'
                                                         : 'outline'
                                                 "
                                             >
                                                 {{
-                                                    props.currentEvent.billing.planFeatures.allowsDownloadAll
+                                                    props.currentEvent.billing
+                                                        .planFeatures
+                                                        .allowsDownloadAll
                                                         ? 'ZIP export included'
                                                         : 'ZIP export locked'
                                                 }}
                                             </Badge>
                                             <Badge
                                                 :variant="
-                                                    props.currentEvent.billing.planFeatures.allowsModerationTools
+                                                    props.currentEvent.billing
+                                                        .planFeatures
+                                                        .allowsModerationTools
                                                         ? 'secondary'
                                                         : 'outline'
                                                 "
                                             >
                                                 {{
-                                                    props.currentEvent.billing.planFeatures.allowsModerationTools
+                                                    props.currentEvent.billing
+                                                        .planFeatures
+                                                        .allowsModerationTools
                                                         ? 'Moderation included'
                                                         : 'Moderation locked'
                                                 }}
@@ -2666,15 +2699,28 @@ function resolveSupportedTimezones(): string[] {
                                         "
                                         class="rounded-xl border border-promo-primary/20 bg-white px-4 py-4"
                                     >
-                                        <h3 class="text-sm font-semibold text-promo-ink">
+                                        <h3
+                                            class="text-sm font-semibold text-promo-ink"
+                                        >
                                             Need multiple paid events?
                                         </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            Switch this account to Business, top up credits once, and create Plus or Pro events without repeating the normal billing flow each time.
+                                        <p
+                                            class="mt-2 text-sm leading-6 text-promo-muted"
+                                        >
+                                            Switch this account to Business, top
+                                            up credits once, and create Plus or
+                                            Pro events without repeating the
+                                            normal billing flow each time.
                                         </p>
-                                        <Button as-child class="mt-4 h-11 bg-[#171411] text-white hover:bg-[#2b2621]">
+                                        <Button
+                                            as-child
+                                            class="mt-4 h-11 bg-[#171411] text-white hover:bg-[#2b2621]"
+                                        >
                                             <Link
-                                                :href="props.eventLinks.businessActivate"
+                                                :href="
+                                                    props.eventLinks
+                                                        .businessActivate
+                                                "
                                                 method="post"
                                                 as="button"
                                             >
@@ -2682,7 +2728,12 @@ function resolveSupportedTimezones(): string[] {
                                             </Link>
                                         </Button>
                                     </div>
-                                    <p v-if="!props.currentEvent.billing.canCheckout">
+                                    <p
+                                        v-if="
+                                            !props.currentEvent.billing
+                                                .canCheckout
+                                        "
+                                    >
                                         Billing for this event is managed by QR
                                         Events admin. If you need plan or
                                         payment changes, contact the platform
@@ -2712,9 +2763,12 @@ function resolveSupportedTimezones(): string[] {
                             v-show="activeTab === 'appearance'"
                             class="space-y-6"
                         >
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            <div
+                                class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600"
+                            >
                                 <p class="font-semibold text-slate-900">
-                                    Current plan: {{ props.currentEvent.billing.planName }}
+                                    Current plan:
+                                    {{ props.currentEvent.billing.planName }}
                                 </p>
                                 <p class="mt-2">
                                     {{
@@ -2913,9 +2967,9 @@ function resolveSupportedTimezones(): string[] {
                                         Album Background
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Choose a preset backdrop, a solid
-                                        color, or let the album rotate through
-                                        uploaded photos.
+                                        Choose a preset backdrop, a solid color,
+                                        or let the album rotate through uploaded
+                                        photos.
                                     </p>
                                 </div>
                                 <div
@@ -3104,7 +3158,6 @@ function resolveSupportedTimezones(): string[] {
                             <InputError
                                 :message="form.errors.auto_moderation_enabled"
                             />
-
                         </section>
 
                         <section
@@ -3658,10 +3711,10 @@ function resolveSupportedTimezones(): string[] {
                                                         >
                                                             <img
                                                                 v-if="
-                                                                    currentLogoUrl
+                                                                    currentPreviewLogoUrl
                                                                 "
                                                                 :src="
-                                                                    currentLogoUrl
+                                                                    currentPreviewLogoUrl
                                                                 "
                                                                 alt="Event logo"
                                                                 class="h-full w-full object-cover"
@@ -4028,9 +4081,7 @@ function resolveSupportedTimezones(): string[] {
                                         <NativeSelectOption value="solid">
                                             Solid Color
                                         </NativeSelectOption>
-                                        <NativeSelectOption
-                                            value="preset"
-                                        >
+                                        <NativeSelectOption value="preset">
                                             Preset Artwork
                                         </NativeSelectOption>
                                         <NativeSelectOption
@@ -4100,11 +4151,15 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <div class="space-y-2">
-                                    <div class="flex items-center justify-between gap-3">
+                                    <div
+                                        class="flex items-center justify-between gap-3"
+                                    >
                                         <h4 class="text-sm font-semibold">
                                             Preset Artwork
                                         </h4>
-                                        <p class="text-xs text-muted-foreground">
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
                                             Reuses the same backgrounds guests
                                             already see in text wishes.
                                         </p>
@@ -4119,8 +4174,10 @@ function resolveSupportedTimezones(): string[] {
                                             type="button"
                                             class="group relative overflow-hidden rounded-2xl border-2 text-left transition"
                                             :class="
-                                                form.album_background_preset_theme_id === theme.id &&
-                                                form.album_background_mode === 'preset'
+                                                form.album_background_preset_theme_id ===
+                                                    theme.id &&
+                                                form.album_background_mode ===
+                                                    'preset'
                                                     ? 'border-primary shadow-sm'
                                                     : 'border-border'
                                             "
@@ -4135,9 +4192,15 @@ function resolveSupportedTimezones(): string[] {
                                                 :alt="theme.name"
                                                 class="h-28 w-full object-cover"
                                             />
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                                            <div class="absolute inset-x-0 bottom-0 p-3">
-                                                <p class="text-sm font-semibold text-white">
+                                            <div
+                                                class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent"
+                                            />
+                                            <div
+                                                class="absolute inset-x-0 bottom-0 p-3"
+                                            >
+                                                <p
+                                                    class="text-sm font-semibold text-white"
+                                                >
                                                     {{ theme.name }}
                                                 </p>
                                             </div>
@@ -4147,8 +4210,8 @@ function resolveSupportedTimezones(): string[] {
                                         v-else
                                         class="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground"
                                     >
-                                        Add text wish backgrounds first and
-                                        they will appear here automatically.
+                                        Add text wish backgrounds first and they
+                                        will appear here automatically.
                                     </p>
                                     <InputError
                                         :message="

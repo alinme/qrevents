@@ -84,6 +84,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
+import { DEFAULT_ALBUM_LOGO_URL } from '@/lib/album-defaults';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
@@ -393,7 +394,16 @@ const commentEmojiOptions = [
     '😭',
     '🙌',
 ];
-const uploadMessageEmojiOptions = ['❤️', '🥂', '✨', '🎉', '📸', '🤍', '🫶', '🥹'];
+const uploadMessageEmojiOptions = [
+    '❤️',
+    '🥂',
+    '✨',
+    '🎉',
+    '📸',
+    '🤍',
+    '🫶',
+    '🥹',
+];
 
 const uploadForm = useForm<{
     files: File[];
@@ -443,7 +453,9 @@ const deleteAssetForm = useForm<{
     guest_token: null,
 });
 
-const guestStorageKey = computed(() => `kululu-guest-profile:${props.shareToken}`);
+const guestStorageKey = computed(
+    () => `kululu-guest-profile:${props.shareToken}`,
+);
 const galleryViewStorageKey = computed(
     () => `kululu-gallery-view:${props.shareToken}`,
 );
@@ -505,7 +517,10 @@ const galleryStacks = computed<GalleryStack[]>(() => {
 
         existing.assets.push(asset);
         const hadNewerTimestamp = createdAtTimestamp > existing.latestTimestamp;
-        existing.latestTimestamp = Math.max(existing.latestTimestamp, createdAtTimestamp);
+        existing.latestTimestamp = Math.max(
+            existing.latestTimestamp,
+            createdAtTimestamp,
+        );
         if (
             existing.latestCreatedAt === null ||
             (createdAt && hadNewerTimestamp)
@@ -524,8 +539,9 @@ const galleryStacks = computed<GalleryStack[]>(() => {
                 ...stack,
                 assets: sortedAssets,
                 preview: sortedAssets[0] ?? stack.preview,
-                mediaCount: sortedAssets.filter((asset) => asset.kind !== 'text')
-                    .length,
+                mediaCount: sortedAssets.filter(
+                    (asset) => asset.kind !== 'text',
+                ).length,
             };
         })
         .sort((left, right) => right.latestTimestamp - left.latestTimestamp);
@@ -541,8 +557,9 @@ const selectedStack = computed(() => {
     }
 
     return (
-        galleryStacks.value.find((stack) => stack.key === activeStackKey.value) ??
-        null
+        galleryStacks.value.find(
+            (stack) => stack.key === activeStackKey.value,
+        ) ?? null
     );
 });
 const selectedInfoStack = computed(() => {
@@ -551,8 +568,9 @@ const selectedInfoStack = computed(() => {
     }
 
     return (
-        galleryStacks.value.find((stack) => stack.key === activeInfoStackKey.value) ??
-        null
+        galleryStacks.value.find(
+            (stack) => stack.key === activeInfoStackKey.value,
+        ) ?? null
     );
 });
 const selectedCommentsStack = computed(() => {
@@ -561,8 +579,9 @@ const selectedCommentsStack = computed(() => {
     }
 
     return (
-        galleryStacks.value.find((stack) => stack.key === activeCommentsStackKey.value) ??
-        null
+        galleryStacks.value.find(
+            (stack) => stack.key === activeCommentsStackKey.value,
+        ) ?? null
     );
 });
 const selectedStackAssets = computed<AssetItem[]>(
@@ -659,18 +678,21 @@ const showQrCode = computed(() => !props.appearance.hideQrCode);
 const showCaptions = computed(() => !props.appearance.hideCaption);
 const showPreviewWatermark = computed(() => !props.canGuestDownload);
 const canUploadText = computed(() => canUpload.value && props.allowTextPosts);
-const canUploadPhotos = computed(() => props.allowedMediaTypes.includes('photo'));
-const canUploadVideos = computed(() => props.allowedMediaTypes.includes('video'));
-const hasAlbumImageBackground = computed(
-    () =>
-        props.appearance.albumBackgroundEnabled
-        && ['preset', 'image'].includes(props.appearance.albumBackgroundMode)
-        && Boolean(props.appearance.albumBackgroundImageUrl),
+const canUploadPhotos = computed(() =>
+    props.allowedMediaTypes.includes('photo'),
+);
+const canUploadVideos = computed(() =>
+    props.allowedMediaTypes.includes('video'),
+);
+const hasAlbumImageBackground = computed(() =>
+    Boolean(props.appearance.albumBackgroundImageUrl),
 );
 const selectedTextPostTheme = computed<TextPostThemeOption | null>(() => {
     const selectedId = textForm.text_post_theme_id;
     if (selectedId !== null) {
-        const selected = props.textPostThemes.find((theme) => theme.id === selectedId);
+        const selected = props.textPostThemes.find(
+            (theme) => theme.id === selectedId,
+        );
         if (selected) {
             return selected;
         }
@@ -824,7 +846,8 @@ const intentOptions = computed(() => [
 ]);
 
 const defaultIntent = (): GuestIntent =>
-    intentOptions.value.find((option) => option.enabled)?.value ?? 'browse_gallery';
+    intentOptions.value.find((option) => option.enabled)?.value ??
+    'browse_gallery';
 
 const welcomeGuestFields = computed<WelcomeField[]>(() => {
     if (!customWelcomeEnabled.value) {
@@ -900,16 +923,25 @@ const currentGuestAvatarUrl = computed(
     () => guestAvatarPreviewUrl.value ?? guestAvatarUrl.value,
 );
 const albumAvatarFallback = computed(() =>
-    (welcomeTitle.value || props.eventName || 'K').trim().charAt(0).toUpperCase(),
+    (welcomeTitle.value || props.eventName || 'K')
+        .trim()
+        .charAt(0)
+        .toUpperCase(),
 );
 const albumLogoUrl = computed(
-    () => props.welcomeScreen.logoUrl ?? props.appearance.logoUrl ?? null,
+    () =>
+        props.welcomeScreen.logoUrl ??
+        props.appearance.logoUrl ??
+        DEFAULT_ALBUM_LOGO_URL,
 );
 const albumPrimaryColor = computed(
     () => props.appearance.primaryColor || '#0f172a',
 );
 const albumAccentColor = computed(
-    () => props.appearance.accentColor || props.appearance.primaryColor || '#334155',
+    () =>
+        props.appearance.accentColor ||
+        props.appearance.primaryColor ||
+        '#334155',
 );
 const heroAccentStyle = computed(() => {
     return {
@@ -930,8 +962,12 @@ const uploadProcessingTitle = computed(() => {
         return t('public.album.processing.uploading_video');
     }
 
-    const hasPhotos = uploadForm.files.some((file) => file.type.startsWith('image/'));
-    const hasVideos = uploadForm.files.some((file) => file.type.startsWith('video/'));
+    const hasPhotos = uploadForm.files.some((file) =>
+        file.type.startsWith('image/'),
+    );
+    const hasVideos = uploadForm.files.some((file) =>
+        file.type.startsWith('video/'),
+    );
 
     if (hasPhotos && hasVideos) {
         return t('public.album.processing.uploading_photos_video');
@@ -953,18 +989,24 @@ const uploadProcessingDescription = computed(() => {
 const heroBackgroundStyle = computed((): Record<string, string> => {
     const style: Record<string, string> = {};
 
-    if (!onboardingDone.value || !props.appearance.albumBackgroundEnabled) {
+    if (!onboardingDone.value) {
         return style;
     }
 
-    if (props.appearance.albumBackgroundMode === 'solid') {
+    if (
+        props.appearance.albumBackgroundEnabled &&
+        props.appearance.albumBackgroundMode === 'solid'
+    ) {
         style.backgroundColor =
             props.appearance.albumBackgroundColor || '#ffffff';
 
         return style;
     }
 
-    if (hasAlbumImageBackground.value && props.appearance.albumBackgroundImageUrl) {
+    if (
+        hasAlbumImageBackground.value &&
+        props.appearance.albumBackgroundImageUrl
+    ) {
         style.backgroundImage = `url(${props.appearance.albumBackgroundImageUrl})`;
         style.backgroundSize = 'cover';
         style.backgroundPosition = 'center';
@@ -1031,29 +1073,33 @@ const pullRefreshVisible = computed(
 const pullRefreshReady = computed(
     () => pullRefreshDistance.value >= pullRefreshThreshold,
 );
-const pullRefreshIndicatorStyle = computed((): Record<string, string> => ({
-    opacity: `${
-        isAlbumRefreshing.value
-            ? 1
-            : Math.min(1, pullRefreshDistance.value / 42)
-    }`,
-    transform: `translate(-50%, ${
-        isAlbumRefreshing.value
-            ? 18
-            : Math.max(0, pullRefreshDistance.value - 10)
-    }px)`,
-}));
-const albumContentStyle = computed((): Record<string, string> => ({
-    ...(pullRefreshDistance.value > 0 || isAlbumRefreshing.value
-        ? {
-              transform: `translateY(${pullRefreshDistance.value}px)`,
-              transition:
-                  pullRefreshStartY.value === null
-                      ? 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)'
-                      : 'none',
-          }
-        : {}),
-}));
+const pullRefreshIndicatorStyle = computed(
+    (): Record<string, string> => ({
+        opacity: `${
+            isAlbumRefreshing.value
+                ? 1
+                : Math.min(1, pullRefreshDistance.value / 42)
+        }`,
+        transform: `translate(-50%, ${
+            isAlbumRefreshing.value
+                ? 18
+                : Math.max(0, pullRefreshDistance.value - 10)
+        }px)`,
+    }),
+);
+const albumContentStyle = computed(
+    (): Record<string, string> => ({
+        ...(pullRefreshDistance.value > 0 || isAlbumRefreshing.value
+            ? {
+                  transform: `translateY(${pullRefreshDistance.value}px)`,
+                  transition:
+                      pullRefreshStartY.value === null
+                          ? 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)'
+                          : 'none',
+              }
+            : {}),
+    }),
+);
 const morphingHeaderProgress = computed(
     () => morphingHeaderState.value.progress,
 );
@@ -1064,62 +1110,77 @@ const morphingHeaderVisualProgress = computed(() =>
     menuOpen.value ? 0 : morphingHeaderProgress.value,
 );
 const morphingHeaderVisible = computed(
-    () => useMorphingHeader && (morphingHeaderProgress.value > 0.001 || menuOpen.value),
+    () =>
+        useMorphingHeader &&
+        (morphingHeaderProgress.value > 0.001 || menuOpen.value),
 );
 const morphingHeaderExpandedHeight = computed(() =>
-    Math.min(
-        Math.max(morphingHeaderState.value.viewportHeight - 24, 360),
-        640,
-    ),
+    Math.min(Math.max(morphingHeaderState.value.viewportHeight - 24, 360), 640),
 );
-const morphingHeaderStyle = computed((): Record<string, string> => ({
-    left: `${morphingHeaderState.value.left}px`,
-    top: `${morphingHeaderState.value.top}px`,
-    width: `${morphingHeaderState.value.width}px`,
-    height: `${
-        menuOpen.value
-            ? morphingHeaderExpandedHeight.value
-            : morphingHeaderState.value.height
-    }px`,
-    borderRadius: `${
-        menuOpen.value
-            ? 32
-            : interpolateNumber(32, 999, morphingHeaderRadiusProgress.value)
-    }px`,
-    opacity: `${menuOpen.value ? 1 : Math.min(1, morphingHeaderProgress.value * 1.45)}`,
-    pointerEvents:
-        menuOpen.value || morphingHeaderProgress.value > 0.08 ? 'auto' : 'none',
-    transition:
-        'height 260ms ease, border-radius 260ms ease, opacity 220ms ease',
-}));
-const morphingHeaderIdentityStyle = computed((): Record<string, string> => ({
-    transform: `scale(${interpolateNumber(1, 0.78, morphingHeaderVisualProgress.value)})`,
-    transformOrigin: 'top left',
-}));
-const morphingHeaderLowerStyle = computed((): Record<string, string> => ({
-    opacity: `${1 - clampNumber(morphingHeaderVisualProgress.value * 2.3, 0, 1)}`,
-    transform: `translateY(${-12 * morphingHeaderVisualProgress.value}px)`,
-}));
-const morphingHeaderMaskStyle = computed((): Record<string, string> => ({
-    opacity: `${clampNumber(morphingHeaderVisualProgress.value * 1.15, 0, 0.92)}`,
-}));
-const heroGlassCardStyle = computed((): Record<string, string> => ({
-    opacity: useMorphingHeader
-        ? `${menuOpen.value ? 0 : 1 - clampNumber(morphingHeaderProgress.value * 1.4, 0, 1)}`
-        : '1',
-}));
-const morphingHeaderTextShadowStyle = computed((): Record<string, string> => ({
-    textShadow:
-        morphingHeaderProgress.value > 0.35
-            ? '0 1px 2px rgba(15,23,42,0.5), 0 6px 18px rgba(15,23,42,0.22)'
-            : '0 1px 2px rgba(15,23,42,0.26)',
-}));
-const morphingHeaderIconShadowStyle = computed((): Record<string, string> => ({
-    filter:
-        morphingHeaderProgress.value > 0.35
-            ? 'drop-shadow(0 1px 2px rgba(15,23,42,0.45)) drop-shadow(0 6px 18px rgba(15,23,42,0.18))'
-            : 'drop-shadow(0 1px 2px rgba(15,23,42,0.2))',
-}));
+const morphingHeaderStyle = computed(
+    (): Record<string, string> => ({
+        left: `${morphingHeaderState.value.left}px`,
+        top: `${morphingHeaderState.value.top}px`,
+        width: `${morphingHeaderState.value.width}px`,
+        height: `${
+            menuOpen.value
+                ? morphingHeaderExpandedHeight.value
+                : morphingHeaderState.value.height
+        }px`,
+        borderRadius: `${
+            menuOpen.value
+                ? 32
+                : interpolateNumber(32, 999, morphingHeaderRadiusProgress.value)
+        }px`,
+        opacity: `${menuOpen.value ? 1 : Math.min(1, morphingHeaderProgress.value * 1.45)}`,
+        pointerEvents:
+            menuOpen.value || morphingHeaderProgress.value > 0.08
+                ? 'auto'
+                : 'none',
+        transition:
+            'height 260ms ease, border-radius 260ms ease, opacity 220ms ease',
+    }),
+);
+const morphingHeaderIdentityStyle = computed(
+    (): Record<string, string> => ({
+        transform: `scale(${interpolateNumber(1, 0.78, morphingHeaderVisualProgress.value)})`,
+        transformOrigin: 'top left',
+    }),
+);
+const morphingHeaderLowerStyle = computed(
+    (): Record<string, string> => ({
+        opacity: `${1 - clampNumber(morphingHeaderVisualProgress.value * 2.3, 0, 1)}`,
+        transform: `translateY(${-12 * morphingHeaderVisualProgress.value}px)`,
+    }),
+);
+const morphingHeaderMaskStyle = computed(
+    (): Record<string, string> => ({
+        opacity: `${clampNumber(morphingHeaderVisualProgress.value * 1.15, 0, 0.92)}`,
+    }),
+);
+const heroGlassCardStyle = computed(
+    (): Record<string, string> => ({
+        opacity: useMorphingHeader
+            ? `${menuOpen.value ? 0 : 1 - clampNumber(morphingHeaderProgress.value * 1.4, 0, 1)}`
+            : '1',
+    }),
+);
+const morphingHeaderTextShadowStyle = computed(
+    (): Record<string, string> => ({
+        textShadow:
+            morphingHeaderProgress.value > 0.35
+                ? '0 1px 2px rgba(15,23,42,0.5), 0 6px 18px rgba(15,23,42,0.22)'
+                : '0 1px 2px rgba(15,23,42,0.26)',
+    }),
+);
+const morphingHeaderIconShadowStyle = computed(
+    (): Record<string, string> => ({
+        filter:
+            morphingHeaderProgress.value > 0.35
+                ? 'drop-shadow(0 1px 2px rgba(15,23,42,0.45)) drop-shadow(0 6px 18px rgba(15,23,42,0.18))'
+                : 'drop-shadow(0 1px 2px rgba(15,23,42,0.2))',
+    }),
+);
 const avatarToneClasses = [
     'bg-rose-500 text-white',
     'bg-sky-500 text-white',
@@ -1138,7 +1199,9 @@ const availableLocales = computed(() => {
     const nextLocales = page.props.locale?.available;
 
     return Array.isArray(nextLocales) && nextLocales.length > 0
-        ? nextLocales.filter((value): value is string => typeof value === 'string')
+        ? nextLocales.filter(
+              (value): value is string => typeof value === 'string',
+          )
         : ['en', 'ro', 'el'];
 });
 const albumLanguageOptions = computed(() => {
@@ -1171,7 +1234,8 @@ const albumLanguageOptions = computed(() => {
 
     return options.filter(
         (option) =>
-            option.key === 'auto' || availableLocales.value.includes(option.key),
+            option.key === 'auto' ||
+            availableLocales.value.includes(option.key),
     );
 });
 const selectedAlbumLanguageKey = computed(() => {
@@ -1261,7 +1325,9 @@ const onTextComposerInput = (event: Event): void => {
 
 const preventDoubleTapZoom = (event: TouchEvent): void => {
     const target = event.target instanceof HTMLElement ? event.target : null;
-    const isEditableTarget = target?.closest('input, textarea, select, [contenteditable="true"]');
+    const isEditableTarget = target?.closest(
+        'input, textarea, select, [contenteditable="true"]',
+    );
     const now = Date.now();
     const delta = now - lastTouchEndAt.value;
     lastTouchEndAt.value = now;
@@ -1308,10 +1374,9 @@ const formatRelativeTime = (value: string | null): string => {
         (new Date(value).getTime() - Date.now()) / 1000,
     );
     const absoluteSeconds = Math.abs(deltaSeconds);
-    const formatter = new Intl.RelativeTimeFormat(
-        locale.value || 'en',
-        { numeric: 'auto' },
-    );
+    const formatter = new Intl.RelativeTimeFormat(locale.value || 'en', {
+        numeric: 'auto',
+    });
 
     if (absoluteSeconds < 60) {
         return formatter.format(deltaSeconds, 'second');
@@ -1385,8 +1450,12 @@ const stackUploadSummary = (stack: GalleryStack): string | null => {
     }
 
     const mediaAssets = stack.assets.filter((asset) => asset.kind !== 'text');
-    const photoCount = mediaAssets.filter((asset) => asset.kind === 'photo').length;
-    const videoCount = mediaAssets.filter((asset) => asset.kind === 'video').length;
+    const photoCount = mediaAssets.filter(
+        (asset) => asset.kind === 'photo',
+    ).length;
+    const videoCount = mediaAssets.filter(
+        (asset) => asset.kind === 'video',
+    ).length;
 
     if (videoCount === 0) {
         return t('public.album.gallery.stack.photos_uploaded', {
@@ -1497,7 +1566,9 @@ const mergeAssetItems = (
         merged.set(item.id, item);
     }
 
-    return Array.from(merged.values()).sort((left, right) => right.id - left.id);
+    return Array.from(merged.values()).sort(
+        (left, right) => right.id - left.id,
+    );
 };
 
 const guestInitials = (value: string | null): string => {
@@ -1507,9 +1578,7 @@ const guestInitials = (value: string | null): string => {
     }
 
     const parts = normalized.split(/\s+/).slice(0, 2);
-    return parts
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
+    return parts.map((part) => part.charAt(0).toUpperCase()).join('');
 };
 
 const avatarFallbackClass = (value: string | null): string => {
@@ -1544,10 +1613,7 @@ const interpolateNumber = (
     progress: number,
 ): number => start + (end - start) * progress;
 
-const updateAssetItem = (
-    assetId: number,
-    patch: Partial<AssetItem>,
-): void => {
+const updateAssetItem = (assetId: number, patch: Partial<AssetItem>): void => {
     assetItems.value = assetItems.value.map((asset) =>
         asset.id === assetId
             ? {
@@ -1639,9 +1705,7 @@ const syncHeroGlassCardObserver = (): void => {
     heroGlassCardResizeObserver?.disconnect();
     heroGlassCardResizeObserver = null;
 
-    if (
-        heroSectionRef.value === null
-    ) {
+    if (heroSectionRef.value === null) {
         return;
     }
 
@@ -1754,7 +1818,8 @@ const syncUploadPreviews = (files: File[]): void => {
     uploadPreviewItems.value = files
         .filter(
             (file) =>
-                file.type.startsWith('image/') || file.type.startsWith('video/'),
+                file.type.startsWith('image/') ||
+                file.type.startsWith('video/'),
         )
         .map((file, index) => ({
             key: `${file.name}-${file.size}-${index}`,
@@ -1853,25 +1918,23 @@ const upsertGuestProfile = async (): Promise<boolean> => {
             body: formData,
         });
 
-        const payload = (await response.json().catch(() => null)) as
-            | {
-                  guest: GuestProfilePayload | null;
-                  likedAssetIds: number[];
-                  message?: string;
-                  errors?: Record<string, string[]>;
-              }
-            | null;
+        const payload = (await response.json().catch(() => null)) as {
+            guest: GuestProfilePayload | null;
+            likedAssetIds: number[];
+            message?: string;
+            errors?: Record<string, string[]>;
+        } | null;
 
         if (!response.ok || payload === null) {
-            guestProfileError.value =
-                payload?.errors
-                    ? Object.values(payload.errors)
-                          .flat()
-                          .find((message) => typeof message === 'string') ?? null
-                    : null;
+            guestProfileError.value = payload?.errors
+                ? (Object.values(payload.errors)
+                      .flat()
+                      .find((message) => typeof message === 'string') ?? null)
+                : null;
             if (guestProfileError.value === null) {
-                guestProfileError.value =
-                    t('public.album.errors.guest_profile_save');
+                guestProfileError.value = t(
+                    'public.album.errors.guest_profile_save',
+                );
             }
             guestProfileProcessing.value = false;
             return false;
@@ -1967,7 +2030,8 @@ const hydrateGuestProfile = (): void => {
                 ? (parsed.intent as GuestIntent)
                 : defaultIntent();
         guestToken.value =
-            typeof parsed.guestToken === 'string' && parsed.guestToken.length > 0
+            typeof parsed.guestToken === 'string' &&
+            parsed.guestToken.length > 0
                 ? parsed.guestToken
                 : createGuestToken();
         activeView.value = isIntentEnabled(parsedIntent)
@@ -2064,39 +2128,33 @@ watch(loadMoreSentinelRef, () => {
     syncLoadMoreObserver();
 });
 
-watch(
-    [activeStackKey, activeStackSlideIndex],
-    ([stackKey, slideIndex]) => {
-        if (stackKey === null) {
-            clearViewerLifecycle();
-            viewerSwiper.value = null;
+watch([activeStackKey, activeStackSlideIndex], ([stackKey, slideIndex]) => {
+    if (stackKey === null) {
+        clearViewerLifecycle();
+        viewerSwiper.value = null;
 
-            return;
+        return;
+    }
+
+    nextTick(() => {
+        if (
+            viewerSwiper.value &&
+            viewerSwiper.value.activeIndex !== slideIndex
+        ) {
+            viewerSwiper.value.slideTo(slideIndex, 0);
         }
 
-        nextTick(() => {
-            if (
-                viewerSwiper.value &&
-                viewerSwiper.value.activeIndex !== slideIndex
-            ) {
-                viewerSwiper.value.slideTo(slideIndex, 0);
-            }
-
-            startSelectedAssetLifecycle();
-        });
-    },
-);
+        startSelectedAssetLifecycle();
+    });
+});
 
 watch(hasProcessingVideoAssets, () => {
     syncProcessingVideoPoll();
 });
 
-watch(
-    [guestName, guestToken, onboardingDone],
-    () => {
-        persistGuestAlbumHint();
-    },
-);
+watch([guestName, guestToken, onboardingDone], () => {
+    persistGuestAlbumHint();
+});
 
 watch(onboardingDone, async () => {
     await nextTick();
@@ -2209,7 +2267,11 @@ const validateGuestStepOne = (): boolean => {
             errors[field.id] = t('public.album.errors.name_required');
             continue;
         }
-        if (field.type === 'email' && value.length > 0 && !isValidEmail(value)) {
+        if (
+            field.type === 'email' &&
+            value.length > 0 &&
+            !isValidEmail(value)
+        ) {
             errors[field.id] = t('public.album.errors.valid_email');
         }
     }
@@ -2550,19 +2612,26 @@ const animateViewerProgress = (
         viewerProgressFrameId = window.requestAnimationFrame(tick);
     };
 
-    viewerAdvanceTimerId = window.setTimeout(() => {
-        clearViewerProgressFrame();
-        viewerProgressStartedAt = null;
-        viewerProgressElapsedMs = durationMs;
-        viewerProgressPercent.value = 100;
-        onComplete();
-    }, Math.max(0, durationMs - elapsedMs));
+    viewerAdvanceTimerId = window.setTimeout(
+        () => {
+            clearViewerProgressFrame();
+            viewerProgressStartedAt = null;
+            viewerProgressElapsedMs = durationMs;
+            viewerProgressPercent.value = 100;
+            onComplete();
+        },
+        Math.max(0, durationMs - elapsedMs),
+    );
 
     viewerProgressFrameId = window.requestAnimationFrame(tick);
 };
 
 const pauseViewerByHold = (): void => {
-    if (typeof window === 'undefined' || !selectedAsset.value || isViewerHoldPaused.value) {
+    if (
+        typeof window === 'undefined' ||
+        !selectedAsset.value ||
+        isViewerHoldPaused.value
+    ) {
         return;
     }
 
@@ -2572,7 +2641,8 @@ const pauseViewerByHold = (): void => {
         if (viewerProgressStartedAt !== null) {
             viewerProgressElapsedMs = Math.min(
                 viewerProgressDurationMs,
-                viewerProgressElapsedMs + (window.performance.now() - viewerProgressStartedAt),
+                viewerProgressElapsedMs +
+                    (window.performance.now() - viewerProgressStartedAt),
             );
         }
 
@@ -2680,11 +2750,15 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
 
         nextTick(() => {
             const video = viewerVideoElements.get(asset.id);
-            const backdropVideo = viewerBackdropVideoElements.get(asset.id) ?? null;
+            const backdropVideo =
+                viewerBackdropVideoElements.get(asset.id) ?? null;
 
             if (!video) {
                 if (typeof window !== 'undefined' && attempt < 6) {
-                    window.setTimeout(() => startSelectedAssetLifecycle(attempt + 1), 120);
+                    window.setTimeout(
+                        () => startSelectedAssetLifecycle(attempt + 1),
+                        120,
+                    );
                 }
 
                 return;
@@ -2712,7 +2786,8 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
 
                 if (
                     backdropVideo &&
-                    Math.abs(backdropVideo.currentTime - video.currentTime) > 0.2
+                    Math.abs(backdropVideo.currentTime - video.currentTime) >
+                        0.2
                 ) {
                     backdropVideo.currentTime = video.currentTime;
                 }
@@ -2857,8 +2932,9 @@ const openAssetComments = async (stackKey: string): Promise<void> => {
     commentError.value = null;
 
     const stack =
-        galleryStacks.value.find((galleryStack) => galleryStack.key === stackKey) ??
-        null;
+        galleryStacks.value.find(
+            (galleryStack) => galleryStack.key === stackKey,
+        ) ?? null;
     const asset = stack?.preview ?? null;
     if (asset === null) {
         return;
@@ -2917,7 +2993,8 @@ const canDeleteAsset = (asset: AssetItem | null): boolean => {
     return (
         guestToken.value.trim().length > 0 &&
         asset.guestName !== null &&
-        asset.guestName.trim().toLowerCase() === guestName.value.trim().toLowerCase()
+        asset.guestName.trim().toLowerCase() ===
+            guestName.value.trim().toLowerCase()
     );
 };
 
@@ -3150,25 +3227,25 @@ const submitAssetComment = async (): Promise<void> => {
             credentials: 'same-origin',
             body: formData,
         });
-        const payload = (await response.json().catch(() => null)) as
-            | {
-                  comment?: AssetComment;
-                  commentCount?: number;
-                  errors?: Record<string, string[]>;
-              }
-            | null;
+        const payload = (await response.json().catch(() => null)) as {
+            comment?: AssetComment;
+            commentCount?: number;
+            errors?: Record<string, string[]>;
+        } | null;
 
         if (!response.ok || payload?.comment === undefined) {
-            commentError.value =
-                payload?.errors
-                    ? Object.values(payload.errors)
-                          .flat()
-                          .find((message) => typeof message === 'string') ?? null
-                    : t('public.album.errors.comment_publish');
+            commentError.value = payload?.errors
+                ? (Object.values(payload.errors)
+                      .flat()
+                      .find((message) => typeof message === 'string') ?? null)
+                : t('public.album.errors.comment_publish');
             return;
         }
 
-        const nextComments = [...(commentItemsByAssetId.value[asset.id] ?? []), payload.comment];
+        const nextComments = [
+            ...(commentItemsByAssetId.value[asset.id] ?? []),
+            payload.comment,
+        ];
         commentItemsByAssetId.value = {
             ...commentItemsByAssetId.value,
             [asset.id]: nextComments,
@@ -3351,7 +3428,10 @@ const onFileSelectionChange = async (event: Event): Promise<void> => {
         return;
     }
 
-    uploadForm.files = await validateSelectedFiles(selectedFiles, uploadMode.value);
+    uploadForm.files = await validateSelectedFiles(
+        selectedFiles,
+        uploadMode.value,
+    );
     syncUploadPreviews(uploadForm.files);
 };
 
@@ -3376,10 +3456,9 @@ const uploadFiles = (): void => {
         guestEmail.value.trim().length > 0 ? guestEmail.value.trim() : null;
     uploadForm.guest_phone =
         guestPhone.value.trim().length > 0 ? guestPhone.value.trim() : null;
-    uploadForm.message =
-        uploadForm.message?.trim().length
-            ? uploadForm.message.trim()
-            : null;
+    uploadForm.message = uploadForm.message?.trim().length
+        ? uploadForm.message.trim()
+        : null;
     uploadForm.guest_token = guestToken.value;
     uploadForm.guest_fields = Object.fromEntries(
         Object.entries(guestFieldValues.value)
@@ -3414,7 +3493,10 @@ const submitTextPost = (): void => {
         return;
     }
     if (selectedTextPostTheme.value === null) {
-        textForm.setError('text', t('public.album.errors.text_background_required'));
+        textForm.setError(
+            'text',
+            t('public.album.errors.text_background_required'),
+        );
         return;
     }
 
@@ -3468,7 +3550,9 @@ const canStartPullRefresh = (): boolean =>
     !isPreEventInfoOpen.value &&
     !isAlbumRefreshing.value;
 
-const refreshAlbum = (reason: 'banner' | 'pull' | 'manual' = 'manual'): void => {
+const refreshAlbum = (
+    reason: 'banner' | 'pull' | 'manual' = 'manual',
+): void => {
     if (isAlbumRefreshing.value) {
         return;
     }
@@ -3760,7 +3844,9 @@ const onAlbumTouchCancel = (): void => {
         :class="
             onboardingDone
                 ? 'bg-white'
-                : !onboardingDone && customWelcomeEnabled && welcomeScreen.backgroundUrl
+                : !onboardingDone &&
+                    customWelcomeEnabled &&
+                    welcomeScreen.backgroundUrl
                   ? 'bg-slate-950'
                   : 'bg-gradient-to-b from-rose-50 via-white to-amber-50'
         "
@@ -3771,18 +3857,23 @@ const onAlbumTouchCancel = (): void => {
     >
         <div
             v-if="onboardingDone && pullRefreshVisible"
-            class="pointer-events-none fixed left-1/2 top-0 z-50 safe-top"
+            class="safe-top pointer-events-none fixed top-0 left-1/2 z-50"
             :style="pullRefreshIndicatorStyle"
         >
-            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/92 px-4 py-2 text-xs font-medium text-slate-700 shadow-lg backdrop-blur">
-                <UploadCloud class="size-4" :class="isAlbumRefreshing ? 'animate-bounce' : ''" />
+            <div
+                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/92 px-4 py-2 text-xs font-medium text-slate-700 shadow-lg backdrop-blur"
+            >
+                <UploadCloud
+                    class="size-4"
+                    :class="isAlbumRefreshing ? 'animate-bounce' : ''"
+                />
                 <span>
                     {{
                         isAlbumRefreshing
-                                    ? t('public.album.processing.refreshing_album')
-                                    : pullRefreshReady
-                                      ? t('public.album.processing.release_to_refresh')
-                                      : t('public.album.processing.pull_to_refresh')
+                            ? t('public.album.processing.refreshing_album')
+                            : pullRefreshReady
+                              ? t('public.album.processing.release_to_refresh')
+                              : t('public.album.processing.pull_to_refresh')
                     }}
                 </span>
             </div>
@@ -3793,18 +3884,18 @@ const onAlbumTouchCancel = (): void => {
                 onboardingDone
                     ? 'pb-32'
                     : !onboardingDone && customWelcomeEnabled
-                    ? ''
-                    : 'mx-auto max-w-md px-4 pb-24 pt-5 sm:max-w-lg'
+                      ? ''
+                      : 'mx-auto max-w-md px-4 pt-5 pb-24 sm:max-w-lg'
             "
             :style="albumContentStyle"
         >
             <div
                 v-if="!onboardingDone && !customWelcomeEnabled"
-                class="pointer-events-none absolute -left-24 -top-20 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
+                class="pointer-events-none absolute -top-20 -left-24 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
             />
             <div
                 v-if="!onboardingDone && !customWelcomeEnabled"
-                class="pointer-events-none absolute -right-24 top-52 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
+                class="pointer-events-none absolute top-52 -right-24 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
             />
 
             <section
@@ -3863,7 +3954,9 @@ const onAlbumTouchCancel = (): void => {
                                 </div>
                             </div>
                         </div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
+                        <p
+                            class="text-[11px] font-semibold tracking-[0.18em] text-white/80 uppercase"
+                        >
                             {{ t('public.album.kicker') }}
                         </p>
                         <h1
@@ -3877,21 +3970,24 @@ const onAlbumTouchCancel = (): void => {
                         </p>
                     </header>
 
-                    <div
-                        v-if="onboardingStep === 1"
-                        class="space-y-3"
-                    >
+                    <div v-if="onboardingStep === 1" class="space-y-3">
                         <div class="space-y-2">
                             <p class="text-sm font-medium text-white">
                                 {{ t('public.album.avatar_label') }}
-                                <span class="text-white/65">({{ t('public.shared.optional') }})</span>
+                                <span class="text-white/65"
+                                    >({{ t('public.shared.optional') }})</span
+                                >
                             </p>
-                            <div class="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/8 px-3 py-3">
+                            <div
+                                class="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/8 px-3 py-3"
+                            >
                                 <Avatar class="size-16 border border-white/25">
                                     <AvatarImage
                                         v-if="currentGuestAvatarUrl"
                                         :src="currentGuestAvatarUrl"
-                                        :alt="t('public.shared.alt.guest_avatar')"
+                                        :alt="
+                                            t('public.shared.alt.guest_avatar')
+                                        "
                                     />
                                     <AvatarFallback
                                         :class="avatarFallbackClass(guestName)"
@@ -3910,10 +4006,14 @@ const onAlbumTouchCancel = (): void => {
                                         <button
                                             type="button"
                                             class="inline-flex h-10 items-center justify-center rounded-2xl bg-white px-3 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
-                                            @click="guestAvatarInputRef?.click()"
+                                            @click="
+                                                guestAvatarInputRef?.click()
+                                            "
                                         >
                                             <Camera class="mr-2 size-4" />
-                                            {{ t('public.album.choose_avatar') }}
+                                            {{
+                                                t('public.album.choose_avatar')
+                                            }}
                                         </button>
                                         <button
                                             v-if="currentGuestAvatarUrl"
@@ -3975,11 +4075,14 @@ const onAlbumTouchCancel = (): void => {
                                 :placeholder="
                                     field.help_text.length > 0
                                         ? field.help_text
-                                        : t('public.album.welcome.write_your_field', {
-                                              field: field.label.toLowerCase(),
-                                          })
+                                        : t(
+                                              'public.album.welcome.write_your_field',
+                                              {
+                                                  field: field.label.toLowerCase(),
+                                              },
+                                          )
                                 "
-                                class="h-12 w-full rounded-2xl border border-white/20 bg-white/95 px-4 text-base text-slate-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                                class="h-12 w-full rounded-2xl border border-white/20 bg-white/95 px-4 text-base text-slate-900 transition outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
                             />
                             <p
                                 v-if="onboardingErrors[field.id]"
@@ -4005,12 +4108,13 @@ const onAlbumTouchCancel = (): void => {
                         </p>
                     </div>
 
-                    <div
-                        v-else
-                        class="space-y-3"
-                    >
+                    <div v-else class="space-y-3">
                         <p class="text-sm font-medium text-white">
-                            {{ t('public.album.welcome.next_step', { name: guestName.trim() }) }}
+                            {{
+                                t('public.album.welcome.next_step', {
+                                    name: guestName.trim(),
+                                })
+                            }}
                         </p>
                         <button
                             v-for="option in intentOptions"
@@ -4020,7 +4124,7 @@ const onAlbumTouchCancel = (): void => {
                             :data-test="`guest-intent-${option.value}`"
                             :class="
                                 selectedIntent === option.value
-                                    ? 'border-rose-300 ring-4 ring-rose-100 bg-white'
+                                    ? 'border-rose-300 bg-white ring-4 ring-rose-100'
                                     : 'border-white/30 bg-white/10 hover:border-white/50'
                             "
                             :disabled="!option.enabled"
@@ -4034,9 +4138,16 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-rose-100 text-rose-700'
                                             : 'bg-white/20 text-white'
                                     "
-                                    :style="selectedIntent !== option.value ? albumTintStyle : undefined"
+                                    :style="
+                                        selectedIntent !== option.value
+                                            ? albumTintStyle
+                                            : undefined
+                                    "
                                 >
-                                    <component :is="option.icon" class="size-4" />
+                                    <component
+                                        :is="option.icon"
+                                        class="size-4"
+                                    />
                                 </div>
                                 <div class="min-w-0">
                                     <p
@@ -4106,10 +4217,7 @@ const onAlbumTouchCancel = (): void => {
                 </div>
             </section>
 
-            <section
-                v-else
-                class="relative pb-6"
-            >
+            <section v-else class="relative pb-6">
                 <header
                     v-if="useMorphingHeader"
                     class="pointer-events-none fixed inset-0 z-40"
@@ -4122,45 +4230,67 @@ const onAlbumTouchCancel = (): void => {
                         <div class="relative h-full p-4">
                             <div
                                 class="flex justify-between gap-3"
-                                :class="menuOpen ? 'items-center' : 'h-full items-center'"
+                                :class="
+                                    menuOpen
+                                        ? 'items-center'
+                                        : 'h-full items-center'
+                                "
                             >
                                 <div
                                     class="flex min-w-0 items-center gap-3"
                                     :style="morphingHeaderIdentityStyle"
                                 >
-                                    <Avatar class="size-16 border border-white/30">
+                                    <Avatar
+                                        class="size-16 border border-white/30"
+                                    >
                                         <AvatarImage
                                             v-if="albumLogoUrl"
                                             :src="albumLogoUrl"
-                                            :alt="t('public.shared.alt.event_logo')"
+                                            :alt="
+                                                t(
+                                                    'public.shared.alt.event_logo',
+                                                )
+                                            "
                                         />
-                                        <AvatarFallback class="bg-white/20 text-lg font-semibold text-white">
+                                        <AvatarFallback
+                                            class="bg-white/20 text-lg font-semibold text-white"
+                                        >
                                             {{ albumAvatarFallback }}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div class="min-w-0">
                                         <p
-                                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75"
-                                            :style="morphingHeaderTextShadowStyle"
+                                            class="text-[11px] font-semibold tracking-[0.18em] text-white/75 uppercase"
+                                            :style="
+                                                morphingHeaderTextShadowStyle
+                                            "
                                         >
                                             {{ t('public.album.kicker') }}
                                         </p>
                                         <h1
                                             class="mt-1 truncate text-[1.2rem] leading-[1.1] font-semibold text-white sm:text-[1.35rem]"
                                             :class="welcomeFontClass"
-                                            :style="morphingHeaderTextShadowStyle"
+                                            :style="
+                                                morphingHeaderTextShadowStyle
+                                            "
                                         >
                                             {{ welcomeTitle }}
                                         </h1>
                                     </div>
                                 </div>
 
-                                <div class="pointer-events-auto ml-auto flex shrink-0 items-center gap-2">
+                                <div
+                                    class="pointer-events-auto ml-auto flex shrink-0 items-center gap-2"
+                                >
                                     <button
                                         type="button"
                                         class="inline-flex size-14 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
                                         :style="morphingHeaderIconShadowStyle"
-                                        :aria-label="menuOpen ? t('public.shared.close_menu') : t('public.shared.open_menu')"
+                                        :aria-label="
+                                            menuOpen
+                                                ? t('public.shared.close_menu')
+                                                : t('public.shared.open_menu')
+                                        "
                                         @click="menuOpen = !menuOpen"
                                     >
                                         <Menu class="size-5" />
@@ -4172,27 +4302,41 @@ const onAlbumTouchCancel = (): void => {
                                 v-if="menuOpen"
                                 class="mt-5 flex h-[calc(100%-4.5rem)] flex-col"
                             >
-                                <div class="rounded-[1.5rem] border border-black/12 bg-black/42 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-md">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/72">
+                                <div
+                                    class="rounded-[1.5rem] border border-black/12 bg-black/42 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-md"
+                                >
+                                    <p
+                                        class="text-xs font-semibold tracking-[0.16em] text-white/72 uppercase"
+                                    >
                                         {{ t('public.album.menu.guest_menu') }}
                                     </p>
                                     <p class="mt-2 text-sm text-white/82">
-                                        {{ t('public.album.menu.signed_in_as') }}
-                                        <span class="font-semibold text-white">{{ guestName.trim() }}</span>
+                                        {{
+                                            t('public.album.menu.signed_in_as')
+                                        }}
+                                        <span
+                                            class="font-semibold text-white"
+                                            >{{ guestName.trim() }}</span
+                                        >
                                     </p>
                                 </div>
 
-                                <div class="mt-3 grid flex-1 content-start gap-2 overflow-y-auto pr-1">
+                                <div
+                                    class="mt-3 grid flex-1 content-start gap-2 overflow-y-auto pr-1"
+                                >
                                     <button
                                         v-for="option in intentOptions"
                                         :key="`morph-menu-${option.value}`"
                                         type="button"
                                         class="flex w-full items-center gap-3 rounded-[1.35rem] border px-4 py-3 text-left text-[15px] font-medium transition"
                                         :class="
-                                            (option.value === 'browse_gallery' &&
-                                                activeView === 'browse_gallery' &&
+                                            (option.value ===
+                                                'browse_gallery' &&
+                                                activeView ===
+                                                    'browse_gallery' &&
                                                 !isComposerOpen) ||
-                                            (option.value !== 'browse_gallery' &&
+                                            (option.value !==
+                                                'browse_gallery' &&
                                                 isComposerOpen &&
                                                 activeView === option.value)
                                                 ? 'border-white/30 bg-white text-slate-900'
@@ -4201,7 +4345,10 @@ const onAlbumTouchCancel = (): void => {
                                         :disabled="!option.enabled"
                                         @click="setActiveView(option.value)"
                                     >
-                                        <component :is="option.icon" class="size-4 shrink-0" />
+                                        <component
+                                            :is="option.icon"
+                                            class="size-4 shrink-0"
+                                        />
                                         <span>{{ option.label }}</span>
                                     </button>
                                     <a
@@ -4209,7 +4356,11 @@ const onAlbumTouchCancel = (): void => {
                                         class="flex w-full items-center gap-3 rounded-[1.35rem] border border-black/12 bg-black/38 px-4 py-3 text-left text-[15px] font-semibold text-white transition hover:bg-black/46"
                                     >
                                         <Images class="size-4 shrink-0" />
-                                        <span>{{ t('public.album.menu.open_photo_wall') }}</span>
+                                        <span>{{
+                                            t(
+                                                'public.album.menu.open_photo_wall',
+                                            )
+                                        }}</span>
                                     </a>
                                     <button
                                         v-if="isPreEventTestMode"
@@ -4217,8 +4368,14 @@ const onAlbumTouchCancel = (): void => {
                                         class="flex w-full items-center gap-3 rounded-[1.35rem] border border-amber-200/35 bg-amber-500/26 px-4 py-3 text-left text-[15px] font-medium text-white transition hover:bg-amber-500/32"
                                         @click="isPreEventInfoOpen = true"
                                     >
-                                        <AlertTriangle class="size-4 shrink-0 text-amber-100" />
-                                        <span>{{ t('public.album.menu.pre_event_test_mode') }}</span>
+                                        <AlertTriangle
+                                            class="size-4 shrink-0 text-amber-100"
+                                        />
+                                        <span>{{
+                                            t(
+                                                'public.album.menu.pre_event_test_mode',
+                                            )
+                                        }}</span>
                                     </button>
                                 </div>
 
@@ -4227,7 +4384,11 @@ const onAlbumTouchCancel = (): void => {
                                     class="mt-3 inline-flex h-12 items-center justify-center rounded-[1.35rem] border border-black/16 bg-black/55 px-4 text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-black/62"
                                     @click="resetGuestOnboarding"
                                 >
-                                    {{ t('public.album.menu.reset_guest_onboarding') }}
+                                    {{
+                                        t(
+                                            'public.album.menu.reset_guest_onboarding',
+                                        )
+                                    }}
                                 </button>
                             </div>
 
@@ -4236,29 +4397,58 @@ const onAlbumTouchCancel = (): void => {
                                 class="mt-3 space-y-3"
                                 :style="morphingHeaderLowerStyle"
                             >
-                                <p class="text-sm leading-relaxed text-white/85">
+                                <p
+                                    class="text-sm leading-relaxed text-white/85"
+                                >
                                     {{ welcomeSubtitle }}
                                 </p>
 
                                 <div
-                                    v-if="eventDate || uploadWindowStartsAt || uploadWindowEndsAt"
+                                    v-if="
+                                        eventDate ||
+                                        uploadWindowStartsAt ||
+                                        uploadWindowEndsAt
+                                    "
                                     class="flex flex-col gap-2 text-xs text-white/82"
                                 >
                                     <p
                                         v-if="eventDate"
                                         class="flex items-center gap-2"
                                     >
-                                        <CalendarDays class="size-3.5 text-white/65" />
+                                        <CalendarDays
+                                            class="size-3.5 text-white/65"
+                                        />
                                         {{ t('public.album.meta.event_date') }}
-                                        <span class="font-medium text-white">{{ formatDate(eventDate) }}</span>
+                                        <span class="font-medium text-white">{{
+                                            formatDate(eventDate)
+                                        }}</span>
                                     </p>
                                     <p
-                                        v-if="uploadWindowStartsAt || uploadWindowEndsAt"
+                                        v-if="
+                                            uploadWindowStartsAt ||
+                                            uploadWindowEndsAt
+                                        "
                                         class="flex items-center gap-2"
                                     >
-                                        <Clock3 class="size-3.5 text-white/65" />
-                                        {{ t('public.album.meta.upload_window') }}
-                                        <span class="font-medium text-white">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
+                                        <Clock3
+                                            class="size-3.5 text-white/65"
+                                        />
+                                        {{
+                                            t('public.album.meta.upload_window')
+                                        }}
+                                        <span class="font-medium text-white"
+                                            >{{
+                                                formatDateTime(
+                                                    uploadWindowStartsAt,
+                                                )
+                                            }}
+                                            -
+                                            {{
+                                                formatDateTime(
+                                                    uploadWindowEndsAt,
+                                                )
+                                            }}</span
+                                        >
                                     </p>
                                 </div>
 
@@ -4269,27 +4459,53 @@ const onAlbumTouchCancel = (): void => {
                                     <div class="flex items-center gap-3">
                                         <img
                                             :src="albumQrDataUrl"
-                                            :alt="t('public.shared.alt.album_qr_code')"
+                                            :alt="
+                                                t(
+                                                    'public.shared.alt.album_qr_code',
+                                                )
+                                            "
                                             class="size-16 rounded-2xl border border-white/20 bg-white p-1.5"
                                         />
                                         <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-white">
-                                                {{ t('public.album.menu.share_album') }}
+                                            <p
+                                                class="text-sm font-semibold text-white"
+                                            >
+                                                {{
+                                                    t(
+                                                        'public.album.menu.share_album',
+                                                    )
+                                                }}
                                             </p>
-                                            <p class="mt-1 text-xs text-white/78">
-                                                {{ t('public.album.menu.share_album_hint') }}
+                                            <p
+                                                class="mt-1 text-xs text-white/78"
+                                            >
+                                                {{
+                                                    t(
+                                                        'public.album.menu.share_album_hint',
+                                                    )
+                                                }}
                                             </p>
-                                            <p class="mt-2 text-sm font-semibold text-white">
+                                            <p
+                                                class="mt-2 text-sm font-semibold text-white"
+                                            >
                                                 {{ props.albumAccessCode }}
                                             </p>
-                                            <p class="mt-1 text-[11px] leading-relaxed text-white/74">
-                                                No QR reader? Visit {{ links.albumEntryShortcut }} and enter this code.
+                                            <p
+                                                class="mt-1 text-[11px] leading-relaxed text-white/74"
+                                            >
+                                                No QR reader? Visit
+                                                {{ links.albumEntryShortcut }}
+                                                and enter this code.
                                             </p>
                                             <a
                                                 :href="links.wall"
                                                 class="mt-2 inline-flex text-xs font-medium text-white/95 underline underline-offset-4"
                                             >
-                                                {{ t('public.album.menu.open_photo_wall') }}
+                                                {{
+                                                    t(
+                                                        'public.album.menu.open_photo_wall',
+                                                    )
+                                                }}
                                             </a>
                                         </div>
                                     </div>
@@ -4307,11 +4523,19 @@ const onAlbumTouchCancel = (): void => {
 
                 <header
                     v-if="!useMorphingHeader"
-                    class="pointer-events-none fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/92 transition-all duration-300 backdrop-blur safe-top safe-x supports-[backdrop-filter]:bg-white/80"
-                    :class="isHeaderCollapsed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
+                    class="safe-top safe-x pointer-events-none fixed inset-x-0 top-0 z-40 border-b border-slate-200/80 bg-white/92 backdrop-blur transition-all duration-300 supports-[backdrop-filter]:bg-white/80"
+                    :class="
+                        isHeaderCollapsed
+                            ? 'translate-y-0 opacity-100'
+                            : '-translate-y-4 opacity-0'
+                    "
                 >
-                    <div class="mx-auto flex w-full max-w-2xl items-center gap-3 py-3">
-                        <div class="pointer-events-auto min-w-0 flex items-center gap-3">
+                    <div
+                        class="mx-auto flex w-full max-w-2xl items-center gap-3 py-3"
+                    >
+                        <div
+                            class="pointer-events-auto flex min-w-0 items-center gap-3"
+                        >
                             <Avatar class="size-11 border border-slate-200">
                                 <AvatarImage
                                     v-if="albumLogoUrl"
@@ -4342,7 +4566,11 @@ const onAlbumTouchCancel = (): void => {
                     class="relative min-h-[52svh] overflow-hidden"
                 >
                     <img
-                        v-if="onboardingDone && hasAlbumImageBackground && props.appearance.albumBackgroundImageUrl"
+                        v-if="
+                            onboardingDone &&
+                            hasAlbumImageBackground &&
+                            props.appearance.albumBackgroundImageUrl
+                        "
                         :src="props.appearance.albumBackgroundImageUrl"
                         :alt="t('public.shared.alt.album_background')"
                         class="absolute inset-0 h-full w-full object-cover"
@@ -4352,7 +4580,11 @@ const onAlbumTouchCancel = (): void => {
                         :src="welcomeScreen.backgroundUrl"
                         :alt="t('public.shared.alt.album_background')"
                         class="absolute inset-0 h-full w-full object-cover"
-                        :class="welcomeScreen.animated ? 'welcome-bg-animate-slow' : ''"
+                        :class="
+                            welcomeScreen.animated
+                                ? 'welcome-bg-animate-slow'
+                                : ''
+                        "
                     />
                     <div
                         v-else
@@ -4372,25 +4604,33 @@ const onAlbumTouchCancel = (): void => {
                         "
                     />
 
-                    <div class="relative mx-auto flex min-h-[52svh] w-full max-w-2xl items-end px-4 pb-6 pt-20">
+                    <div
+                        class="relative mx-auto flex min-h-[52svh] w-full max-w-2xl items-end px-4 pt-20 pb-6"
+                    >
                         <div
                             ref="heroGlassCardRef"
                             class="w-full text-white transition-opacity duration-200"
                             :style="heroGlassCardStyle"
                         >
                             <div class="flex items-start gap-4">
-                                <Avatar class="size-18 border border-white/25 shadow-[0_16px_30px_rgba(15,23,42,0.24)]">
+                                <Avatar
+                                    class="size-18 border border-white/25 shadow-[0_16px_30px_rgba(15,23,42,0.24)]"
+                                >
                                     <AvatarImage
                                         v-if="albumLogoUrl"
                                         :src="albumLogoUrl"
                                         :alt="t('public.shared.alt.event_logo')"
                                     />
-                                    <AvatarFallback class="bg-white/18 text-lg font-semibold text-white">
+                                    <AvatarFallback
+                                        class="bg-white/18 text-lg font-semibold text-white"
+                                    >
                                         {{ albumAvatarFallback }}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div class="min-w-0 flex-1 pt-1">
-                                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                                    <p
+                                        class="text-[11px] font-semibold tracking-[0.18em] text-white/75 uppercase"
+                                    >
                                         {{ t('public.album.kicker') }}
                                     </p>
                                     <h1
@@ -4402,23 +4642,33 @@ const onAlbumTouchCancel = (): void => {
                                 </div>
                             </div>
 
-                            <p class="mt-4 text-sm leading-relaxed text-white/88">
+                            <p
+                                class="mt-4 text-sm leading-relaxed text-white/88"
+                            >
                                 {{ welcomeSubtitle }}
                             </p>
-                            <p class="mt-2 max-w-xl text-sm leading-relaxed text-white/72">
+                            <p
+                                class="mt-2 max-w-xl text-sm leading-relaxed text-white/72"
+                            >
                                 {{ t('public.album.profile_description') }}
                             </p>
 
-                            <div class="mt-4 flex flex-wrap items-start gap-x-5 gap-y-3 border-t border-white/14 pt-3">
+                            <div
+                                class="mt-4 flex flex-wrap items-start gap-x-5 gap-y-3 border-t border-white/14 pt-3"
+                            >
                                 <div
                                     v-for="stat in albumHeaderStats"
                                     :key="stat.label"
                                     class="min-w-[4.5rem] flex-1"
                                 >
-                                    <p class="text-[10px] font-medium uppercase tracking-[0.16em] text-white/56">
+                                    <p
+                                        class="text-[10px] font-medium tracking-[0.16em] text-white/56 uppercase"
+                                    >
                                         {{ stat.label }}
                                     </p>
-                                    <p class="mt-1 text-sm font-semibold text-white/88 sm:text-[0.95rem]">
+                                    <p
+                                        class="mt-1 text-sm font-semibold text-white/88 sm:text-[0.95rem]"
+                                    >
                                         {{ stat.value }}
                                     </p>
                                 </div>
@@ -4436,7 +4686,9 @@ const onAlbumTouchCancel = (): void => {
                             {{ t('public.album.gallery.title') }}
                         </h2>
                         <div class="flex items-center gap-2">
-                            <div class="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+                            <div
+                                class="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-sm"
+                            >
                                 <button
                                     type="button"
                                     class="inline-flex size-9 items-center justify-center rounded-full transition"
@@ -4445,7 +4697,11 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-slate-900 text-white'
                                             : 'text-slate-600 hover:bg-slate-100'
                                     "
-                                    :aria-label="t('public.album.actions.show_grid_three')"
+                                    :aria-label="
+                                        t(
+                                            'public.album.actions.show_grid_three',
+                                        )
+                                    "
                                     title="3-column gallery"
                                     @click="galleryView = 'grid3'"
                                 >
@@ -4459,7 +4715,9 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-slate-900 text-white'
                                             : 'text-slate-600 hover:bg-slate-100'
                                     "
-                                    :aria-label="t('public.album.actions.show_grid_two')"
+                                    :aria-label="
+                                        t('public.album.actions.show_grid_two')
+                                    "
                                     title="2-column gallery"
                                     @click="galleryView = 'grid2'"
                                 >
@@ -4473,7 +4731,9 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-slate-900 text-white'
                                             : 'text-slate-600 hover:bg-slate-100'
                                     "
-                                    :aria-label="t('public.album.actions.show_feed')"
+                                    :aria-label="
+                                        t('public.album.actions.show_feed')
+                                    "
                                     title="Feed view"
                                     @click="galleryView = 'feed'"
                                 >
@@ -4483,10 +4743,7 @@ const onAlbumTouchCancel = (): void => {
                         </div>
                     </div>
 
-                    <div
-                        v-if="hasPendingAlbumUpdate"
-                        class="px-2 pb-3"
-                    >
+                    <div v-if="hasPendingAlbumUpdate" class="px-2 pb-3">
                         <button
                             type="button"
                             class="flex w-full items-center justify-between gap-3 rounded-[1.35rem] border border-sky-200 bg-sky-50 px-4 py-3 text-left text-sky-900 transition hover:bg-sky-100"
@@ -4494,98 +4751,141 @@ const onAlbumTouchCancel = (): void => {
                             @click="refreshAlbum('banner')"
                         >
                             <div class="flex items-center gap-3">
-                                <div class="inline-flex size-10 items-center justify-center rounded-full bg-sky-500 text-white">
+                                <div
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-sky-500 text-white"
+                                >
                                     <UploadCloud class="size-4" />
                                 </div>
                                 <div>
                                     <p class="text-sm font-semibold">
-                                        {{ t('public.album.gallery.new_posts_available') }}
+                                        {{
+                                            t(
+                                                'public.album.gallery.new_posts_available',
+                                            )
+                                        }}
                                     </p>
                                     <p class="text-xs text-sky-800/80">
                                         {{
                                             pendingAlbumUpdateCount > 0
-                                                ? t('public.album.gallery.new_posts_waiting', {
-                                                      count: pendingAlbumUpdateCount,
-                                                      label:
-                                                          pendingAlbumUpdateCount === 1
-                                                              ? t('public.album.gallery.new_post_singular')
-                                                              : t('public.album.gallery.new_post_plural'),
-                                                  })
-                                                : t('public.album.gallery.tap_to_load_latest')
+                                                ? t(
+                                                      'public.album.gallery.new_posts_waiting',
+                                                      {
+                                                          count: pendingAlbumUpdateCount,
+                                                          label:
+                                                              pendingAlbumUpdateCount ===
+                                                              1
+                                                                  ? t(
+                                                                        'public.album.gallery.new_post_singular',
+                                                                    )
+                                                                  : t(
+                                                                        'public.album.gallery.new_post_plural',
+                                                                    ),
+                                                      },
+                                                  )
+                                                : t(
+                                                      'public.album.gallery.tap_to_load_latest',
+                                                  )
                                         }}
                                     </p>
                                 </div>
                             </div>
-                            <span class="text-xs font-semibold uppercase tracking-[0.14em]">
+                            <span
+                                class="text-xs font-semibold tracking-[0.14em] uppercase"
+                            >
                                 {{ t('public.shared.refresh') }}
                             </span>
                         </button>
                     </div>
 
-                    <div
-                        v-if="!props.canViewGallery"
-                        class="px-2 py-6"
-                    >
+                    <div v-if="!props.canViewGallery" class="px-2 py-6">
                         <Empty class="rounded-[1.75rem] border bg-white py-14">
                             <EmptyHeader>
                                 <EmptyMedia variant="icon">
                                     <EyeOff class="size-5" />
                                 </EmptyMedia>
-                                <EmptyTitle>{{ t('public.album.gallery.viewing_disabled_title') }}</EmptyTitle>
+                                <EmptyTitle>{{
+                                    t(
+                                        'public.album.gallery.viewing_disabled_title',
+                                    )
+                                }}</EmptyTitle>
                                 <EmptyDescription>
                                     {{
                                         canUpload
-                                            ? t('public.album.gallery.viewing_disabled_can_upload')
-                                            : t('public.album.gallery.viewing_disabled_cannot_upload')
+                                            ? t(
+                                                  'public.album.gallery.viewing_disabled_can_upload',
+                                              )
+                                            : t(
+                                                  'public.album.gallery.viewing_disabled_cannot_upload',
+                                              )
                                     }}
                                 </EmptyDescription>
                             </EmptyHeader>
                         </Empty>
                     </div>
 
-                    <div
-                        v-else-if="assetItems.length === 0"
-                        class="px-2 py-6"
-                    >
+                    <div v-else-if="assetItems.length === 0" class="px-2 py-6">
                         <Empty class="rounded-[1.75rem] border bg-white py-14">
                             <EmptyHeader>
                                 <EmptyMedia variant="icon">
                                     <Images class="size-5" />
                                 </EmptyMedia>
-                                <EmptyTitle>{{ t('public.album.gallery.empty_title') }}</EmptyTitle>
+                                <EmptyTitle>{{
+                                    t('public.album.gallery.empty_title')
+                                }}</EmptyTitle>
                                 <EmptyDescription>
-                                    {{ t('public.album.gallery.empty_description') }}
+                                    {{
+                                        t(
+                                            'public.album.gallery.empty_description',
+                                        )
+                                    }}
                                 </EmptyDescription>
                             </EmptyHeader>
                         </Empty>
                     </div>
 
-                    <div
-                        v-else-if="galleryView === 'feed'"
-                        class="space-y-0"
-                    >
+                    <div v-else-if="galleryView === 'feed'" class="space-y-0">
                         <article
                             v-for="stack in galleryStacks"
                             :key="`feed-${stack.key}`"
                             class="overflow-hidden bg-white"
                         >
-                            <div class="flex items-center justify-between gap-3 px-3 py-3">
+                            <div
+                                class="flex items-center justify-between gap-3 px-3 py-3"
+                            >
                                 <div class="flex min-w-0 items-center gap-3">
-                                    <Avatar class="size-11 border border-slate-200">
+                                    <Avatar
+                                        class="size-11 border border-slate-200"
+                                    >
                                         <AvatarImage
                                             v-if="stack.preview.guestAvatarUrl"
-                                            :src="stack.preview.guestAvatarUrl ?? ''"
-                                            :alt="stack.guestName || t('public.shared.alt.guest_avatar')"
+                                            :src="
+                                                stack.preview.guestAvatarUrl ??
+                                                ''
+                                            "
+                                            :alt="
+                                                stack.guestName ||
+                                                t(
+                                                    'public.shared.alt.guest_avatar',
+                                                )
+                                            "
                                         />
                                         <AvatarFallback
-                                            :class="avatarFallbackClass(stack.guestName)"
+                                            :class="
+                                                avatarFallbackClass(
+                                                    stack.guestName,
+                                                )
+                                            "
                                         >
                                             {{ guestInitials(stack.guestName) }}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div class="min-w-0">
-                                        <div class="flex min-w-0 items-baseline gap-2">
-                                            <p class="truncate text-sm font-semibold text-slate-900">
+                                        <div
+                                            class="flex min-w-0 items-baseline gap-2"
+                                        >
+                                            <p
+                                                class="truncate text-sm font-semibold text-slate-900"
+                                            >
                                                 {{ stack.guestName }}
                                             </p>
                                             <span
@@ -4595,53 +4895,98 @@ const onAlbumTouchCancel = (): void => {
                                                 {{ stackUploadSummary(stack) }}
                                             </span>
                                         </div>
-                                        <p class="truncate text-xs text-slate-500">
-                                            {{ formatDateTime(stack.preview.createdAt) }}
+                                        <p
+                                            class="truncate text-xs text-slate-500"
+                                        >
+                                            {{
+                                                formatDateTime(
+                                                    stack.preview.createdAt,
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <DropdownMenu>
                                     <DropdownMenuTrigger :as-child="true">
-                        <button
-                            type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-                            :aria-label="t('public.album.actions.open_upload_options')"
-                        >
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                                            :aria-label="
+                                                t(
+                                                    'public.album.actions.open_upload_options',
+                                                )
+                                            "
+                                        >
                                             <MoreHorizontal class="size-4" />
                                         </button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" class="w-48">
+                                    <DropdownMenuContent
+                                        align="end"
+                                        class="w-48"
+                                    >
                                         <DropdownMenuItem
-                                            @select.prevent="openAssetViewer(stack.key)"
+                                            @select.prevent="
+                                                openAssetViewer(stack.key)
+                                            "
                                         >
-                                            {{ t('public.album.actions.open_viewer') }}
+                                            {{
+                                                t(
+                                                    'public.album.actions.open_viewer',
+                                                )
+                                            }}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            @select.prevent="openAssetInfo(stack.key)"
+                                            @select.prevent="
+                                                openAssetInfo(stack.key)
+                                            "
                                         >
-                                            {{ t('public.album.actions.open_info') }}
+                                            {{
+                                                t(
+                                                    'public.album.actions.open_info',
+                                                )
+                                            }}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            @select.prevent="shareAsset(stack.preview)"
+                                            @select.prevent="
+                                                shareAsset(stack.preview)
+                                            "
                                         >
                                             {{ t('public.album.asset.share') }}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            v-if="currentFeedAssetCanDownload(stack)"
+                                            v-if="
+                                                currentFeedAssetCanDownload(
+                                                    stack,
+                                                )
+                                            "
                                             :as-child="true"
                                         >
-                                            <a :href="stack.preview.downloadUrl">
-                                                {{ t('public.shared.download') }}
+                                            <a
+                                                :href="
+                                                    stack.preview.downloadUrl
+                                                "
+                                            >
+                                                {{
+                                                    t('public.shared.download')
+                                                }}
                                             </a>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                            v-if="currentFeedAssetCanDelete(stack)"
+                                            v-if="
+                                                currentFeedAssetCanDelete(stack)
+                                            "
                                             variant="destructive"
-                                            @select.prevent="deleteAsset(stack.preview)"
+                                            @select.prevent="
+                                                deleteAsset(stack.preview)
+                                            "
                                         >
-                                            {{ t('public.album.actions.delete_upload') }}
+                                            {{
+                                                t(
+                                                    'public.album.actions.delete_upload',
+                                                )
+                                            }}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -4666,7 +5011,11 @@ const onAlbumTouchCancel = (): void => {
                                                 stack.preview.previewUrl ??
                                                 undefined
                                             "
-                                            :alt="t('public.shared.alt.uploaded_event_photo')"
+                                            :alt="
+                                                t(
+                                                    'public.shared.alt.uploaded_event_photo',
+                                                )
+                                            "
                                             loading="lazy"
                                             decoding="async"
                                             class="block aspect-[4/5] w-full object-cover transition-opacity duration-300"
@@ -4675,11 +5024,21 @@ const onAlbumTouchCancel = (): void => {
                                                     ? 'opacity-100'
                                                     : 'opacity-0'
                                             "
-                                            @load="markPhotoAsLoaded(stack.preview.id)"
-                                            @error="markPhotoAsLoaded(stack.preview.id)"
+                                            @load="
+                                                markPhotoAsLoaded(
+                                                    stack.preview.id,
+                                                )
+                                            "
+                                            @error="
+                                                markPhotoAsLoaded(
+                                                    stack.preview.id,
+                                                )
+                                            "
                                         />
                                         <div
-                                            v-if="!isPhotoLoaded(stack.preview.id)"
+                                            v-if="
+                                                !isPhotoLoaded(stack.preview.id)
+                                            "
                                             class="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
                                         />
                                     </template>
@@ -4689,7 +5048,11 @@ const onAlbumTouchCancel = (): void => {
                                             stack.preview.thumbnailUrl
                                         "
                                         :src="stack.preview.thumbnailUrl"
-                                        :alt="t('public.shared.alt.uploaded_event_video')"
+                                        :alt="
+                                            t(
+                                                'public.shared.alt.uploaded_event_video',
+                                            )
+                                        "
                                         loading="lazy"
                                         decoding="async"
                                         class="block aspect-[4/5] w-full object-cover transition-opacity duration-300"
@@ -4698,15 +5061,22 @@ const onAlbumTouchCancel = (): void => {
                                                 ? 'opacity-100'
                                                 : 'opacity-0'
                                         "
-                                        @load="markPhotoAsLoaded(stack.preview.id)"
-                                        @error="markPhotoAsLoaded(stack.preview.id)"
+                                        @load="
+                                            markPhotoAsLoaded(stack.preview.id)
+                                        "
+                                        @error="
+                                            markPhotoAsLoaded(stack.preview.id)
+                                        "
                                     />
                                     <video
                                         v-else-if="
                                             stack.preview.kind === 'video' &&
                                             stack.preview.previewUrl
                                         "
-                                        :src="stack.preview.previewUrl ?? undefined"
+                                        :src="
+                                            stack.preview.previewUrl ??
+                                            undefined
+                                        "
                                         class="block aspect-[4/5] w-full object-cover"
                                         autoplay
                                         loop
@@ -4721,10 +5091,18 @@ const onAlbumTouchCancel = (): void => {
                                         "
                                         class="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-slate-100 text-slate-500"
                                     >
-                                        <LoaderCircle class="size-8 animate-spin text-slate-400" />
+                                        <LoaderCircle
+                                            class="size-8 animate-spin text-slate-400"
+                                        />
                                         <div class="space-y-1 text-center">
-                                            <p class="text-sm font-semibold text-slate-700">
-                                                {{ t('public.album.labels.processing_video') }}
+                                            <p
+                                                class="text-sm font-semibold text-slate-700"
+                                            >
+                                                {{
+                                                    t(
+                                                        'public.album.labels.processing_video',
+                                                    )
+                                                }}
                                             </p>
                                             <p class="text-xs text-slate-500">
                                                 Preview will appear in a moment.
@@ -4732,27 +5110,44 @@ const onAlbumTouchCancel = (): void => {
                                         </div>
                                     </div>
                                     <div
-                                        v-else-if="stack.preview.kind === 'text'"
+                                        v-else-if="
+                                            stack.preview.kind === 'text'
+                                        "
                                         class="flex aspect-[4/5] w-full items-center justify-center p-6"
-                                        :style="textPostSurfaceStyle(stack.preview)"
+                                        :style="
+                                            textPostSurfaceStyle(stack.preview)
+                                        "
                                     >
                                         <p
-                                            class="max-w-md whitespace-pre-wrap text-center text-[1.75rem] font-semibold leading-[1.35] sm:text-[2rem]"
-                                            :style="textPostContentStyle(stack.preview)"
+                                            class="max-w-md text-center text-[1.75rem] leading-[1.35] font-semibold whitespace-pre-wrap sm:text-[2rem]"
+                                            :style="
+                                                textPostContentStyle(
+                                                    stack.preview,
+                                                )
+                                            "
                                         >
-                                            {{ stack.preview.text ?? t('public.album.labels.text_post') }}
+                                            {{
+                                                stack.preview.text ??
+                                                t(
+                                                    'public.album.labels.text_post',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div
                                         v-else
                                         class="flex aspect-[4/5] w-full items-center justify-center text-xs text-slate-500"
                                     >
-                                        {{ t('public.album.labels.preview_unavailable') }}
+                                        {{
+                                            t(
+                                                'public.album.labels.preview_unavailable',
+                                            )
+                                        }}
                                     </div>
                                 </button>
 
                                 <div
-                                    class="pointer-events-none absolute right-3 top-3 text-white"
+                                    class="pointer-events-none absolute top-3 right-3 text-white"
                                 >
                                     <component
                                         :is="stackMediaBadgeIcon(stack)"
@@ -4768,17 +5163,26 @@ const onAlbumTouchCancel = (): void => {
                                     "
                                     class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15"
                                 >
-                                    <span class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
-                                            {{ t('public.album.labels.preview_only') }}
+                                    <span
+                                        class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase"
+                                    >
+                                        {{
+                                            t(
+                                                'public.album.labels.preview_only',
+                                            )
+                                        }}
                                     </span>
                                 </div>
-
                             </div>
 
-                            <div class="px-3 pb-3 pt-3">
-                                <div class="flex items-center justify-between gap-4">
+                            <div class="px-3 pt-3 pb-3">
+                                <div
+                                    class="flex items-center justify-between gap-4"
+                                >
                                     <div class="flex items-center gap-3">
-                                        <div class="inline-flex items-center gap-2 text-slate-700">
+                                        <div
+                                            class="inline-flex items-center gap-2 text-slate-700"
+                                        >
                                             <button
                                                 type="button"
                                                 class="inline-flex size-12 items-center justify-center rounded-full transition hover:text-slate-950"
@@ -4787,41 +5191,65 @@ const onAlbumTouchCancel = (): void => {
                                                         ? 'text-rose-600'
                                                         : 'text-slate-700'
                                                 "
-                                                :disabled="isAssetLikePending(stack.preview)"
-                                                :aria-pressed="isAssetLiked(stack.preview)"
-                                                @click="toggleAssetLike(stack.preview)"
+                                                :disabled="
+                                                    isAssetLikePending(
+                                                        stack.preview,
+                                                    )
+                                                "
+                                                :aria-pressed="
+                                                    isAssetLiked(stack.preview)
+                                                "
+                                                @click="
+                                                    toggleAssetLike(
+                                                        stack.preview,
+                                                    )
+                                                "
                                             >
                                                 <Heart
                                                     class="size-6 transition-transform duration-200"
-                                                    :class="
-                                                        [
-                                                            isAssetLiked(stack.preview)
-                                                                ? 'fill-rose-500 text-rose-500'
-                                                                : 'text-slate-700',
-                                                            isAssetLikeAnimating(stack.preview)
-                                                                ? 'scale-125'
-                                                                : '',
-                                                            isAssetLikePending(stack.preview)
-                                                                ? 'opacity-60'
-                                                                : '',
-                                                        ]
-                                                    "
+                                                    :class="[
+                                                        isAssetLiked(
+                                                            stack.preview,
+                                                        )
+                                                            ? 'fill-rose-500 text-rose-500'
+                                                            : 'text-slate-700',
+                                                        isAssetLikeAnimating(
+                                                            stack.preview,
+                                                        )
+                                                            ? 'scale-125'
+                                                            : '',
+                                                        isAssetLikePending(
+                                                            stack.preview,
+                                                        )
+                                                            ? 'opacity-60'
+                                                            : '',
+                                                    ]"
                                                 />
                                             </button>
                                             <span
                                                 v-if="
-                                                    !isAssetLikePending(stack.preview) &&
+                                                    !isAssetLikePending(
+                                                        stack.preview,
+                                                    ) &&
                                                     stack.preview.likeCount > 0
                                                 "
-                                                class="text-sm font-semibold leading-none text-slate-700"
+                                                class="text-sm leading-none font-semibold text-slate-700"
                                             >
-                                                {{ formatLikeCount(stack.preview.likeCount) }}
+                                                {{
+                                                    formatLikeCount(
+                                                        stack.preview.likeCount,
+                                                    )
+                                                }}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             class="inline-flex size-12 items-center justify-center rounded-full text-slate-700 transition hover:text-slate-950"
-                                            :aria-label="t('public.album.actions.share_post')"
+                                            :aria-label="
+                                                t(
+                                                    'public.album.actions.share_post',
+                                                )
+                                            "
                                             @click="shareAsset(stack.preview)"
                                         >
                                             <Send class="size-6" />
@@ -4829,39 +5257,64 @@ const onAlbumTouchCancel = (): void => {
                                         <button
                                             type="button"
                                             class="inline-flex min-w-0 items-center justify-center gap-1 rounded-full px-1 text-slate-700 transition hover:text-slate-950"
-                                            :aria-label="t('public.album.actions.open_comments')"
-                                            @click="openAssetComments(stack.key)"
+                                            :aria-label="
+                                                t(
+                                                    'public.album.actions.open_comments',
+                                                )
+                                            "
+                                            @click="
+                                                openAssetComments(stack.key)
+                                            "
                                         >
                                             <MessageCircle class="size-6" />
                                             <span
-                                                v-if="stack.preview.commentCount > 0"
-                                                class="text-sm font-semibold leading-none"
+                                                v-if="
+                                                    stack.preview.commentCount >
+                                                    0
+                                                "
+                                                class="text-sm leading-none font-semibold"
                                             >
-                                                {{ formatLikeCount(stack.preview.commentCount) }}
+                                                {{
+                                                    formatLikeCount(
+                                                        stack.preview
+                                                            .commentCount,
+                                                    )
+                                                }}
                                             </span>
                                         </button>
                                     </div>
                                     <button
                                         type="button"
                                         class="inline-flex size-12 items-center justify-center rounded-full text-slate-700 transition hover:text-slate-950"
-                                        :aria-label="t('public.album.actions.open_info')"
+                                        :aria-label="
+                                            t('public.album.actions.open_info')
+                                        "
                                         @click="openAssetInfo(stack.key)"
                                     >
                                         <Info class="size-6" />
                                     </button>
                                 </div>
                                 <div
-                                    v-if="stack.preview.kind !== 'text' && stack.preview.message"
+                                    v-if="
+                                        stack.preview.kind !== 'text' &&
+                                        stack.preview.message
+                                    "
                                     class="mt-0.5 space-y-0.5"
                                 >
-                                    <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                                    <p
+                                        class="text-sm leading-relaxed whitespace-pre-wrap text-slate-700"
+                                    >
                                         {{ displayedStackMessage(stack) }}
                                     </p>
                                     <button
                                         v-if="hasLongStackMessage(stack)"
                                         type="button"
                                         class="text-sm font-medium text-slate-500 transition hover:text-slate-900"
-                                        @click="toggleStackMessageExpansion(stack.key)"
+                                        @click="
+                                            toggleStackMessageExpansion(
+                                                stack.key,
+                                            )
+                                        "
                                     >
                                         {{
                                             isStackMessageExpanded(stack.key)
@@ -4884,36 +5337,49 @@ const onAlbumTouchCancel = (): void => {
                             </div>
 
                             <Separator
-                                v-if="galleryStacks[galleryStacks.length - 1]?.key !== stack.key"
+                                v-if="
+                                    galleryStacks[galleryStacks.length - 1]
+                                        ?.key !== stack.key
+                                "
                                 class="bg-slate-200 sm:hidden"
                             />
                         </article>
 
-                        <div
-                            v-if="!hasMoreAssets"
-                            class="px-3 py-8 sm:px-0"
-                        >
-                            <Empty class="border-0 bg-transparent py-0 shadow-none">
+                        <div v-if="!hasMoreAssets" class="px-3 py-8 sm:px-0">
+                            <Empty
+                                class="border-0 bg-transparent py-0 shadow-none"
+                            >
                                 <EmptyHeader>
-                                    <EmptyMedia variant="icon" class="bg-slate-100 text-slate-500">
+                                    <EmptyMedia
+                                        variant="icon"
+                                        class="bg-slate-100 text-slate-500"
+                                    >
                                         <Images class="size-5" />
                                     </EmptyMedia>
                                     <EmptyTitle class="text-slate-900">
-                                        {{ t('public.album.gallery.end_title') }}
+                                        {{
+                                            t('public.album.gallery.end_title')
+                                        }}
                                     </EmptyTitle>
                                     <EmptyDescription class="text-slate-500">
-                                        {{ t('public.album.gallery.end_description') }}
+                                        {{
+                                            t(
+                                                'public.album.gallery.end_description',
+                                            )
+                                        }}
                                     </EmptyDescription>
                                 </EmptyHeader>
                             </Empty>
                         </div>
                     </div>
 
-                    <div
-                        v-else
-                        class="space-y-8"
-                    >
-                        <div :class="['grid gap-px bg-slate-200', galleryGridClass]">
+                    <div v-else class="space-y-8">
+                        <div
+                            :class="[
+                                'grid gap-px bg-slate-200',
+                                galleryGridClass,
+                            ]"
+                        >
                             <article
                                 v-for="stack in galleryStacks"
                                 :key="stack.key"
@@ -4937,7 +5403,11 @@ const onAlbumTouchCancel = (): void => {
                                                 stack.preview.previewUrl ??
                                                 undefined
                                             "
-                                            :alt="t('public.shared.alt.uploaded_event_photo')"
+                                            :alt="
+                                                t(
+                                                    'public.shared.alt.uploaded_event_photo',
+                                                )
+                                            "
                                             loading="lazy"
                                             decoding="async"
                                             fetchpriority="low"
@@ -4947,11 +5417,21 @@ const onAlbumTouchCancel = (): void => {
                                                     ? 'opacity-100'
                                                     : 'opacity-0'
                                             "
-                                            @load="markPhotoAsLoaded(stack.preview.id)"
-                                            @error="markPhotoAsLoaded(stack.preview.id)"
+                                            @load="
+                                                markPhotoAsLoaded(
+                                                    stack.preview.id,
+                                                )
+                                            "
+                                            @error="
+                                                markPhotoAsLoaded(
+                                                    stack.preview.id,
+                                                )
+                                            "
                                         />
                                         <div
-                                            v-if="!isPhotoLoaded(stack.preview.id)"
+                                            v-if="
+                                                !isPhotoLoaded(stack.preview.id)
+                                            "
                                             class="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
                                         />
                                     </template>
@@ -4961,7 +5441,11 @@ const onAlbumTouchCancel = (): void => {
                                             stack.preview.thumbnailUrl
                                         "
                                         :src="stack.preview.thumbnailUrl"
-                                        :alt="t('public.shared.alt.uploaded_event_video')"
+                                        :alt="
+                                            t(
+                                                'public.shared.alt.uploaded_event_video',
+                                            )
+                                        "
                                         loading="lazy"
                                         decoding="async"
                                         fetchpriority="low"
@@ -4971,8 +5455,12 @@ const onAlbumTouchCancel = (): void => {
                                                 ? 'opacity-100'
                                                 : 'opacity-0'
                                         "
-                                        @load="markPhotoAsLoaded(stack.preview.id)"
-                                        @error="markPhotoAsLoaded(stack.preview.id)"
+                                        @load="
+                                            markPhotoAsLoaded(stack.preview.id)
+                                        "
+                                        @error="
+                                            markPhotoAsLoaded(stack.preview.id)
+                                        "
                                     />
                                     <video
                                         v-else-if="
@@ -4994,33 +5482,58 @@ const onAlbumTouchCancel = (): void => {
                                         "
                                         class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 px-4 text-center text-slate-500"
                                     >
-                                        <LoaderCircle class="size-7 animate-spin text-slate-400" />
-                                        <p class="text-xs font-semibold text-slate-700">
-                                            {{ t('public.album.labels.processing_video') }}
+                                        <LoaderCircle
+                                            class="size-7 animate-spin text-slate-400"
+                                        />
+                                        <p
+                                            class="text-xs font-semibold text-slate-700"
+                                        >
+                                            {{
+                                                t(
+                                                    'public.album.labels.processing_video',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div
-                                        v-else-if="stack.preview.kind === 'text'"
+                                        v-else-if="
+                                            stack.preview.kind === 'text'
+                                        "
                                         class="flex h-full w-full items-center justify-center p-3"
-                                        :style="textPostSurfaceStyle(stack.preview)"
+                                        :style="
+                                            textPostSurfaceStyle(stack.preview)
+                                        "
                                     >
                                         <p
-                                            class="line-clamp-6 whitespace-pre-wrap text-center text-sm font-semibold leading-relaxed sm:text-base"
-                                            :style="textPostContentStyle(stack.preview)"
+                                            class="line-clamp-6 text-center text-sm leading-relaxed font-semibold whitespace-pre-wrap sm:text-base"
+                                            :style="
+                                                textPostContentStyle(
+                                                    stack.preview,
+                                                )
+                                            "
                                         >
-                                            {{ stack.preview.text ?? t('public.album.labels.text_post') }}
+                                            {{
+                                                stack.preview.text ??
+                                                t(
+                                                    'public.album.labels.text_post',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div
                                         v-else
                                         class="flex h-full w-full items-center justify-center text-xs text-slate-500"
                                     >
-                                        {{ t('public.album.labels.preview_unavailable') }}
+                                        {{
+                                            t(
+                                                'public.album.labels.preview_unavailable',
+                                            )
+                                        }}
                                     </div>
 
                                     <div
                                         v-if="stack.mediaCount > 1"
-                                        class="pointer-events-none absolute right-2 top-2 inline-flex items-center justify-center rounded-full border border-white/35 bg-black/38 p-1.5 text-white shadow-[0_8px_18px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+                                        class="pointer-events-none absolute top-2 right-2 inline-flex items-center justify-center rounded-full border border-white/35 bg-black/38 p-1.5 text-white shadow-[0_8px_18px_rgba(0,0,0,0.28)] backdrop-blur-sm"
                                     >
                                         <Images class="size-7" />
                                     </div>
@@ -5033,28 +5546,42 @@ const onAlbumTouchCancel = (): void => {
                                         "
                                         class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20"
                                     >
-                                        <span class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
-                                            {{ t('public.album.labels.preview_only') }}
+                                        <span
+                                            class="rounded-full border border-white/40 bg-black/45 px-2 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase"
+                                        >
+                                            {{
+                                                t(
+                                                    'public.album.labels.preview_only',
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                 </button>
                             </article>
                         </div>
 
-                        <div
-                            v-if="!hasMoreAssets"
-                            class="px-2 sm:px-0"
-                        >
-                            <Empty class="border-0 bg-transparent py-0 shadow-none">
+                        <div v-if="!hasMoreAssets" class="px-2 sm:px-0">
+                            <Empty
+                                class="border-0 bg-transparent py-0 shadow-none"
+                            >
                                 <EmptyHeader>
-                                    <EmptyMedia variant="icon" class="bg-slate-100 text-slate-500">
+                                    <EmptyMedia
+                                        variant="icon"
+                                        class="bg-slate-100 text-slate-500"
+                                    >
                                         <Images class="size-5" />
                                     </EmptyMedia>
                                     <EmptyTitle class="text-slate-900">
-                                        {{ t('public.album.gallery.end_title') }}
+                                        {{
+                                            t('public.album.gallery.end_title')
+                                        }}
                                     </EmptyTitle>
                                     <EmptyDescription class="text-slate-500">
-                                        {{ t('public.album.gallery.end_description') }}
+                                        {{
+                                            t(
+                                                'public.album.gallery.end_description',
+                                            )
+                                        }}
                                     </EmptyDescription>
                                 </EmptyHeader>
                             </Empty>
@@ -5066,16 +5593,22 @@ const onAlbumTouchCancel = (): void => {
                         ref="loadMoreSentinelRef"
                         class="px-2 py-6"
                     >
-                        <div class="flex items-center justify-center gap-2 text-sm text-slate-500">
+                        <div
+                            class="flex items-center justify-center gap-2 text-sm text-slate-500"
+                        >
                             <UploadCloud
                                 class="size-4"
-                                :class="isLoadingMoreAssets ? 'animate-bounce' : ''"
+                                :class="
+                                    isLoadingMoreAssets ? 'animate-bounce' : ''
+                                "
                             />
                             <span>
                                 {{
                                     isLoadingMoreAssets
                                         ? t('public.album.gallery.loading_more')
-                                        : t('public.album.gallery.scroll_for_more')
+                                        : t(
+                                              'public.album.gallery.scroll_for_more',
+                                          )
                                 }}
                             </span>
                         </div>
@@ -5090,7 +5623,8 @@ const onAlbumTouchCancel = (): void => {
         >
             <Separator class="bg-slate-200" />
             <div class="px-3 py-2 text-center text-xs text-slate-500">
-                © {{ new Date().getFullYear() }} {{ appName }}. {{ t('public.wall.footer') }}
+                © {{ new Date().getFullYear() }} {{ appName }}.
+                {{ t('public.wall.footer') }}
             </div>
         </footer>
 
@@ -5099,18 +5633,28 @@ const onAlbumTouchCancel = (): void => {
             class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40"
             aria-label="Guest album actions"
         >
-            <div class="mx-auto flex w-full max-w-none items-end justify-between gap-1 border-t border-slate-200/80 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.65rem)] pt-2 shadow-[0_-8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div
+                class="mx-auto flex w-full max-w-none items-end justify-between gap-1 border-t border-slate-200/80 bg-white/95 px-3 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.65rem)] shadow-[0_-8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+            >
                 <button
                     type="button"
                     class="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-500 transition hover:bg-slate-100/80"
                     :aria-label="t('public.album.nav.language')"
-                    :class="isLanguagePickerOpen ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
+                    :class="
+                        isLanguagePickerOpen
+                            ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                            : ''
+                    "
                     @click="openLanguagePicker"
                 >
-                    <IconLanguage class="size-8 transition group-active:scale-95" />
+                    <IconLanguage
+                        class="size-8 transition group-active:scale-95"
+                    />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
-                        :class="isLanguagePickerOpen ? 'opacity-100' : 'opacity-0'"
+                        :class="
+                            isLanguagePickerOpen ? 'opacity-100' : 'opacity-0'
+                        "
                     />
                 </button>
                 <button
@@ -5127,20 +5671,36 @@ const onAlbumTouchCancel = (): void => {
                     <Film class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
-                        :class="isComposerOpen && activeView === 'video_testimonial' ? 'opacity-100' : 'opacity-0'"
+                        :class="
+                            isComposerOpen && activeView === 'video_testimonial'
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                        "
                     />
                 </button>
                 <button
                     type="button"
                     class="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-500 transition hover:bg-slate-100/80"
-                    :class="isComposerOpen && (activeView === 'upload_media' || activeView === 'video_testimonial') ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
+                    :class="
+                        isComposerOpen &&
+                        (activeView === 'upload_media' ||
+                            activeView === 'video_testimonial')
+                            ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                            : ''
+                    "
                     :aria-label="t('public.album.nav.camera')"
                     @click="triggerQuickUpload"
                 >
                     <Camera class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
-                        :class="isComposerOpen && (activeView === 'upload_media' || activeView === 'video_testimonial') ? 'opacity-100' : 'opacity-0'"
+                        :class="
+                            isComposerOpen &&
+                            (activeView === 'upload_media' ||
+                                activeView === 'video_testimonial')
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                        "
                     />
                 </button>
                 <button
@@ -5155,16 +5715,26 @@ const onAlbumTouchCancel = (): void => {
                     :aria-label="t('public.album.nav.text')"
                     @click="setActiveView('text_wish')"
                 >
-                    <MessageSquareText class="size-8 transition group-active:scale-95" />
+                    <MessageSquareText
+                        class="size-8 transition group-active:scale-95"
+                    />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
-                        :class="isComposerOpen && activeView === 'text_wish' ? 'opacity-100' : 'opacity-0'"
+                        :class="
+                            isComposerOpen && activeView === 'text_wish'
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                        "
                     />
                 </button>
                 <button
                     type="button"
                     class="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-500 transition hover:bg-slate-100/80"
-                    :class="menuOpen ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
+                    :class="
+                        menuOpen
+                            ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                            : ''
+                    "
                     :aria-label="t('public.album.nav.settings')"
                     @click="openGuestSettings"
                 >
@@ -5190,14 +5760,25 @@ const onAlbumTouchCancel = (): void => {
                 class="fixed inset-0 z-[68] bg-[#fcfaf6]"
             >
                 <div class="flex h-full flex-col">
-                    <header :class="['safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur', composerHeaderPaddingClass]">
+                    <header
+                        :class="[
+                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur',
+                            composerHeaderPaddingClass,
+                        ]"
+                    >
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <div class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                <div
+                                    class="flex items-center gap-2 text-lg font-semibold text-slate-900"
+                                >
                                     <IconLanguage class="size-6" />
-                                    <span>{{ t('public.album.language.title') }}</span>
+                                    <span>{{
+                                        t('public.album.language.title')
+                                    }}</span>
                                 </div>
-                                <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                                <p
+                                    class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600"
+                                >
                                     {{ t('public.album.language.subtitle') }}
                                 </p>
                             </div>
@@ -5213,7 +5794,9 @@ const onAlbumTouchCancel = (): void => {
                     </header>
 
                     <div class="safe-bottom flex-1 overflow-y-auto px-5 py-5">
-                        <div class="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
+                        <div
+                            class="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2"
+                        >
                             <button
                                 v-for="option in albumLanguageOptions"
                                 :key="`album-language-${option.key}`"
@@ -5229,19 +5812,32 @@ const onAlbumTouchCancel = (): void => {
                                 "
                                 @click="selectAlbumLocale(option.key)"
                             >
-                                <span class="text-5xl leading-none">{{ option.flag }}</span>
+                                <span class="text-5xl leading-none">{{
+                                    option.flag
+                                }}</span>
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <p class="text-lg font-semibold text-slate-900">
+                                    <div
+                                        class="flex items-center justify-between gap-3"
+                                    >
+                                        <p
+                                            class="text-lg font-semibold text-slate-900"
+                                        >
                                             {{ option.label }}
                                         </p>
                                         <CheckCircle2
-                                            v-if="selectedAlbumLanguageKey === option.key"
+                                            v-if="
+                                                selectedAlbumLanguageKey ===
+                                                option.key
+                                            "
                                             class="size-5 shrink-0"
-                                            :style="{ color: albumPrimaryColor }"
+                                            :style="{
+                                                color: albumPrimaryColor,
+                                            }"
                                         />
                                     </div>
-                                    <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                                    <p
+                                        class="mt-2 text-sm leading-relaxed text-slate-600"
+                                    >
                                         {{ option.description }}
                                     </p>
                                 </div>
@@ -5255,14 +5851,18 @@ const onAlbumTouchCancel = (): void => {
         <Sheet v-model:open="isPreEventInfoOpen">
             <SheetContent
                 side="bottom"
-                class="safe-bottom max-h-[72vh] rounded-t-[2rem] px-5 pb-8 pt-8"
+                class="safe-bottom max-h-[72vh] rounded-t-[2rem] px-5 pt-8 pb-8"
             >
                 <SheetHeader class="px-0 text-left">
-                    <SheetTitle class="flex items-center gap-2 text-base text-slate-900">
+                    <SheetTitle
+                        class="flex items-center gap-2 text-base text-slate-900"
+                    >
                         <AlertTriangle class="size-5 text-amber-600" />
                         {{ t('public.album.menu.pre_event_test_mode') }}
                     </SheetTitle>
-                    <SheetDescription class="text-sm leading-relaxed text-slate-600">
+                    <SheetDescription
+                        class="text-sm leading-relaxed text-slate-600"
+                    >
                         {{ t('public.album.pre_event.description') }}
                     </SheetDescription>
                 </SheetHeader>
@@ -5272,17 +5872,16 @@ const onAlbumTouchCancel = (): void => {
                         variant="muted"
                         class="rounded-[1.5rem] border-slate-200 bg-slate-50"
                     >
-                        <ItemMedia
-                            variant="icon"
-                            :class="statusCard.classes"
-                        >
+                        <ItemMedia variant="icon" :class="statusCard.classes">
                             <component :is="statusCard.icon" class="size-4" />
                         </ItemMedia>
                         <ItemContent>
                             <ItemTitle class="text-slate-900">
                                 {{ statusCard.title }}
                             </ItemTitle>
-                            <ItemDescription class="line-clamp-none text-slate-600">
+                            <ItemDescription
+                                class="line-clamp-none text-slate-600"
+                            >
                                 {{ statusCard.description }}
                             </ItemDescription>
                         </ItemContent>
@@ -5293,16 +5892,29 @@ const onAlbumTouchCancel = (): void => {
                         class="rounded-[1.5rem] border-slate-200 bg-white"
                     >
                         <ItemContent class="gap-2">
-                            <div class="flex items-center justify-between gap-3 text-sm">
+                            <div
+                                class="flex items-center justify-between gap-3 text-sm"
+                            >
                                 <ItemTitle class="text-slate-900">
-                                    {{ t('public.album.pre_event.remaining_uploads') }}
+                                    {{
+                                        t(
+                                            'public.album.pre_event.remaining_uploads',
+                                        )
+                                    }}
                                 </ItemTitle>
                                 <span class="font-semibold text-slate-900">
-                                    {{ props.preEventTestUploadsRemaining }} / {{ props.preEventTestUploadLimit }}
+                                    {{ props.preEventTestUploadsRemaining }} /
+                                    {{ props.preEventTestUploadLimit }}
                                 </span>
                             </div>
-                            <ItemDescription class="line-clamp-none text-slate-600">
-                                {{ t('public.album.pre_event.remaining_uploads_hint') }}
+                            <ItemDescription
+                                class="line-clamp-none text-slate-600"
+                            >
+                                {{
+                                    t(
+                                        'public.album.pre_event.remaining_uploads_hint',
+                                    )
+                                }}
                             </ItemDescription>
                         </ItemContent>
                     </Item>
@@ -5313,31 +5925,48 @@ const onAlbumTouchCancel = (): void => {
                     >
                         <ItemContent class="gap-4">
                             <div>
-                                <div class="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+                                <div
+                                    class="mb-1.5 flex items-center justify-between text-xs text-slate-500"
+                                >
                                     <span>{{ t('public.album.storage') }}</span>
                                     <span class="font-medium text-slate-900">
-                                        {{ formatBytes(limits.storageUsedBytes) }} / {{ formatBytes(limits.storageLimitBytes) }}
+                                        {{
+                                            formatBytes(limits.storageUsedBytes)
+                                        }}
+                                        /
+                                        {{
+                                            formatBytes(
+                                                limits.storageLimitBytes,
+                                            )
+                                        }}
                                     </span>
                                 </div>
                                 <div class="h-2 rounded-full bg-slate-200">
                                     <div
                                         class="h-full rounded-full bg-slate-900 transition-all"
-                                        :style="{ width: `${usageStoragePercent}%` }"
+                                        :style="{
+                                            width: `${usageStoragePercent}%`,
+                                        }"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <div class="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+                                <div
+                                    class="mb-1.5 flex items-center justify-between text-xs text-slate-500"
+                                >
                                     <span>{{ t('public.album.uploads') }}</span>
                                     <span class="font-medium text-slate-900">
-                                        {{ limits.uploadCount }} / {{ limits.uploadLimit }}
+                                        {{ limits.uploadCount }} /
+                                        {{ limits.uploadLimit }}
                                     </span>
                                 </div>
                                 <div class="h-2 rounded-full bg-slate-200">
                                     <div
                                         class="h-full rounded-full bg-amber-500 transition-all"
-                                        :style="{ width: `${usageUploadsPercent}%` }"
+                                        :style="{
+                                            width: `${usageUploadsPercent}%`,
+                                        }"
                                     />
                                 </div>
                             </div>
@@ -5363,9 +5992,15 @@ const onAlbumTouchCancel = (): void => {
                     v-if="uploadForm.processing"
                     class="absolute inset-0 z-20 flex items-center justify-center bg-[#fcfaf6]/88 backdrop-blur-sm"
                 >
-                    <div class="flex flex-col items-center gap-4 px-8 text-center">
-                        <div class="inline-flex size-16 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
-                            <LoaderCircle class="size-8 animate-spin text-slate-900" />
+                    <div
+                        class="flex flex-col items-center gap-4 px-8 text-center"
+                    >
+                        <div
+                            class="inline-flex size-16 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
+                        >
+                            <LoaderCircle
+                                class="size-8 animate-spin text-slate-900"
+                            />
                         </div>
                         <div class="space-y-1">
                             <p class="text-base font-semibold text-slate-900">
@@ -5378,10 +6013,16 @@ const onAlbumTouchCancel = (): void => {
                     </div>
                 </div>
                 <div class="flex h-full flex-col">
-                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] backdrop-blur">
-                        <div class="relative flex min-h-16 items-start justify-center gap-3">
+                    <header
+                        class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] pb-5 backdrop-blur"
+                    >
+                        <div
+                            class="relative flex min-h-16 items-start justify-center gap-3"
+                        >
                             <div class="max-w-xl text-center">
-                                <div class="flex items-center justify-center gap-2 text-lg font-semibold text-slate-900">
+                                <div
+                                    class="flex items-center justify-center gap-2 text-lg font-semibold text-slate-900"
+                                >
                                     <component
                                         :is="
                                             activeView === 'video_testimonial'
@@ -5400,7 +6041,9 @@ const onAlbumTouchCancel = (): void => {
                                         }}
                                     </span>
                                 </div>
-                                <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                                <p
+                                    class="mt-2 text-sm leading-relaxed text-slate-600"
+                                >
                                     {{
                                         activeView === 'text_wish'
                                             ? t('public.album.text.description')
@@ -5410,7 +6053,7 @@ const onAlbumTouchCancel = (): void => {
                             </div>
                             <button
                                 type="button"
-                                class="absolute right-0 top-0 inline-flex size-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                                class="absolute top-0 right-0 inline-flex size-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
                                 :aria-label="t('public.album.composer.close')"
                                 @click="closeComposer"
                             >
@@ -5419,25 +6062,38 @@ const onAlbumTouchCancel = (): void => {
                         </div>
                     </header>
 
-                    <div class="flex-1 overflow-y-auto px-5 pb-36 pt-5">
+                    <div class="flex-1 overflow-y-auto px-5 pt-5 pb-36">
                         <div
-                            v-if="activeView === 'upload_media' || activeView === 'video_testimonial'"
+                            v-if="
+                                activeView === 'upload_media' ||
+                                activeView === 'video_testimonial'
+                            "
                             class="space-y-5"
                         >
                             <p class="text-sm leading-relaxed text-slate-600">
-                                {{ t('public.album.labels.limits_summary', {
-                                    photoMax: formatBytes(limits.photoMaxSizeBytes),
-                                    videoMax: formatBytes(limits.videoMaxSizeBytes),
-                                }) }}
+                                {{
+                                    t('public.album.labels.limits_summary', {
+                                        photoMax: formatBytes(
+                                            limits.photoMaxSizeBytes,
+                                        ),
+                                        videoMax: formatBytes(
+                                            limits.videoMaxSizeBytes,
+                                        ),
+                                    })
+                                }}
                             </p>
 
-                            <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                            <div
+                                class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1"
+                            >
                                 <button
                                     v-for="emoji in uploadMessageEmojiOptions"
                                     :key="`upload-message-emoji-${emoji}`"
                                     type="button"
                                     class="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                                    :disabled="!canUpload || uploadForm.processing"
+                                    :disabled="
+                                        !canUpload || uploadForm.processing
+                                    "
                                     @click="appendUploadMessageEmoji(emoji)"
                                 >
                                     {{ emoji }}
@@ -5449,13 +6105,23 @@ const onAlbumTouchCancel = (): void => {
                                     id="upload-message"
                                     v-model="uploadForm.message"
                                     maxlength="500"
-                                    :placeholder="t('public.album.upload.message_placeholder')"
-                                    :disabled="!canUpload || uploadForm.processing"
+                                    :placeholder="
+                                        t(
+                                            'public.album.upload.message_placeholder',
+                                        )
+                                    "
+                                    :disabled="
+                                        !canUpload || uploadForm.processing
+                                    "
                                     rows="2"
-                                    class="min-h-14 w-full resize-none rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4 text-base leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                    class="min-h-14 w-full resize-none rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4 text-base leading-relaxed text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
                                 />
-                                <div class="flex items-center justify-end text-xs font-medium text-slate-400">
-                                    {{ uploadForm.message?.trim().length ?? 0 }}/500
+                                <div
+                                    class="flex items-center justify-end text-xs font-medium text-slate-400"
+                                >
+                                    {{
+                                        uploadForm.message?.trim().length ?? 0
+                                    }}/500
                                 </div>
                                 <p
                                     v-if="uploadForm.errors.message"
@@ -5470,7 +6136,12 @@ const onAlbumTouchCancel = (): void => {
                                 type="file"
                                 multiple
                                 :accept="uploadAccept"
-                                :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                                :disabled="
+                                    !canUpload ||
+                                    uploadAccept.length === 0 ||
+                                    uploadForm.processing ||
+                                    isValidatingVideos
+                                "
                                 class="sr-only"
                                 data-test="guest-upload-input"
                                 @change="onFileSelectionChange"
@@ -5480,7 +6151,12 @@ const onAlbumTouchCancel = (): void => {
                                 v-if="uploadForm.files.length === 0"
                                 type="button"
                                 class="flex min-h-56 w-full flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-300 bg-white px-6 py-8 text-center shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                :disabled="!canUpload || uploadAccept.length === 0 || uploadForm.processing || isValidatingVideos"
+                                :disabled="
+                                    !canUpload ||
+                                    uploadAccept.length === 0 ||
+                                    uploadForm.processing ||
+                                    isValidatingVideos
+                                "
                                 data-test="guest-upload-picker"
                                 @click="openUploadFilePicker"
                             >
@@ -5490,18 +6166,30 @@ const onAlbumTouchCancel = (): void => {
                                 >
                                     <UploadCloud class="size-8" />
                                 </div>
-                                <p class="mt-5 text-lg font-semibold text-slate-900">
+                                <p
+                                    class="mt-5 text-lg font-semibold text-slate-900"
+                                >
                                     {{
                                         activeView === 'video_testimonial'
-                                            ? t('public.album.labels.choose_your_video')
-                                            : t('public.album.labels.choose_photos_or_videos')
+                                            ? t(
+                                                  'public.album.labels.choose_your_video',
+                                              )
+                                            : t(
+                                                  'public.album.labels.choose_photos_or_videos',
+                                              )
                                     }}
                                 </p>
-                                <p class="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                                <p
+                                    class="mt-2 max-w-sm text-sm leading-relaxed text-slate-500"
+                                >
                                     {{
                                         activeView === 'video_testimonial'
-                                            ? t('public.album.labels.pick_one_short_clip')
-                                            : t('public.album.upload.dropzone_hint')
+                                            ? t(
+                                                  'public.album.labels.pick_one_short_clip',
+                                              )
+                                            : t(
+                                                  'public.album.upload.dropzone_hint',
+                                              )
                                     }}
                                 </p>
                             </button>
@@ -5510,23 +6198,42 @@ const onAlbumTouchCancel = (): void => {
                                 v-if="uploadForm.files.length > 0"
                                 class="rounded-[1.8rem] border border-slate-200 bg-white p-4 shadow-sm"
                             >
-                                <div class="flex items-center justify-between gap-3">
-                                    <p class="text-sm font-semibold text-slate-900">
-                                        {{ t('public.album.labels.selected_files') }} ({{ uploadForm.files.length }})
+                                <div
+                                    class="flex items-center justify-between gap-3"
+                                >
+                                    <p
+                                        class="text-sm font-semibold text-slate-900"
+                                    >
+                                        {{
+                                            t(
+                                                'public.album.labels.selected_files',
+                                            )
+                                        }}
+                                        ({{ uploadForm.files.length }})
                                     </p>
                                     <button
                                         v-if="uploadForm.files.length > 0"
                                         type="button"
                                         class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                        :disabled="uploadForm.processing || isValidatingVideos"
+                                        :disabled="
+                                            uploadForm.processing ||
+                                            isValidatingVideos
+                                        "
                                         @click="openUploadFilePicker"
                                     >
-                                        {{ t('public.album.labels.change_selected_files') }}
+                                        {{
+                                            t(
+                                                'public.album.labels.change_selected_files',
+                                            )
+                                        }}
                                     </button>
                                 </div>
                                 <div class="mt-4 flex flex-wrap gap-3">
                                     <div
-                                        v-for="preview in uploadPreviewItems.slice(0, 6)"
+                                        v-for="preview in uploadPreviewItems.slice(
+                                            0,
+                                            6,
+                                        )"
                                         :key="preview.key"
                                         class="relative size-20 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-slate-50"
                                     >
@@ -5566,8 +6273,12 @@ const onAlbumTouchCancel = (): void => {
                                 v-if="clientValidationErrors.length > 0"
                                 class="rounded-[1.6rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
                             >
-                                <p class="font-semibold">{{ t('public.album.files_skipped') }}</p>
-                                <ul class="mt-2 list-inside list-disc space-y-1">
+                                <p class="font-semibold">
+                                    {{ t('public.album.files_skipped') }}
+                                </p>
+                                <ul
+                                    class="mt-2 list-inside list-disc space-y-1"
+                                >
                                     <li
                                         v-for="error in clientValidationErrors"
                                         :key="error"
@@ -5585,25 +6296,40 @@ const onAlbumTouchCancel = (): void => {
                             </p>
 
                             <div
-                                v-if="uploadForm.processing || uploadForm.files.length > 0"
+                                v-if="
+                                    uploadForm.processing ||
+                                    uploadForm.files.length > 0
+                                "
                                 class="sticky bottom-4 z-10 pt-2"
                             >
                                 <button
                                     type="button"
-                                    class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
+                                    class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                                     :style="heroAccentStyle"
-                                    :disabled="!canUpload || uploadForm.files.length === 0 || uploadForm.processing || isValidatingVideos"
+                                    :disabled="
+                                        !canUpload ||
+                                        uploadForm.files.length === 0 ||
+                                        uploadForm.processing ||
+                                        isValidatingVideos
+                                    "
                                     data-test="guest-upload-submit"
                                     @click="uploadFiles"
                                 >
                                     <UploadCloud class="mr-2 size-5" />
-                                    {{ uploadForm.processing ? t('public.album.upload.uploading') : uploadButtonLabel }}
+                                    {{
+                                        uploadForm.processing
+                                            ? t('public.album.upload.uploading')
+                                            : uploadButtonLabel
+                                    }}
                                 </button>
                             </div>
                         </div>
 
                         <div
-                            v-else-if="activeView === 'text_wish' && props.allowTextPosts"
+                            v-else-if="
+                                activeView === 'text_wish' &&
+                                props.allowTextPosts
+                            "
                             class="space-y-5"
                         >
                             <div
@@ -5612,8 +6338,10 @@ const onAlbumTouchCancel = (): void => {
                                     selectedTextPostTheme
                                         ? {
                                               ...textPostSurfaceStyle({
-                                                  textThemeImageUrl: selectedTextPostTheme.imageUrl,
-                                                  textThemeBackgroundColor: selectedTextPostTheme.backgroundColor,
+                                                  textThemeImageUrl:
+                                                      selectedTextPostTheme.imageUrl,
+                                                  textThemeBackgroundColor:
+                                                      selectedTextPostTheme.backgroundColor,
                                               }),
                                           }
                                         : undefined
@@ -5624,45 +6352,63 @@ const onAlbumTouchCancel = (): void => {
                                 <div
                                     class="absolute inset-0"
                                     :class="
-                                        selectedTextPostTheme?.textColor === '#111827'
+                                        selectedTextPostTheme?.textColor ===
+                                        '#111827'
                                             ? 'bg-white/6'
                                             : 'bg-black/18'
                                     "
                                 />
-                                <div class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center">
+                                <div
+                                    class="absolute inset-0 flex items-center justify-center px-8 py-10 text-center"
+                                >
                                     <div
-                                        v-if="textForm.text.trim().length === 0 && !isTextComposerFocused"
+                                        v-if="
+                                            textForm.text.trim().length === 0 &&
+                                            !isTextComposerFocused
+                                        "
                                         class="pointer-events-none absolute inset-0 flex items-center justify-center px-10 text-center"
                                     >
                                         <p
-                                            class="max-w-md text-center text-[2rem] font-semibold leading-tight opacity-78 sm:text-[2.45rem]"
+                                            class="max-w-md text-center text-[2rem] leading-tight font-semibold opacity-78 sm:text-[2.45rem]"
                                             :style="
                                                 selectedTextPostTheme
                                                     ? {
-                                                          ...textPostContentStyle({
-                                                              textThemeTextColor: selectedTextPostTheme.textColor,
-                                                          }),
+                                                          ...textPostContentStyle(
+                                                              {
+                                                                  textThemeTextColor:
+                                                                      selectedTextPostTheme.textColor,
+                                                              },
+                                                          ),
                                                           textShadow:
-                                                              selectedTextPostTheme.textColor === '#111827'
+                                                              selectedTextPostTheme.textColor ===
+                                                              '#111827'
                                                                   ? '0 1px 14px rgba(255,255,255,0.55)'
                                                                   : '0 1px 14px rgba(15,23,42,0.35)',
                                                       }
                                                     : undefined
                                             "
                                         >
-                                            {{ t('public.album.text.canvas_hint') }}
+                                            {{
+                                                t(
+                                                    'public.album.text.canvas_hint',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <textarea
                                         ref="textComposerRef"
                                         v-model="textForm.text"
                                         spellcheck="true"
-                                        :disabled="!canUploadText || textForm.processing"
+                                        :disabled="
+                                            !canUploadText ||
+                                            textForm.processing
+                                        "
                                         placeholder=""
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pb-10 pt-[30%] text-center text-[3.65rem] font-semibold leading-[1.08] outline-none sm:text-[4.4rem]"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pt-[30%] pb-10 text-center text-[3.65rem] leading-[1.08] font-semibold outline-none sm:text-[4.4rem]"
                                         :class="[
-                                            !canUploadText || textForm.processing
+                                            !canUploadText ||
+                                            textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
                                                 : '',
                                         ]"
@@ -5670,10 +6416,12 @@ const onAlbumTouchCancel = (): void => {
                                             selectedTextPostTheme
                                                 ? {
                                                       ...textPostContentStyle({
-                                                          textThemeTextColor: selectedTextPostTheme.textColor,
+                                                          textThemeTextColor:
+                                                              selectedTextPostTheme.textColor,
                                                       }),
                                                       textShadow:
-                                                          selectedTextPostTheme.textColor === '#111827'
+                                                          selectedTextPostTheme.textColor ===
+                                                          '#111827'
                                                               ? '0 1px 14px rgba(255,255,255,0.55)'
                                                               : '0 1px 14px rgba(15,23,42,0.35)',
                                                   }
@@ -5686,12 +6434,20 @@ const onAlbumTouchCancel = (): void => {
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between gap-3 text-sm text-slate-500">
-                                <span>{{ t('public.album.text.background_theme') }}</span>
-                                <span>{{ textForm.text.trim().length }}/500</span>
+                            <div
+                                class="flex items-center justify-between gap-3 text-sm text-slate-500"
+                            >
+                                <span>{{
+                                    t('public.album.text.background_theme')
+                                }}</span>
+                                <span
+                                    >{{ textForm.text.trim().length }}/500</span
+                                >
                             </div>
 
-                            <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                            <div
+                                class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1"
+                            >
                                 <button
                                     v-for="theme in props.textPostThemes"
                                     :key="theme.id"
@@ -5702,7 +6458,9 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'border-slate-900'
                                             : 'border-transparent'
                                     "
-                                    @click="textForm.text_post_theme_id = theme.id"
+                                    @click="
+                                        textForm.text_post_theme_id = theme.id
+                                    "
                                 >
                                     <img
                                         :src="theme.imageUrl"
@@ -5710,30 +6468,52 @@ const onAlbumTouchCancel = (): void => {
                                         class="size-24 object-cover"
                                     />
                                     <div
-                                        v-if="textForm.text_post_theme_id === theme.id"
+                                        v-if="
+                                            textForm.text_post_theme_id ===
+                                            theme.id
+                                        "
                                         class="absolute inset-0 flex items-start justify-end bg-black/10 p-2"
                                     >
-                                        <span class="inline-flex size-7 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+                                        <span
+                                            class="inline-flex size-7 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm"
+                                        >
                                             <CheckCircle2 class="size-4.5" />
                                         </span>
                                     </div>
                                 </button>
                             </div>
                             <p
-                                v-if="textForm.errors.text || textForm.errors.text_post_theme_id"
+                                v-if="
+                                    textForm.errors.text ||
+                                    textForm.errors.text_post_theme_id
+                                "
                                 class="text-sm text-rose-700"
                             >
-                                {{ textForm.errors.text || textForm.errors.text_post_theme_id }}
+                                {{
+                                    textForm.errors.text ||
+                                    textForm.errors.text_post_theme_id
+                                }}
                             </p>
                             <button
-                                v-if="textForm.processing || textForm.text.trim().length > 0"
+                                v-if="
+                                    textForm.processing ||
+                                    textForm.text.trim().length > 0
+                                "
                                 type="button"
                                 class="inline-flex h-14 w-full items-center justify-center rounded-[1.5rem] px-6 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                                 :style="heroAccentStyle"
-                                :disabled="!canUploadText || textForm.processing || textForm.text.trim().length === 0"
+                                :disabled="
+                                    !canUploadText ||
+                                    textForm.processing ||
+                                    textForm.text.trim().length === 0
+                                "
                                 @click="submitTextPost"
                             >
-                                {{ textForm.processing ? t('public.album.text.posting') : t('public.album.text.post_button') }}
+                                {{
+                                    textForm.processing
+                                        ? t('public.album.text.posting')
+                                        : t('public.album.text.post_button')
+                                }}
                             </button>
                         </div>
                     </div>
@@ -5749,18 +6529,22 @@ const onAlbumTouchCancel = (): void => {
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div
-                v-if="menuOpen"
-                class="fixed inset-0 z-[72] bg-[#fcfaf6]"
-            >
+            <div v-if="menuOpen" class="fixed inset-0 z-[72] bg-[#fcfaf6]">
                 <div class="flex h-full flex-col">
-                    <header :class="['safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur', composerHeaderPaddingClass]">
+                    <header
+                        :class="[
+                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur',
+                            composerHeaderPaddingClass,
+                        ]"
+                    >
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="text-lg font-semibold text-slate-900">
                                     {{ t('public.album.settings.title') }}
                                 </p>
-                                <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                                <p
+                                    class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600"
+                                >
                                     {{ t('public.album.settings.description') }}
                                 </p>
                             </div>
@@ -5775,27 +6559,58 @@ const onAlbumTouchCancel = (): void => {
                         </div>
                     </header>
 
-                    <div class="flex-1 overflow-y-auto px-5 pb-10 pt-5">
-                        <section class="rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm">
-                            <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+                    <div class="flex-1 overflow-y-auto px-5 pt-5 pb-10">
+                        <section
+                            class="rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm"
+                        >
+                            <div
+                                class="flex flex-col gap-5 sm:flex-row sm:items-start"
+                            >
                                 <div class="flex items-center gap-4">
-                                    <Avatar class="size-20 border border-slate-200">
+                                    <Avatar
+                                        class="size-20 border border-slate-200"
+                                    >
                                         <AvatarImage
                                             v-if="currentGuestAvatarUrl"
                                             :src="currentGuestAvatarUrl ?? ''"
-                                            :alt="guestName || t('public.shared.alt.guest_avatar')"
+                                            :alt="
+                                                guestName ||
+                                                t(
+                                                    'public.shared.alt.guest_avatar',
+                                                )
+                                            "
                                         />
-                                        <AvatarFallback :class="avatarFallbackClass(guestName)">
+                                        <AvatarFallback
+                                            :class="
+                                                avatarFallbackClass(guestName)
+                                            "
+                                        >
                                             {{ guestInitials(guestName) }}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p class="text-base font-semibold text-slate-900">
-                                            {{ t('public.album.settings.profile_title') }}
+                                        <p
+                                            class="text-base font-semibold text-slate-900"
+                                        >
+                                            {{
+                                                t(
+                                                    'public.album.settings.profile_title',
+                                                )
+                                            }}
                                         </p>
                                         <p class="mt-1 text-sm text-slate-500">
-                                            {{ t('public.album.menu.signed_in_as') }}
-                                            <span class="font-semibold text-slate-900">{{ guestName.trim() || t('public.shared.guest') }}</span>
+                                            {{
+                                                t(
+                                                    'public.album.menu.signed_in_as',
+                                                )
+                                            }}
+                                            <span
+                                                class="font-semibold text-slate-900"
+                                                >{{
+                                                    guestName.trim() ||
+                                                    t('public.shared.guest')
+                                                }}</span
+                                            >
                                         </p>
                                     </div>
                                 </div>
@@ -5840,9 +6655,13 @@ const onAlbumTouchCancel = (): void => {
                                     <input
                                         :id="`settings-${field.id}`"
                                         v-model="guestFieldValues[field.id]"
-                                        :type="field.type === 'phone' ? 'tel' : field.type"
+                                        :type="
+                                            field.type === 'phone'
+                                                ? 'tel'
+                                                : field.type
+                                        "
                                         :placeholder="field.help_text"
-                                        class="h-13 w-full rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                        class="h-13 w-full rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
                                     />
                                     <p
                                         v-if="onboardingErrors[field.id]"
@@ -5874,7 +6693,9 @@ const onAlbumTouchCancel = (): void => {
                             </p>
                         </section>
 
-                        <section class="mt-5 rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm">
+                        <section
+                            class="mt-5 rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm"
+                        >
                             <p class="text-base font-semibold text-slate-900">
                                 {{ t('public.album.settings.event_details') }}
                             </p>
@@ -5883,20 +6704,43 @@ const onAlbumTouchCancel = (): void => {
                                     v-if="eventDate"
                                     class="flex items-center gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3"
                                 >
-                                    <CalendarDays class="size-5 text-slate-500" />
+                                    <CalendarDays
+                                        class="size-5 text-slate-500"
+                                    />
                                     <span>
                                         {{ t('public.album.meta.event_date') }}
-                                        <span class="font-semibold text-slate-900">{{ formatDate(eventDate) }}</span>
+                                        <span
+                                            class="font-semibold text-slate-900"
+                                            >{{ formatDate(eventDate) }}</span
+                                        >
                                     </span>
                                 </p>
                                 <p
-                                    v-if="uploadWindowStartsAt || uploadWindowEndsAt"
+                                    v-if="
+                                        uploadWindowStartsAt ||
+                                        uploadWindowEndsAt
+                                    "
                                     class="flex items-center gap-3 rounded-[1.2rem] bg-slate-50 px-4 py-3"
                                 >
                                     <Clock3 class="size-5 text-slate-500" />
                                     <span>
-                                        {{ t('public.album.meta.upload_window') }}
-                                        <span class="font-semibold text-slate-900">{{ formatDateTime(uploadWindowStartsAt) }} - {{ formatDateTime(uploadWindowEndsAt) }}</span>
+                                        {{
+                                            t('public.album.meta.upload_window')
+                                        }}
+                                        <span
+                                            class="font-semibold text-slate-900"
+                                            >{{
+                                                formatDateTime(
+                                                    uploadWindowStartsAt,
+                                                )
+                                            }}
+                                            -
+                                            {{
+                                                formatDateTime(
+                                                    uploadWindowEndsAt,
+                                                )
+                                            }}</span
+                                        >
                                     </span>
                                 </p>
                             </div>
@@ -5919,7 +6763,11 @@ const onAlbumTouchCancel = (): void => {
                                     "
                                 >
                                     <AlertTriangle class="size-5" />
-                                    {{ t('public.album.menu.pre_event_test_mode') }}
+                                    {{
+                                        t(
+                                            'public.album.menu.pre_event_test_mode',
+                                        )
+                                    }}
                                 </button>
                                 <button
                                     type="button"
@@ -5927,7 +6775,11 @@ const onAlbumTouchCancel = (): void => {
                                     @click="resetGuestOnboarding"
                                 >
                                     <Trash2 class="size-5" />
-                                    {{ t('public.album.menu.reset_guest_onboarding') }}
+                                    {{
+                                        t(
+                                            'public.album.menu.reset_guest_onboarding',
+                                        )
+                                    }}
                                 </button>
                             </div>
                         </section>
@@ -5939,16 +6791,22 @@ const onAlbumTouchCancel = (): void => {
         <Drawer
             direction="bottom"
             :open="isAssetCommentsOpen"
-            @update:open="(open) => { if (!open) closeAssetComments(); }"
+            @update:open="
+                (open) => {
+                    if (!open) closeAssetComments();
+                }
+            "
         >
             <DrawerContent
                 class="safe-bottom z-[70] max-h-[84vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
             >
-                    <DrawerHeader class="border-b border-slate-200 px-5 pb-5 pt-3 text-center">
-                        <DrawerTitle class="text-center text-lg text-slate-900">
-                            {{ t('public.album.comments.title') }}
-                        </DrawerTitle>
-                    </DrawerHeader>
+                <DrawerHeader
+                    class="border-b border-slate-200 px-5 pt-3 pb-5 text-center"
+                >
+                    <DrawerTitle class="text-center text-lg text-slate-900">
+                        {{ t('public.album.comments.title') }}
+                    </DrawerTitle>
+                </DrawerHeader>
 
                 <div
                     v-if="selectedCommentsAsset"
@@ -5974,8 +6832,14 @@ const onAlbumTouchCancel = (): void => {
                         class="flex min-h-0 flex-1 items-center justify-center px-5 py-10"
                     >
                         <div class="text-center">
-                            <p class="text-sm font-medium text-slate-900">{{ t('public.album.comments.none_title') }}</p>
-                            <p class="mt-1 text-sm text-slate-500">{{ t('public.album.comments.none_description') }}</p>
+                            <p class="text-sm font-medium text-slate-900">
+                                {{ t('public.album.comments.none_title') }}
+                            </p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{
+                                    t('public.album.comments.none_description')
+                                }}
+                            </p>
                         </div>
                     </div>
 
@@ -5996,34 +6860,60 @@ const onAlbumTouchCancel = (): void => {
                                         :alt="comment.guestName"
                                     />
                                     <AvatarFallback
-                                        :class="avatarFallbackClass(comment.guestName)"
+                                        :class="
+                                            avatarFallbackClass(
+                                                comment.guestName,
+                                            )
+                                        "
                                     >
                                         {{ guestInitials(comment.guestName) }}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div class="relative min-w-0 flex-1 pr-14">
-                                    <div class="min-w-0 flex items-center gap-2">
-                                        <p class="truncate text-sm font-semibold text-slate-900">
+                                    <div
+                                        class="flex min-w-0 items-center gap-2"
+                                    >
+                                        <p
+                                            class="truncate text-sm font-semibold text-slate-900"
+                                        >
                                             {{ comment.guestName }}
                                         </p>
-                                        <p class="shrink-0 text-xs text-slate-500">
-                                            {{ formatRelativeTime(comment.createdAt) }}
+                                        <p
+                                            class="shrink-0 text-xs text-slate-500"
+                                        >
+                                            {{
+                                                formatRelativeTime(
+                                                    comment.createdAt,
+                                                )
+                                            }}
                                         </p>
                                     </div>
-                                    <p class="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                                    <p
+                                        class="mt-0.5 text-sm leading-relaxed whitespace-pre-wrap text-slate-700"
+                                    >
                                         {{ comment.body }}
                                     </p>
                                     <button
                                         type="button"
-                                        class="absolute right-0 top-0 inline-flex items-center gap-1 px-1 py-1 text-xs font-medium text-slate-500 transition hover:text-rose-600 disabled:opacity-50"
-                                        :class="comment.liked ? 'text-rose-600' : ''"
-                                        :disabled="isCommentLikePending(comment.id)"
+                                        class="absolute top-0 right-0 inline-flex items-center gap-1 px-1 py-1 text-xs font-medium text-slate-500 transition hover:text-rose-600 disabled:opacity-50"
+                                        :class="
+                                            comment.liked ? 'text-rose-600' : ''
+                                        "
+                                        :disabled="
+                                            isCommentLikePending(comment.id)
+                                        "
                                         @click="toggleCommentLike(comment)"
                                     >
-                                        <span>{{ formatLikeCount(comment.likeCount) }}</span>
+                                        <span>{{
+                                            formatLikeCount(comment.likeCount)
+                                        }}</span>
                                         <Heart
                                             class="size-5"
-                                            :class="comment.liked ? 'fill-rose-500 text-rose-500' : ''"
+                                            :class="
+                                                comment.liked
+                                                    ? 'fill-rose-500 text-rose-500'
+                                                    : ''
+                                            "
                                         />
                                     </button>
                                 </div>
@@ -6031,7 +6921,9 @@ const onAlbumTouchCancel = (): void => {
                         </article>
                     </div>
 
-                    <DrawerFooter class="mt-auto gap-3 border-t border-slate-200 bg-white/95 px-5 pb-6 pt-4">
+                    <DrawerFooter
+                        class="mt-auto gap-3 border-t border-slate-200 bg-white/95 px-5 pt-4 pb-6"
+                    >
                         <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                             <button
                                 v-for="emoji in commentEmojiOptions"
@@ -6044,14 +6936,26 @@ const onAlbumTouchCancel = (): void => {
                             </button>
                         </div>
                         <div class="space-y-2">
-                            <InputGroup class="h-12 rounded-full border-slate-200 bg-white">
+                            <InputGroup
+                                class="h-12 rounded-full border-slate-200 bg-white"
+                            >
                                 <InputGroupInput
                                     v-model="commentDraft"
                                     maxlength="500"
-                                    :placeholder="t('public.album.comments.placeholder')"
-                                    :disabled="isAssetCommentPending(selectedCommentsAsset.id)"
+                                    :placeholder="
+                                        t('public.album.comments.placeholder')
+                                    "
+                                    :disabled="
+                                        isAssetCommentPending(
+                                            selectedCommentsAsset.id,
+                                        )
+                                    "
                                     class="h-12 rounded-full px-4 text-sm"
-                                    @keydown.enter.prevent="commentDraft.trim().length > 0 ? submitAssetComment() : undefined"
+                                    @keydown.enter.prevent="
+                                        commentDraft.trim().length > 0
+                                            ? submitAssetComment()
+                                            : undefined
+                                    "
                                 />
                                 <InputGroupAddon
                                     v-if="commentDraft.trim().length > 0"
@@ -6061,7 +6965,11 @@ const onAlbumTouchCancel = (): void => {
                                     <InputGroupButton
                                         size="sm"
                                         class="h-8 rounded-full bg-[#1d9bf0] px-3 text-white hover:bg-[#1a8cd8]"
-                                        :disabled="isAssetCommentPending(selectedCommentsAsset.id)"
+                                        :disabled="
+                                            isAssetCommentPending(
+                                                selectedCommentsAsset.id,
+                                            )
+                                        "
                                         @click="submitAssetComment"
                                     >
                                         <ArrowUp class="size-4" />
@@ -6091,7 +6999,7 @@ const onAlbumTouchCancel = (): void => {
             <button
                 v-if="showScrollTopButton"
                 type="button"
-                class="safe-right fixed bottom-28 right-4 z-30 inline-flex h-11 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900/76 text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-slate-900/84"
+                class="safe-right fixed right-4 bottom-28 z-30 inline-flex h-11 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900/76 text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-slate-900/84"
                 :aria-label="t('public.album.actions.scroll_to_top')"
                 @click="scrollAlbumToTop"
             >
@@ -6111,10 +7019,7 @@ const onAlbumTouchCancel = (): void => {
                 v-if="selectedAsset"
                 class="fixed inset-0 z-50 overflow-hidden bg-[#040507] text-white"
             >
-                <div
-                    v-if="selectedAssetBackdropUrl"
-                    class="absolute inset-0"
-                >
+                <div v-if="selectedAssetBackdropUrl" class="absolute inset-0">
                     <video
                         v-if="
                             selectedAsset.kind === 'video' &&
@@ -6140,13 +7045,21 @@ const onAlbumTouchCancel = (): void => {
                         :src="selectedAssetBackdropUrl"
                         alt=""
                         class="h-full w-full object-cover"
-                        :class="selectedAssetIsPortrait ? 'scale-110 blur-2xl opacity-50' : 'opacity-88'"
+                        :class="
+                            selectedAssetIsPortrait
+                                ? 'scale-110 opacity-50 blur-2xl'
+                                : 'opacity-88'
+                        "
                     />
                 </div>
 
-                <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.82)_0%,rgba(3,4,6,0.18)_18%,rgba(3,4,6,0.18)_78%,rgba(3,4,6,0.84)_100%)]" />
+                <div
+                    class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.82)_0%,rgba(3,4,6,0.18)_18%,rgba(3,4,6,0.18)_78%,rgba(3,4,6,0.84)_100%)]"
+                />
 
-                <header class="pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-4">
+                <header
+                    class="pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 sm:px-4"
+                >
                     <div class="mb-3 flex items-center gap-1.5">
                         <span
                             v-for="(asset, index) in selectedStackAssets"
@@ -6160,8 +7073,8 @@ const onAlbumTouchCancel = (): void => {
                                         index < activeStackSlideIndex
                                             ? 100
                                             : index === activeStackSlideIndex
-                                                ? viewerProgressPercent
-                                                : 0
+                                              ? viewerProgressPercent
+                                              : 0
                                     }%`,
                                 }"
                             />
@@ -6169,28 +7082,44 @@ const onAlbumTouchCancel = (): void => {
                     </div>
 
                     <div class="flex items-center justify-between gap-3">
-                        <div class="pointer-events-auto flex min-w-0 items-center gap-2">
+                        <div
+                            class="pointer-events-auto flex min-w-0 items-center gap-2"
+                        >
                             <button
                                 type="button"
                                 class="inline-flex size-10 items-center justify-center rounded-full border border-white/12 bg-black/34 text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur"
-                                :aria-label="t('public.album.actions.close_viewer')"
+                                :aria-label="
+                                    t('public.album.actions.close_viewer')
+                                "
                                 @click="closeAssetViewer"
                             >
                                 <X class="size-5" />
                             </button>
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-white">
-                                    {{ selectedAsset.guestName || t('public.shared.guest') }}
+                                <p
+                                    class="truncate text-sm font-semibold text-white"
+                                >
+                                    {{
+                                        selectedAsset.guestName ||
+                                        t('public.shared.guest')
+                                    }}
                                 </p>
-                                <div class="flex flex-wrap items-center gap-2 text-xs text-white/75">
+                                <div
+                                    class="flex flex-wrap items-center gap-2 text-xs text-white/75"
+                                >
                                     <span class="truncate">
-                                        {{ formatDateTime(selectedAsset.createdAt) }}
+                                        {{
+                                            formatDateTime(
+                                                selectedAsset.createdAt,
+                                            )
+                                        }}
                                     </span>
                                     <span
                                         v-if="selectedStackAssets.length > 1"
-                                        class="inline-flex items-center rounded-full border border-white/12 bg-black/26 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/78"
+                                        class="inline-flex items-center rounded-full border border-white/12 bg-black/26 px-2 py-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/78 uppercase"
                                     >
-                                        {{ activeStackSlideIndex + 1 }} / {{ selectedStackAssets.length }}
+                                        {{ activeStackSlideIndex + 1 }} /
+                                        {{ selectedStackAssets.length }}
                                     </span>
                                 </div>
                             </div>
@@ -6201,7 +7130,9 @@ const onAlbumTouchCancel = (): void => {
                             type="button"
                             class="pointer-events-auto inline-flex size-10 items-center justify-center rounded-full border border-white/12 bg-black/34 text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur disabled:opacity-50"
                             :disabled="deleteAssetForm.processing"
-                            :aria-label="t('public.album.actions.delete_upload')"
+                            :aria-label="
+                                t('public.album.actions.delete_upload')
+                            "
                             @click="deleteSelectedAsset"
                         >
                             <Trash2 class="size-5" />
@@ -6210,7 +7141,7 @@ const onAlbumTouchCancel = (): void => {
                 </header>
 
                 <div
-                    class="relative box-border flex h-[100dvh] w-screen items-center justify-center overflow-hidden pb-[calc(8rem+env(safe-area-inset-bottom))] pt-[calc(4.5rem+env(safe-area-inset-top))]"
+                    class="relative box-border flex h-[100dvh] w-screen items-center justify-center overflow-hidden pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(8rem+env(safe-area-inset-bottom))]"
                     @pointerdown.passive="pauseViewerByHold"
                     @pointerup.passive="resumeViewerFromHold"
                     @pointercancel.passive="resumeViewerFromHold"
@@ -6232,30 +7163,54 @@ const onAlbumTouchCancel = (): void => {
                             :key="`story-slide-${asset.id}`"
                             class="!h-full !w-full"
                         >
-                            <article class="relative h-full w-full overflow-hidden">
-                                <template v-if="asset.kind === 'photo' && asset.previewUrl">
+                            <article
+                                class="relative h-full w-full overflow-hidden"
+                            >
+                                <template
+                                    v-if="
+                                        asset.kind === 'photo' &&
+                                        asset.previewUrl
+                                    "
+                                >
                                     <img
-                                        v-if="asset.height && asset.width && asset.height > asset.width * 1.05"
+                                        v-if="
+                                            asset.height &&
+                                            asset.width &&
+                                            asset.height > asset.width * 1.05
+                                        "
                                         :src="asset.previewUrl"
-                                        :alt="t('public.shared.alt.selected_event_photo')"
+                                        :alt="
+                                            t(
+                                                'public.shared.alt.selected_event_photo',
+                                            )
+                                        "
                                         class="absolute inset-0 m-auto h-full w-full object-contain px-[max(3vw,0.75rem)] py-[max(6vh,3.25rem)]"
                                     />
                                     <img
                                         v-else
                                         :src="asset.previewUrl"
-                                        :alt="t('public.shared.alt.selected_event_photo')"
+                                        :alt="
+                                            t(
+                                                'public.shared.alt.selected_event_photo',
+                                            )
+                                        "
                                         class="h-full w-full object-cover"
                                     />
                                 </template>
 
                                 <video
-                                    v-else-if="asset.kind === 'video' && asset.previewUrl"
+                                    v-else-if="
+                                        asset.kind === 'video' &&
+                                        asset.previewUrl
+                                    "
                                     :ref="setViewerVideoElement(asset.id)"
                                     :src="asset.previewUrl"
                                     :poster="asset.thumbnailUrl ?? undefined"
                                     class="h-full w-full"
                                     :class="
-                                        asset.height && asset.width && asset.height > asset.width * 1.05
+                                        asset.height &&
+                                        asset.width &&
+                                        asset.height > asset.width * 1.05
                                             ? 'object-contain px-[max(3vw,0.75rem)] py-[max(6vh,3.25rem)]'
                                             : 'object-cover'
                                     "
@@ -6265,16 +7220,29 @@ const onAlbumTouchCancel = (): void => {
                                 />
 
                                 <div
-                                    v-else-if="asset.kind === 'video' && asset.videoProcessing"
+                                    v-else-if="
+                                        asset.kind === 'video' &&
+                                        asset.videoProcessing
+                                    "
                                     class="flex h-full w-full flex-col items-center justify-center gap-4 text-center"
                                 >
-                                    <LoaderCircle class="size-10 animate-spin text-white/80" />
+                                    <LoaderCircle
+                                        class="size-10 animate-spin text-white/80"
+                                    />
                                     <div class="space-y-1">
                                         <p class="text-base font-semibold">
-                                            {{ t('public.album.labels.processing_video') }}
+                                            {{
+                                                t(
+                                                    'public.album.labels.processing_video',
+                                                )
+                                            }}
                                         </p>
                                         <p class="text-sm text-white/75">
-                                            {{ t('public.album.labels.upload_preparing') }}
+                                            {{
+                                                t(
+                                                    'public.album.labels.upload_preparing',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -6285,10 +7253,13 @@ const onAlbumTouchCancel = (): void => {
                                     :style="textPostSurfaceStyle(asset)"
                                 >
                                     <p
-                                        class="max-w-5xl whitespace-pre-wrap text-center text-[clamp(2rem,5vw,4.6rem)] font-semibold leading-[1.1]"
+                                        class="max-w-5xl text-center text-[clamp(2rem,5vw,4.6rem)] leading-[1.1] font-semibold whitespace-pre-wrap"
                                         :style="textPostContentStyle(asset)"
                                     >
-                                        {{ asset.text ?? t('public.album.labels.text_post') }}
+                                        {{
+                                            asset.text ??
+                                            t('public.album.labels.text_post')
+                                        }}
                                     </p>
                                 </div>
                             </article>
@@ -6299,7 +7270,9 @@ const onAlbumTouchCancel = (): void => {
                         v-if="hasMultipleInSelectedStack"
                         type="button"
                         class="absolute inset-y-0 left-0 z-10 w-[24%] min-w-16"
-                        :aria-label="t('public.album.actions.previous_in_stack')"
+                        :aria-label="
+                            t('public.album.actions.previous_in_stack')
+                        "
                         @click="showPreviousInStack"
                     />
                     <button
@@ -6317,44 +7290,76 @@ const onAlbumTouchCancel = (): void => {
                         <button
                             type="button"
                             class="pointer-events-auto inline-flex min-h-12 items-center gap-2 rounded-full border border-white/12 bg-black/34 px-3 py-2 text-sm font-medium text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur transition hover:bg-black/42"
-                            :aria-label="t('public.album.actions.open_comments')"
+                            :aria-label="
+                                t('public.album.actions.open_comments')
+                            "
                             @click="openAssetComments(selectedStack.key)"
                         >
                             <MessageCircle class="size-4.5" />
-                            <span>{{ formatLikeCount(selectedAsset?.commentCount ?? 0) }}</span>
+                            <span>{{
+                                formatLikeCount(
+                                    selectedAsset?.commentCount ?? 0,
+                                )
+                            }}</span>
                         </button>
 
                         <button
                             type="button"
                             class="pointer-events-auto inline-flex min-h-12 items-center gap-2 rounded-full border border-white/12 bg-black/34 px-3 py-2 text-sm font-medium text-white shadow-[0_16px_34px_rgba(0,0,0,0.24)] backdrop-blur transition hover:bg-black/42"
                             :aria-label="t('public.album.actions.open_info')"
-                            @click="openAssetInfo(selectedStack.key, activeStackSlideIndex)"
+                            @click="
+                                openAssetInfo(
+                                    selectedStack.key,
+                                    activeStackSlideIndex,
+                                )
+                            "
                         >
                             <Info class="size-4.5" />
-                            <span>{{ t('public.album.actions.open_info') }}</span>
+                            <span>{{
+                                t('public.album.actions.open_info')
+                            }}</span>
                         </button>
                     </div>
                 </div>
-                <footer class="absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2.5">
-                    <div class="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(4,5,7,0.56),rgba(4,5,7,0.22))] px-3 py-3 shadow-[0_16px_36px_rgba(0,0,0,0.18)] backdrop-blur-md">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-white">
-                                <span class="inline-flex items-center gap-2 text-white/84">
+                <footer
+                    class="absolute inset-x-0 bottom-0 z-20 px-3 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+                >
+                    <div
+                        class="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(4,5,7,0.56),rgba(4,5,7,0.22))] px-3 py-3 shadow-[0_16px_36px_rgba(0,0,0,0.18)] backdrop-blur-md"
+                    >
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-3"
+                        >
+                            <div
+                                class="flex flex-wrap items-center gap-3 text-sm font-semibold text-white"
+                            >
+                                <span
+                                    class="inline-flex items-center gap-2 text-white/84"
+                                >
                                     <Heart class="size-4 text-rose-400" />
-                                    {{ formatLikeCount(selectedAsset.likeCount) }}
+                                    {{
+                                        formatLikeCount(selectedAsset.likeCount)
+                                    }}
                                 </span>
                                 <span
                                     v-if="
                                         showPreviewWatermark &&
-                                        (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
+                                        (selectedAsset.kind === 'photo' ||
+                                            selectedAsset.kind === 'video')
                                     "
-                                    class="inline-flex items-center rounded-full border border-white/18 bg-white/6 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/72"
+                                    class="inline-flex items-center rounded-full border border-white/18 bg-white/6 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white/72 uppercase"
                                 >
-                                    {{ t('public.album.labels.preview_only_payment_required') }}
+                                    {{
+                                        t(
+                                            'public.album.labels.preview_only_payment_required',
+                                        )
+                                    }}
                                 </span>
                             </div>
 
-                            <div class="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+                            <div
+                                class="pointer-events-auto flex flex-wrap items-center justify-end gap-2"
+                            >
                                 <button
                                     type="button"
                                     class="inline-flex items-center gap-1 rounded-full border border-white/18 px-3 py-1.5 text-xs font-medium text-white transition"
@@ -6363,27 +7368,35 @@ const onAlbumTouchCancel = (): void => {
                                             ? 'bg-rose-500/15 text-rose-300'
                                             : 'hover:bg-white/10'
                                     "
-                                    :disabled="selectedAsset === null || isAssetLikePending(selectedAsset)"
+                                    :disabled="
+                                        selectedAsset === null ||
+                                        isAssetLikePending(selectedAsset)
+                                    "
                                     :aria-pressed="selectedAssetLiked"
                                     @click="toggleSelectedAssetLike"
                                 >
                                     <Heart
                                         class="size-3.5 transition-transform duration-200"
-                                        :class="
-                                            [
-                                                selectedAssetLiked
-                                                    ? 'fill-rose-500 text-rose-500'
-                                                    : '',
-                                                selectedAsset && isAssetLikeAnimating(selectedAsset)
-                                                    ? 'scale-125'
-                                                    : '',
-                                                selectedAsset && isAssetLikePending(selectedAsset)
-                                                    ? 'opacity-60'
-                                                    : '',
-                                            ]
-                                        "
+                                        :class="[
+                                            selectedAssetLiked
+                                                ? 'fill-rose-500 text-rose-500'
+                                                : '',
+                                            selectedAsset &&
+                                            isAssetLikeAnimating(selectedAsset)
+                                                ? 'scale-125'
+                                                : '',
+                                            selectedAsset &&
+                                            isAssetLikePending(selectedAsset)
+                                                ? 'opacity-60'
+                                                : '',
+                                        ]"
                                     />
-                                    {{ selectedAsset && isAssetLikePending(selectedAsset) ? t('public.shared.saving') : t('public.album.actions.like') }}
+                                    {{
+                                        selectedAsset &&
+                                        isAssetLikePending(selectedAsset)
+                                            ? t('public.shared.saving')
+                                            : t('public.album.actions.like')
+                                    }}
                                 </button>
                                 <button
                                     type="button"
@@ -6406,8 +7419,11 @@ const onAlbumTouchCancel = (): void => {
                         </div>
 
                         <p
-                            v-if="selectedStack?.preview.kind !== 'text' && selectedStack?.preview.message"
-                            class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/76"
+                            v-if="
+                                selectedStack?.preview.kind !== 'text' &&
+                                selectedStack?.preview.message
+                            "
+                            class="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-white/76"
                         >
                             {{ selectedStack.preview.message }}
                         </p>
@@ -6435,12 +7451,18 @@ const onAlbumTouchCancel = (): void => {
         <Drawer
             direction="bottom"
             :open="isAssetInfoOpen"
-            @update:open="(open) => { if (!open) closeAssetInfo(); }"
+            @update:open="
+                (open) => {
+                    if (!open) closeAssetInfo();
+                }
+            "
         >
             <DrawerContent
                 class="safe-bottom z-[70] max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
             >
-                <DrawerHeader class="border-b border-slate-200 px-5 pb-5 pt-3 text-center">
+                <DrawerHeader
+                    class="border-b border-slate-200 px-5 pt-3 pb-5 text-center"
+                >
                     <DrawerTitle class="text-center text-lg text-slate-900">
                         {{ t('public.album.info.title') }}
                     </DrawerTitle>
@@ -6450,56 +7472,94 @@ const onAlbumTouchCancel = (): void => {
                     v-if="selectedInfoAsset"
                     class="min-h-0 flex-1 overflow-y-auto px-5 py-5"
                 >
-                    <div class="flex items-start gap-3 border-b border-slate-200 pb-4">
+                    <div
+                        class="flex items-start gap-3 border-b border-slate-200 pb-4"
+                    >
                         <Avatar class="size-11 border border-slate-200">
                             <AvatarImage
                                 v-if="selectedInfoAsset.guestAvatarUrl"
                                 :src="selectedInfoAsset.guestAvatarUrl ?? ''"
-                                :alt="selectedInfoAsset.guestName || t('public.shared.alt.guest_avatar')"
+                                :alt="
+                                    selectedInfoAsset.guestName ||
+                                    t('public.shared.alt.guest_avatar')
+                                "
                             />
                             <AvatarFallback
-                                :class="avatarFallbackClass(selectedInfoAsset.guestName)"
+                                :class="
+                                    avatarFallbackClass(
+                                        selectedInfoAsset.guestName,
+                                    )
+                                "
                             >
                                 {{ guestInitials(selectedInfoAsset.guestName) }}
                             </AvatarFallback>
                         </Avatar>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-semibold text-slate-900">
-                                {{ selectedInfoAsset.guestName || t('public.shared.guest') }}
+                            <p
+                                class="truncate text-sm font-semibold text-slate-900"
+                            >
+                                {{
+                                    selectedInfoAsset.guestName ||
+                                    t('public.shared.guest')
+                                }}
                             </p>
                             <p class="mt-1 text-sm text-slate-500">
-                                {{ formatDateTime(selectedInfoAsset.createdAt) }}
+                                {{
+                                    formatDateTime(selectedInfoAsset.createdAt)
+                                }}
                             </p>
                             <p class="mt-1 text-xs text-slate-400">
-                                {{ formatRelativeTime(selectedInfoAsset.createdAt) }}
+                                {{
+                                    formatRelativeTime(
+                                        selectedInfoAsset.createdAt,
+                                    )
+                                }}
                             </p>
                         </div>
                     </div>
 
                     <div class="divide-y divide-slate-200">
-                        <div class="flex items-start justify-between gap-4 py-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        <div
+                            class="flex items-start justify-between gap-4 py-4"
+                        >
+                            <span
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.info.type') }}
                             </span>
-                            <span class="text-right text-sm font-medium capitalize text-slate-900">
+                            <span
+                                class="text-right text-sm font-medium text-slate-900 capitalize"
+                            >
                                 {{ selectedInfoAsset.kind }}
                             </span>
                         </div>
 
-                        <div class="flex items-start justify-between gap-4 py-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        <div
+                            class="flex items-start justify-between gap-4 py-4"
+                        >
+                            <span
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.info.status') }}
                             </span>
-                            <span class="text-right text-sm font-medium capitalize text-slate-900">
+                            <span
+                                class="text-right text-sm font-medium text-slate-900 capitalize"
+                            >
                                 {{ selectedInfoAsset.moderationStatus }}
                             </span>
                         </div>
 
-                        <div class="flex items-start justify-between gap-4 py-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        <div
+                            class="flex items-start justify-between gap-4 py-4"
+                        >
+                            <span
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.info.size') }}
                             </span>
-                            <span class="text-right text-sm font-medium text-slate-900">
+                            <span
+                                class="text-right text-sm font-medium text-slate-900"
+                            >
                                 {{ formatBytes(selectedInfoAsset.sizeBytes) }}
                             </span>
                         </div>
@@ -6508,10 +7568,14 @@ const onAlbumTouchCancel = (): void => {
                             v-if="selectedInfoAsset.mimeType"
                             class="flex items-start justify-between gap-4 py-4"
                         >
-                            <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <span
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.info.format') }}
                             </span>
-                            <span class="max-w-[60%] break-all text-right text-sm font-medium text-slate-900">
+                            <span
+                                class="max-w-[60%] text-right text-sm font-medium break-all text-slate-900"
+                            >
                                 {{ selectedInfoAsset.mimeType }}
                             </span>
                         </div>
@@ -6520,22 +7584,33 @@ const onAlbumTouchCancel = (): void => {
                             v-if="selectedInfoAsset.message?.trim()"
                             class="py-4"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <p
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.info.message') }}
                             </p>
-                            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-900">
+                            <p
+                                class="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-slate-900"
+                            >
                                 {{ selectedInfoAsset.message }}
                             </p>
                         </div>
 
                         <div
-                            v-if="selectedInfoAsset.kind === 'text' && selectedInfoAsset.text?.trim()"
+                            v-if="
+                                selectedInfoAsset.kind === 'text' &&
+                                selectedInfoAsset.text?.trim()
+                            "
                             class="py-4"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            <p
+                                class="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                            >
                                 {{ t('public.album.labels.text_post') }}
                             </p>
-                            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-900">
+                            <p
+                                class="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-slate-900"
+                            >
                                 {{ selectedInfoAsset.text }}
                             </p>
                         </div>
@@ -6543,7 +7618,6 @@ const onAlbumTouchCancel = (): void => {
                 </div>
             </DrawerContent>
         </Drawer>
-
     </main>
 </template>
 
