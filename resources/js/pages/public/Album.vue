@@ -6024,9 +6024,17 @@ const onAlbumTouchCancel = (): void => {
                                 <p class="truncate text-sm font-semibold text-white">
                                     {{ selectedAsset.guestName || t('public.shared.guest') }}
                                 </p>
-                                <p class="truncate text-xs text-white/75">
-                                    {{ formatDateTime(selectedAsset.createdAt) }}
-                                </p>
+                                <div class="flex flex-wrap items-center gap-2 text-xs text-white/75">
+                                    <span class="truncate">
+                                        {{ formatDateTime(selectedAsset.createdAt) }}
+                                    </span>
+                                    <span
+                                        v-if="selectedStackAssets.length > 1"
+                                        class="inline-flex items-center rounded-full border border-white/12 bg-black/26 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/78"
+                                    >
+                                        {{ activeStackSlideIndex + 1 }} / {{ selectedStackAssets.length }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -6140,119 +6148,115 @@ const onAlbumTouchCancel = (): void => {
                         @click="showNextInStack"
                     />
                 </div>
-                <div
-                    class="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4"
-                >
-                    <div class="inline-flex items-center gap-4 rounded-full border border-white/12 bg-black/50 px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                        <span class="inline-flex items-center gap-2">
-                            <Heart class="size-4 text-rose-400" />
-                            {{ formatLikeCount(selectedAsset.likeCount) }}
-                        </span>
-                        <span class="inline-flex items-center gap-2">
-                            <MessageCircle class="size-4 text-white/80" />
-                            {{ formatLikeCount(selectedAsset.commentCount) }}
-                        </span>
-                    </div>
-                </div>
-                <div
-                    v-if="
-                        showPreviewWatermark &&
-                        (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
-                    "
-                    class="pointer-events-none absolute inset-x-0 bottom-40 z-20 flex justify-center"
-                    >
-                        <span class="rounded-full border border-white/35 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                            {{ t('public.album.labels.preview_only_payment_required') }}
-                        </span>
-                    </div>
-
                 <footer class="absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2.5">
-                    <div class="rounded-[1.75rem] border border-white/12 bg-black/46 px-3 py-2.5 shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur">
-                    <div class="flex flex-wrap items-center justify-center gap-2">
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition"
-                            :class="
-                                selectedAssetLiked
-                                    ? 'bg-rose-500/15 text-rose-300'
-                                    : 'hover:bg-white/10'
-                            "
-                            :disabled="selectedAsset === null || isAssetLikePending(selectedAsset)"
-                            :aria-pressed="selectedAssetLiked"
-                            @click="toggleSelectedAssetLike"
-                        >
-                            <Heart
-                                class="size-3.5 transition-transform duration-200"
-                                :class="
-                                    [
+                    <div class="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(4,5,7,0.74),rgba(4,5,7,0.36))] px-3 py-3 shadow-[0_16px_36px_rgba(0,0,0,0.24)] backdrop-blur-md">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-white">
+                                <span class="inline-flex items-center gap-2 text-white/84">
+                                    <Heart class="size-4 text-rose-400" />
+                                    {{ formatLikeCount(selectedAsset.likeCount) }}
+                                </span>
+                                <span class="inline-flex items-center gap-2 text-white/78">
+                                    <MessageCircle class="size-4 text-white/76" />
+                                    {{ formatLikeCount(selectedAsset.commentCount) }}
+                                </span>
+                                <span
+                                    v-if="
+                                        showPreviewWatermark &&
+                                        (selectedAsset.kind === 'photo' || selectedAsset.kind === 'video')
+                                    "
+                                    class="inline-flex items-center rounded-full border border-white/18 bg-white/6 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/72"
+                                >
+                                    {{ t('public.album.labels.preview_only_payment_required') }}
+                                </span>
+                            </div>
+
+                            <div class="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 rounded-full border border-white/18 px-3 py-1.5 text-xs font-medium text-white transition"
+                                    :class="
                                         selectedAssetLiked
-                                            ? 'fill-rose-500 text-rose-500'
-                                            : '',
-                                        selectedAsset && isAssetLikeAnimating(selectedAsset)
-                                            ? 'scale-125'
-                                            : '',
-                                        selectedAsset && isAssetLikePending(selectedAsset)
-                                            ? 'opacity-60'
-                                            : '',
-                                    ]
+                                            ? 'bg-rose-500/15 text-rose-300'
+                                            : 'hover:bg-white/10'
+                                    "
+                                    :disabled="selectedAsset === null || isAssetLikePending(selectedAsset)"
+                                    :aria-pressed="selectedAssetLiked"
+                                    @click="toggleSelectedAssetLike"
+                                >
+                                    <Heart
+                                        class="size-3.5 transition-transform duration-200"
+                                        :class="
+                                            [
+                                                selectedAssetLiked
+                                                    ? 'fill-rose-500 text-rose-500'
+                                                    : '',
+                                                selectedAsset && isAssetLikeAnimating(selectedAsset)
+                                                    ? 'scale-125'
+                                                    : '',
+                                                selectedAsset && isAssetLikePending(selectedAsset)
+                                                    ? 'opacity-60'
+                                                    : '',
+                                            ]
+                                        "
+                                    />
+                                    {{ selectedAsset && isAssetLikePending(selectedAsset) ? t('public.shared.saving') : t('public.album.actions.like') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 rounded-full border border-white/18 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
+                                    :aria-label="t('public.album.asset.share')"
+                                    @click="shareSelectedAsset"
+                                >
+                                    <Copy class="size-3.5" />
+                                    {{ t('public.album.asset.share') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 rounded-full border border-white/18 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
+                                    :aria-label="t('public.album.actions.open_info')"
+                                    @click="
+                                        selectedStack
+                                            ? openAssetInfo(selectedStack.key, activeStackSlideIndex)
+                                            : undefined
+                                    "
+                                >
+                                    <Info class="size-3.5" />
+                                    {{ t('public.album.actions.open_info') }}
+                                </button>
+                                <a
+                                    v-if="selectedAssetCanDownload"
+                                    :href="selectedAsset.downloadUrl"
+                                    class="inline-flex items-center gap-1 rounded-full border border-white/18 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
+                                >
+                                    <Download class="size-3.5" />
+                                    {{ t('public.shared.download') }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <p
+                            v-if="selectedStack?.preview.kind !== 'text' && selectedStack?.preview.message"
+                            class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/76"
+                        >
+                            {{ selectedStack.preview.message }}
+                        </p>
+
+                        <div
+                            v-if="hasMultipleInSelectedStack"
+                            class="mt-3 flex items-center justify-center gap-1.5"
+                        >
+                            <span
+                                v-for="(asset, index) in selectedStackAssets"
+                                :key="`stack-dot-${asset.id}`"
+                                class="size-1.5 rounded-full"
+                                :class="
+                                    index === activeStackSlideIndex
+                                        ? 'bg-white'
+                                        : 'bg-white/30'
                                 "
                             />
-                            {{ selectedAsset && isAssetLikePending(selectedAsset) ? t('public.shared.saving') : t('public.album.actions.like') }}
-                        </button>
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
-                            :aria-label="t('public.album.asset.share')"
-                            @click="shareSelectedAsset"
-                        >
-                            <Copy class="size-3.5" />
-                            {{ t('public.album.asset.share') }}
-                        </button>
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
-                            :aria-label="t('public.album.actions.open_info')"
-                            @click="
-                                selectedStack
-                                    ? openAssetInfo(selectedStack.key, activeStackSlideIndex)
-                                    : undefined
-                            "
-                        >
-                            <Info class="size-3.5" />
-                            {{ t('public.album.actions.open_info') }}
-                        </button>
-                        <a
-                            v-if="selectedAssetCanDownload"
-                            :href="selectedAsset.downloadUrl"
-                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white"
-                        >
-                            <Download class="size-3.5" />
-                            {{ t('public.shared.download') }}
-                        </a>
-                    </div>
-
-                    <p
-                        v-if="selectedStack?.preview.kind !== 'text' && selectedStack?.preview.message"
-                        class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80"
-                    >
-                        {{ selectedStack.preview.message }}
-                    </p>
-
-                    <div
-                        v-if="hasMultipleInSelectedStack"
-                        class="mt-2 flex items-center justify-center gap-1.5"
-                    >
-                        <span
-                            v-for="(asset, index) in selectedStackAssets"
-                            :key="`stack-dot-${asset.id}`"
-                            class="size-1.5 rounded-full"
-                            :class="
-                                index === activeStackSlideIndex
-                                    ? 'bg-white'
-                                    : 'bg-white/30'
-                            "
-                        />
-                    </div>
+                        </div>
                     </div>
                 </footer>
             </div>

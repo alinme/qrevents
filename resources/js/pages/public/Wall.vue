@@ -203,7 +203,7 @@ const emptyStateStyle = computed<Record<string, string>>(() => ({
         'radial-gradient(circle at top, color-mix(in srgb, var(--wall-primary) 55%, transparent), transparent 46%), linear-gradient(180deg, rgba(12,12,18,0.92) 0%, rgba(3,4,6,0.98) 100%)',
 }));
 
-const poweredByLabel = computed(() => `Made possible by ${appName.value.toLowerCase()}.app`);
+const poweredByLabel = computed(() => `by ${appName.value.toLowerCase()}.app`);
 
 const formatDateTime = (value: string | null): string => {
     if (!value) {
@@ -770,6 +770,12 @@ watch(
                             <p class="mt-2 text-[11px] text-white/58">
                                 {{ t('public.wall.open_digital_album') }}
                             </p>
+                            <p
+                                v-if="showPoweredBy"
+                                class="mt-2 text-[11px] uppercase tracking-[0.14em] text-white/46"
+                            >
+                                {{ poweredByLabel }}
+                            </p>
                         </div>
 
                         <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
@@ -930,12 +936,6 @@ watch(
                     </div>
                 </div>
 
-                <div
-                    v-if="showPoweredBy"
-                    class="wall-strip wall-strip-powered ml-auto px-3 py-2 text-xs text-white/62"
-                >
-                    {{ poweredByLabel }}
-                </div>
             </div>
         </div>
     </main>
@@ -970,13 +970,8 @@ watch(
 .wall-strip-brand,
 .wall-strip-qr,
 .wall-strip-reactions,
-.wall-strip-caption,
-.wall-strip-powered {
+.wall-strip-caption {
     border-radius: 1rem;
-}
-
-.wall-strip-powered {
-    white-space: nowrap;
 }
 
 .wall-heart-burst {
@@ -1036,10 +1031,6 @@ watch(
         max-width: none;
     }
 
-    .wall-strip-powered {
-        margin-left: 0;
-        align-self: flex-start;
-    }
 }
 
 @media (max-aspect-ratio: 1 / 1) {
