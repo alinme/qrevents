@@ -368,6 +368,7 @@ let viewerProgressFrameId: number | null = null;
 let activeViewerVideoCleanup: (() => void) | null = null;
 let lockedScrollY = 0;
 const viewerVideoElements = new Map<number, HTMLVideoElement>();
+const viewerBackdropVideoElements = new Map<number, HTMLVideoElement>();
 const commentEmojiOptions = [
     '❤️',
     '👏',
@@ -2478,6 +2479,11 @@ const clearViewerVideoPlayback = (): void => {
         video.pause();
         video.currentTime = 0;
     });
+
+    viewerBackdropVideoElements.forEach((video) => {
+        video.pause();
+        video.currentTime = 0;
+    });
 };
 
 const clearViewerLifecycle = (): void => {
@@ -2536,6 +2542,18 @@ const setViewerVideoElement =
         viewerVideoElements.delete(assetId);
     };
 
+const setViewerBackdropVideoElement =
+    (assetId: number) =>
+    (element: Element | null): void => {
+        if (element instanceof HTMLVideoElement) {
+            viewerBackdropVideoElements.set(assetId, element);
+
+            return;
+        }
+
+        viewerBackdropVideoElements.delete(assetId);
+    };
+
 const startSelectedAssetLifecycle = (attempt = 0): void => {
     const asset = selectedAsset.value;
 
@@ -2556,6 +2574,7 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
 
         nextTick(() => {
             const video = viewerVideoElements.get(asset.id);
+            const backdropVideo = viewerBackdropVideoElements.get(asset.id) ?? null;
 
             if (!video) {
                 if (typeof window !== 'undefined' && attempt < 6) {
@@ -2566,6 +2585,14 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
             }
 
             video.currentTime = 0;
+            video.loop = false;
+            video.muted = true;
+
+            if (backdropVideo) {
+                backdropVideo.currentTime = 0;
+                backdropVideo.loop = false;
+                backdropVideo.muted = true;
+            }
 
             const syncProgress = (): void => {
                 const duration = video.duration;
@@ -2575,6 +2602,13 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
                         0,
                         Math.min(100, (video.currentTime / duration) * 100),
                     );
+                }
+
+                if (
+                    backdropVideo &&
+                    Math.abs(backdropVideo.currentTime - video.currentTime) > 0.2
+                ) {
+                    backdropVideo.currentTime = video.currentTime;
                 }
             };
 
@@ -2590,6 +2624,10 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
                 video.removeEventListener('timeupdate', syncProgress);
                 video.removeEventListener('ended', handleEnded);
             };
+
+            if (backdropVideo) {
+                void backdropVideo.play().catch(() => {});
+            }
 
             void video.play().catch(() => {
                 animateViewerProgress(6500, () => {
@@ -5919,6 +5957,22 @@ const onAlbumTouchCancel = (): void => {
                     v-if="selectedAssetBackdropUrl"
                     class="absolute inset-0"
                 >
+                    <video
+                        v-if="
+                            selectedAsset.kind === 'video' &&
+                            selectedAssetIsPortrait &&
+                            !selectedAsset.videoProcessing &&
+                            selectedAsset.previewUrl
+                        "
+                        :ref="setViewerBackdropVideoElement(selectedAsset.id)"
+                        :src="selectedAsset.previewUrl"
+                        :poster="selectedAsset.thumbnailUrl ?? undefined"
+                        class="h-full w-full scale-110 object-cover opacity-40 blur-2xl"
+                        autoplay
+                        muted
+                        playsinline
+                        aria-hidden="true"
+                    />
                     <img
                         v-if="
                             selectedAsset.kind !== 'video' ||

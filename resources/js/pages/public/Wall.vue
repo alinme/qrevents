@@ -157,6 +157,16 @@ const slideSubtitle = computed(() => {
 const currentReactionNotes = computed(() =>
     (currentAsset.value?.recentComments ?? []).slice(-3).reverse(),
 );
+const currentReactionStripItems = computed(() =>
+    currentReactionNotes.value.map((note) => ({
+        id: note.id,
+        label:
+            note.likeCount > 0
+                ? `${note.guestName} • ${note.likeCount}`
+                : note.guestName,
+        body: note.body,
+    })),
+);
 
 const currentAssetBackdropUrl = computed(() => {
     if (!currentAsset.value) {
@@ -877,28 +887,20 @@ watch(
         </section>
 
         <div
-            v-if="currentReactionNotes.length > 0"
-            class="wall-safe pointer-events-none absolute left-0 top-[max(5.75rem,12vh)] z-30 hidden max-w-[min(34vw,22rem)] gap-2 xl:flex xl:flex-col"
+            v-if="currentReactionStripItems.length > 0"
+            class="wall-safe pointer-events-none absolute left-0 top-[max(5.75rem,12vh)] z-30 hidden xl:block"
         >
-            <div
-                v-for="note in currentReactionNotes"
-                :key="`wall-note-${note.id}`"
-                class="wall-strip wall-strip-note flex items-start justify-between gap-3 px-3 py-2.5"
-            >
-                <div class="min-w-0">
-                    <p class="line-clamp-2 text-sm text-white/90">
-                        {{ note.body }}
-                    </p>
-                    <p class="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/54">
-                        {{ note.guestName }}
-                    </p>
-                </div>
+            <div class="wall-strip wall-strip-reactions flex max-w-[min(42vw,34rem)] flex-wrap items-center gap-2 px-3 py-2">
                 <span
-                    v-if="note.likeCount > 0"
-                    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/8 px-2 py-1 text-xs text-white/78"
+                    v-for="note in currentReactionStripItems"
+                    :key="`wall-note-${note.id}`"
+                    class="inline-flex max-w-full items-center gap-2 rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/78"
                 >
-                    <Heart class="size-3.5 fill-current text-pink-300/90" />
-                    {{ note.likeCount }}
+                    <Heart class="size-3 fill-current text-pink-300/90" />
+                    <span class="truncate">{{ note.label }}</span>
+                    <span class="max-w-[16rem] truncate text-white/56">
+                        {{ note.body }}
+                    </span>
                 </span>
             </div>
         </div>
@@ -967,7 +969,7 @@ watch(
 
 .wall-strip-brand,
 .wall-strip-qr,
-.wall-strip-note,
+.wall-strip-reactions,
 .wall-strip-caption,
 .wall-strip-powered {
     border-radius: 1rem;
@@ -1021,7 +1023,7 @@ watch(
         max-width: min(34vw, 10.75rem);
     }
 
-    .wall-strip-note {
+    .wall-strip-reactions {
         display: none;
     }
 
