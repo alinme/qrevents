@@ -8,10 +8,10 @@ import {
     Instagram,
     Menu,
     Newspaper,
-    QrCode,
     Star,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -118,8 +118,8 @@ const switchMarketingLocale = (nextLocale: string): void => {
         <header class="sticky top-0 z-40 border-b border-promo-line/60 bg-promo-bg/92 backdrop-blur-md">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
                 <Link :href="home()" class="flex items-center gap-3">
-                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_8px_18px_rgba(232,79,154,0.16)]">
-                        <QrCode class="size-5" />
+                    <div class="flex size-10 items-center justify-center rounded-[16px] bg-white shadow-[0_8px_18px_rgba(23,20,17,0.08)] ring-1 ring-promo-line/70">
+                        <AppLogoIcon class="size-7" />
                     </div>
                     <div>
                         <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
@@ -353,8 +353,8 @@ const switchMarketingLocale = (nextLocale: string): void => {
                 <div class="grid gap-12 border-b border-promo-line pb-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
                     <div>
                         <div class="flex items-center gap-3">
-                            <div class="flex size-11 items-center justify-center rounded-[18px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white">
-                                <QrCode class="size-5" />
+                            <div class="flex size-11 items-center justify-center rounded-[18px] bg-white ring-1 ring-promo-line/70">
+                                <AppLogoIcon class="size-8" />
                             </div>
                             <div>
                                 <div class="text-base font-extrabold tracking-[-0.03em] text-promo-ink sm:text-lg">
