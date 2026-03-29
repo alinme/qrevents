@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qrevents-static-v1';
+const CACHE_NAME = 'qrevents-static-v2';
 const APP_SHELL = [
     '/',
     '/launch',
@@ -6,6 +6,11 @@ const APP_SHELL = [
     '/apple-touch-icon.png',
     '/favicon.ico',
     '/favicon.svg',
+    '/icons/192.png',
+    '/icons/512.png',
+    '/icons/launchericon-192x192.png',
+    '/icons/launchericon-512x512.png',
+    '/og_image.png',
 ];
 
 self.addEventListener('install', (event) => {
