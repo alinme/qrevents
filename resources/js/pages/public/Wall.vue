@@ -412,7 +412,7 @@ const playActiveVideoSlide = (attempt = 0): void => {
             }
         };
 
-        const handleDurationUpdate = (): void => {
+        const handleMetadataReady = (): void => {
             if (currentAsset.value?.id !== asset.id) {
                 return;
             }
@@ -422,14 +422,14 @@ const playActiveVideoSlide = (attempt = 0): void => {
 
         foreground.addEventListener('timeupdate', syncBackdrop);
         foreground.addEventListener('ended', handleEnded);
-        foreground.addEventListener('loadedmetadata', handleDurationUpdate);
-        foreground.addEventListener('durationchange', handleDurationUpdate);
+        foreground.addEventListener('loadedmetadata', handleMetadataReady, {
+            once: true,
+        });
 
         activeVideoCleanup = () => {
             foreground.removeEventListener('timeupdate', syncBackdrop);
             foreground.removeEventListener('ended', handleEnded);
-            foreground.removeEventListener('loadedmetadata', handleDurationUpdate);
-            foreground.removeEventListener('durationchange', handleDurationUpdate);
+            foreground.removeEventListener('loadedmetadata', handleMetadataReady);
         };
 
         if (backdrop) {
