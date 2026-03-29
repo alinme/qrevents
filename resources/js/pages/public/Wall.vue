@@ -970,36 +970,36 @@ watch(
             v-if="leftReactionStripItems.length > 0"
             class="wall-safe pointer-events-none absolute left-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
         >
-            <div class="wall-strip wall-strip-reactions flex max-w-[min(42vw,34rem)] flex-wrap items-center gap-2 px-3 py-2">
-                <span
+            <div class="wall-strip wall-strip-reactions flex max-w-[min(42vw,34rem)] flex-col gap-2 px-4 py-3">
+                <div
                     v-for="note in leftReactionStripItems"
                     :key="`wall-note-${note.id}`"
-                    class="inline-flex max-w-full items-center gap-2 rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/78"
+                    class="flex max-w-full items-start gap-2 text-sm text-white/76"
                 >
-                    <Heart class="size-3 fill-current text-pink-300/90" />
-                    <span class="truncate">{{ note.label }}</span>
-                    <span class="max-w-[16rem] truncate text-white/56">
+                    <Heart class="mt-0.5 size-3.5 shrink-0 fill-current text-pink-300/90" />
+                    <span class="shrink-0 text-white/72">{{ note.label }}</span>
+                    <span class="min-w-0 text-white/54">
                         {{ note.body }}
                     </span>
-                </span>
+                </div>
             </div>
         </div>
         <div
             v-if="rightReactionStripItems.length > 0"
             class="wall-safe pointer-events-none absolute right-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
         >
-            <div class="wall-strip wall-strip-reactions ml-auto flex max-w-[min(42vw,34rem)] flex-wrap items-center justify-end gap-2 px-3 py-2 text-right">
-                <span
+            <div class="wall-strip wall-strip-reactions ml-auto flex max-w-[min(42vw,34rem)] flex-col gap-2 px-4 py-3 text-right">
+                <div
                     v-for="note in rightReactionStripItems"
                     :key="`wall-note-right-${note.id}`"
-                    class="inline-flex max-w-full items-center gap-2 rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/78"
+                    class="flex max-w-full items-start justify-end gap-2 text-sm text-white/76"
                 >
-                    <span class="max-w-[16rem] truncate text-white/56">
+                    <span class="min-w-0 text-white/54">
                         {{ note.body }}
                     </span>
-                    <span class="truncate">{{ note.label }}</span>
-                    <Heart class="size-3 fill-current text-pink-300/90" />
-                </span>
+                    <span class="shrink-0 text-white/72">{{ note.label }}</span>
+                    <Heart class="mt-0.5 size-3.5 shrink-0 fill-current text-pink-300/90" />
+                </div>
             </div>
         </div>
 
