@@ -120,7 +120,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
                 <Link :href="home()" class="flex items-center">
                     <img
-                        :src="`/logo.svg?v=${brandAssetVersion}`"
+                        :src="`/logo.png?v=${brandAssetVersion}`"
                         :alt="t('marketing.brand.title', { appName })"
                         width="154"
                         height="45"
