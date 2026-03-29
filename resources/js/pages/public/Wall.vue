@@ -683,7 +683,7 @@ watch(
             />
         </div>
 
-        <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.7)_0%,rgba(3,4,6,0.14)_22%,rgba(3,4,6,0.14)_78%,rgba(3,4,6,0.78)_100%)]" />
+        <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.78)_0%,rgba(3,4,6,0.16)_18%,rgba(3,4,6,0.12)_72%,rgba(3,4,6,0.84)_100%)]" />
 
         <div class="pointer-events-none absolute inset-0 z-20 overflow-hidden">
             <Heart
@@ -702,71 +702,73 @@ watch(
             />
         </div>
 
-        <div class="pointer-events-none absolute inset-x-[clamp(0.75rem,2vw,1.5rem)] top-[clamp(0.75rem,2vw,1.5rem)] z-30 flex items-start justify-between gap-4">
-            <div class="wall-strip max-w-[min(70vw,38rem)] px-4 py-3">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/12">
-                        <img
-                            v-if="wallLogoUrl"
-                            :src="wallLogoUrl"
-                            :alt="t('public.shared.alt.event_logo')"
-                            class="h-full w-full object-cover"
-                        />
-                        <span
-                            v-else
-                            class="text-sm font-semibold uppercase tracking-[0.12em] text-white/90"
-                        >
-                            {{ wallTitle.charAt(0) }}
-                        </span>
-                    </div>
-
-                    <div class="min-w-0">
-                        <p class="truncate text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
-                            {{ t('public.wall.live_photo_wall') }}
-                        </p>
-                        <h1 class="truncate text-base font-semibold text-white sm:text-lg">
-                            {{ wallTitle }}
-                        </h1>
-                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/72">
-                            <span>{{ status }}</span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <span
-                                    class="size-2 rounded-full"
-                                    :class="wallLiveStatus === 'updating' ? 'bg-amber-300' : 'bg-emerald-300'"
-                                />
-                                {{ wallLiveStatus === 'updating' ? t('public.wall.updating') : t('public.wall.auto_updating') }}
+        <div class="wall-safe wall-safe-top pointer-events-none absolute inset-x-0 top-0 z-30">
+            <div class="wall-top-strip flex items-start justify-between gap-4">
+                <div class="wall-strip wall-strip-brand max-w-[min(66vw,34rem)] px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/12">
+                            <img
+                                v-if="wallLogoUrl"
+                                :src="wallLogoUrl"
+                                :alt="t('public.shared.alt.event_logo')"
+                                class="h-full w-full object-cover"
+                            />
+                            <span
+                                v-else
+                                class="text-sm font-semibold uppercase tracking-[0.12em] text-white/90"
+                            >
+                                {{ wallTitle.charAt(0) }}
                             </span>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="truncate text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
+                                {{ t('public.wall.live_photo_wall') }}
+                            </p>
+                            <h1 class="truncate text-base font-semibold text-white sm:text-lg">
+                                {{ wallTitle }}
+                            </h1>
+                            <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/72">
+                                <span>{{ status }}</span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span
+                                        class="size-2 rounded-full"
+                                        :class="wallLiveStatus === 'updating' ? 'bg-amber-300' : 'bg-emerald-300'"
+                                    />
+                                    {{ wallLiveStatus === 'updating' ? t('public.wall.updating') : t('public.wall.auto_updating') }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div
-                v-if="qrVisible"
-                class="wall-strip max-w-[min(34vw,19rem)] px-4 py-3 text-right"
-            >
-                <div class="flex items-start justify-end gap-3">
-                    <div class="min-w-0">
-                        <p class="text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
-                            {{ t('public.wall.scan_to_upload') }}
-                        </p>
-                        <p class="mt-1 text-sm font-semibold text-white">
-                            {{ albumAccessCode }}
-                        </p>
-                        <p class="mt-1 text-xs text-white/72">
-                            Visit {{ albumEntryShortcutUrl }}
-                        </p>
-                        <p class="mt-2 text-[11px] text-white/58">
-                            {{ t('public.wall.open_digital_album') }}
-                        </p>
-                    </div>
+                <div
+                    v-if="qrVisible"
+                    class="wall-strip wall-strip-qr max-w-[min(26vw,14rem)] px-3 py-3 text-right"
+                >
+                    <div class="flex items-start justify-end gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
+                                {{ t('public.wall.scan_to_upload') }}
+                            </p>
+                            <p class="mt-1 text-sm font-semibold text-white">
+                                {{ albumAccessCode }}
+                            </p>
+                            <p class="mt-1 text-xs text-white/72">
+                                Visit {{ albumEntryShortcutUrl }}
+                            </p>
+                            <p class="mt-2 text-[11px] text-white/58">
+                                {{ t('public.wall.open_digital_album') }}
+                            </p>
+                        </div>
 
-                    <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
-                        <img
-                            :src="albumQrDataUrl"
-                            :alt="t('public.shared.alt.album_qr_code')"
-                            class="h-full w-full object-cover"
-                        />
+                        <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
+                            <img
+                                :src="albumQrDataUrl"
+                                :alt="t('public.shared.alt.album_qr_code')"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -876,12 +878,12 @@ watch(
 
         <div
             v-if="currentReactionNotes.length > 0"
-            class="pointer-events-none absolute left-[clamp(0.75rem,2vw,1.5rem)] top-[clamp(5.8rem,14vh,7.5rem)] z-30 hidden max-w-[min(38vw,26rem)] gap-2 lg:flex lg:flex-col"
+            class="wall-safe pointer-events-none absolute left-0 top-[max(5.75rem,12vh)] z-30 hidden max-w-[min(34vw,22rem)] gap-2 xl:flex xl:flex-col"
         >
             <div
                 v-for="note in currentReactionNotes"
                 :key="`wall-note-${note.id}`"
-                class="wall-strip flex items-start justify-between gap-3 px-3 py-2.5"
+                class="wall-strip wall-strip-note flex items-start justify-between gap-3 px-3 py-2.5"
             >
                 <div class="min-w-0">
                     <p class="line-clamp-2 text-sm text-white/90">
@@ -902,46 +904,77 @@ watch(
         </div>
 
         <div
-            class="pointer-events-none absolute inset-x-[clamp(0.75rem,2vw,1.5rem)] bottom-[clamp(0.75rem,2vw,1.5rem)] z-30 flex flex-wrap items-end justify-between gap-4"
+            class="wall-safe wall-safe-bottom pointer-events-none absolute inset-x-0 bottom-0 z-30"
         >
-            <div
-                v-if="captionVisible && currentAsset"
-                class="wall-strip max-w-[min(78vw,44rem)] px-4 py-3"
-            >
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <p class="text-sm font-semibold text-white">
-                        {{ slideTitle }}
-                    </p>
-                    <span class="text-sm text-white/64">
-                        {{ slideSubtitle }}
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-sm text-white/72">
-                        <Heart class="size-3.5 fill-current text-pink-300/90" />
-                        {{ currentAsset.likeCount }}
-                    </span>
-                    <span class="text-sm text-white/72">
-                        💬 {{ currentAsset.commentCount }}
-                    </span>
+            <div class="wall-bottom-strip flex flex-wrap items-end justify-between gap-4">
+                <div
+                    v-if="captionVisible && currentAsset"
+                    class="wall-strip wall-strip-caption max-w-[min(72vw,42rem)] px-4 py-3"
+                >
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <p class="text-sm font-semibold text-white">
+                            {{ slideTitle }}
+                        </p>
+                        <span class="text-sm text-white/64">
+                            {{ slideSubtitle }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-sm text-white/72">
+                            <Heart class="size-3.5 fill-current text-pink-300/90" />
+                            {{ currentAsset.likeCount }}
+                        </span>
+                        <span class="text-sm text-white/72">
+                            💬 {{ currentAsset.commentCount }}
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            <div
-                v-if="showPoweredBy"
-                class="wall-strip ml-auto px-3 py-2 text-xs text-white/62"
-            >
-                {{ poweredByLabel }}
+                <div
+                    v-if="showPoweredBy"
+                    class="wall-strip wall-strip-powered ml-auto px-3 py-2 text-xs text-white/62"
+                >
+                    {{ poweredByLabel }}
+                </div>
             </div>
         </div>
     </main>
 </template>
 
 <style scoped>
+.wall-safe {
+    padding-left: max(1rem, calc(env(safe-area-inset-left) + 0.75rem));
+    padding-right: max(1rem, calc(env(safe-area-inset-right) + 0.75rem));
+}
+
+.wall-safe-top {
+    padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.5rem));
+}
+
+.wall-safe-bottom {
+    padding-bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+}
+
+.wall-top-strip,
+.wall-bottom-strip {
+    width: 100%;
+}
+
 .wall-strip {
-    background: linear-gradient(180deg, rgb(7 8 11 / 74%), rgb(7 8 11 / 46%));
+    background:
+        linear-gradient(180deg, rgb(7 8 11 / 72%), rgb(7 8 11 / 24%)),
+        linear-gradient(90deg, rgb(255 255 255 / 0.04), transparent 36%);
     backdrop-filter: blur(18px);
-    border: 1px solid rgb(255 255 255 / 0.08);
-    border-radius: 1.25rem;
-    box-shadow: 0 20px 60px rgb(0 0 0 / 0.22);
+}
+
+.wall-strip-brand,
+.wall-strip-qr,
+.wall-strip-note,
+.wall-strip-caption,
+.wall-strip-powered {
+    border-radius: 1rem;
+}
+
+.wall-strip-powered {
+    white-space: nowrap;
 }
 
 .wall-heart-burst {
@@ -971,6 +1004,51 @@ watch(
     100% {
         opacity: 0;
         transform: translate3d(-14px, -184px, 0) scale(0.9);
+    }
+}
+
+@media (max-aspect-ratio: 4 / 3) {
+    .wall-top-strip,
+    .wall-bottom-strip {
+        gap: 0.75rem;
+    }
+
+    .wall-strip-brand {
+        max-width: min(62vw, 24rem);
+    }
+
+    .wall-strip-qr {
+        max-width: min(34vw, 10.75rem);
+    }
+
+    .wall-strip-note {
+        display: none;
+    }
+
+    .wall-bottom-strip {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .wall-strip-caption {
+        max-width: none;
+    }
+
+    .wall-strip-powered {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+}
+
+@media (max-aspect-ratio: 1 / 1) {
+    .wall-top-strip {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .wall-strip-brand,
+    .wall-strip-qr {
+        max-width: none;
     }
 }
 </style>

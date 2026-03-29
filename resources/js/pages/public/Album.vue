@@ -2627,9 +2627,13 @@ const openAssetViewer = (stackKey: string, slideIndex = 0): void => {
     });
 };
 
-const openAssetInfo = (stackKey: string, slideIndex = 0): void => {
+const openAssetInfo = (stackKey: string, slideIndex?: number): void => {
+    const resolvedSlideIndex =
+        slideIndex ??
+        (activeStackKey.value === stackKey ? activeStackSlideIndex.value : 0);
+
     activeInfoStackKey.value = stackKey;
-    activeInfoSlideIndex.value = slideIndex;
+    activeInfoSlideIndex.value = resolvedSlideIndex;
     isAssetInfoOpen.value = true;
 };
 
@@ -6150,6 +6154,19 @@ const onAlbumTouchCancel = (): void => {
                             <Copy class="size-3.5" />
                             {{ t('public.album.asset.share') }}
                         </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
+                            :aria-label="t('public.album.actions.open_info')"
+                            @click="
+                                selectedStack
+                                    ? openAssetInfo(selectedStack.key, activeStackSlideIndex)
+                                    : undefined
+                            "
+                        >
+                            <Info class="size-3.5" />
+                            {{ t('public.album.actions.open_info') }}
+                        </button>
                         <a
                             v-if="selectedAssetCanDownload"
                             :href="selectedAsset.downloadUrl"
@@ -6188,13 +6205,12 @@ const onAlbumTouchCancel = (): void => {
         </transition>
 
         <Drawer
-            v-if="showCaptions"
             direction="bottom"
             :open="isAssetInfoOpen"
             @update:open="(open) => { if (!open) closeAssetInfo(); }"
         >
             <DrawerContent
-                class="safe-bottom max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
+                class="safe-bottom z-[70] max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
             >
                 <DrawerHeader class="border-b border-slate-200 px-5 pb-5 pt-3 text-center">
                     <DrawerTitle class="text-center text-lg text-slate-900">
