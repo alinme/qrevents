@@ -14,9 +14,11 @@ defineProps<Props>();
 
 <template>
     <img
-        src="/favicon.svg"
+        src="/apple-touch-icon.png"
         alt="EventSmart logo"
-        :class="className"
+        :class="['object-contain', className]"
+        loading="eager"
+        decoding="async"
         v-bind="$attrs"
     />
 </template>
