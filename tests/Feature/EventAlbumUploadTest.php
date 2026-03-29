@@ -706,6 +706,69 @@ it('groups album media collections by upload batch', function () {
         );
 });
 
+it('shares mixed album media for the public album header and gallery', function () {
+    $event = Event::factory()->create();
+
+    $photo = $event->assets()->create([
+        'kind' => 'photo',
+        'disk' => 'public',
+        'path' => 'events/test/header-photo.jpg',
+        'original_filename' => 'header-photo.jpg',
+        'mime_type' => 'image/jpeg',
+        'size_bytes' => 2048,
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Elena',
+        ],
+    ]);
+
+    $video = $event->assets()->create([
+        'kind' => 'video',
+        'disk' => 'public',
+        'path' => 'events/test/header-video.mp4',
+        'preview_path' => 'events/test/header-video-preview.mp4',
+        'video_thumbnail_path' => 'events/test/header-video-thumb.jpg',
+        'original_filename' => 'header-video.mp4',
+        'mime_type' => 'video/mp4',
+        'size_bytes' => 4096,
+        'duration_seconds' => 8,
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Mihai',
+        ],
+    ]);
+
+    $text = $event->assets()->create([
+        'kind' => 'text',
+        'disk' => 'public',
+        'path' => 'events/test/header-text.txt',
+        'original_filename' => 'header-text.txt',
+        'mime_type' => 'text/plain',
+        'size_bytes' => 512,
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Ana',
+            'text' => 'So happy to celebrate with you both.',
+        ],
+    ]);
+
+    $this->get(route('events.album', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Album')
+            ->has('assets', 3)
+            ->where('assets.0.id', $text->id)
+            ->where('assets.0.kind', 'text')
+            ->where('assets.1.id', $video->id)
+            ->where('assets.1.kind', 'video')
+            ->where('assets.2.id', $photo->id)
+            ->where('assets.2.kind', 'photo')
+            ->where('assets.0.text', 'So happy to celebrate with you both.')
+            ->where('assets.1.previewUrl', route('events.album.asset-preview', [$event->publicAlbumCode(), $video]))
+            ->where('assets.2.guestName', 'Elena'),
+        );
+});
+
 it('shares localized public album strings from the event display language', function () {
     $event = Event::factory()->create([
         'branding' => [

@@ -3178,6 +3178,7 @@ const submitAssetComment = async (): Promise<void> => {
         });
         commentDraft.value = '';
         toast.success(t('public.album.comments.posted'));
+        closeAssetComments();
     } catch {
         commentError.value = t('public.album.errors.comment_publish');
     } finally {
@@ -4408,17 +4409,17 @@ const onAlbumTouchCancel = (): void => {
                                 {{ t('public.album.profile_description') }}
                             </p>
 
-                            <div class="mx-auto mt-5 grid max-w-xl grid-cols-4 gap-3 border-t border-white/14 pt-4 text-center">
+                            <div class="mt-4 flex flex-wrap items-start gap-x-5 gap-y-3 border-t border-white/14 pt-3">
                                 <div
                                     v-for="stat in albumHeaderStats"
                                     :key="stat.label"
-                                    class="min-w-0 text-center"
+                                    class="min-w-[4.5rem] flex-1"
                                 >
-                                    <p class="truncate text-lg font-semibold text-white">
-                                        {{ stat.value }}
-                                    </p>
-                                    <p class="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/70">
+                                    <p class="text-[10px] font-medium uppercase tracking-[0.16em] text-white/56">
                                         {{ stat.label }}
+                                    </p>
+                                    <p class="mt-1 text-sm font-semibold text-white/88 sm:text-[0.95rem]">
+                                        {{ stat.value }}
                                     </p>
                                 </div>
                             </div>
