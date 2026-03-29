@@ -307,7 +307,7 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
             min(100, (int) config('events.video_variants.quality_percent', 76)),
         );
 
-        return (int) round(36 - (($qualityPercent / 100) * 18));
+        return (int) round(42 - (($qualityPercent / 100) * 18));
     }
 
     /**
@@ -445,9 +445,9 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
 
         $pngPath = $path.'.png';
-        $width = max(240, min(640, (int) round($maxWidth * 0.26)));
-        $height = max(72, (int) round($width * 0.24));
-        $fontSize = max(18, (int) round($height * 0.36));
+        $width = max(300, min(760, (int) round($maxWidth * 0.3)));
+        $height = max(92, (int) round($width * 0.24));
+        $fontSize = max(24, (int) round($height * 0.38));
 
         $shadowDraw = new ImagickDraw;
         $fontPath = $this->watermarkFontPath();
@@ -456,7 +456,7 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
         $shadowDraw->setFontSize($fontSize);
         $shadowDraw->setTextAlignment(Imagick::ALIGN_RIGHT);
-        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.18)'));
+        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.34)'));
 
         $draw = new ImagickDraw;
         if ($fontPath !== null) {
@@ -464,16 +464,16 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         }
         $draw->setFontSize($fontSize);
         $draw->setTextAlignment(Imagick::ALIGN_RIGHT);
-        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.20)'));
+        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.46)'));
 
         $overlay = new Imagick;
         $overlay->newImage($width, $height, new ImagickPixel('transparent'));
         $overlay->setImageFormat('png');
-        $baseline = (int) round($height * 0.72);
-        $rightInset = max(12, (int) round($width * 0.08));
-        $overlay->annotateImage($shadowDraw, $width - $rightInset + 2, $baseline + 2, 0, $text);
+        $baseline = (int) round($height * 0.74);
+        $rightInset = max(18, (int) round($width * 0.1));
+        $overlay->annotateImage($shadowDraw, $width - $rightInset + 3, $baseline + 3, 0, $text);
         $overlay->annotateImage($draw, $width - $rightInset, $baseline, 0, $text);
-        $overlay->gaussianBlurImage(0.5, 0.4);
+        $overlay->gaussianBlurImage(0.45, 0.35);
         $overlay->writeImage($pngPath);
         $overlay->clear();
         $overlay->destroy();

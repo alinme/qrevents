@@ -4307,7 +4307,7 @@ class EventController extends Controller
             'downloadUrl' => route('events.album.asset-download', [$event->share_token, $asset]),
             'deleteUrl' => route('events.album.asset-delete', [$event->share_token, $asset]),
             'likeToggleUrl' => route('events.album.asset-like.toggle', [$event->share_token, $asset]),
-            'sizeBytes' => $asset->size_bytes,
+            'sizeBytes' => $this->assetPublicSizeBytes($asset),
             'text' => is_string($metadata['text'] ?? null) ? $metadata['text'] : null,
             ...$this->textPostThemeAssetProps($metadata),
             'guestName' => is_string($metadata['guest_name'] ?? null) ? $metadata['guest_name'] : null,
@@ -4359,6 +4359,19 @@ class EventController extends Controller
                     ->all()
                 : [],
         ];
+    }
+
+    private function assetPublicSizeBytes(EventAsset $asset): int
+    {
+        if ($asset->kind !== 'video' || ! is_string($asset->video_preview_path) || trim($asset->video_preview_path) === '') {
+            return (int) $asset->size_bytes;
+        }
+
+        try {
+            return (int) Storage::disk($asset->disk)->size($asset->video_preview_path);
+        } catch (Throwable) {
+            return (int) $asset->size_bytes;
+        }
     }
 
     /**
