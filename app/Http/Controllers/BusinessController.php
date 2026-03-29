@@ -54,7 +54,24 @@ class BusinessController extends Controller
                 'logoUrl' => $this->businessLogoUrl($profile),
             ],
             'submitUrl' => route('dashboard.business.onboarding.store'),
+            'cancelUrl' => route('dashboard.business.onboarding.cancel'),
         ]);
+    }
+
+    public function cancelOnboarding(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        if ($user->hasCompletedBusinessOnboarding()) {
+            return to_route('dashboard.business');
+        }
+
+        $user->forceFill([
+            'account_type' => $user::ACCOUNT_TYPE_USER,
+        ])->save();
+
+        return to_route('dashboard.account')->with('success', 'Business upgrade cancelled.');
     }
 
     public function storeOnboarding(StoreBusinessOnboardingRequest $request): RedirectResponse

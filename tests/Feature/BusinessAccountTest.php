@@ -26,6 +26,7 @@ test('users can switch to business, finish onboarding, and reach the business da
         ->assertInertia(fn (Assert $page) => $page
             ->component('business/Onboarding')
             ->where('profile.billingEmail', $user->email)
+            ->where('cancelUrl', route('dashboard.business.onboarding.cancel'))
         );
 
     $this->actingAs($user)
@@ -56,6 +57,23 @@ test('users can switch to business, finish onboarding, and reach the business da
         ->and($user->canAccessBusinessDashboard())->toBeTrue();
 
     Storage::disk('public')->assertExists((string) ($user->business_profile['logo_path'] ?? ''));
+});
+
+test('users can cancel business onboarding before saving their business profile', function () {
+    $user = User::factory()->create([
+        'account_type' => User::ACCOUNT_TYPE_BUSINESS,
+        'business_onboarded_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('dashboard.business.onboarding.cancel'))
+        ->assertRedirect(route('dashboard.account'))
+        ->assertSessionHas('success', 'Business upgrade cancelled.');
+
+    $user->refresh();
+
+    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_USER)
+        ->and($user->business_onboarded_at)->toBeNull();
 });
 
 test('business wallet checkout locks the latest fx rate at session creation', function () {

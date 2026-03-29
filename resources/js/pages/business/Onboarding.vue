@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { BadgeCheck, BriefcaseBusiness, Globe2, Palette, ReceiptText } from 'lucide-vue-next';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ const props = defineProps<{
         logoUrl: string | null;
     };
     submitUrl: string;
+    cancelUrl: string;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -151,7 +152,15 @@ const brandPreviewStyle = computed(() => ({
                     </div>
                 </div>
 
-                <div class="flex justify-end border-t border-black/5 pt-5">
+                <div class="flex items-center justify-between gap-3 border-t border-black/5 pt-5">
+                    <Link
+                        as="button"
+                        :href="props.cancelUrl"
+                        method="post"
+                        class="inline-flex items-center justify-center rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-black/20 hover:bg-zinc-50"
+                    >
+                        Cancel
+                    </Link>
                     <Button type="submit" class="bg-[#171411] text-white hover:bg-[#2b2621]" :disabled="form.processing">
                         Save business profile
                     </Button>

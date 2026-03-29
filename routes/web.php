@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard/business/events', [DashboardController::class, 'businessEvents'])->name('dashboard.business.events.index');
     Route::post('dashboard/business/activate', [BusinessController::class, 'activate'])->name('dashboard.business.activate');
     Route::get('dashboard/business/onboarding', [BusinessController::class, 'onboarding'])->name('dashboard.business.onboarding');
+    Route::post('dashboard/business/onboarding/cancel', [BusinessController::class, 'cancelOnboarding'])->name('dashboard.business.onboarding.cancel');
     Route::post('dashboard/business/onboarding', [BusinessController::class, 'storeOnboarding'])->name('dashboard.business.onboarding.store');
     Route::get('dashboard/business/wallet', [DashboardController::class, 'walletHistory'])->name('dashboard.business.wallet.history');
     Route::post('dashboard/business/wallet/checkout', [BusinessController::class, 'createWalletCheckout'])->name('dashboard.business.wallet.checkout');
