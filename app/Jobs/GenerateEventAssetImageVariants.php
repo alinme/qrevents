@@ -3,15 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\EventAsset;
+use App\Support\MediaWatermarkFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Imagick;
-use ImagickDraw;
 use ImagickException;
-use ImagickPixel;
 use Throwable;
 
 class GenerateEventAssetImageVariants implements ShouldQueue
@@ -59,36 +58,44 @@ class GenerateEventAssetImageVariants implements ShouldQueue
         $watermarkedThumbnailPath = sprintf('%s/thumb-watermarked.%s', $baseDirectory, $format);
         $watermarkedPreviewPath = sprintf('%s/preview-watermarked.%s', $baseDirectory, $format);
         $watermarkedDownloadPath = sprintf('%s/download-watermarked.%s', $baseDirectory, $format);
-        $watermarkText = trim((string) config('events.image_variants.watermark_text', 'QREVENTS'));
+        $watermarkFactory = new MediaWatermarkFactory;
 
         try {
             $thumbnailBlob = $this->variantBlob(
+                $asset,
                 $originalContents,
                 max(160, (int) config('events.image_variants.thumbnail_max_pixels', 640)),
                 $format,
             );
             $previewBlob = $this->variantBlob(
+                $asset,
                 $originalContents,
                 max(480, (int) config('events.image_variants.preview_max_pixels', 1600)),
                 $format,
             );
             $watermarkedThumbnailBlob = $this->variantBlob(
+                $asset,
                 $originalContents,
                 max(160, (int) config('events.image_variants.thumbnail_max_pixels', 640)),
                 $format,
-                $watermarkText,
+                true,
+                $watermarkFactory,
             );
             $watermarkedPreviewBlob = $this->variantBlob(
+                $asset,
                 $originalContents,
                 max(480, (int) config('events.image_variants.preview_max_pixels', 1600)),
                 $format,
-                $watermarkText,
+                true,
+                $watermarkFactory,
             );
             $watermarkedDownloadBlob = $this->variantBlob(
+                $asset,
                 $originalContents,
                 max(800, (int) config('events.image_variants.watermarked_download_max_pixels', 2400)),
                 $format,
-                $watermarkText,
+                true,
+                $watermarkFactory,
             );
         } catch (ImagickException) {
             return;
@@ -125,10 +132,12 @@ class GenerateEventAssetImageVariants implements ShouldQueue
      * @throws ImagickException
      */
     private function variantBlob(
+        EventAsset $asset,
         string $contents,
         int $maxPixels,
         string $format,
-        ?string $watermarkText = null,
+        bool $watermarked = false,
+        ?MediaWatermarkFactory $watermarkFactory = null,
     ): string {
         $image = new Imagick;
         $image->readImageBlob($contents);
@@ -146,8 +155,27 @@ class GenerateEventAssetImageVariants implements ShouldQueue
             $image->resizeImage($targetWidth, $targetHeight, Imagick::FILTER_LANCZOS, 1);
         }
 
-        if ($watermarkText !== null && $watermarkText !== '') {
-            $this->applyWatermark($image, $watermarkText);
+        if ($watermarked) {
+            $overlay = ($watermarkFactory ?? new MediaWatermarkFactory)->makeImageOverlay(
+                $asset,
+                (int) $image->getImageWidth(),
+                (int) $image->getImageHeight(),
+            );
+
+            if ($overlay instanceof Imagick) {
+                $marginX = max(14, (int) round($image->getImageWidth() * 0.03));
+                $marginY = max(14, (int) round($image->getImageHeight() * 0.03));
+
+                $image->compositeImage(
+                    $overlay,
+                    Imagick::COMPOSITE_OVER,
+                    max(0, (int) $image->getImageWidth() - (int) $overlay->getImageWidth() - $marginX),
+                    max(0, (int) $image->getImageHeight() - (int) $overlay->getImageHeight() - $marginY),
+                );
+
+                $overlay->clear();
+                $overlay->destroy();
+            }
         }
 
         $targetFormat = Str::lower($format);
@@ -170,79 +198,6 @@ class GenerateEventAssetImageVariants implements ShouldQueue
         $image->destroy();
 
         return $blob;
-    }
-
-    /**
-     * @throws ImagickException
-     */
-    private function applyWatermark(Imagick $image, string $text): void
-    {
-        $width = max(1, (int) $image->getImageWidth());
-        $height = max(1, (int) $image->getImageHeight());
-        $fontSize = max(28, (int) round(min($width, $height) * 0.14));
-
-        $shadowDraw = new ImagickDraw;
-        $fontPath = $this->watermarkFontPath();
-        if ($fontPath !== null) {
-            $shadowDraw->setFont($fontPath);
-        }
-        $shadowDraw->setFontSize($fontSize);
-        $shadowDraw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $shadowDraw->setGravity(Imagick::GRAVITY_CENTER);
-        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.16)'));
-
-        $draw = new ImagickDraw;
-        if ($fontPath !== null) {
-            $draw->setFont($fontPath);
-        }
-        $draw->setFontSize($fontSize);
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->setGravity(Imagick::GRAVITY_CENTER);
-        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.18)'));
-        $draw->setStrokeColor(new ImagickPixel('rgba(255,255,255,0.30)'));
-        $draw->setStrokeWidth(max(1, $fontSize / 30));
-
-        $overlay = new Imagick;
-        $overlay->newImage($width, $height, new ImagickPixel('transparent'));
-        $overlay->setImageFormat('png');
-        $overlay->annotateImage($shadowDraw, 0, 4, 0, $text);
-        $overlay->annotateImage($draw, 0, 0, 0, $text);
-        $overlay->gaussianBlurImage(0.7, 0.5);
-
-        $image->compositeImage($overlay, Imagick::COMPOSITE_OVER, 0, 0);
-        $overlay->clear();
-        $overlay->destroy();
-    }
-
-    private function watermarkFontPath(): ?string
-    {
-        $configured = trim((string) config('events.image_variants.watermark_font', ''));
-        if ($configured !== '') {
-            if (is_file($configured)) {
-                return $configured;
-            }
-
-            $relativeToApp = base_path($configured);
-            if (is_file($relativeToApp)) {
-                return $relativeToApp;
-            }
-        }
-
-        $candidates = [
-            '/System/Library/Fonts/Supplemental/Arial.ttf',
-            '/System/Library/Fonts/Supplemental/Helvetica.ttc',
-            '/Library/Fonts/Arial.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/usr/share/fonts/dejavu/DejaVuSans.ttf',
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (is_file($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return null;
     }
 
     private function normalizedFormat(): string

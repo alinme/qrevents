@@ -3,16 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\EventAsset;
+use App\Support\MediaWatermarkFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Imagick;
-use ImagickDraw;
 use ImagickException;
-use ImagickPixel;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -47,7 +45,7 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         $format = $this->normalizedFormat();
         $thumbnailPath = sprintf('%s/video-thumb.%s', $baseDirectory, $format);
         $previewPath = sprintf('%s/video-preview.mp4', $baseDirectory);
-        $watermarkText = trim((string) config('app.name', 'EventSmart'));
+        $watermarkFactory = new MediaWatermarkFactory;
 
         try {
             $posterBlob = $this->extractPosterBlob($inputPath, $asset);
@@ -61,11 +59,11 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
                 $format,
             );
             $previewVideoPath = $this->transcodeVariant(
+                $asset,
                 $inputPath,
                 max(640, (int) config('events.video_variants.preview_max_width', 1280)),
-                true,
-                $watermarkText,
                 $this->normalizedCrf(),
+                $watermarkFactory,
             );
             if ($previewVideoPath === null) {
                 return;
@@ -206,11 +204,11 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
     }
 
     private function transcodeVariant(
+        EventAsset $asset,
         string $inputPath,
         int $maxWidth,
-        bool $watermarked,
-        ?string $watermarkText,
         int $crf,
+        ?MediaWatermarkFactory $watermarkFactory = null,
     ): ?string {
         $outputPath = tempnam(sys_get_temp_dir(), 'qr-video-variant-');
         if ($outputPath === false) {
@@ -219,10 +217,12 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
 
         $outputMp4Path = $outputPath.'.mp4';
         $ffmpegBinary = (string) config('events.video_variants.ffmpeg_binary', 'ffmpeg');
-        $watermarkOverlayPath = null;
-        if ($watermarked && $watermarkText !== null && trim($watermarkText) !== '') {
-            $watermarkOverlayPath = $this->createWatermarkOverlay($maxWidth, $watermarkText);
-        }
+        $frameHeight = max(240, (int) round($maxWidth * 0.56));
+        $watermarkOverlayPath = ($watermarkFactory ?? new MediaWatermarkFactory)->makeVideoOverlayPath(
+            $asset,
+            $maxWidth,
+            $frameHeight,
+        );
 
         $command = [
             $ffmpegBinary,
@@ -246,7 +246,7 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         if ($watermarkOverlayPath !== null) {
             $command[] = '-filter_complex';
             $command[] = sprintf(
-                '[0:v]scale=min(%d\\,iw):-2[scaled];[scaled][1:v]overlay=main_w-overlay_w-36:main_h-overlay_h-28',
+                '[0:v]scale=min(%d\\,iw):-2[scaled];[scaled][1:v]overlay=main_w-overlay_w-main_w*0.03:main_h-overlay_h-main_h*0.03',
                 $maxWidth,
             );
         } else {
@@ -317,7 +317,6 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         string $contents,
         int $maxPixels,
         string $format,
-        ?string $watermarkText = null,
     ): string {
         $image = new Imagick;
         $image->readImageBlob($contents);
@@ -333,10 +332,6 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
             $targetWidth = max(1, (int) round($width * $scale));
             $targetHeight = max(1, (int) round($height * $scale));
             $image->resizeImage($targetWidth, $targetHeight, Imagick::FILTER_LANCZOS, 1);
-        }
-
-        if ($watermarkText !== null && $watermarkText !== '') {
-            $this->applyWatermark($image, $watermarkText);
         }
 
         $targetFormat = Str::lower($format);
@@ -359,130 +354,6 @@ class GenerateEventAssetVideoThumbnails implements ShouldQueue
         $image->destroy();
 
         return $blob;
-    }
-
-    /**
-     * @throws ImagickException
-     */
-    private function applyWatermark(Imagick $image, string $text): void
-    {
-        $width = max(1, (int) $image->getImageWidth());
-        $height = max(1, (int) $image->getImageHeight());
-        $fontSize = max(28, (int) round(min($width, $height) * 0.14));
-
-        $shadowDraw = new ImagickDraw;
-        $fontPath = $this->watermarkFontPath();
-        if ($fontPath !== null) {
-            $shadowDraw->setFont($fontPath);
-        }
-        $shadowDraw->setFontSize($fontSize);
-        $shadowDraw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $shadowDraw->setGravity(Imagick::GRAVITY_CENTER);
-        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.16)'));
-
-        $draw = new ImagickDraw;
-        if ($fontPath !== null) {
-            $draw->setFont($fontPath);
-        }
-        $draw->setFontSize($fontSize);
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-        $draw->setGravity(Imagick::GRAVITY_CENTER);
-        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.18)'));
-        $draw->setStrokeColor(new ImagickPixel('rgba(255,255,255,0.30)'));
-        $draw->setStrokeWidth(max(1, $fontSize / 30));
-
-        $overlay = new Imagick;
-        $overlay->newImage($width, $height, new ImagickPixel('transparent'));
-        $overlay->setImageFormat('png');
-        $overlay->annotateImage($shadowDraw, 0, 4, 0, $text);
-        $overlay->annotateImage($draw, 0, 0, 0, $text);
-        $overlay->gaussianBlurImage(0.7, 0.5);
-
-        $image->compositeImage($overlay, Imagick::COMPOSITE_OVER, 0, 0);
-        $overlay->clear();
-        $overlay->destroy();
-    }
-
-    private function watermarkFontPath(): ?string
-    {
-        $configured = trim((string) config('events.image_variants.watermark_font', ''));
-        if ($configured !== '') {
-            if (is_file($configured)) {
-                return $configured;
-            }
-
-            $relativeToApp = base_path($configured);
-            if (is_file($relativeToApp)) {
-                return $relativeToApp;
-            }
-        }
-
-        $candidates = [
-            '/System/Library/Fonts/Supplemental/Arial.ttf',
-            '/System/Library/Fonts/Supplemental/Helvetica.ttc',
-            '/Library/Fonts/Arial.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/usr/share/fonts/dejavu/DejaVuSans.ttf',
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (is_file($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @throws ImagickException
-     */
-    private function createWatermarkOverlay(int $maxWidth, string $text): ?string
-    {
-        $path = tempnam(sys_get_temp_dir(), 'qr-video-watermark-');
-        if ($path === false) {
-            return null;
-        }
-
-        $pngPath = $path.'.png';
-        $width = max(300, min(760, (int) round($maxWidth * 0.3)));
-        $height = max(92, (int) round($width * 0.24));
-        $fontSize = max(24, (int) round($height * 0.38));
-
-        $shadowDraw = new ImagickDraw;
-        $fontPath = $this->watermarkFontPath();
-        if ($fontPath !== null) {
-            $shadowDraw->setFont($fontPath);
-        }
-        $shadowDraw->setFontSize($fontSize);
-        $shadowDraw->setTextAlignment(Imagick::ALIGN_RIGHT);
-        $shadowDraw->setFillColor(new ImagickPixel('rgba(15,23,42,0.34)'));
-
-        $draw = new ImagickDraw;
-        if ($fontPath !== null) {
-            $draw->setFont($fontPath);
-        }
-        $draw->setFontSize($fontSize);
-        $draw->setTextAlignment(Imagick::ALIGN_RIGHT);
-        $draw->setFillColor(new ImagickPixel('rgba(255,255,255,0.46)'));
-
-        $overlay = new Imagick;
-        $overlay->newImage($width, $height, new ImagickPixel('transparent'));
-        $overlay->setImageFormat('png');
-        $baseline = (int) round($height * 0.74);
-        $rightInset = max(18, (int) round($width * 0.1));
-        $overlay->annotateImage($shadowDraw, $width - $rightInset + 3, $baseline + 3, 0, $text);
-        $overlay->annotateImage($draw, $width - $rightInset, $baseline, 0, $text);
-        $overlay->gaussianBlurImage(0.45, 0.35);
-        $overlay->writeImage($pngPath);
-        $overlay->clear();
-        $overlay->destroy();
-
-        if (is_file($path)) {
-            @unlink($path);
-        }
-
-        return is_file($pngPath) ? $pngPath : null;
     }
 
     private function normalizedFormat(): string
