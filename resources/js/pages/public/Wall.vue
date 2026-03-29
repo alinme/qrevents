@@ -2,12 +2,12 @@
 import { Head, usePage } from '@inertiajs/vue3';
 import { Heart, LoaderCircle } from 'lucide-vue-next';
 import type { Swiper as SwiperInstance } from 'swiper';
-import { EffectFade } from 'swiper/modules';
+import { EffectCreative } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTranslations } from '@/composables/useTranslations';
 import 'swiper/css';
-import 'swiper/css/effect-fade';
+import 'swiper/css/effect-creative';
 
 type WallBranding = {
     primaryColor: string | null;
@@ -76,7 +76,7 @@ const props = defineProps<{
     assets: WallAsset[];
 }>();
 
-const modules = [EffectFade];
+const modules = [EffectCreative];
 
 const page = usePage();
 const { locale, t } = useTranslations();
@@ -794,11 +794,23 @@ watch(
             <Swiper
                 class="h-full w-full"
                 :modules="modules"
-                effect="fade"
-                :fade-effect="{ crossFade: true }"
+                effect="creative"
+                :creative-effect="{
+                    limitProgress: 2,
+                    prev: {
+                        opacity: 0,
+                        scale: 0.92,
+                        translate: ['-8%', 0, -220],
+                    },
+                    next: {
+                        opacity: 0,
+                        scale: 1.08,
+                        translate: ['8%', 0, -220],
+                    },
+                }"
                 :allow-touch-move="false"
                 :simulate-touch="false"
-                :speed="900"
+                :speed="1400"
                 @swiper="handleSwiperReady"
                 @slide-change="handleSlideChange"
             >

@@ -340,6 +340,7 @@ const heroGlassCardRef = ref<HTMLElement | null>(null);
 const isTextComposerFocused = ref(false);
 const loadedPhotoAssetIds = ref<Record<number, boolean>>({});
 const viewerProgressPercent = ref(0);
+const isViewerHoldPaused = ref(false);
 const isAlbumRefreshing = ref(false);
 const isLoadingMoreAssets = ref(false);
 const hasPendingAlbumUpdate = ref(false);
@@ -367,6 +368,11 @@ let viewerAdvanceTimerId: number | null = null;
 let viewerProgressFrameId: number | null = null;
 let activeViewerVideoCleanup: (() => void) | null = null;
 let lockedScrollY = 0;
+let viewerProgressStartedAt: number | null = null;
+let viewerProgressDurationMs = 0;
+let viewerProgressElapsedMs = 0;
+let viewerProgressCompleteHandler: (() => void) | null = null;
+let viewerLifecycleMode: 'timed' | 'video' | null = null;
 const viewerVideoElements = new Map<number, HTMLVideoElement>();
 const viewerBackdropVideoElements = new Map<number, HTMLVideoElement>();
 const commentEmojiOptions = [
@@ -2491,21 +2497,43 @@ const clearViewerLifecycle = (): void => {
     clearViewerProgressFrame();
     clearViewerVideoPlayback();
     viewerProgressPercent.value = 0;
+    viewerProgressStartedAt = null;
+    viewerProgressDurationMs = 0;
+    viewerProgressElapsedMs = 0;
+    viewerProgressCompleteHandler = null;
+    viewerLifecycleMode = null;
+    isViewerHoldPaused.value = false;
 };
 
-const animateViewerProgress = (durationMs: number, onComplete: () => void): void => {
+const animateViewerProgress = (
+    durationMs: number,
+    onComplete: () => void,
+    elapsedMs = 0,
+): void => {
     if (typeof window === 'undefined') {
         return;
     }
 
     clearViewerAdvanceTimer();
     clearViewerProgressFrame();
-    viewerProgressPercent.value = 0;
+    viewerProgressDurationMs = durationMs;
+    viewerProgressElapsedMs = elapsedMs;
+    viewerProgressCompleteHandler = onComplete;
+    viewerLifecycleMode = 'timed';
+    viewerProgressPercent.value = Math.max(
+        0,
+        Math.min(100, (elapsedMs / durationMs) * 100),
+    );
 
     const startedAt = window.performance.now();
+    viewerProgressStartedAt = startedAt;
 
     const tick = (timestamp: number): void => {
-        const elapsed = Math.min(durationMs, timestamp - startedAt);
+        const elapsed = Math.min(
+            durationMs,
+            elapsedMs + (timestamp - startedAt),
+        );
+        viewerProgressElapsedMs = elapsed;
         viewerProgressPercent.value = Math.max(
             0,
             Math.min(100, (elapsed / durationMs) * 100),
@@ -2513,6 +2541,7 @@ const animateViewerProgress = (durationMs: number, onComplete: () => void): void
 
         if (elapsed >= durationMs) {
             viewerProgressFrameId = null;
+            viewerProgressStartedAt = null;
             onComplete();
 
             return;
@@ -2523,11 +2552,86 @@ const animateViewerProgress = (durationMs: number, onComplete: () => void): void
 
     viewerAdvanceTimerId = window.setTimeout(() => {
         clearViewerProgressFrame();
+        viewerProgressStartedAt = null;
+        viewerProgressElapsedMs = durationMs;
         viewerProgressPercent.value = 100;
         onComplete();
-    }, durationMs);
+    }, Math.max(0, durationMs - elapsedMs));
 
     viewerProgressFrameId = window.requestAnimationFrame(tick);
+};
+
+const pauseViewerByHold = (): void => {
+    if (typeof window === 'undefined' || !selectedAsset.value || isViewerHoldPaused.value) {
+        return;
+    }
+
+    isViewerHoldPaused.value = true;
+
+    if (viewerLifecycleMode === 'timed') {
+        if (viewerProgressStartedAt !== null) {
+            viewerProgressElapsedMs = Math.min(
+                viewerProgressDurationMs,
+                viewerProgressElapsedMs + (window.performance.now() - viewerProgressStartedAt),
+            );
+        }
+
+        viewerProgressStartedAt = null;
+        clearViewerAdvanceTimer();
+        clearViewerProgressFrame();
+
+        return;
+    }
+
+    if (viewerLifecycleMode === 'video') {
+        viewerVideoElements.forEach((video) => {
+            video.pause();
+        });
+
+        viewerBackdropVideoElements.forEach((video) => {
+            video.pause();
+        });
+    }
+};
+
+const resumeViewerFromHold = (): void => {
+    if (
+        typeof window === 'undefined' ||
+        !selectedAsset.value ||
+        !isViewerHoldPaused.value
+    ) {
+        return;
+    }
+
+    isViewerHoldPaused.value = false;
+
+    if (
+        viewerLifecycleMode === 'timed' &&
+        viewerProgressCompleteHandler &&
+        viewerProgressDurationMs > 0
+    ) {
+        animateViewerProgress(
+            viewerProgressDurationMs,
+            viewerProgressCompleteHandler,
+            viewerProgressElapsedMs,
+        );
+
+        return;
+    }
+
+    if (viewerLifecycleMode === 'video') {
+        const assetId = selectedAsset.value.id;
+        const video = viewerVideoElements.get(assetId);
+        const backdropVideo = viewerBackdropVideoElements.get(assetId) ?? null;
+
+        if (backdropVideo) {
+            void backdropVideo.play().catch(() => {});
+        }
+
+        if (video) {
+            void video.play().catch(() => {});
+        }
+    }
 };
 
 const setViewerVideoElement =
@@ -2564,6 +2668,8 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
     }
 
     if (asset.kind === 'video') {
+        viewerLifecycleMode = 'video';
+
         if (asset.videoProcessing || asset.previewUrl === null) {
             animateViewerProgress(3200, () => {
                 showNextInStack();
@@ -2613,6 +2719,7 @@ const startSelectedAssetLifecycle = (attempt = 0): void => {
             };
 
             const handleEnded = (): void => {
+                viewerProgressStartedAt = null;
                 viewerProgressPercent.value = 100;
                 showNextInStack();
             };
@@ -6053,6 +6160,10 @@ const onAlbumTouchCancel = (): void => {
 
                 <div
                     class="relative box-border flex h-[100dvh] w-screen items-center justify-center overflow-hidden pb-[calc(8rem+env(safe-area-inset-bottom))] pt-[calc(4.5rem+env(safe-area-inset-top))]"
+                    @pointerdown.passive="pauseViewerByHold"
+                    @pointerup.passive="resumeViewerFromHold"
+                    @pointercancel.passive="resumeViewerFromHold"
+                    @pointerleave.passive="resumeViewerFromHold"
                 >
                     <Swiper
                         class="h-full w-full"
