@@ -5095,10 +5095,10 @@ const onAlbumTouchCancel = (): void => {
 
         <nav
             v-if="showBottomNav"
-            class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40 px-3 pb-3"
+            class="safe-x safe-bottom fixed inset-x-0 bottom-0 z-40"
             aria-label="Guest album actions"
         >
-            <div class="mx-auto flex max-w-xl items-end justify-between gap-1 rounded-[2rem] border border-white/60 bg-white/88 px-2.5 py-2 shadow-[0_20px_44px_rgba(15,23,42,0.2)] backdrop-blur-2xl">
+            <div class="mx-auto flex w-full max-w-none items-end justify-between gap-1 border-t border-slate-200/80 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.65rem)] pt-2 shadow-[0_-8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                 <button
                     type="button"
                     class="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-500 transition hover:bg-slate-100/80"
@@ -5131,12 +5131,12 @@ const onAlbumTouchCancel = (): void => {
                 </button>
                 <button
                     type="button"
-                    class="-mt-4 inline-flex size-[4.15rem] shrink-0 items-center justify-center rounded-[1.5rem] border border-white/40 text-white shadow-[0_18px_32px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5"
+                    class="-mt-8 inline-flex size-[5.25rem] shrink-0 items-center justify-center rounded-full border-[5px] border-white text-white shadow-[0_20px_36px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5"
                     :style="heroAccentStyle"
                     :aria-label="t('public.album.nav.camera')"
                     @click="triggerQuickUpload"
                 >
-                    <Camera class="size-7" />
+                    <Camera class="size-8" />
                 </button>
                 <button
                     v-if="props.allowTextPosts"
