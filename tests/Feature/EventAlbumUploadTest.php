@@ -118,6 +118,37 @@ it('includes live reaction data for approved wall assets', function () {
         );
 });
 
+it('includes duration data for approved wall video assets', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    /** @var EventAsset $asset */
+    $asset = EventAsset::factory()->for($event)->for($owner)->create([
+        'kind' => 'video',
+        'disk' => 'public',
+        'path' => 'events/test/wall-video.mp4',
+        'preview_path' => 'events/test/wall-video-preview.mp4',
+        'video_thumbnail_path' => 'events/test/wall-video-thumb.jpg',
+        'width' => 1080,
+        'height' => 1920,
+        'duration_seconds' => 17,
+        'moderation_status' => 'approved',
+        'metadata' => [
+            'guest_name' => 'Elena',
+            'wall_visibility' => 'approved',
+        ],
+    ]);
+
+    $this->get(route('events.wall', $event->share_token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/Wall')
+            ->where('assets.0.id', $asset->id)
+            ->where('assets.0.kind', 'video')
+            ->where('assets.0.durationSeconds', 17),
+        );
+});
+
 it('uploads photos and videos when the upload window is open', function () {
     $event = Event::factory()->create([
         'upload_window_starts_at' => now()->subHour(),

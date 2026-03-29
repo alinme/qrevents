@@ -333,6 +333,32 @@ const queueNextSlide = (delayMs: number): void => {
     }, delayMs);
 };
 
+const queueVideoFallbackAdvance = (
+    asset: WallAsset,
+    foreground?: HTMLVideoElement | null,
+): void => {
+    const elementDuration =
+        foreground && Number.isFinite(foreground.duration) && foreground.duration > 0
+            ? foreground.duration
+            : null;
+    const assetDuration =
+        asset.durationSeconds && asset.durationSeconds > 0
+            ? asset.durationSeconds
+            : null;
+    const durationSeconds = elementDuration ?? assetDuration;
+
+    if (durationSeconds === null) {
+        queueNextSlide(15000);
+
+        return;
+    }
+
+    const durationMs = Math.round(durationSeconds * 1000 + 900);
+    const safeDelayMs = Math.min(Math.max(durationMs, 5000), 120000);
+
+    queueNextSlide(safeDelayMs);
+};
+
 const playActiveVideoSlide = (attempt = 0): void => {
     const asset = currentAsset.value;
 
@@ -386,20 +412,34 @@ const playActiveVideoSlide = (attempt = 0): void => {
             }
         };
 
+        const handleDurationUpdate = (): void => {
+            if (currentAsset.value?.id !== asset.id) {
+                return;
+            }
+
+            queueVideoFallbackAdvance(asset, foreground);
+        };
+
         foreground.addEventListener('timeupdate', syncBackdrop);
         foreground.addEventListener('ended', handleEnded);
+        foreground.addEventListener('loadedmetadata', handleDurationUpdate);
+        foreground.addEventListener('durationchange', handleDurationUpdate);
 
         activeVideoCleanup = () => {
             foreground.removeEventListener('timeupdate', syncBackdrop);
             foreground.removeEventListener('ended', handleEnded);
+            foreground.removeEventListener('loadedmetadata', handleDurationUpdate);
+            foreground.removeEventListener('durationchange', handleDurationUpdate);
         };
 
         if (backdrop) {
             void backdrop.play().catch(() => {});
         }
 
+        queueVideoFallbackAdvance(asset, foreground);
+
         void foreground.play().catch(() => {
-            queueNextSlide(9000);
+            queueVideoFallbackAdvance(asset, foreground);
         });
     });
 };
@@ -459,6 +499,7 @@ const setBackdropVideoElement =
 
 const applyWallAssets = (nextAssets: WallAsset[]): void => {
     const currentAssetId = currentAsset.value?.id ?? null;
+    const previousCurrentAsset = currentAsset.value;
 
     wallAssets.value = [...nextAssets];
 
@@ -487,11 +528,31 @@ const applyWallAssets = (nextAssets: WallAsset[]): void => {
 
     activeIndex.value = nextIndex;
 
+    const nextCurrentAsset = displayAssets.value[nextIndex] ?? null;
+    const shouldPreserveCurrentVideoPlayback =
+        previousCurrentAsset !== null &&
+        nextCurrentAsset !== null &&
+        previousCurrentAsset.id === nextCurrentAsset.id &&
+        previousCurrentAsset.kind === 'video' &&
+        nextCurrentAsset.kind === 'video' &&
+        previousCurrentAsset.previewUrl !== null &&
+        previousCurrentAsset.previewUrl === nextCurrentAsset.previewUrl &&
+        !nextCurrentAsset.videoProcessing;
+
     nextTick(() => {
         const swiper = swiperInstance.value;
 
         if (swiper && swiper.activeIndex !== nextIndex) {
             swiper.slideTo(nextIndex, 0);
+        }
+
+        if (shouldPreserveCurrentVideoPlayback) {
+            queueVideoFallbackAdvance(
+                nextCurrentAsset,
+                foregroundVideoElements.get(nextCurrentAsset.id),
+            );
+
+            return;
         }
 
         startSlideLifecycle();
