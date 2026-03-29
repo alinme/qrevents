@@ -638,6 +638,8 @@ const selectedAssetCanDelete = computed(() =>
 const selectedAssetCanDownload = computed(() =>
     canDownloadAsset(selectedAsset.value),
 );
+const composerHeaderPaddingClass =
+    'px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1.15rem)]';
 
 const isPhotoLoaded = (assetId: number): boolean =>
     loadedPhotoAssetIds.value[assetId] === true;
@@ -4734,7 +4736,7 @@ const onAlbumTouchCancel = (): void => {
                                         :style="textPostSurfaceStyle(stack.preview)"
                                     >
                                         <p
-                                            class="max-w-md whitespace-pre-wrap text-center text-[1.45rem] font-semibold leading-[1.45] sm:text-[1.7rem]"
+                                            class="max-w-md whitespace-pre-wrap text-center text-[1.75rem] font-semibold leading-[1.35] sm:text-[2rem]"
                                             :style="textPostContentStyle(stack.preview)"
                                         >
                                             {{ stack.preview.text ?? t('public.album.labels.text_post') }}
@@ -5104,7 +5106,7 @@ const onAlbumTouchCancel = (): void => {
                     :class="isLanguagePickerOpen ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
                     @click="openLanguagePicker"
                 >
-                    <IconLanguage class="size-7 transition group-active:scale-95" />
+                    <IconLanguage class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
                         :class="isLanguagePickerOpen ? 'opacity-100' : 'opacity-0'"
@@ -5121,7 +5123,7 @@ const onAlbumTouchCancel = (): void => {
                     :aria-label="t('public.album.nav.video')"
                     @click="setActiveView('video_testimonial')"
                 >
-                    <Film class="size-7 transition group-active:scale-95" />
+                    <Film class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
                         :class="isComposerOpen && activeView === 'video_testimonial' ? 'opacity-100' : 'opacity-0'"
@@ -5129,12 +5131,16 @@ const onAlbumTouchCancel = (): void => {
                 </button>
                 <button
                     type="button"
-                    class="-mt-8 inline-flex size-[5.25rem] shrink-0 items-center justify-center rounded-full border-[5px] border-white text-white shadow-[0_20px_36px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5"
-                    :style="heroAccentStyle"
+                    class="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.35rem] px-2 py-2 text-slate-500 transition hover:bg-slate-100/80"
+                    :class="isComposerOpen && (activeView === 'upload_media' || activeView === 'video_testimonial') ? 'bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : ''"
                     :aria-label="t('public.album.nav.camera')"
                     @click="triggerQuickUpload"
                 >
-                    <Camera class="size-8" />
+                    <Camera class="size-8 transition group-active:scale-95" />
+                    <span
+                        class="h-1.5 w-1.5 rounded-full bg-current transition"
+                        :class="isComposerOpen && (activeView === 'upload_media' || activeView === 'video_testimonial') ? 'opacity-100' : 'opacity-0'"
+                    />
                 </button>
                 <button
                     v-if="props.allowTextPosts"
@@ -5148,7 +5154,7 @@ const onAlbumTouchCancel = (): void => {
                     :aria-label="t('public.album.nav.text')"
                     @click="setActiveView('text_wish')"
                 >
-                    <MessageSquareText class="size-7 transition group-active:scale-95" />
+                    <MessageSquareText class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
                         :class="isComposerOpen && activeView === 'text_wish' ? 'opacity-100' : 'opacity-0'"
@@ -5161,7 +5167,7 @@ const onAlbumTouchCancel = (): void => {
                     :aria-label="t('public.album.nav.settings')"
                     @click="openGuestSettings"
                 >
-                    <Menu class="size-7 transition group-active:scale-95" />
+                    <Menu class="size-8 transition group-active:scale-95" />
                     <span
                         class="h-1.5 w-1.5 rounded-full bg-current transition"
                         :class="menuOpen ? 'opacity-100' : 'opacity-0'"
@@ -5183,7 +5189,7 @@ const onAlbumTouchCancel = (): void => {
                 class="fixed inset-0 z-[68] bg-[#fcfaf6]"
             >
                 <div class="flex h-full flex-col">
-                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-3 backdrop-blur">
+                    <header :class="['safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur', composerHeaderPaddingClass]">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -5445,7 +5451,7 @@ const onAlbumTouchCancel = (): void => {
                                     :placeholder="t('public.album.upload.message_placeholder')"
                                     :disabled="!canUpload || uploadForm.processing"
                                     rows="2"
-                                    class="min-h-12 w-full resize-none rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
+                                    class="min-h-14 w-full resize-none rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4 text-base leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white"
                                 />
                                 <div class="flex items-center justify-end text-xs font-medium text-slate-400">
                                     {{ uploadForm.message?.trim().length ?? 0 }}/500
@@ -5653,9 +5659,8 @@ const onAlbumTouchCancel = (): void => {
                                         :disabled="!canUploadText || textForm.processing"
                                         placeholder=""
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-2 text-center text-[3.2rem] font-semibold leading-tight outline-none sm:text-[4rem]"
+                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pb-10 pt-[30%] text-center text-[3.65rem] font-semibold leading-[1.08] outline-none sm:text-[4.4rem]"
                                         :class="[
-                                            textForm.text.trim().length === 0 ? 'pt-[34%]' : 'pt-8',
                                             !canUploadText || textForm.processing
                                                 ? 'cursor-not-allowed opacity-70'
                                                 : '',
@@ -5748,7 +5753,7 @@ const onAlbumTouchCancel = (): void => {
                 class="fixed inset-0 z-[72] bg-[#fcfaf6]"
             >
                 <div class="flex h-full flex-col">
-                    <header class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pb-5 pt-3 backdrop-blur">
+                    <header :class="['safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur', composerHeaderPaddingClass]">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="text-lg font-semibold text-slate-900">

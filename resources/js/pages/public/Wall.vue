@@ -167,6 +167,12 @@ const currentReactionStripItems = computed(() =>
         body: note.body,
     })),
 );
+const leftReactionStripItems = computed(() =>
+    currentReactionStripItems.value.filter((_, index) => index % 2 === 0),
+);
+const rightReactionStripItems = computed(() =>
+    currentReactionStripItems.value.filter((_, index) => index % 2 === 1),
+);
 
 const currentAssetBackdropUrl = computed(() => {
     if (!currentAsset.value) {
@@ -203,7 +209,7 @@ const emptyStateStyle = computed<Record<string, string>>(() => ({
         'radial-gradient(circle at top, color-mix(in srgb, var(--wall-primary) 55%, transparent), transparent 46%), linear-gradient(180deg, rgba(12,12,18,0.92) 0%, rgba(3,4,6,0.98) 100%)',
 }));
 
-const poweredByLabel = computed(() => `by ${appName.value.toLowerCase()}.app`);
+const poweredByLabel = computed(() => `Made possible by ${appName.value.toLowerCase()}.app`);
 
 const formatDateTime = (value: string | null): string => {
     if (!value) {
@@ -810,10 +816,18 @@ watch(
 
                 <div
                     v-if="qrVisible"
-                    class="wall-strip wall-strip-qr max-w-[min(26vw,14rem)] px-3 py-3 text-right"
+                    class="wall-strip wall-strip-qr max-w-[min(38vw,23rem)] px-4 py-3"
                 >
-                    <div class="flex items-start justify-end gap-3">
-                        <div class="min-w-0">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
+                            <img
+                                :src="albumQrDataUrl"
+                                :alt="t('public.shared.alt.album_qr_code')"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
+
+                        <div class="min-w-0 flex-1">
                             <p class="text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white/60">
                                 {{ t('public.wall.scan_to_upload') }}
                             </p>
@@ -828,18 +842,10 @@ watch(
                             </p>
                             <p
                                 v-if="showPoweredBy"
-                                class="mt-2 text-[11px] uppercase tracking-[0.14em] text-white/46"
+                                class="mt-2 text-[11px] text-white/46"
                             >
                                 {{ poweredByLabel }}
                             </p>
-                        </div>
-
-                        <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5">
-                            <img
-                                :src="albumQrDataUrl"
-                                :alt="t('public.shared.alt.album_qr_code')"
-                                class="h-full w-full object-cover"
-                            />
                         </div>
                     </div>
                 </div>
@@ -961,12 +967,12 @@ watch(
         </section>
 
         <div
-            v-if="currentReactionStripItems.length > 0"
-            class="wall-safe pointer-events-none absolute left-0 top-[max(5.75rem,12vh)] z-30 hidden xl:block"
+            v-if="leftReactionStripItems.length > 0"
+            class="wall-safe pointer-events-none absolute left-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
         >
             <div class="wall-strip wall-strip-reactions flex max-w-[min(42vw,34rem)] flex-wrap items-center gap-2 px-3 py-2">
                 <span
-                    v-for="note in currentReactionStripItems"
+                    v-for="note in leftReactionStripItems"
                     :key="`wall-note-${note.id}`"
                     class="inline-flex max-w-full items-center gap-2 rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/78"
                 >
@@ -975,6 +981,24 @@ watch(
                     <span class="max-w-[16rem] truncate text-white/56">
                         {{ note.body }}
                     </span>
+                </span>
+            </div>
+        </div>
+        <div
+            v-if="rightReactionStripItems.length > 0"
+            class="wall-safe pointer-events-none absolute right-0 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
+        >
+            <div class="wall-strip wall-strip-reactions ml-auto flex max-w-[min(42vw,34rem)] flex-wrap items-center justify-end gap-2 px-3 py-2 text-right">
+                <span
+                    v-for="note in rightReactionStripItems"
+                    :key="`wall-note-right-${note.id}`"
+                    class="inline-flex max-w-full items-center gap-2 rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/78"
+                >
+                    <span class="max-w-[16rem] truncate text-white/56">
+                        {{ note.body }}
+                    </span>
+                    <span class="truncate">{{ note.label }}</span>
+                    <Heart class="size-3 fill-current text-pink-300/90" />
                 </span>
             </div>
         </div>
@@ -1083,7 +1107,7 @@ watch(
     }
 
     .wall-strip-qr {
-        max-width: min(34vw, 10.75rem);
+        max-width: min(42vw, 18rem);
     }
 
     .wall-strip-reactions {
