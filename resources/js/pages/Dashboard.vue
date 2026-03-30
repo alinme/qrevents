@@ -97,6 +97,12 @@ const ownerName = computed(() => page.props.auth?.user?.name ?? 'You');
 
 const workspaceLabel = (event: DashboardEvent): string =>
     event.onboardingComplete ? 'Workspace' : event.primaryAction.label;
+
+const managementLink = (event: DashboardEvent): string =>
+    !event.isPaid ? event.links.billing : event.links.settings;
+
+const managementLabel = (event: DashboardEvent): string =>
+    !event.isPaid ? 'Billing' : 'Settings';
 </script>
 
 <template>
@@ -249,8 +255,8 @@ const workspaceLabel = (event: DashboardEvent): string =>
                                                 </Link>
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
-                                                <Link :href="event.links.settings">
-                                                    Settings
+                                                <Link :href="managementLink(event)">
+                                                    {{ managementLabel(event) }}
                                                 </Link>
                                             </Button>
                                         </div>

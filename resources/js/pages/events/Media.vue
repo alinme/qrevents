@@ -186,6 +186,14 @@ const visibleCount = ref(24);
 const mediaView = ref<MediaViewMode>('balanced');
 const attendeePage = ref(1);
 const previewScope = ref<PreviewScope>('main');
+
+const pillToggleClass = (active: boolean): string =>
+    active
+        ? 'bg-brand-ink text-brand-inverse shadow-sm hover:bg-brand-ink hover:text-brand-inverse'
+        : 'text-brand-muted hover:bg-brand-highlight/20 hover:text-brand-ink';
+
+const pillToggleIconClass = (active: boolean): string =>
+    active ? 'size-4 text-brand-inverse' : 'size-4 text-brand-muted';
 const copiedAssetId = ref<number | null>(null);
 const previewTouchStartX = ref<number | null>(null);
 const previewTouchStartY = ref<number | null>(null);
@@ -1120,32 +1128,32 @@ const statCards = computed(() => [
                         <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'relaxed' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full transition"
+                            :class="pillToggleClass(mediaView === 'relaxed')"
                             title="Relaxed gallery view"
                             @click="mediaView = 'relaxed'"
                         >
-                            <Columns2 class="size-4" />
+                            <Columns2 :class="pillToggleIconClass(mediaView === 'relaxed')" />
                             <span class="sr-only">Relaxed gallery view</span>
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'balanced' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full transition"
+                            :class="pillToggleClass(mediaView === 'balanced')"
                             title="Balanced gallery view"
                             @click="mediaView = 'balanced'"
                         >
-                            <Columns3 class="size-4" />
+                            <Columns3 :class="pillToggleIconClass(mediaView === 'balanced')" />
                             <span class="sr-only">Balanced gallery view</span>
                         </button>
                         <button
                             type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                            :class="mediaView === 'dense' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                            class="inline-flex size-9 items-center justify-center rounded-full transition"
+                            :class="pillToggleClass(mediaView === 'dense')"
                             title="Dense gallery view"
                             @click="mediaView = 'dense'"
                         >
-                            <Grid2x2 class="size-4" />
+                            <Grid2x2 :class="pillToggleIconClass(mediaView === 'dense')" />
                             <span class="sr-only">Dense gallery view</span>
                         </button>
                         </div>
@@ -1179,42 +1187,42 @@ const statCards = computed(() => [
                         <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'all' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                :class="pillToggleClass(kindFilter === 'all')"
                                 title="All uploads"
                                 @click="kindFilter = 'all'"
                             >
-                                <Grid2x2 class="size-4" />
+                                <Grid2x2 :class="pillToggleIconClass(kindFilter === 'all')" />
                                 <span class="sr-only">All uploads</span>
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'photo' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                :class="pillToggleClass(kindFilter === 'photo')"
                                 title="Photos"
                                 @click="kindFilter = 'photo'"
                             >
-                                <IconPhoto class="size-4" />
+                                <IconPhoto :class="pillToggleIconClass(kindFilter === 'photo')" />
                                 <span class="sr-only">Photos</span>
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'video' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                :class="pillToggleClass(kindFilter === 'video')"
                                 title="Videos"
                                 @click="kindFilter = 'video'"
                             >
-                                <IconVideo class="size-4" />
+                                <IconVideo :class="pillToggleIconClass(kindFilter === 'video')" />
                                 <span class="sr-only">Videos</span>
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                :class="kindFilter === 'text' ? 'bg-brand-ink text-brand-inverse hover:bg-brand-ink hover:text-brand-inverse' : ''"
+                                class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                :class="pillToggleClass(kindFilter === 'text')"
                                 title="Text posts"
                                 @click="kindFilter = 'text'"
                             >
-                                <IconFileText class="size-4" />
+                                <IconFileText :class="pillToggleIconClass(kindFilter === 'text')" />
                                 <span class="sr-only">Text posts</span>
                             </button>
                         </div>

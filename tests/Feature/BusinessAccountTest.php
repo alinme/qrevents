@@ -76,6 +76,27 @@ test('users can cancel business onboarding before saving their business profile'
         ->and($user->business_onboarded_at)->toBeNull();
 });
 
+test('cancelling business onboarding returns users to the billing page they upgraded from', function () {
+    $user = User::factory()->create();
+    $event = \App\Models\Event::factory()->for($user)->create();
+    $billingUrl = route('events.settings', ['event' => $event, 'tab' => 'billing']);
+
+    $this->actingAs($user)
+        ->from($billingUrl)
+        ->post(route('dashboard.business.activate'))
+        ->assertRedirect(route('dashboard.business.onboarding'));
+
+    $this->actingAs($user)
+        ->post(route('dashboard.business.onboarding.cancel'))
+        ->assertRedirect($billingUrl)
+        ->assertSessionHas('success', 'Business upgrade cancelled.');
+
+    $user->refresh();
+
+    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_USER)
+        ->and($user->business_onboarded_at)->toBeNull();
+});
+
 test('business wallet checkout locks the latest fx rate at session creation', function () {
     config(['services.stripe.secret' => 'sk_test_123']);
 
