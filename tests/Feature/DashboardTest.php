@@ -227,6 +227,23 @@ test('event workspace exposes guest upload settings summary for owners', functio
         );
 });
 
+test('business owners return from an event workspace to the business events dashboard', function () {
+    $owner = User::factory()->business()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Studio Launch',
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Home')
+            ->where('eventLinks.accountDashboard', route('dashboard.business.events.index'))
+            ->where('backNavigation.href', route('dashboard.business.events.index'))
+        );
+});
+
 test('normal users cannot access the dedicated business dashboard', function () {
     $user = User::factory()->create();
 

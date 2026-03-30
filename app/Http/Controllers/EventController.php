@@ -2380,6 +2380,7 @@ class EventController extends Controller
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
+        $eventOverviewUrl = $this->eventOverviewUrl($request);
         $planFeatures = $this->planFeaturePayload($event);
         $canManageBilling = $request->user()->canAccessAdmin();
         $canCheckoutBilling = ! $canManageBilling
@@ -2542,7 +2543,7 @@ class EventController extends Controller
                 ],
             ],
             'eventLinks' => [
-                'accountDashboard' => $showEventOverviewLink ? route('dashboard.account') : null,
+                'accountDashboard' => $eventOverviewUrl,
                 'dashboard' => route('events.show', $event),
                 'guests' => route('events.guests', $event),
                 'guestReport' => route('events.guests.report', $event),
@@ -2578,8 +2579,8 @@ class EventController extends Controller
                 ['title' => 'Guests', 'href' => route('events.guests', $event)],
                 ['title' => 'Settings', 'href' => route('events.settings', $event)],
             ])),
-            'backNavigation' => $showEventOverviewLink
-                ? ['title' => 'Events', 'href' => route('dashboard.account')]
+            'backNavigation' => $eventOverviewUrl !== null
+                ? ['title' => 'Events', 'href' => $eventOverviewUrl]
                 : null,
         ];
     }
@@ -3645,6 +3646,19 @@ class EventController extends Controller
             ->pluck('event_id');
 
         return $ownedEventIds->count() + $collaboratorEventIds->count() > 1;
+    }
+
+    private function eventOverviewUrl(Request $request): ?string
+    {
+        if (! $this->shouldShowEventOverviewLink($request)) {
+            return null;
+        }
+
+        if ($request->user()->canAccessBusinessDashboard()) {
+            return route('dashboard.business.events.index');
+        }
+
+        return route('dashboard.account');
     }
 
     private function guestPartyDuplicateKey(string $name, ?string $phone): string
