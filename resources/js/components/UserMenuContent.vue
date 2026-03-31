@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { LogOut, Settings } from 'lucide-vue-next';
+import AppLocaleSwitcher from '@/components/AppLocaleSwitcher.vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -8,6 +9,7 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
@@ -19,6 +21,8 @@ type Props = {
 const handleLogout = () => {
     router.flushAll();
 };
+
+const { t } = useTranslations();
 
 defineProps<Props>();
 </script>
@@ -34,10 +38,12 @@ defineProps<Props>();
         <DropdownMenuItem :as-child="true">
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
-                Settings
+                {{ t('app.user_menu.settings') }}
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>
+    <DropdownMenuSeparator />
+    <AppLocaleSwitcher />
     <DropdownMenuSeparator />
     <DropdownMenuItem :as-child="true">
         <Link
@@ -48,7 +54,7 @@ defineProps<Props>();
             data-test="logout-button"
         >
             <LogOut class="mr-2 h-4 w-4" />
-            Log out
+            {{ t('app.user_menu.logout') }}
         </Link>
     </DropdownMenuItem>
 </template>

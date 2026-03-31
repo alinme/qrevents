@@ -22,6 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -115,12 +116,26 @@ const props = defineProps<{
     showDashboardModal: boolean;
 }>();
 
+const { locale, t } = useTranslations();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: props.currentEvent.name,
         href: props.eventLinks.dashboard,
     },
 ];
+
+const intlLocale = computed(() => {
+    if (locale.value === 'ro') {
+        return 'ro-RO';
+    }
+
+    if (locale.value === 'el') {
+        return 'el-GR';
+    }
+
+    return 'en-GB';
+});
 
 const modalOpen = ref(props.showDashboardModal);
 const exportSubmitting = ref(false);
@@ -129,12 +144,12 @@ const isRefreshingWorkspace = ref(false);
 const qrPreview = ref<'album' | 'wall' | null>(null);
 let workspacePollId: number | null = null;
 
-const formatDateTime = (value: string | null, fallback = 'Unknown'): string => {
+const formatDateTime = (value: string | null, fallback = t('event_home.fallback.unknown')): string => {
     if (!value) {
         return fallback;
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(intlLocale.value, {
         dateStyle: 'medium',
         timeStyle: 'short',
     }).format(new Date(value));
@@ -142,10 +157,10 @@ const formatDateTime = (value: string | null, fallback = 'Unknown'): string => {
 
 const formatDateOnly = (value: string | null): string => {
     if (!value) {
-        return 'Not set';
+        return t('event_home.fallback.not_set');
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(intlLocale.value, {
         dateStyle: 'long',
     }).format(new Date(value));
 };
@@ -167,7 +182,7 @@ const formatBytes = (bytes: number): string => {
 
 const uploadWindowLabel = computed(() => {
     if (!props.currentEvent.uploadWindowStartsAt || !props.currentEvent.uploadWindowEndsAt) {
-        return 'Not scheduled yet';
+        return t('event_home.fallback.not_scheduled_yet');
     }
 
     return `${formatDateTime(props.currentEvent.uploadWindowStartsAt)} - ${formatDateTime(props.currentEvent.uploadWindowEndsAt)}`;
@@ -203,92 +218,92 @@ const showBillingBanner = computed(
 );
 
 const billingActionLabel = computed(() =>
-    props.currentEvent.billing.canManage ? 'Open billing' : 'View billing',
+    props.currentEvent.billing.canManage ? t('event_home.actions.open_billing') : t('event_home.actions.view_billing'),
 );
 
 const mediaExportLabel = computed(() => {
     if (!canDownloadAll.value) {
-        return 'Upgrade for export';
+        return t('event_home.export.upgrade');
     }
 
     if (mediaExportBusy.value) {
-        return 'Exporting...';
+        return t('event_home.export.exporting');
     }
 
     if (mediaExportReady.value) {
-        return 'Download album';
+        return t('event_home.export.download');
     }
 
     if (props.currentEvent.mediaExport.status === 'failed') {
-        return 'Retry export';
+        return t('event_home.export.retry');
     }
 
-    return 'Build album export';
+    return t('event_home.export.build');
 });
 
 const mediaExportHint = computed(() => {
     if (!canDownloadAll.value) {
-        return 'ZIP export unlocks on paid plans.';
+        return t('event_home.export.hint_locked');
     }
 
     if (mediaExportBusy.value) {
-        return 'Export is being prepared in the background.';
+        return t('event_home.export.hint_processing');
     }
 
     if (mediaExportReady.value) {
         return props.currentEvent.mediaExport.completedAt
-            ? `Ready since ${formatDateTime(props.currentEvent.mediaExport.completedAt)}`
-            : 'Ready to download.';
+            ? t('event_home.export.hint_ready_since', { date: formatDateTime(props.currentEvent.mediaExport.completedAt) })
+            : t('event_home.export.hint_ready');
     }
 
     if (props.currentEvent.mediaExport.status === 'failed') {
-        return props.currentEvent.mediaExport.error || 'The previous export failed.';
+        return props.currentEvent.mediaExport.error || t('event_home.export.hint_failed');
     }
 
-    return 'Create a ZIP of the approved album when you need a handoff.';
+    return t('event_home.export.hint_idle');
 });
 
 const guestUploadTypeLabels: Record<string, string> = {
-    photo: 'Photos',
-    video: 'Videos',
-    text: 'Text wishes',
+    photo: t('event_home.media_types.photo'),
+    video: t('event_home.media_types.video'),
+    text: t('event_home.media_types.text'),
 };
 
 const summaryItems = computed(() => [
     {
-        label: 'Guests',
+        label: t('event_home.summary.guests'),
         value: String(props.dashboardStats.guestCount),
         detail: props.dashboardStats.lastUploadAt
-            ? `Last upload ${formatDateTime(props.dashboardStats.lastUploadAt)}`
-            : 'No uploads yet',
+            ? t('event_home.summary.last_upload', { date: formatDateTime(props.dashboardStats.lastUploadAt) })
+            : t('event_home.summary.no_uploads'),
         icon: Users,
     },
     {
-        label: 'Uploads',
+        label: t('event_home.summary.uploads'),
         value: uploadUsageLabel.value,
-        detail: `${props.dashboardStats.uploadRemaining} remaining`,
+        detail: t('event_home.summary.remaining', { count: props.dashboardStats.uploadRemaining }),
         icon: ImageIcon,
     },
     {
-        label: 'Pending review',
+        label: t('event_home.summary.pending_review'),
         value: String(props.currentEvent.moderationSummary.processingCount),
-        detail: `${props.dashboardStats.approvedCount} approved`,
+        detail: t('event_home.summary.approved', { count: props.dashboardStats.approvedCount }),
         icon: Clock3,
     },
     {
-        label: 'Storage',
+        label: t('event_home.summary.storage'),
         value: storageUsageLabel.value,
-        detail: `${formatBytes(props.dashboardStats.storageRemainingBytes)} free`,
+        detail: t('event_home.summary.free', { amount: formatBytes(props.dashboardStats.storageRemainingBytes) }),
         icon: CheckCircle2,
     },
 ]);
 
 const recentUploadSummary = (upload: RecentUpload): string => {
     if (upload.kind === 'text') {
-        return upload.text?.trim() || 'Text post';
+        return upload.text?.trim() || t('event_home.recent.text_post');
     }
 
-    return upload.message?.trim() || `${upload.kind} upload`;
+    return upload.message?.trim() || t(`event_home.recent.kind_upload.${upload.kind}`);
 };
 
 const moderationToneClass = (status: RecentUpload['moderationStatus']): string => {
@@ -302,20 +317,23 @@ const moderationToneClass = (status: RecentUpload['moderationStatus']): string =
     }
 };
 
+const moderationLabel = (status: RecentUpload['moderationStatus']): string =>
+    t(`event_home.status.${status}`);
+
 const qrPreviewData = computed(() => {
     if (qrPreview.value === 'album') {
         return {
-            title: 'Digital album QR code',
+            title: t('event_home.qr.album_title'),
             image: props.eventLinks.albumQrDataUrl,
-            alt: 'Digital album QR code',
+            alt: t('event_home.qr.album_alt'),
         };
     }
 
     if (qrPreview.value === 'wall') {
         return {
-            title: 'Photo wall QR code',
+            title: t('event_home.qr.wall_title'),
             image: props.eventLinks.wallQrDataUrl,
-            alt: 'Photo wall QR code',
+            alt: t('event_home.qr.wall_alt'),
         };
     }
 
@@ -328,7 +346,7 @@ const copyText = async (value: string, successMessage: string): Promise<void> =>
         || !navigator.clipboard
         || typeof navigator.clipboard.writeText !== 'function'
     ) {
-        toast.error('Copy is not available on this device.');
+        toast.error(t('event_home.clipboard.unavailable'));
         return;
     }
 
@@ -422,8 +440,8 @@ watch(
             ).length;
             toast.success(
                 newUploadCount === 1
-                    ? 'A new guest upload just arrived.'
-                    : `${newUploadCount} new guest uploads just arrived.`,
+                    ? t('event_home.activity.new_upload_single')
+                    : t('event_home.activity.new_upload_plural', { count: newUploadCount }),
             );
         }
 
@@ -443,7 +461,7 @@ watch(
             ['pending', 'processing'].includes(previousStatus) &&
             nextStatus === 'ready'
         ) {
-            toast.success('Album export is ready to download.');
+            toast.success(t('event_home.export.ready'));
         }
 
         if (
@@ -451,7 +469,7 @@ watch(
             ['pending', 'processing'].includes(previousStatus) &&
             nextStatus === 'failed'
         ) {
-            toast.error('Album export failed. Please try again.');
+            toast.error(t('event_home.export.failed'));
         }
     },
 );
@@ -483,7 +501,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head :title="currentEvent.name" />
+    <Head :title="t('event_home.page_title', { event: currentEvent.name })" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-full bg-[#faf7f2]">
@@ -519,7 +537,7 @@ onUnmounted(() => {
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                                Workspace
+                                {{ t('event_home.hero.kicker') }}
                             </p>
                             <h1 class="mt-2 text-xl font-semibold tracking-tight text-[#171411] sm:text-2xl">
                                 {{ currentEvent.name }}
@@ -529,7 +547,7 @@ onUnmounted(() => {
                             </p>
                             <div class="mt-3 flex flex-wrap items-center gap-2">
                                 <span class="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                                    Guest uploads
+                                    {{ t('event_home.hero.uploads_label') }}
                                 </span>
                                 <span
                                     v-for="mediaType in currentEvent.allowedMediaTypes"
@@ -542,7 +560,7 @@ onUnmounted(() => {
                                     :href="`${eventLinks.settings}#guest-upload-types`"
                                     class="text-xs font-medium text-zinc-600 underline-offset-4 hover:text-[#171411] hover:underline"
                                 >
-                                    Edit
+                                    {{ t('event_home.actions.edit') }}
                                 </Link>
                             </div>
                             <p class="mt-2 text-sm text-zinc-500">
@@ -553,7 +571,7 @@ onUnmounted(() => {
                         <div class="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
                             <Button v-if="eventLinks.accountDashboard" as-child size="sm" variant="outline">
                                 <Link :href="eventLinks.accountDashboard">
-                                    Events
+                                    {{ t('app.nav.events') }}
                                 </Link>
                             </Button>
                             <Button
@@ -595,21 +613,21 @@ onUnmounted(() => {
                         <div class="flex items-end justify-between gap-4 border-b border-black/5 pb-4">
                             <div>
                                 <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                    Recent uploads
+                                    {{ t('event_home.section.recent_title') }}
                                 </h2>
                                 <p class="mt-1 text-sm text-zinc-600">
-                                    Short updates from the guest album.
+                                    {{ t('event_home.section.recent_description') }}
                                 </p>
                             </div>
                             <Button as-child size="sm" variant="outline">
                                 <Link :href="eventLinks.media">
-                                    Open media
+                                    {{ t('event_home.actions.open_media') }}
                                 </Link>
                             </Button>
                         </div>
 
                         <div v-if="dashboardRecentUploads.length === 0" class="py-8 text-sm text-zinc-600">
-                            No uploads yet.
+                            {{ t('event_home.section.recent_empty') }}
                         </div>
 
                         <div v-else class="min-h-0 max-h-[30rem] flex-1 overflow-y-auto pt-2">
@@ -629,7 +647,7 @@ onUnmounted(() => {
                                         <ImageIcon v-if="upload.kind === 'photo'" class="size-4" />
                                         <Video v-else-if="upload.kind === 'video'" class="size-4" />
                                         <MessageSquareText v-else class="size-4" />
-                                        <span class="capitalize">{{ upload.kind }}</span>
+                                        <span>{{ guestUploadTypeLabels[upload.kind] ?? upload.kind }}</span>
                                         <span>·</span>
                                         <span>{{ formatDateTime(upload.createdAt) }}</span>
                                     </div>
@@ -639,7 +657,7 @@ onUnmounted(() => {
                                     class="inline-flex w-fit rounded-full px-2.5 py-1 text-[0.68rem] font-semibold capitalize"
                                     :class="moderationToneClass(upload.moderationStatus)"
                                 >
-                                    {{ upload.moderationStatus }}
+                                    {{ moderationLabel(upload.moderationStatus) }}
                                 </span>
                             </div>
                             </div>
@@ -649,10 +667,10 @@ onUnmounted(() => {
                     <aside class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
                         <div class="border-b border-black/5 pb-4">
                             <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
-                                Share links
+                                {{ t('event_home.section.share_title') }}
                             </h2>
                             <p class="mt-1 text-sm text-zinc-600">
-                                Album and wall links for your guests.
+                                {{ t('event_home.section.share_description') }}
                             </p>
                         </div>
 
@@ -666,49 +684,49 @@ onUnmounted(() => {
                                     >
                                         <img
                                             :src="eventLinks.albumQrDataUrl"
-                                            alt="Digital album QR code"
+                                            :alt="t('event_home.qr.album_alt')"
                                             class="size-20 rounded-[0.8rem]"
                                         />
                                     </button>
                                     <div class="min-w-0 flex-1">
                                         <h3 class="text-sm font-semibold text-[#171411]">
-                                            Digital album
+                                            {{ t('event_home.album.title') }}
                                         </h3>
                                         <p class="mt-1 text-sm text-zinc-600">
-                                            Guests upload and browse from here.
+                                            {{ t('event_home.album.description') }}
                                         </p>
                                         <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                            Album code {{ eventLinks.albumAccessCode }}
+                                            {{ t('event_home.album.code_label', { code: eventLinks.albumAccessCode }) }}
                                         </p>
                                         <p class="mt-1 text-xs text-zinc-500">
-                                            Guests without a QR reader can visit {{ eventLinks.albumEntryShortcut }} and enter the code.
+                                            {{ t('event_home.album.code_hint', { shortcut: eventLinks.albumEntryShortcut }) }}
                                         </p>
                                         <p v-if="eventLinks.albumShortUrl" class="mt-1 text-xs text-zinc-500">
-                                            Short link {{ eventLinks.albumShortUrl }}
+                                            {{ t('event_home.album.short_link', { url: eventLinks.albumShortUrl }) }}
                                         </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.album" target="_blank" rel="noopener noreferrer">
-                                                    Open
+                                                    {{ t('event_home.actions.open') }}
                                                 </a>
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.album, 'Album link copied.')">
+                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.album, t('event_home.clipboard.album_link'))">
                                                 <Copy class="mr-2 size-4" />
-                                                Copy
+                                                {{ t('event_home.actions.copy') }}
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.albumQrDataUrl" download="digital-album-qr.svg">
                                                     <Download class="mr-2 size-4" />
-                                                    QR
+                                                    {{ t('event_home.actions.qr') }}
                                                 </a>
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                @click="copyText(eventLinks.albumShortUrl ?? eventLinks.albumAccessCode, eventLinks.albumShortUrl ? 'Album short link copied.' : 'Album code copied.')"
+                                                @click="copyText(eventLinks.albumShortUrl ?? eventLinks.albumAccessCode, eventLinks.albumShortUrl ? t('event_home.clipboard.album_short_link') : t('event_home.clipboard.album_code'))"
                                             >
                                                 <Copy class="mr-2 size-4" />
-                                                {{ eventLinks.albumShortUrl ? 'Short link' : 'Code' }}
+                                                {{ eventLinks.albumShortUrl ? t('event_home.actions.short_link') : t('event_home.actions.code') }}
                                             </Button>
                                         </div>
                                     </div>
@@ -724,46 +742,46 @@ onUnmounted(() => {
                                     >
                                         <img
                                             :src="eventLinks.wallQrDataUrl"
-                                            alt="Photo wall QR code"
+                                            :alt="t('event_home.qr.wall_alt')"
                                             class="size-20 rounded-[0.8rem]"
                                         />
                                     </button>
                                     <div class="min-w-0 flex-1">
                                         <h3 class="text-sm font-semibold text-[#171411]">
-                                            Photo wall
+                                            {{ t('event_home.wall.title') }}
                                         </h3>
                                         <p class="mt-1 text-sm text-zinc-600">
-                                            Open this on a screen during the event.
+                                            {{ t('event_home.wall.description') }}
                                         </p>
                                         <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                                            Wall code {{ eventLinks.albumAccessCode }}
+                                            {{ t('event_home.wall.code_label', { code: eventLinks.albumAccessCode }) }}
                                         </p>
                                         <p v-if="eventLinks.wallShortUrl" class="mt-1 text-xs text-zinc-500">
-                                            Short link {{ eventLinks.wallShortUrl }}
+                                            {{ t('event_home.wall.short_link', { url: eventLinks.wallShortUrl }) }}
                                         </p>
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.wall" target="_blank" rel="noopener noreferrer">
-                                                    Open
+                                                    {{ t('event_home.actions.open') }}
                                                 </a>
                                             </Button>
-                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, 'Photo wall link copied.')">
+                                            <Button size="sm" variant="outline" @click="copyText(eventLinks.wall, t('event_home.clipboard.wall_link'))">
                                                 <Copy class="mr-2 size-4" />
-                                                Copy
+                                                {{ t('event_home.actions.copy') }}
                                             </Button>
                                             <Button
                                                 v-if="eventLinks.wallShortUrl"
                                                 size="sm"
                                                 variant="outline"
-                                                @click="copyText(eventLinks.wallShortUrl, 'Photo wall short link copied.')"
+                                                @click="copyText(eventLinks.wallShortUrl, t('event_home.clipboard.wall_short_link'))"
                                             >
                                                 <Copy class="mr-2 size-4" />
-                                                Short link
+                                                {{ t('event_home.actions.short_link') }}
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <a :href="eventLinks.wallQrDataUrl" download="photo-wall-qr.svg">
                                                     <Download class="mr-2 size-4" />
-                                                    QR
+                                                    {{ t('event_home.actions.qr') }}
                                                 </a>
                                             </Button>
                                         </div>
@@ -780,9 +798,9 @@ onUnmounted(() => {
     <Dialog v-model:open="modalOpen">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>Event ready</DialogTitle>
+                <DialogTitle>{{ t('event_home.dialog.ready_title') }}</DialogTitle>
                 <DialogDescription>
-                    This page is now the compact event workspace. Use media and settings from here whenever you need them.
+                    {{ t('event_home.dialog.ready_description') }}
                 </DialogDescription>
             </DialogHeader>
         </DialogContent>
@@ -803,13 +821,13 @@ onUnmounted(() => {
                 />
                 <template v-if="qrPreview === 'album'">
                     <p class="mt-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                        Album code
+                        {{ t('event_home.dialog.album_code_label') }}
                     </p>
                     <p class="mt-2 text-3xl font-semibold tracking-[0.32em] text-[#171411]">
                         {{ eventLinks.albumAccessCode }}
                     </p>
                     <p class="mt-2 text-sm text-zinc-500">
-                        No QR reader? Visit {{ eventLinks.albumEntryShortcut }} and enter the code.
+                        {{ t('event_home.dialog.album_code_hint', { shortcut: eventLinks.albumEntryShortcut }) }}
                     </p>
                 </template>
             </div>

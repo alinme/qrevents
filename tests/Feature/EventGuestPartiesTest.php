@@ -63,6 +63,25 @@ it('shows the guest parties page for an event owner', function () {
         );
 });
 
+it('shares localized guest workspace strings for authenticated pages', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $this->actingAs($owner)
+        ->withUnencryptedCookies(['site_locale' => 'ro'])
+        ->get(route('events.guests', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Guests')
+            ->where('locale.current', 'ro')
+            ->where('translations.guests.page.title', 'Invitati')
+            ->where('translations.app.language.label', 'Limba')
+            ->where('translations.guests.dialogs.guest.add_title', 'Adauga invitat')
+            ->where('translations.guests.dialogs.tables.manage_title', 'Gestioneaza mesele')
+            ->where('translations.guests.dialogs.guest.quick_title', 'Detalii rapide')
+        );
+});
+
 it('shows the printable guest report for an event owner', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([

@@ -176,6 +176,38 @@ test('event workspace exposes guest upload settings summary for owners', functio
         );
 });
 
+test('authenticated dashboard pages share localized host workspace strings', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Spring Wedding',
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->withUnencryptedCookies(['site_locale' => 'ro'])
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('locale.current', 'ro')
+            ->where('translations.app.language.label', 'Limba')
+            ->where('translations.dashboard.hero.title', 'Continua de unde ai ramas cu evenimentul')
+            ->where('translations.dashboard.sections.activity.title', 'Activitate recenta')
+        );
+
+    $this->actingAs($owner)
+        ->withUnencryptedCookies(['site_locale' => 'ro'])
+        ->get(route('events.show', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/Home')
+            ->where('locale.current', 'ro')
+            ->where('translations.event_home.hero.kicker', 'Workspace')
+            ->where('translations.event_home.section.share_title', 'Linkuri de distribuit')
+            ->where('translations.event_home.media_types.text', 'Mesaje text')
+        );
+});
+
 test('business owners return from an event workspace to the business events dashboard', function () {
     $owner = User::factory()->business()->create();
     $event = Event::factory()->for($owner)->create([

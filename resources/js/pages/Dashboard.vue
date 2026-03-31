@@ -16,11 +16,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
     badgeClass,
-    formatDateOnly,
-    formatDateTime,
     moderationBadgeClass,
 } from '@/lib/dashboard';
 import type { BreadcrumbItem } from '@/types';
@@ -45,6 +44,8 @@ const props = defineProps<{
     showDashboardModal: boolean;
 }>();
 
+const { locale, t } = useTranslations();
+
 const page = usePage<{
     auth?: {
         user?: {
@@ -55,7 +56,7 @@ const page = usePage<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: t('app.nav.dashboard'),
         href: props.dashboardLinks.overview,
     },
 ];
@@ -66,37 +67,73 @@ const totalAccessibleEvents = computed(
     () => props.summary.ownedEventCount + props.summary.collaboratorEventCount,
 );
 
+const intlLocale = computed(() => {
+    if (locale.value === 'ro') {
+        return 'ro-RO';
+    }
+
+    if (locale.value === 'el') {
+        return 'el-GR';
+    }
+
+    return 'en-GB';
+});
+
+const formatLocalizedDateOnly = (value: string | null): string => {
+    if (!value) {
+        return t('event_home.fallback.not_set');
+    }
+
+    return new Intl.DateTimeFormat(intlLocale.value, {
+        dateStyle: 'long',
+    }).format(new Date(value));
+};
+
+const formatLocalizedDateTime = (value: string | null): string => {
+    if (!value) {
+        return t('dashboard.sections.activity.empty');
+    }
+
+    return new Intl.DateTimeFormat(intlLocale.value, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
+};
+
+const formatNumber = (value: number): string =>
+    new Intl.NumberFormat(intlLocale.value).format(value);
+
 const compactStats = computed(() => [
     {
-        label: 'Events',
+        label: t('dashboard.stats.events'),
         value: totalAccessibleEvents.value,
-        detail: `${props.summary.ownedEventCount} owned`,
+        detail: t('dashboard.stats.events_detail', { count: formatNumber(props.summary.ownedEventCount) }),
         icon: FolderKanban,
     },
     {
-        label: 'Uploads',
+        label: t('dashboard.stats.uploads'),
         value: props.summary.totalUploadCount,
-        detail: 'Across all accessible events',
+        detail: t('dashboard.stats.uploads_detail'),
         icon: Camera,
     },
     {
-        label: 'Pending',
+        label: t('dashboard.stats.pending'),
         value: props.summary.pendingModerationCount,
-        detail: 'Waiting for review',
+        detail: t('dashboard.stats.pending_detail'),
         icon: Clock3,
     },
     {
-        label: 'Exports',
+        label: t('dashboard.stats.exports'),
         value: props.summary.readyExportCount,
-        detail: 'Ready to download',
+        detail: t('dashboard.stats.exports_detail'),
         icon: CheckCircle2,
     },
 ]);
 
-const ownerName = computed(() => page.props.auth?.user?.name ?? 'You');
+const ownerName = computed(() => page.props.auth?.user?.name ?? t('dashboard.owner_fallback'));
 
 const workspaceLabel = (event: DashboardEvent): string =>
-    event.onboardingComplete ? 'Workspace' : event.primaryAction.label;
+    event.onboardingComplete ? t('app.nav.workspace') : t('dashboard.actions.continue_setup');
 
 const needsBillingAttention = (event: DashboardEvent): boolean =>
     event.planDetails.priceCents > 0 && !event.isPaid;
@@ -105,9 +142,7 @@ const managementLink = (event: DashboardEvent): string =>
     needsBillingAttention(event) ? event.links.billing : event.links.settings;
 
 const managementLabel = (event: DashboardEvent): string =>
-    needsBillingAttention(event) ? 'Billing' : 'Settings';
-
-const numberFormatter = new Intl.NumberFormat();
+    needsBillingAttention(event) ? t('app.nav.billing') : t('app.nav.settings');
 
 const formatStorageLimit = (bytes: number): string => {
     if (bytes >= 1024 ** 3) {
@@ -116,19 +151,21 @@ const formatStorageLimit = (bytes: number): string => {
             ? gigabytes.toString()
             : gigabytes.toFixed(1);
 
-        return `${value} GB storage`;
+        return t('dashboard.plan.storage_gb', { value });
     }
 
-    return `${Math.max(1, Math.round(bytes / 1024 ** 2))} MB storage`;
+    return t('dashboard.plan.storage_mb', {
+        value: Math.max(1, Math.round(bytes / 1024 ** 2)),
+    });
 };
 
 const uploadWindowLabel = (days: number): string =>
-    `${numberFormatter.format(days)}-day upload window`;
+    t('dashboard.plan.upload_window', { count: formatNumber(days) });
 
 const planSummary = (event: DashboardEvent): string =>
     [
         formatStorageLimit(event.planDetails.storageLimitBytes),
-        `${numberFormatter.format(event.planDetails.uploadLimit)} uploads`,
+        t('dashboard.plan.uploads', { count: formatNumber(event.planDetails.uploadLimit) }),
         uploadWindowLabel(event.planDetails.uploadWindowDays),
     ].join(' · ');
 
@@ -136,17 +173,17 @@ const planCapabilities = (event: DashboardEvent): string[] => {
     const capabilities: string[] = [];
 
     if (event.planDetails.downloadAllEnabled) {
-        capabilities.push('Full downloads');
+        capabilities.push(t('dashboard.plan.capabilities.full_downloads'));
     } else {
-        capabilities.push('QR Events branding');
+        capabilities.push(t('dashboard.plan.capabilities.branding'));
     }
 
     if (event.planDetails.moderationToolsEnabled) {
-        capabilities.push('Moderation tools');
+        capabilities.push(t('dashboard.plan.capabilities.moderation_tools'));
     }
 
     if (event.planDetails.removeAppBranding) {
-        capabilities.push('White-label album');
+        capabilities.push(t('dashboard.plan.capabilities.white_label'));
     }
 
     return capabilities;
@@ -154,7 +191,7 @@ const planCapabilities = (event: DashboardEvent): string[] => {
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head :title="t('dashboard.page_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -163,13 +200,13 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="dashboard-eyebrow">
-                                Events
+                                {{ t('dashboard.hero.kicker') }}
                             </p>
                             <h1 class="dashboard-title mt-2">
-                                Pick up where your event left off
+                                {{ t('dashboard.hero.title') }}
                             </h1>
                             <p class="dashboard-body mt-2">
-                                {{ ownerName }}, open the workspace you need and keep moving.
+                                {{ t('dashboard.hero.description', { name: ownerName }) }}
                             </p>
                         </div>
                         <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -198,15 +235,15 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                     >
                         <div>
                             <p class="text-sm font-semibold text-amber-950">
-                                {{ continueSetupEvent.name }} still needs setup.
+                                {{ t('dashboard.continue_setup.title', { event: continueSetupEvent.name }) }}
                             </p>
                             <p class="text-sm text-amber-800">
-                                Finish onboarding, then manage it here with the rest of your events.
+                                {{ t('dashboard.continue_setup.description') }}
                             </p>
                         </div>
                         <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                             <Link :href="continueSetupEvent.primaryAction.url">
-                                Continue setup
+                                {{ t('dashboard.actions.continue_setup') }}
                             </Link>
                         </Button>
                     </div>
@@ -218,14 +255,14 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                         <div class="dashboard-panel-divider flex flex-col gap-2 pb-4 sm:flex-row sm:items-end sm:justify-between">
                             <div>
                                 <h2 class="dashboard-section-title">
-                                    Your events
+                                    {{ t('dashboard.sections.events.title') }}
                                 </h2>
                                 <p class="dashboard-body mt-1">
-                                    Open the right workspace, media view, or settings page fast.
+                                    {{ t('dashboard.sections.events.description') }}
                                 </p>
                             </div>
                             <p class="text-sm text-brand-muted">
-                                {{ totalAccessibleEvents }} total
+                                {{ t('dashboard.sections.events.total', { count: formatNumber(totalAccessibleEvents) }) }}
                             </p>
                         </div>
 
@@ -233,13 +270,13 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                             v-if="ownedEvents.length === 0 && collaboratorEvents.length === 0"
                             class="dashboard-body py-10"
                         >
-                            No events are linked to this account yet.
+                            {{ t('dashboard.empty.no_events') }}
                         </div>
 
                         <div v-else class="space-y-5 pt-5">
                             <div v-if="ownedEvents.length > 0" class="space-y-3">
                                 <p class="dashboard-eyebrow">
-                                    Your events
+                                    {{ t('dashboard.sections.events.owned') }}
                                 </p>
 
                                 <article
@@ -275,16 +312,18 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                                     {{ event.name }}
                                                 </h3>
                                                 <p class="mt-1 text-sm text-brand-muted">
-                                                    {{ formatDateOnly(event.eventDate) }} ·
-                                                    {{ event.guestCount }} guests ·
-                                                    {{ event.assetCount }} uploads ·
-                                                    {{ event.processingCount }} pending
+                                                    {{ t('dashboard.event_summary.inline', {
+                                                        date: formatLocalizedDateOnly(event.eventDate),
+                                                        guests: formatNumber(event.guestCount),
+                                                        uploads: formatNumber(event.assetCount),
+                                                        pending: formatNumber(event.processingCount),
+                                                    }) }}
                                                 </p>
                                                 <p class="dashboard-meta mt-1">
                                                     {{
                                                         event.lastUploadAt
-                                                            ? `Last upload ${formatDateTime(event.lastUploadAt)}`
-                                                            : 'No guest uploads yet'
+                                                            ? t('dashboard.event_summary.last_upload', { date: formatLocalizedDateTime(event.lastUploadAt) })
+                                                            : t('dashboard.event_summary.no_uploads')
                                                     }}
                                                 </p>
                                                 <p class="dashboard-meta mt-1">
@@ -314,7 +353,7 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <Link :href="event.links.media">
-                                                    Media
+                                                    {{ t('app.nav.media') }}
                                                 </Link>
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
@@ -329,7 +368,7 @@ const planCapabilities = (event: DashboardEvent): string[] => {
 
                             <div v-if="collaboratorEvents.length > 0" class="space-y-3">
                                 <p class="dashboard-eyebrow">
-                                    Shared with you
+                                    {{ t('dashboard.sections.events.shared') }}
                                 </p>
 
                                 <article
@@ -365,9 +404,11 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                                     {{ event.name }}
                                                 </h3>
                                                 <p class="mt-1 text-sm text-brand-muted">
-                                                    {{ formatDateOnly(event.eventDate) }} ·
-                                                    {{ event.assetCount }} uploads ·
-                                                    {{ event.processingCount }} pending
+                                                    {{ t('dashboard.event_summary.shared_inline', {
+                                                        date: formatLocalizedDateOnly(event.eventDate),
+                                                        uploads: formatNumber(event.assetCount),
+                                                        pending: formatNumber(event.processingCount),
+                                                    }) }}
                                                 </p>
                                                 <p class="dashboard-meta mt-1">
                                                     {{ planSummary(event) }}
@@ -387,17 +428,17 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                         <div class="flex flex-wrap gap-2">
                                             <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                                 <Link :href="event.links.dashboard">
-                                                    Workspace
+                                                    {{ t('app.nav.workspace') }}
                                                 </Link>
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <Link :href="event.links.media">
-                                                    Media
+                                                    {{ t('app.nav.media') }}
                                                 </Link>
                                             </Button>
                                             <Button as-child size="sm" variant="outline">
                                                 <Link :href="event.links.settings">
-                                                    Settings
+                                                    {{ t('app.nav.settings') }}
                                                 </Link>
                                             </Button>
                                         </div>
@@ -411,15 +452,15 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                         <div class="flex min-h-0 w-full flex-col">
                         <div class="dashboard-panel-divider flex flex-col gap-2 pb-4">
                             <h2 class="dashboard-section-title">
-                                Recent activity
+                                {{ t('dashboard.sections.activity.title') }}
                             </h2>
                             <p class="dashboard-body">
-                                Quick updates from your guest uploads.
+                                {{ t('dashboard.sections.activity.description') }}
                             </p>
                         </div>
 
                         <div v-if="recentActivity.length === 0" class="dashboard-body py-8">
-                            No recent uploads yet.
+                            {{ t('dashboard.sections.activity.empty') }}
                         </div>
 
                         <div v-else class="min-h-0 flex-1 overflow-y-auto pt-2">
@@ -432,15 +473,16 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                             >
                                 <div class="min-w-0">
                                     <p class="text-sm text-brand-ink">
-                                        <span class="font-semibold">{{ activity.guestName }}</span>
-                                        in
-                                        <span class="font-medium">{{ activity.eventName }}</span>
+                                        {{ t('dashboard.sections.activity.item', {
+                                            guest: activity.guestName,
+                                            event: activity.eventName,
+                                        }) }}
                                     </p>
                                     <p class="mt-1 text-sm text-brand-muted">
                                         {{ activity.summary }}
                                     </p>
                                     <p class="dashboard-meta mt-1">
-                                        {{ formatDateTime(activity.createdAt) }}
+                                        {{ formatLocalizedDateTime(activity.createdAt) }}
                                     </p>
                                 </div>
 
@@ -464,9 +506,9 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                 <Dialog :open="modalOpen" @update:open="modalOpen = $event">
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Event ready</DialogTitle>
+                        <DialogTitle>{{ t('dashboard.dialog.title') }}</DialogTitle>
                         <DialogDescription>
-                            Everything now starts from your event list. Open the workspace you need and keep going.
+                            {{ t('dashboard.dialog.description') }}
                         </DialogDescription>
                     </DialogHeader>
                     <Button
@@ -481,7 +523,7 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                 ?? dashboardLinks.overview
                             "
                         >
-                            Open event
+                            {{ t('dashboard.actions.open_event') }}
                         </Link>
                     </Button>
                 </DialogContent>

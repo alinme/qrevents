@@ -17,6 +17,7 @@ import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
+import SidebarLocaleSwitcher from '@/components/SidebarLocaleSwitcher.vue';
 import {
     Sidebar,
     SidebarContent,
@@ -233,6 +234,7 @@ const eventTitle = computed(
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
+            <SidebarLocaleSwitcher />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

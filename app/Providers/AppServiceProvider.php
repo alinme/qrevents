@@ -101,15 +101,37 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureViteHotFile(): void
     {
-        if (app()->runningInConsole()) {
+        if (! isset($_SERVER['HTTP_HOST'])) {
             return;
         }
 
-        $hotFile = self::shouldUseViteHotFileForHost(request()->getHost())
-            ? public_path('hot')
+        $hotFilePath = public_path('hot');
+        $hotFile = self::shouldUseViteHotFileForRequest(
+            request()->getHost(),
+            is_file($hotFilePath) ? file_get_contents($hotFilePath) : null,
+        )
+            ? $hotFilePath
             : storage_path('framework/vite.hot.disabled');
 
         Vite::useHotFile($hotFile);
+    }
+
+    /**
+     * Determine whether the current request should honor the Vite hot file contents.
+     */
+    public static function shouldUseViteHotFileForRequest(?string $requestHost, ?string $hotFileContents): bool
+    {
+        if (! self::shouldUseViteHotFileForHost($requestHost)) {
+            return false;
+        }
+
+        $hotFileHost = self::extractViteHotFileHost($hotFileContents);
+
+        if ($hotFileHost === null) {
+            return true;
+        }
+
+        return self::hostsMatchForVite($requestHost, $hotFileHost);
     }
 
     /**
@@ -117,13 +139,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public static function shouldUseViteHotFileForHost(?string $host): bool
     {
-        if (! is_string($host)) {
-            return false;
-        }
+        $normalizedHost = self::normalizeHost($host);
 
-        $normalizedHost = strtolower(trim($host, '[] '));
-
-        if ($normalizedHost === '') {
+        if ($normalizedHost === null) {
             return false;
         }
 
@@ -131,5 +149,65 @@ class AppServiceProvider extends ServiceProvider
             || str_ends_with($normalizedHost, '.test')
             || str_ends_with($normalizedHost, '.localhost')
             || str_ends_with($normalizedHost, '.local');
+    }
+
+    /**
+     * Extract the dev server host from a Vite hot file URL when available.
+     */
+    protected static function extractViteHotFileHost(?string $hotFileContents): ?string
+    {
+        if (! is_string($hotFileContents)) {
+            return null;
+        }
+
+        $trimmedContents = trim($hotFileContents);
+
+        if ($trimmedContents === '') {
+            return null;
+        }
+
+        $host = parse_url($trimmedContents, PHP_URL_HOST);
+
+        return self::normalizeHost(is_string($host) ? $host : null);
+    }
+
+    /**
+     * Determine whether the request host and Vite hot file host refer to the same local endpoint.
+     */
+    protected static function hostsMatchForVite(?string $requestHost, ?string $hotFileHost): bool
+    {
+        $normalizedRequestHost = self::normalizeHost($requestHost);
+        $normalizedHotFileHost = self::normalizeHost($hotFileHost);
+
+        if ($normalizedRequestHost === null || $normalizedHotFileHost === null) {
+            return false;
+        }
+
+        if ($normalizedRequestHost === $normalizedHotFileHost) {
+            return true;
+        }
+
+        $loopbackHosts = ['localhost', '127.0.0.1', '::1'];
+
+        return in_array($normalizedRequestHost, $loopbackHosts, true)
+            && in_array($normalizedHotFileHost, $loopbackHosts, true);
+    }
+
+    /**
+     * Normalize request and Vite dev server hosts for safe comparison.
+     */
+    protected static function normalizeHost(?string $host): ?string
+    {
+        if (! is_string($host)) {
+            return null;
+        }
+
+        $normalizedHost = strtolower(trim($host, '[] '));
+
+        if ($normalizedHost === '') {
+            return null;
+        }
+
+        return $normalizedHost;
     }
 }
