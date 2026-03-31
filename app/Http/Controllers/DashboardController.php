@@ -55,7 +55,7 @@ class DashboardController extends Controller
             return to_route('dashboard.business');
         }
 
-        return to_route('dashboard.account');
+        return $this->account($request);
     }
 
     public function account(Request $request): Response|RedirectResponse
@@ -157,7 +157,7 @@ class DashboardController extends Controller
             'accountNavigation' => [],
             'businessNavigation' => $data['businessNavigation'],
             'dashboardLinks' => [
-                'overview' => route('dashboard.account'),
+                'overview' => route('dashboard.business'),
                 'business' => route('dashboard.business'),
                 'createBusiness' => route('dashboard.business.events.create'),
                 'ownedEvents' => route('dashboard.business.events.index'),
@@ -200,7 +200,7 @@ class DashboardController extends Controller
             'accountNavigation' => [],
             'businessNavigation' => $data['businessNavigation'],
             'dashboardLinks' => [
-                'overview' => route('dashboard.account'),
+                'overview' => route('dashboard.business'),
                 'business' => route('dashboard.business'),
                 'createBusiness' => route('dashboard.business.events.create'),
                 'ownedEvents' => route('dashboard.business.events.index'),
@@ -528,7 +528,9 @@ class DashboardController extends Controller
 
     private function accountOverviewUrl(Request $request): string
     {
-        return route('dashboard.account');
+        return $request->user()->canAccessBusinessDashboard()
+            ? route('dashboard.business')
+            : route('dashboard');
     }
 
     /**

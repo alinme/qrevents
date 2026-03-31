@@ -92,7 +92,7 @@ class HandleInertiaRequests extends Middleware
             return [
                 [
                     'title' => 'Events',
-                    'href' => route('dashboard.account'),
+                    'href' => route('dashboard.business.events.index'),
                 ],
                 [
                     'title' => 'Business',

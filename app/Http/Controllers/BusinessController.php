@@ -86,7 +86,7 @@ class BusinessController extends Controller
             return redirect()->to($returnTo)->with('success', 'Business upgrade cancelled.');
         }
 
-        return to_route('dashboard.account')->with('success', 'Business upgrade cancelled.');
+        return to_route('dashboard')->with('success', 'Business upgrade cancelled.');
     }
 
     public function storeOnboarding(StoreBusinessOnboardingRequest $request): RedirectResponse

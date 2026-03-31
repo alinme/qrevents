@@ -67,7 +67,7 @@ test('users can cancel business onboarding before saving their business profile'
 
     $this->actingAs($user)
         ->post(route('dashboard.business.onboarding.cancel'))
-        ->assertRedirect(route('dashboard.account'))
+        ->assertRedirect(route('dashboard'))
         ->assertSessionHas('success', 'Business upgrade cancelled.');
 
     $user->refresh();

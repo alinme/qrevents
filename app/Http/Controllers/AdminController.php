@@ -272,8 +272,8 @@ class AdminController extends Controller
             && $user->canAccessAdmin()
         ) {
             return [
-                'title' => 'Account',
-                'href' => route('dashboard.account'),
+                'title' => 'Dashboard',
+                'href' => route('dashboard'),
             ];
         }
 

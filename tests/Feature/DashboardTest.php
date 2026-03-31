@@ -60,7 +60,11 @@ test('collaborator-only users can still enter the dashboard flow without owner o
 
     $this->actingAs($collaborator)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.account'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('summary.collaboratorEventCount', 1)
+        );
 });
 
 test('multi-event user accounts stay on the main dashboard without business tools', function () {
@@ -97,10 +101,6 @@ test('multi-event user accounts stay on the main dashboard without business tool
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.account'));
-
-    $this->actingAs($owner)
-        ->get(route('dashboard.account'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
@@ -110,70 +110,12 @@ test('multi-event user accounts stay on the main dashboard without business tool
         );
 });
 
-test('owned event accounts can still open the account dashboard explicitly', function () {
+test('the removed account dashboard endpoint is not available to business users', function () {
     $owner = User::factory()->business()->create();
 
-    $liveEvent = Event::factory()->for($owner)->create([
-        'name' => 'Brand Launch',
-        'status' => Event::STATUS_LIVE,
-        'is_paid' => true,
-        'storage_limit_bytes' => 10737418240,
-        'storage_used_bytes' => 3221225472,
-    ]);
-    $scheduledUnpaidEvent = Event::factory()->for($owner)->create([
-        'name' => 'Retail Tour',
-        'status' => Event::STATUS_SCHEDULED,
-        'is_paid' => false,
-        'payment_due_at' => now()->addDay(),
-        'storage_limit_bytes' => 5368709120,
-        'storage_used_bytes' => 2147483648,
-    ]);
-    $lockedEvent = Event::factory()->for($owner)->create([
-        'name' => 'Locked Expo',
-        'status' => Event::STATUS_LOCKED,
-        'is_paid' => false,
-        'payment_due_at' => now()->subDay(),
-        'storage_limit_bytes' => 4294967296,
-        'storage_used_bytes' => 1073741824,
-    ]);
-
-    EventAsset::factory()->count(2)->for($liveEvent)->for($owner)->create();
-    EventAsset::factory()->for($scheduledUnpaidEvent)->for($owner)->create([
-        'moderation_status' => 'processing',
-    ]);
-
     $this->actingAs($owner)
-        ->get(route('dashboard.account'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('auth.user.accountType', User::ACCOUNT_TYPE_BUSINESS)
-            ->where('auth.user.capabilities.accessBusinessDashboard', true)
-            ->where('dashboardLinks.overview', route('dashboard.account'))
-            ->where('dashboardLinks.business', route('dashboard.business'))
-            ->where('businessOverview.hasOwnedEvents', true)
-            ->where('businessOverview.activeEventCount', 2)
-            ->where('businessOverview.liveEventCount', 1)
-            ->where('businessOverview.unpaidEventCount', 2)
-            ->where('businessOverview.overdueEventCount', 1)
-            ->where('businessOverview.readyExportCount', 0)
-            ->where('businessOverview.totalAllocatedStorageBytes', 20401094656)
-            ->where('businessOverview.totalUsedStorageBytes', 6442450944)
-            ->where('businessOverview.totalFreeStorageBytes', 13958643712)
-            ->where('businessOverview.storageUsagePercent', 32)
-            ->where(
-                'businessAttentionEvents',
-                fn ($events): bool => collect($events)->contains(
-                    fn (array $event): bool => $event['name'] === 'Locked Expo'
-                        && $event['attentionLabel'] === 'Resolve billing'
-                        && $event['billingLabel'] === 'Payment overdue',
-                ) && collect($events)->contains(
-                    fn (array $event): bool => $event['name'] === 'Retail Tour'
-                        && $event['attentionLabel'] === 'Review invoice'
-                        && $event['billingLabel'] === 'Payment due soon',
-                ),
-            )
-        );
+        ->get('/dashboard/account')
+        ->assertNotFound();
 });
 
 test('business accounts land on the business home from the main dashboard route', function () {
@@ -189,20 +131,21 @@ test('business accounts land on the business home from the main dashboard route'
         ->assertRedirect(route('dashboard.business'));
 });
 
-test('normal owned-event users are sent to the account dashboard from the dashboard landing page', function () {
+test('normal owned-event users see the dashboard on the dashboard route', function () {
     $owner = User::factory()->create();
-    $event = Event::factory()->for($owner)->create([
+    Event::factory()->for($owner)->create([
         'name' => 'Spring Wedding',
     ]);
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.account'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
 });
 
-test('single-event owners in onboarding are sent to the account dashboard from the dashboard landing page', function () {
+test('single-event owners in onboarding still see the dashboard on the dashboard route', function () {
     $owner = User::factory()->create();
-    $event = Event::factory()->for($owner)->create([
+    Event::factory()->for($owner)->create([
         'name' => 'Spring Wedding',
         'onboarding_step' => 'photos',
         'onboarding_completed_at' => null,
@@ -210,7 +153,8 @@ test('single-event owners in onboarding are sent to the account dashboard from t
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.account'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
 });
 
 test('event workspace exposes guest upload settings summary for owners', function () {
@@ -311,7 +255,7 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
     ]);
 
     $this->actingAs($owner)
-        ->get(route('dashboard.account'))
+        ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
@@ -321,8 +265,8 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
             ->where('summary.totalUploadCount', 2)
             ->where('summary.pendingModerationCount', 1)
             ->where('summary.readyExportCount', 1)
-            ->where('dashboardLinks.ownedEvents', route('dashboard.account').'#events')
-            ->where('dashboardLinks.recentActivity', route('dashboard.account').'#activity')
+            ->where('dashboardLinks.ownedEvents', route('dashboard').'#events')
+            ->where('dashboardLinks.recentActivity', route('dashboard').'#activity')
             ->where('continueSetupEvent.name', 'Rooftop Rehearsal')
             ->where('continueSetupEvent.primaryAction.url', route('onboarding.photos', $setupEvent))
             ->where(
@@ -384,7 +328,11 @@ test('single collaborator event users land on the account dashboard from the das
 
     $this->actingAs($collaboratorUser)
         ->get(route('dashboard'))
-        ->assertRedirect(route('dashboard.account'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('summary.collaboratorEventCount', 1)
+        );
 });
 
 test('account dashboard exposes free plus and pro plan tiers for normal users', function () {
@@ -467,11 +415,11 @@ test('account dashboard exposes free plus and pro plan tiers for normal users', 
     ]);
 
     $this->actingAs($owner)
-        ->get(route('dashboard.account'))
+        ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
-            ->where('dashboardLinks.overview', route('dashboard.account'))
+            ->where('dashboardLinks.overview', route('dashboard'))
             ->where(
                 'ownedEvents',
                 fn ($events): bool => collect($events)->contains(
@@ -505,29 +453,16 @@ test('account dashboard exposes free plus and pro plan tiers for normal users', 
         );
 });
 
-test('super admins can still open their account dashboard explicitly', function () {
+test('the removed account dashboard endpoint is not available to super admins', function () {
     config(['app.super_admin_emails' => ['admin@example.com']]);
 
     $admin = User::factory()->create([
         'email' => 'admin@example.com',
     ]);
-    $event = Event::factory()->for($admin)->create([
-        'name' => 'Admin Hosted Event',
-        'onboarding_completed_at' => now(),
-    ]);
 
     $this->actingAs($admin)
-        ->get(route('dashboard.account'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('auth.user.accountType', User::ACCOUNT_TYPE_SUPER_ADMIN)
-            ->where('auth.user.capabilities.accessAdmin', true)
-            ->where('auth.user.capabilities.accessBusinessDashboard', true)
-            ->where('dashboardLinks.overview', route('dashboard.account'))
-            ->where('ownedEvents.0.name', 'Admin Hosted Event')
-            ->where('ownedEvents.0.links.dashboard', route('events.show', $event))
-        );
+        ->get('/dashboard/account')
+        ->assertNotFound();
 });
 
 test('business accounts can open the dedicated business dashboard', function () {
@@ -557,7 +492,7 @@ test('business accounts can open the dedicated business dashboard', function () 
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard/BusinessOverview')
             ->where('sidebarLabel', 'Business')
-            ->where('dashboardLinks.overview', route('dashboard.account'))
+            ->where('dashboardLinks.overview', route('dashboard.business'))
             ->where('dashboardLinks.business', route('dashboard.business'))
             ->where('businessNavigation.0.title', 'Business')
             ->where('businessNavigation.1.title', 'Billing')
@@ -1001,7 +936,7 @@ test('owned events page renders all owned event workspaces', function () {
 
     $this->actingAs($owner)
         ->get(route('dashboard.events'))
-        ->assertRedirect(route('dashboard.account').'#events');
+        ->assertRedirect(route('dashboard').'#events');
 });
 
 test('business accounts open the account events page from the events shortcut', function () {
@@ -1048,10 +983,10 @@ test('recent activity page links directly to the matching asset in media', funct
 
     $this->actingAs($owner)
         ->get(route('dashboard.activity'))
-        ->assertRedirect(route('dashboard.account').'#activity');
+        ->assertRedirect(route('dashboard').'#activity');
 });
 
-test('business accounts open the account activity page from the activity shortcut', function () {
+test('business accounts open the business activity section from the activity shortcut', function () {
     $owner = User::factory()->business()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Activity Event',
@@ -1064,7 +999,7 @@ test('business accounts open the account activity page from the activity shortcu
 
     $this->actingAs($owner)
         ->get(route('dashboard.activity'))
-        ->assertRedirect(route('dashboard.account').'#activity');
+        ->assertRedirect(route('dashboard.business').'#activity');
 });
 
 test('media page accepts a deep-linked asset from dashboard activity', function () {

@@ -46,7 +46,6 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('dashboard/account', [DashboardController::class, 'account'])->name('dashboard.account');
     Route::get('dashboard/business', [DashboardController::class, 'business'])->name('dashboard.business');
     Route::get('dashboard/business/events', [DashboardController::class, 'businessEvents'])->name('dashboard.business.events.index');
     Route::post('dashboard/business/activate', [BusinessController::class, 'activate'])->name('dashboard.business.activate');

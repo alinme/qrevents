@@ -1,87 +1,6 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 import businessE58f3e from './business'
 /**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-export const account = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: account.url(options),
-    method: 'get',
-})
-
-account.definition = {
-    methods: ["get","head"],
-    url: '/dashboard/account',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-account.url = (options?: RouteQueryOptions) => {
-    return account.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-account.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: account.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-account.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: account.url(options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-const accountForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: account.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-accountForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: account.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::account
-* @see app/Http/Controllers/DashboardController.php:61
-* @route '/dashboard/account'
-*/
-accountForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: account.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-account.form = accountForm
-
-/**
 * @see \App\Http\Controllers\DashboardController::business
 * @see app/Http/Controllers/DashboardController.php:86
 * @route '/dashboard/business'
@@ -325,7 +244,6 @@ activityForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =>
 activity.form = activityForm
 
 const dashboard = {
-    account: Object.assign(account, account),
     business: Object.assign(business, businessE58f3e),
     events: Object.assign(events, events),
     activity: Object.assign(activity, activity),

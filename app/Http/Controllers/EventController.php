@@ -3658,7 +3658,7 @@ class EventController extends Controller
             return route('dashboard.business.events.index');
         }
 
-        return route('dashboard.account');
+        return route('dashboard');
     }
 
     private function guestPartyDuplicateKey(string $name, ?string $phone): string

@@ -39,7 +39,7 @@ class AuthOnboardingRedirector
             ? $dashboardRedirect->getTargetUrl()
             : ($user->isBusinessAccount()
                 ? route('dashboard.business', absolute: false)
-                : route('dashboard.account', absolute: false));
+                : route('dashboard', absolute: false));
     }
 
     private function hasActiveCollaboratorEvent(User $user): bool

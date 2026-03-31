@@ -89,7 +89,7 @@ test('super admins can review platform users events and billing queues', functio
             ->where('summary.totalFreeStorageBytes', 24696061952)
             ->where('summary.storageCleanupCandidateCount', 1)
             ->where('adminLinks.users', route('admin.users'))
-            ->where('backNavigation.href', route('dashboard.account'))
+            ->where('backNavigation.href', route('dashboard'))
             ->where(
                 'recentUsers',
                 fn ($users): bool => collect($users)->contains(
