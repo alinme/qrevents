@@ -1,5 +1,35 @@
 import type { BusinessWalletActivity, RecentActivity, Tone } from '@/types';
 
+type DateFormatOptions = {
+    locale?: string;
+    emptyLabel?: string;
+};
+
+type CreditFormatOptions = {
+    creditsLabel?: string;
+};
+
+type TranslationResolver = (
+    key: string,
+    replacements?: Record<string, string | number>,
+) => string;
+
+type WalletCopyOptions = CreditFormatOptions & {
+    t?: TranslationResolver;
+};
+
+const resolveIntlLocale = (locale?: string): string => {
+    if (locale === 'ro') {
+        return 'ro-RO';
+    }
+
+    if (locale === 'el') {
+        return 'el-GR';
+    }
+
+    return 'en-GB';
+};
+
 export const formatBytes = (bytes: number): string => {
     if (!Number.isFinite(bytes) || bytes <= 0) {
         return '0 B';
@@ -15,25 +45,31 @@ export const formatBytes = (bytes: number): string => {
     return `${value >= 10 || exponent === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[exponent]}`;
 };
 
-export const formatDateOnly = (value: string | null): string => {
+export const formatDateOnly = (
+    value: string | null,
+    options: DateFormatOptions = {},
+): string => {
     if (!value) {
-        return 'Date not set';
+        return options.emptyLabel ?? 'Date not set';
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(resolveIntlLocale(options.locale), {
         dateStyle: 'long',
     }).format(new Date(value));
 };
 
 export const formatDateTime = (
     value: string | null,
-    emptyLabel = 'No activity yet',
+    options: string | DateFormatOptions = 'No activity yet',
 ): string => {
+    const resolvedOptions =
+        typeof options === 'string' ? { emptyLabel: options } : options;
+
     if (!value) {
-        return emptyLabel;
+        return resolvedOptions.emptyLabel ?? 'No activity yet';
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(resolveIntlLocale(resolvedOptions.locale), {
         dateStyle: 'medium',
         timeStyle: 'short',
     }).format(new Date(value));
@@ -58,41 +94,70 @@ export const badgeClass = (tone: Tone): string => {
     }
 };
 
-export const formatCreditDelta = (credits: number): string => {
+export const formatCreditDelta = (
+    credits: number,
+    options: CreditFormatOptions = {},
+): string => {
     const absoluteCredits = Math.abs(credits);
+    const creditsLabel = options.creditsLabel ?? 'credits';
 
     if (credits > 0) {
-        return `+${absoluteCredits} credits`;
+        return `+${absoluteCredits} ${creditsLabel}`;
     }
 
     if (credits < 0) {
-        return `-${absoluteCredits} credits`;
+        return `-${absoluteCredits} ${creditsLabel}`;
     }
 
-    return `${absoluteCredits} credits`;
+    return `${absoluteCredits} ${creditsLabel}`;
 };
 
-export const walletActivityLabel = (item: BusinessWalletActivity): string => {
+export const walletActivityLabel = (
+    item: BusinessWalletActivity,
+    options: WalletCopyOptions = {},
+): string => {
     const absoluteCredits = Math.abs(item.credits);
+    const creditsLabel = options.creditsLabel ?? 'credits';
 
     if (item.kind === 'top_up') {
-        return `+${absoluteCredits} credits added`;
+        return options.t
+            ? options.t('dashboard.business.wallet.activity.top_up', {
+                  count: absoluteCredits,
+              })
+            : `+${absoluteCredits} ${creditsLabel} added`;
     }
 
     if (item.kind === 'bonus') {
-        return `+${absoluteCredits} bonus credits`;
+        return options.t
+            ? options.t('dashboard.business.wallet.activity.bonus', {
+                  count: absoluteCredits,
+              })
+            : `+${absoluteCredits} bonus ${creditsLabel}`;
     }
 
     if (item.kind === 'event_debit') {
-        return `-${absoluteCredits} credits used`;
+        return options.t
+            ? options.t('dashboard.business.wallet.activity.event_debit', {
+                  count: absoluteCredits,
+              })
+            : `-${absoluteCredits} ${creditsLabel} used`;
     }
 
-    return `${formatCreditDelta(item.credits)} updated`;
+    return options.t
+        ? options.t('dashboard.business.wallet.activity.adjustment', {
+              count: formatCreditDelta(item.credits, { creditsLabel }),
+          })
+        : `${formatCreditDelta(item.credits, { creditsLabel })} updated`;
 };
 
 export const walletActivityKindLabel = (
     kind: BusinessWalletActivity['kind'],
+    options: WalletCopyOptions = {},
 ): string => {
+    if (options.t) {
+        return options.t(`dashboard.business.wallet.kind.${kind}`);
+    }
+
     switch (kind) {
         case 'top_up':
             return 'Top up';

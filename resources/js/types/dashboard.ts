@@ -7,6 +7,49 @@ export type Tone =
     | 'zinc'
     | 'rose';
 
+export type DashboardRoleKey = 'owner' | 'manager' | 'viewer';
+
+export type DashboardStatusKey =
+    | 'setup_in_progress'
+    | 'live'
+    | 'grace'
+    | 'locked'
+    | 'expired'
+    | 'draft'
+    | 'scheduled';
+
+export type DashboardBillingKey =
+    | 'paid'
+    | 'billing_pending'
+    | 'payment_overdue'
+    | 'payment_due_soon';
+
+export type DashboardMediaExportKey =
+    | 'ready'
+    | 'running'
+    | 'failed'
+    | 'idle';
+
+export type DashboardPrimaryActionKey =
+    | 'continue_setup'
+    | 'open_workspace';
+
+export type BusinessAttentionKey =
+    | 'finish_setup'
+    | 'resolve_billing'
+    | 'review_access'
+    | 'review_invoice'
+    | 'retry_export'
+    | 'open_workspace';
+
+export type BusinessDashboardStatusOptionKey =
+    | 'all'
+    | 'attention'
+    | 'unpaid'
+    | 'overdue'
+    | 'live'
+    | 'export_ready';
+
 export type Summary = {
     ownedEventCount: number;
     collaboratorEventCount: number;
@@ -62,10 +105,13 @@ export type BusinessAttentionEvent = {
     id: number;
     name: string;
     plan: string;
+    statusKey: DashboardStatusKey;
     statusLabel: string;
     statusTone: Tone;
+    billingKey: DashboardBillingKey;
     billingLabel: string;
     billingTone: Tone;
+    attentionKey: BusinessAttentionKey;
     attentionLabel: string;
     attentionDetail: string;
     paymentDueAt: string | null;
@@ -98,13 +144,17 @@ export type DashboardEvent = {
     };
     eventDate: string | null;
     timezone: string;
+    roleKey: DashboardRoleKey;
     roleLabel: string;
     roleTone: Tone;
+    statusKey: DashboardStatusKey;
     statusLabel: string;
     statusTone: Tone;
+    billingKey: DashboardBillingKey;
     billingLabel: string;
     billingTone: Tone;
     mediaExportStatus: 'idle' | 'pending' | 'processing' | 'ready' | 'failed';
+    mediaExportKey: DashboardMediaExportKey;
     mediaExportLabel: string;
     mediaExportTone: Tone;
     uploadCount: number;
@@ -121,6 +171,7 @@ export type DashboardEvent = {
     isPaid: boolean;
     onboardingComplete: boolean;
     primaryAction: {
+        key: DashboardPrimaryActionKey;
         label: string;
         url: string;
     };
@@ -175,6 +226,7 @@ export type BusinessDashboardFilters = {
     attentionTotalCount: number;
     statusOptions: Array<{
         value: BusinessDashboardStatus;
+        labelKey: BusinessDashboardStatusOptionKey;
         label: string;
         count: number;
     }>;

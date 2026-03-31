@@ -24,6 +24,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
     badgeClass,
@@ -66,49 +67,81 @@ const props = defineProps<{
     ownedEventsPagination: PaginationMeta;
 }>();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const { locale, t } = useTranslations();
+
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('app.nav.dashboard'),
         href: props.dashboardLinks.overview,
     },
     {
-        title: 'Business',
+        title: t('app.nav.business'),
         href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
     },
-];
+]);
+
+const formatNumber = (value: number): string =>
+    new Intl.NumberFormat(
+        locale.value === 'ro'
+            ? 'ro-RO'
+            : locale.value === 'el'
+              ? 'el-GR'
+              : 'en-GB',
+    ).format(value);
+
+const formatLocalizedDateOnly = (value: string | null): string =>
+    formatDateOnly(value, {
+        locale: locale.value,
+        emptyLabel: t('event_home.fallback.not_set'),
+    });
+
+const formatLocalizedDateTime = (
+    value: string | null,
+    emptyLabel = t('dashboard.business.wallet.no_activity'),
+): string =>
+    formatDateTime(value, {
+        locale: locale.value,
+        emptyLabel,
+    });
+
+const creditLabel = computed(() => t('dashboard.business.wallet.credits_unit'));
 
 const businessHealthCards = computed(() => [
     {
-        label: 'Events',
-        value: props.filters.ownedEventTotalCount,
-        detail: 'Everything in your owned-event portfolio.',
+        label: t('dashboard.business.metrics.events.label'),
+        value: formatNumber(props.filters.ownedEventTotalCount),
+        detail: t('dashboard.business.metrics.events.detail'),
         icon: FolderKanban,
     },
     {
-        label: 'Live',
-        value: props.businessOverview.liveEventCount,
-        detail: 'Events currently open for guest uploads.',
+        label: t('dashboard.business.metrics.live.label'),
+        value: formatNumber(props.businessOverview.liveEventCount),
+        detail: t('dashboard.business.metrics.live.detail'),
         icon: ArrowRight,
     },
     {
-        label: 'To setup',
-        value: props.summary.pendingSetupCount,
-        detail: 'Events still going through onboarding.',
+        label: t('dashboard.business.metrics.setup.label'),
+        value: formatNumber(props.summary.pendingSetupCount),
+        detail: t('dashboard.business.metrics.setup.detail'),
         icon: Settings,
     },
     {
-        label: 'Attention',
+        label: t('dashboard.business.metrics.attention.label'),
         value:
             props.businessOverview.overdueEventCount > 0
-                ? `${props.businessOverview.overdueEventCount} overdue`
-                : `${props.businessOverview.unpaidEventCount} unpaid`,
-        detail: 'Events that still need billing follow-up.',
+                ? t('dashboard.business.metrics.attention.overdue_value', {
+                    count: formatNumber(props.businessOverview.overdueEventCount),
+                })
+                : t('dashboard.business.metrics.attention.unpaid_value', {
+                    count: formatNumber(props.businessOverview.unpaidEventCount),
+                }),
+        detail: t('dashboard.business.metrics.attention.detail'),
         icon: CreditCard,
     },
     {
-        label: 'Exports',
-        value: props.businessOverview.readyExportCount,
-        detail: 'Workspaces with a media export ready to download.',
+        label: t('dashboard.business.metrics.exports.label'),
+        value: formatNumber(props.businessOverview.readyExportCount),
+        detail: t('dashboard.business.metrics.exports.detail'),
         icon: Download,
     },
 ]);
@@ -357,31 +390,43 @@ const hasSelection = computed(
 
 const selectionLabel = computed(() => {
     if (allFilteredSelected.value) {
-        return `All ${props.filters.ownedEventCount} filtered workspaces selected`;
+        return t('dashboard.business.selection.all_filtered', {
+            count: formatNumber(props.filters.ownedEventCount),
+        });
     }
 
-    return `${selectedEventIds.value.length} selected across pages`;
+    return t('dashboard.business.selection.across_pages', {
+        count: formatNumber(selectedEventIds.value.length),
+    });
 });
+
+const primaryActionLabel = (event: DashboardEvent): string => {
+    if (event.primaryAction.key === 'continue_setup') {
+        return t('dashboard.actions.continue_setup');
+    }
+
+    return t('app.nav.workspace');
+};
 
 const eventSecondaryAction = (event: DashboardEvent): RowActionLink => {
     if (!event.isPaid) {
         return {
-            label: 'Billing',
+            label: t('app.nav.billing'),
             url: event.links.billing,
             icon: CreditCard,
         };
     }
 
-    if (event.canManage && event.mediaExportStatus === 'ready') {
+    if (event.canManage && event.mediaExportKey === 'ready') {
         return {
-            label: 'Export',
+            label: t('dashboard.business.actions.export'),
             url: event.links.mediaExportDownload,
             icon: Download,
         };
     }
 
     return {
-        label: 'Media',
+        label: t('app.nav.media'),
         url: event.links.media,
         icon: Camera,
     };
@@ -391,12 +436,12 @@ const eventOverflowActions = (event: DashboardEvent): RowActionLink[] => {
     const secondaryAction = eventSecondaryAction(event);
     const actions: RowActionLink[] = [
         {
-            label: 'Media',
+            label: t('app.nav.media'),
             url: event.links.media,
             icon: Camera,
         },
         {
-            label: 'Settings',
+            label: t('app.nav.settings'),
             url: event.links.settings,
             icon: Settings,
         },
@@ -404,15 +449,15 @@ const eventOverflowActions = (event: DashboardEvent): RowActionLink[] => {
 
     if (!event.isPaid) {
         actions.splice(1, 0, {
-            label: 'Billing',
+            label: t('app.nav.billing'),
             url: event.links.billing,
             icon: CreditCard,
         });
     }
 
-    if (event.canManage && event.mediaExportStatus === 'ready') {
+    if (event.canManage && event.mediaExportKey === 'ready') {
         actions.splice(actions.length - 1, 0, {
-            label: 'Export',
+            label: t('dashboard.business.actions.export'),
             url: event.links.mediaExportDownload,
             icon: Download,
         });
@@ -424,16 +469,16 @@ const eventOverflowActions = (event: DashboardEvent): RowActionLink[] => {
 const attentionSecondaryAction = (
     event: BusinessAttentionEvent,
 ): RowActionLink => {
-    if (event.billingTone !== 'emerald') {
+    if (event.billingKey !== 'paid') {
         return {
-            label: 'Billing',
+            label: t('app.nav.billing'),
             url: event.links.billing,
             icon: CreditCard,
         };
     }
 
     return {
-        label: 'Media',
+        label: t('app.nav.media'),
         url: event.links.media,
         icon: Camera,
     };
@@ -445,20 +490,20 @@ const attentionOverflowActions = (
     const secondaryAction = attentionSecondaryAction(event);
     const actions: RowActionLink[] = [
         {
-            label: 'Media',
+            label: t('app.nav.media'),
             url: event.links.media,
             icon: Camera,
         },
         {
-            label: 'Settings',
+            label: t('app.nav.settings'),
             url: event.links.settings,
             icon: Settings,
         },
     ];
 
-    if (event.billingTone !== 'emerald') {
+    if (event.billingKey !== 'paid') {
         actions.splice(1, 0, {
-            label: 'Billing',
+            label: t('app.nav.billing'),
             url: event.links.billing,
             icon: CreditCard,
         });
@@ -526,7 +571,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
 </script>
 
 <template>
-    <Head title="Business Dashboard" />
+    <Head :title="t('dashboard.business.page_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -535,13 +580,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="dashboard-eyebrow">
-                                Business
+                                {{ t('dashboard.business.hero.kicker') }}
                             </p>
                             <h1 class="dashboard-title mt-2">
-                                Create and run client events
+                                {{ t('dashboard.business.hero.title') }}
                             </h1>
                             <p class="dashboard-body mt-2">
-                                Billing, exports, and live workspaces in one calm home.
+                                {{ t('dashboard.business.hero.description') }}
                             </p>
                         </div>
 
@@ -572,15 +617,15 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         <p class="font-semibold">
                             {{
                                 walletCheckoutStatus === 'success'
-                                    ? 'Top-up checkout completed.'
-                                    : 'Top-up checkout was cancelled.'
+                                    ? t('dashboard.business.checkout.success_title')
+                                    : t('dashboard.business.checkout.cancelled_title')
                             }}
                         </p>
                         <p class="mt-1 leading-6">
                             {{
                                 walletCheckoutStatus === 'success'
-                                    ? 'If Stripe has already confirmed the payment, your credits should appear here. Refresh once if they do not show up right away.'
-                                    : 'Your wallet balance did not change. You can try again whenever you are ready.'
+                                    ? t('dashboard.business.checkout.success_body')
+                                    : t('dashboard.business.checkout.cancelled_body')
                             }}
                         </p>
                     </div>
@@ -607,32 +652,36 @@ watch([selectedEventIds, allFilteredSelected], () => {
 
                         <div class="border-t border-brand-border/70 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
                             <p class="dashboard-eyebrow">
-                                Billing
+                                {{ t('dashboard.business.wallet.summary.kicker') }}
                             </p>
                             <p class="mt-2 text-2xl font-semibold tracking-tight text-brand-ink">
-                                {{ businessOverview.walletCredits }} credits
+                                {{ t('dashboard.business.wallet.summary.balance', { count: formatNumber(businessOverview.walletCredits) }) }}
                             </p>
                             <p class="dashboard-body mt-1">
-                                One credit equals one euro in billing value.
+                                {{ t('dashboard.business.wallet.summary.description') }}
                             </p>
 
                             <div class="mt-4 space-y-2 text-sm text-brand-muted">
                                 <p v-if="latestWalletEntry" class="text-brand-ink">
-                                    <span class="font-semibold">{{ walletActivityLabel(latestWalletEntry) }}</span>
+                                    <span class="font-semibold">{{ walletActivityLabel(latestWalletEntry, { t, creditsLabel: creditLabel }) }}</span>
                                     <span class="text-brand-muted">
-                                        · {{ formatDateTime(latestWalletEntry.createdAt) }}
+                                        · {{ formatLocalizedDateTime(latestWalletEntry.createdAt) }}
                                     </span>
                                 </p>
                                 <p v-else>
-                                    No billing activity yet.
+                                    {{ t('dashboard.business.wallet.no_activity') }}
                                 </p>
                                 <p>
-                                    {{ businessOverview.walletCredits }} credits on hand ·
-                                    {{ businessOverview.walletCurrency }}
+                                    {{ t('dashboard.business.wallet.summary.on_hand', {
+                                        count: formatNumber(businessOverview.walletCredits),
+                                        currency: businessOverview.walletCurrency,
+                                    }) }}
                                 </p>
                                 <p>
-                                    {{ formatBytes(businessOverview.totalUsedStorageBytes) }} used ·
-                                    {{ formatBytes(businessOverview.totalFreeStorageBytes) }} free
+                                    {{ t('dashboard.business.wallet.summary.storage', {
+                                        used: formatBytes(businessOverview.totalUsedStorageBytes),
+                                        free: formatBytes(businessOverview.totalFreeStorageBytes),
+                                    }) }}
                                 </p>
                             </div>
 
@@ -644,22 +693,22 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="dashboard-panel-divider flex items-start justify-between gap-3 pb-4">
                         <div>
                             <p class="dashboard-eyebrow">
-                                Attention
+                                {{ t('dashboard.business.attention.kicker') }}
                             </p>
                             <h2 class="dashboard-section-title mt-2">
-                                What needs you first
+                                {{ t('dashboard.business.attention.title') }}
                             </h2>
                             <p class="dashboard-body mt-1">
-                                Billing follow-up, overdue workspaces, and the next places to open.
+                                {{ t('dashboard.business.attention.description') }}
                             </p>
                         </div>
                         <span class="dashboard-chip">
-                            {{ businessAttentionSummary.visibleCount }}
+                            {{ formatNumber(businessAttentionSummary.visibleCount) }}
                         </span>
                     </div>
 
                     <div v-if="businessAttentionEvents.length === 0" class="dashboard-body py-8">
-                        Nothing urgent right now.
+                        {{ t('dashboard.business.attention.empty') }}
                     </div>
 
                     <div v-else class="divide-y divide-brand-border/70 pt-2">
@@ -692,11 +741,16 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         <p class="mt-1 text-sm text-brand-muted">
                                             {{
                                                 event.paymentDueAt
-                                                    ? `Due ${formatDateOnly(event.paymentDueAt)}`
-                                                    : 'No due date set'
+                                                    ? t('dashboard.business.attention.due_date', {
+                                                        date: formatLocalizedDateOnly(event.paymentDueAt),
+                                                    })
+                                                    : t('dashboard.business.attention.no_due_date')
                                             }}
-                                            · {{ event.assetCount }} uploads
-                                            · {{ formatBytes(event.storageUsedBytes) }} of {{ formatBytes(event.storageLimitBytes) }}
+                                            · {{ t('dashboard.business.event.uploads', { count: formatNumber(event.assetCount) }) }}
+                                            · {{ t('dashboard.business.event.storage', {
+                                                used: formatBytes(event.storageUsedBytes),
+                                                total: formatBytes(event.storageLimitBytes),
+                                            }) }}
                                         </p>
                                     </div>
                                 </div>
@@ -704,7 +758,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
                                     <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                         <Link :href="event.links.dashboard">
-                                            Open workspace
+                                            {{ t('app.nav.workspace') }}
                                         </Link>
                                     </Button>
                                     <Button as-child size="sm" variant="outline">
@@ -718,7 +772,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             <button
                                                 type="button"
                                                 class="inline-flex size-9 items-center justify-center rounded-full border border-brand-border bg-brand-inverse text-brand-muted transition hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                                aria-label="More attention actions"
+                                                :aria-label="t('dashboard.business.attention.more_actions')"
                                             >
                                                 <MoreHorizontal class="size-4" />
                                             </button>
@@ -746,14 +800,17 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="dashboard-panel-divider flex flex-col gap-3 pb-4 md:flex-row md:items-end md:justify-between">
                         <div>
                             <h2 class="dashboard-section-title">
-                                Event portfolio
+                                {{ t('dashboard.business.portfolio.title') }}
                             </h2>
                             <p class="dashboard-body mt-1">
-                                Find the right workspace fast, then jump into the next action.
+                                {{ t('dashboard.business.portfolio.description') }}
                             </p>
                         </div>
                         <p class="text-sm text-brand-muted">
-                            {{ filters.ownedEventCount }} of {{ filters.ownedEventTotalCount }} shown
+                            {{ t('dashboard.business.portfolio.showing_count', {
+                                visible: formatNumber(filters.ownedEventCount),
+                                total: formatNumber(filters.ownedEventTotalCount),
+                            }) }}
                         </p>
                     </div>
 
@@ -765,13 +822,13 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     <Input
                                         v-model="search"
                                         type="search"
-                                        placeholder="Search events, plans, billing, or status"
+                                        :placeholder="t('dashboard.business.portfolio.search_placeholder')"
                                         class="h-11 rounded-full border-brand-border bg-brand-inverse pr-4 pl-10"
                                     />
                                 </div>
                                 <div class="flex gap-2">
                                     <Button type="submit" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
-                                        Apply
+                                        {{ t('dashboard.business.portfolio.apply') }}
                                     </Button>
                                     <Button
                                         v-if="filters.hasActiveFilters"
@@ -780,7 +837,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         @click="resetFilters"
                                     >
                                         <X class="size-4" />
-                                        Clear
+                                        {{ t('dashboard.business.portfolio.clear') }}
                                     </Button>
                                 </div>
                             </form>
@@ -797,8 +854,8 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         ? 'border-brand-ink bg-brand-ink text-brand-inverse'
                                         : 'border-brand-border bg-brand-inverse text-brand-muted hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink'
                                 "
-                            >
-                                <span>{{ option.label }}</span>
+                                >
+                                    <span>{{ option.label }}</span>
                                 <span
                                     class="rounded-full px-2 py-0.5 text-xs"
                                     :class="
@@ -807,7 +864,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                             : 'bg-brand-panel-strong/35 text-brand-muted'
                                     "
                                 >
-                                    {{ option.count }}
+                                    {{ formatNumber(option.count) }}
                                 </span>
                             </Link>
                         </div>
@@ -821,7 +878,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     <span class="font-semibold text-brand-ink">{{ selectionLabel }}</span>
                                 </p>
                                 <p v-if="allFilteredSelected" class="dashboard-meta mt-1">
-                                    Clear selection to go back to page-by-page picks.
+                                    {{ t('dashboard.business.selection.clear_hint') }}
                                 </p>
                             </div>
 
@@ -833,7 +890,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     @click="selectAllFiltered"
                                 >
                                     <CheckSquare class="size-4" />
-                                    Select all filtered
+                                    {{ t('dashboard.business.selection.select_all_filtered') }}
                                 </Button>
                                 <Button
                                     v-if="visibleEventIds.length > 0 && !allFilteredSelected"
@@ -842,7 +899,11 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     @click="toggleVisibleSelection"
                                 >
                                     <component :is="allVisibleSelected ? CheckSquare : Square" class="size-4" />
-                                    {{ allVisibleSelected ? 'Clear page' : 'Select page' }}
+                                    {{
+                                        allVisibleSelected
+                                            ? t('dashboard.business.selection.clear_page')
+                                            : t('dashboard.business.selection.select_page')
+                                    }}
                                 </Button>
                                 <Button
                                     v-if="hasSelection"
@@ -851,7 +912,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     @click="clearSelection"
                                 >
                                     <X class="size-4" />
-                                    Clear selection
+                                    {{ t('dashboard.business.selection.clear') }}
                                 </Button>
                                 <Button
                                     v-if="hasSelection"
@@ -860,7 +921,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     @click="startBulkExports"
                                 >
                                     <Download class="size-4" />
-                                    Start exports
+                                    {{ t('dashboard.business.selection.start_exports') }}
                                 </Button>
                                 <Button
                                     v-if="hasSelection"
@@ -869,7 +930,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 >
                                     <a :href="buildBusinessActionUrl(businessActionLinks.billingQueueDownload)">
                                         <CreditCard class="size-4" />
-                                        Billing CSV
+                                        {{ t('dashboard.business.selection.billing_csv') }}
                                     </a>
                                 </Button>
                             </div>
@@ -880,13 +941,17 @@ watch([selectedEventIds, allFilteredSelected], () => {
                         <div v-if="ownedEvents.length === 0" class="py-12 text-center">
                             <div class="mx-auto max-w-md space-y-2">
                                 <h3 class="text-lg font-semibold text-brand-ink">
-                                    {{ filters.hasActiveFilters ? 'No workspaces match these filters' : 'No owned events yet' }}
+                                    {{
+                                        filters.hasActiveFilters
+                                            ? t('dashboard.business.portfolio.empty.filtered_title')
+                                            : t('dashboard.business.portfolio.empty.default_title')
+                                    }}
                                 </h3>
                                 <p class="dashboard-body">
                                     {{
                                         filters.hasActiveFilters
-                                            ? 'Try a broader search or switch back to all workspaces.'
-                                            : 'Your first business event will appear here with quick routes into workspace, media, billing, and export.'
+                                            ? t('dashboard.business.portfolio.empty.filtered_body')
+                                            : t('dashboard.business.portfolio.empty.default_body')
                                     }}
                                 </p>
                             </div>
@@ -907,7 +972,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                                     :disabled="allFilteredSelected"
                                                     @update:checked="toggleEventSelection(event.id)"
                                                 />
-                                                <span class="sr-only">Select {{ event.name }}</span>
+                                                <span class="sr-only">{{ t('dashboard.business.selection.select_event', { event: event.name }) }}</span>
                                             </label>
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold" :class="badgeClass(event.statusTone)">
                                                 {{ event.statusLabel }}
@@ -925,12 +990,18 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                                 {{ event.name }}
                                             </h3>
                                             <p class="mt-1 text-sm text-brand-muted">
-                                                {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
+                                                {{ formatLocalizedDateOnly(event.eventDate) }} · {{ event.timezone }}
                                             </p>
                                             <p class="mt-1 text-sm text-brand-muted">
-                                                {{ event.guestCount }} guests · {{ event.assetCount }} uploads · {{ event.processingCount }} pending
-                                                <span v-if="event.mediaExportStatus === 'ready'"> · Export ready</span>
-                                                <span v-if="event.lastUploadAt"> · Last upload {{ formatDateTime(event.lastUploadAt) }}</span>
+                                                {{ t('dashboard.business.event.guests', { count: formatNumber(event.guestCount) }) }}
+                                                · {{ t('dashboard.business.event.uploads', { count: formatNumber(event.assetCount) }) }}
+                                                · {{ t('dashboard.business.event.pending', { count: formatNumber(event.processingCount) }) }}
+                                                <span v-if="event.mediaExportKey === 'ready'">
+                                                    · {{ t('dashboard.business.badges.media_export.ready') }}
+                                                </span>
+                                                <span v-if="event.lastUploadAt">
+                                                    · {{ t('dashboard.business.event.last_upload', { date: formatLocalizedDateTime(event.lastUploadAt) }) }}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -938,7 +1009,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                     <div class="flex flex-wrap gap-2 xl:max-w-[300px] xl:justify-end">
                                         <Button as-child size="sm" class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                             <Link :href="event.primaryAction.url">
-                                                {{ event.primaryAction.label }}
+                                                {{ primaryActionLabel(event) }}
                                             </Link>
                                         </Button>
                                         <Button as-child size="sm" variant="outline">
@@ -950,10 +1021,10 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger as-child>
                                                 <button
-                                                    type="button"
-                                                    class="inline-flex size-9 items-center justify-center rounded-full border border-brand-border bg-brand-inverse text-brand-muted transition hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink"
-                                                    aria-label="More workspace actions"
-                                                >
+                                                type="button"
+                                                class="inline-flex size-9 items-center justify-center rounded-full border border-brand-border bg-brand-inverse text-brand-muted transition hover:border-brand-accent/30 hover:bg-brand-highlight/20 hover:text-brand-ink"
+                                                :aria-label="t('dashboard.business.portfolio.more_actions')"
+                                            >
                                                     <MoreHorizontal class="size-4" />
                                                 </button>
                                             </DropdownMenuTrigger>
@@ -980,28 +1051,36 @@ watch([selectedEventIds, allFilteredSelected], () => {
                             class="mt-4 flex flex-col gap-3 border-t border-brand-border/70 pt-4 md:flex-row md:items-center md:justify-between"
                         >
                             <p class="text-sm text-brand-muted">
-                                Showing {{ ownedEventsPagination.from ?? 0 }} to {{ ownedEventsPagination.to ?? 0 }} of {{ ownedEventsPagination.total }} workspaces
+                                {{ t('dashboard.business.pagination.showing', {
+                                    from: formatNumber(ownedEventsPagination.from ?? 0),
+                                    to: formatNumber(ownedEventsPagination.to ?? 0),
+                                    total: formatNumber(ownedEventsPagination.total),
+                                    item: t('dashboard.business.portfolio.items_label'),
+                                }) }}
                             </p>
 
                             <div class="flex flex-wrap items-center gap-2">
                                 <Button v-if="ownedEventsPagination.prevPageUrl" as-child variant="outline">
                                     <Link :href="ownedEventsPagination.prevPageUrl">
-                                        Previous
+                                        {{ t('dashboard.business.pagination.previous') }}
                                     </Link>
                                 </Button>
                                 <Button v-else variant="outline" disabled>
-                                    Previous
+                                    {{ t('dashboard.business.pagination.previous') }}
                                 </Button>
                                 <span class="text-sm font-medium text-brand-muted">
-                                    Page {{ ownedEventsPagination.currentPage }} of {{ ownedEventsPagination.lastPage }}
+                                    {{ t('dashboard.business.pagination.page', {
+                                        current: formatNumber(ownedEventsPagination.currentPage),
+                                        total: formatNumber(ownedEventsPagination.lastPage),
+                                    }) }}
                                 </span>
                                 <Button v-if="ownedEventsPagination.nextPageUrl" as-child variant="outline">
                                     <Link :href="ownedEventsPagination.nextPageUrl">
-                                        Next
+                                        {{ t('dashboard.business.pagination.next') }}
                                     </Link>
                                 </Button>
                                 <Button v-else variant="outline" disabled>
-                                    Next
+                                    {{ t('dashboard.business.pagination.next') }}
                                 </Button>
                             </div>
                         </div>
@@ -1012,24 +1091,24 @@ watch([selectedEventIds, allFilteredSelected], () => {
                     <div class="dashboard-panel-divider flex items-start justify-between gap-3 pb-4">
                         <div>
                             <p class="dashboard-eyebrow">
-                                Billing
+                                {{ t('dashboard.business.wallet.recent.kicker') }}
                             </p>
                             <h2 class="dashboard-section-title mt-2">
-                                Recent activity
+                                {{ t('dashboard.business.wallet.recent.title') }}
                             </h2>
                             <p class="dashboard-body mt-1">
-                                The latest billing activity for this business account.
+                                {{ t('dashboard.business.wallet.recent.description') }}
                             </p>
                         </div>
                         <Button as-child size="sm" variant="outline">
                             <Link :href="businessActionLinks.walletHistory">
-                                View history
+                                {{ t('dashboard.business.wallet.recent.view_history') }}
                             </Link>
                         </Button>
                     </div>
 
                     <div v-if="walletActivity.length === 0" class="dashboard-body py-8">
-                        No billing activity yet.
+                        {{ t('dashboard.business.wallet.no_activity') }}
                     </div>
 
                     <div v-else class="max-h-[18rem] overflow-y-auto overscroll-contain pt-2 pr-1 sm:max-h-[20rem]">
@@ -1042,7 +1121,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold text-brand-ink">
-                                            {{ walletActivityLabel(item) }}
+                                            {{ walletActivityLabel(item, { t, creditsLabel: creditLabel }) }}
                                         </p>
                                         <p class="mt-1 text-sm text-brand-muted">
                                             {{ item.description }}
@@ -1060,7 +1139,7 @@ watch([selectedEventIds, allFilteredSelected], () => {
                                         </p>
                                     </div>
                                     <p class="shrink-0 text-xs text-brand-muted">
-                                        {{ formatDateTime(item.createdAt) }}
+                                        {{ formatLocalizedDateTime(item.createdAt) }}
                                     </p>
                                 </div>
                             </article>

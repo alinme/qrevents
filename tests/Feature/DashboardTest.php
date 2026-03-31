@@ -208,6 +208,46 @@ test('authenticated dashboard pages share localized host workspace strings', fun
         );
 });
 
+test('business dashboard shares localized strings and stable status keys', function () {
+    $owner = User::factory()->business()->create([
+        'business_wallet_credits' => 140,
+        'business_wallet_currency' => 'EUR',
+    ]);
+
+    $event = Event::factory()->for($owner)->create([
+        'name' => 'Studio Summit',
+        'status' => Event::STATUS_LIVE,
+        'is_paid' => false,
+        'payment_due_at' => now()->subDay(),
+        'media_export_status' => 'ready',
+        'onboarding_completed_at' => now(),
+    ]);
+
+    EventAsset::factory()->for($event)->for($owner)->create([
+        'moderation_status' => 'approved',
+    ]);
+
+    $this->actingAs($owner)
+        ->withUnencryptedCookies(['site_locale' => 'ro'])
+        ->get(route('dashboard.business'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard/BusinessOverview')
+            ->where('locale.current', 'ro')
+            ->where('translations.dashboard.business.hero.title', 'Creeaza si gestioneaza evenimentele clientilor')
+            ->where('filters.statusOptions.0.labelKey', 'all')
+            ->where('filters.statusOptions.0.label', 'Toate workspace-urile')
+            ->where('ownedEvents.0.statusKey', 'live')
+            ->where('ownedEvents.0.statusLabel', 'Live acum')
+            ->where('ownedEvents.0.billingKey', 'payment_overdue')
+            ->where('ownedEvents.0.billingLabel', 'Plata restanta')
+            ->where('ownedEvents.0.mediaExportKey', 'ready')
+            ->where('ownedEvents.0.primaryAction.key', 'open_workspace')
+            ->where('businessAttentionEvents.0.attentionKey', 'resolve_billing')
+            ->where('businessAttentionEvents.0.attentionLabel', 'Rezolva facturarea')
+        );
+});
+
 test('business owners return from an event workspace to the business events dashboard', function () {
     $owner = User::factory()->business()->create();
     $event = Event::factory()->for($owner)->create([

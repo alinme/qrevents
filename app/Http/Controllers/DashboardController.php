@@ -331,16 +331,16 @@ class DashboardController extends Controller
             }
 
             fputcsv($handle, [
-                'Event',
-                'Plan',
-                'Status',
-                'Billing',
-                'Payment Due',
-                'Approved Uploads',
-                'Pending Review',
-                'Export Status',
-                'Billing Link',
-                'Workspace Link',
+                __('dashboard.business.csv.headers.event'),
+                __('dashboard.business.csv.headers.plan'),
+                __('dashboard.business.csv.headers.status'),
+                __('dashboard.business.csv.headers.billing'),
+                __('dashboard.business.csv.headers.payment_due'),
+                __('dashboard.business.csv.headers.approved_uploads'),
+                __('dashboard.business.csv.headers.pending_review'),
+                __('dashboard.business.csv.headers.export_status'),
+                __('dashboard.business.csv.headers.billing_link'),
+                __('dashboard.business.csv.headers.workspace_link'),
             ]);
 
             foreach ($selectedOwnedEvents as $event) {
@@ -466,14 +466,14 @@ class DashboardController extends Controller
             'businessAttentionEvents' => $this->businessAttentionEvents($ownedEvents, $assetStats, $defaultStats),
             'quickActions' => array_values(array_filter([
                 $continueSetupEvent !== null ? [
-                    'label' => 'Continue setup',
-                    'description' => 'Finish onboarding so guests can start uploading.',
+                    'label' => __('dashboard.business.quick_actions.continue_setup.label'),
+                    'description' => __('dashboard.business.quick_actions.continue_setup.description'),
                     'url' => $this->onboardingStepUrl($continueSetupEvent),
                     'tone' => 'amber',
                 ] : null,
                 $isSuperAdmin ? [
-                    'label' => 'Open admin',
-                    'description' => 'Review accounts, events, and billing across the platform.',
+                    'label' => __('dashboard.business.quick_actions.open_admin.label'),
+                    'description' => __('dashboard.business.quick_actions.open_admin.description'),
                     'url' => route('admin.overview'),
                     'tone' => 'violet',
                 ] : null,
@@ -642,19 +642,23 @@ class DashboardController extends Controller
             ->sortBy(fn (Event $event): int => $this->businessAttentionPriority($event))
             ->take(4)
             ->map(function (Event $event) use ($assetStats, $defaultStats): array {
-                [$statusLabel, $statusTone] = $this->eventStatusMeta($event);
-                [$billingLabel, $billingTone] = $this->billingMeta($event);
+                $statusMeta = $this->eventStatusMeta($event);
+                $billingMeta = $this->billingMeta($event);
+                $attentionKey = $this->businessAttentionKey($event);
 
                 return [
                     'id' => $event->id,
                     'name' => $event->name,
-                    'plan' => $event->plan?->name ?? 'Custom plan',
-                    'statusLabel' => $statusLabel,
-                    'statusTone' => $statusTone,
-                    'billingLabel' => $billingLabel,
-                    'billingTone' => $billingTone,
-                    'attentionLabel' => $this->businessAttentionLabel($event),
-                    'attentionDetail' => $this->businessAttentionDetail($event),
+                    'plan' => $event->plan?->name ?? __('dashboard.business.fallback.custom_plan'),
+                    'statusKey' => $statusMeta['key'],
+                    'statusLabel' => $statusMeta['label'],
+                    'statusTone' => $statusMeta['tone'],
+                    'billingKey' => $billingMeta['key'],
+                    'billingLabel' => $billingMeta['label'],
+                    'billingTone' => $billingMeta['tone'],
+                    'attentionKey' => $attentionKey,
+                    'attentionLabel' => $this->businessAttentionLabel($attentionKey),
+                    'attentionDetail' => $this->businessAttentionDetail($attentionKey),
                     'paymentDueAt' => ($event->payment_due_at ?? $event->grace_ends_at)?->toIso8601String(),
                     'storageUsedBytes' => (int) $event->storage_used_bytes,
                     'storageLimitBytes' => (int) $event->storage_limit_bytes,
@@ -715,58 +719,41 @@ class DashboardController extends Controller
         return 5;
     }
 
-    private function businessAttentionLabel(Event $event): string
+    private function businessAttentionKey(Event $event): string
     {
         if ($event->onboarding_completed_at === null) {
-            return 'Finish setup';
+            return 'finish_setup';
         }
 
         $paymentDueAt = $event->payment_due_at ?? $event->grace_ends_at;
 
         if (! $event->is_paid && ($paymentDueAt?->isPast() ?? false)) {
-            return 'Resolve billing';
+            return 'resolve_billing';
         }
 
         if (in_array($event->status, [Event::STATUS_LOCKED, Event::STATUS_EXPIRED], true)) {
-            return 'Review access';
+            return 'review_access';
         }
 
         if (! $event->is_paid) {
-            return 'Review invoice';
+            return 'review_invoice';
         }
 
         if ($event->media_export_status === 'failed') {
-            return 'Retry export';
+            return 'retry_export';
         }
 
-        return 'Open workspace';
+        return 'open_workspace';
     }
 
-    private function businessAttentionDetail(Event $event): string
+    private function businessAttentionLabel(string $key): string
     {
-        if ($event->onboarding_completed_at === null) {
-            return 'Complete onboarding so the album, upload flow, and workspace can go live.';
-        }
+        return __("dashboard.business.attention.{$key}.label");
+    }
 
-        $paymentDueAt = $event->payment_due_at ?? $event->grace_ends_at;
-
-        if (! $event->is_paid && ($paymentDueAt?->isPast() ?? false)) {
-            return 'Payment is past due for this event and needs follow-up before access tightens further.';
-        }
-
-        if (in_array($event->status, [Event::STATUS_LOCKED, Event::STATUS_EXPIRED], true)) {
-            return 'This event is no longer fully accessible and may need billing or cleanup follow-up.';
-        }
-
-        if (! $event->is_paid) {
-            return 'This event still has an open balance. Double-check the due date and billing note.';
-        }
-
-        if ($event->media_export_status === 'failed') {
-            return 'The latest export attempt failed. Open the workspace to retry or review the media set.';
-        }
-
-        return 'Open the workspace to keep this event moving.';
+    private function businessAttentionDetail(string $key): string
+    {
+        return __("dashboard.business.attention.{$key}.detail");
     }
 
     /**
@@ -845,13 +832,14 @@ class DashboardController extends Controller
         ?EventCollaborator $collaboration,
         array $assetStats,
     ): array {
-        [$roleLabel, $roleTone] = $this->eventRoleMeta($context, $collaboration);
-        [$statusLabel, $statusTone] = $this->eventStatusMeta($event);
-        [$billingLabel, $billingTone] = $this->billingMeta($event);
-        [$mediaExportLabel, $mediaExportTone] = $this->mediaExportMeta($event);
+        $roleMeta = $this->eventRoleMeta($context, $collaboration);
+        $statusMeta = $this->eventStatusMeta($event);
+        $billingMeta = $this->billingMeta($event);
+        $mediaExportMeta = $this->mediaExportMeta($event);
         [$planSlug, $planTone] = $this->dashboardPlanMeta($event);
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
-        $planName = $event->plan?->name ?? 'Custom plan';
+        $planName = $event->plan?->name ?? __('dashboard.business.fallback.custom_plan');
+        $primaryActionKey = $event->onboarding_completed_at === null ? 'continue_setup' : 'open_workspace';
 
         return [
             'id' => $event->id,
@@ -871,17 +859,21 @@ class DashboardController extends Controller
             ],
             'eventDate' => $event->event_date?->toDateString(),
             'timezone' => $event->timezone,
-            'roleLabel' => $roleLabel,
-            'roleTone' => $roleTone,
-            'statusLabel' => $statusLabel,
-            'statusTone' => $statusTone,
-            'billingLabel' => $billingLabel,
-            'billingTone' => $billingTone,
+            'roleKey' => $roleMeta['key'],
+            'roleLabel' => $roleMeta['label'],
+            'roleTone' => $roleMeta['tone'],
+            'statusKey' => $statusMeta['key'],
+            'statusLabel' => $statusMeta['label'],
+            'statusTone' => $statusMeta['tone'],
+            'billingKey' => $billingMeta['key'],
+            'billingLabel' => $billingMeta['label'],
+            'billingTone' => $billingMeta['tone'],
             'mediaExportStatus' => is_string($event->media_export_status) && $event->media_export_status !== ''
                 ? $event->media_export_status
                 : 'idle',
-            'mediaExportLabel' => $mediaExportLabel,
-            'mediaExportTone' => $mediaExportTone,
+            'mediaExportKey' => $mediaExportMeta['key'],
+            'mediaExportLabel' => $mediaExportMeta['label'],
+            'mediaExportTone' => $mediaExportMeta['tone'],
             'uploadCount' => $event->upload_count,
             'uploadLimit' => $event->upload_limit,
             'storageUsedBytes' => $event->storage_used_bytes,
@@ -896,7 +888,8 @@ class DashboardController extends Controller
             'isPaid' => $event->is_paid,
             'onboardingComplete' => $event->onboarding_completed_at !== null,
             'primaryAction' => [
-                'label' => $event->onboarding_completed_at === null ? 'Continue setup' : 'Open workspace',
+                'key' => $primaryActionKey,
+                'label' => $this->primaryActionLabel($primaryActionKey),
                 'url' => $event->onboarding_completed_at === null
                     ? $this->onboardingStepUrl($event)
                     : route('events.show', $event),
@@ -939,71 +932,106 @@ class DashboardController extends Controller
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{key: string, label: string, tone: string}
      */
     private function eventRoleMeta(string $context, ?EventCollaborator $collaboration): array
     {
         if ($context === 'owner') {
-            return ['Owner', 'dark'];
+            return [
+                'key' => 'owner',
+                'label' => __('dashboard.business.badges.role.owner'),
+                'tone' => 'dark',
+            ];
         }
 
-        return match ($collaboration?->role) {
-            'manager' => ['Manager', 'sky'],
-            default => ['Viewer', 'zinc'],
-        };
+        $roleKey = $collaboration?->role === 'manager' ? 'manager' : 'viewer';
+
+        return [
+            'key' => $roleKey,
+            'label' => __("dashboard.business.badges.role.{$roleKey}"),
+            'tone' => $roleKey === 'manager' ? 'sky' : 'zinc',
+        ];
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{key: string, label: string, tone: string}
      */
     private function eventStatusMeta(Event $event): array
     {
+        $statusKey = 'scheduled';
+        $statusTone = 'violet';
+
         if ($event->onboarding_completed_at === null) {
-            return ['Setup in progress', 'amber'];
+            $statusKey = 'setup_in_progress';
+            $statusTone = 'amber';
+        } else {
+            match ($event->status) {
+                Event::STATUS_LIVE => [$statusKey, $statusTone] = ['live', 'emerald'],
+                Event::STATUS_GRACE => [$statusKey, $statusTone] = ['grace', 'sky'],
+                Event::STATUS_LOCKED => [$statusKey, $statusTone] = ['locked', 'rose'],
+                Event::STATUS_EXPIRED => [$statusKey, $statusTone] = ['expired', 'zinc'],
+                Event::STATUS_DRAFT => [$statusKey, $statusTone] = ['draft', 'amber'],
+                default => [$statusKey, $statusTone] = ['scheduled', 'violet'],
+            };
         }
 
-        return match ($event->status) {
-            Event::STATUS_LIVE => ['Live now', 'emerald'],
-            Event::STATUS_GRACE => ['Grace period', 'sky'],
-            Event::STATUS_LOCKED => ['Locked', 'rose'],
-            Event::STATUS_EXPIRED => ['Expired', 'zinc'],
-            Event::STATUS_DRAFT => ['Draft', 'amber'],
-            default => ['Scheduled', 'violet'],
-        };
+        return [
+            'key' => $statusKey,
+            'label' => __("dashboard.business.badges.status.{$statusKey}"),
+            'tone' => $statusTone,
+        ];
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{key: string, label: string, tone: string}
      */
     private function billingMeta(Event $event): array
     {
+        $billingKey = 'payment_due_soon';
+        $billingTone = 'amber';
+
         if ($event->is_paid) {
-            return ['Paid', 'emerald'];
+            $billingKey = 'paid';
+            $billingTone = 'emerald';
+        } else {
+            $paymentDueAt = $event->payment_due_at ?? $event->grace_ends_at;
+
+            if ($paymentDueAt === null) {
+                $billingKey = 'billing_pending';
+                $billingTone = 'amber';
+            } elseif ($paymentDueAt->isPast()) {
+                $billingKey = 'payment_overdue';
+                $billingTone = 'rose';
+            } else {
+                $billingKey = 'payment_due_soon';
+                $billingTone = 'amber';
+            }
         }
 
-        $paymentDueAt = $event->payment_due_at ?? $event->grace_ends_at;
-        if ($paymentDueAt === null) {
-            return ['Billing pending', 'amber'];
-        }
-
-        if ($paymentDueAt->isPast()) {
-            return ['Payment overdue', 'rose'];
-        }
-
-        return ['Payment due soon', 'amber'];
+        return [
+            'key' => $billingKey,
+            'label' => __("dashboard.business.badges.billing.{$billingKey}"),
+            'tone' => $billingTone,
+        ];
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{key: string, label: string, tone: string}
      */
     private function mediaExportMeta(Event $event): array
     {
-        return match ($event->media_export_status) {
-            'ready' => ['Export ready', 'emerald'],
-            'pending', 'processing' => ['Export running', 'sky'],
-            'failed' => ['Export failed', 'rose'],
-            default => ['No export yet', 'zinc'],
+        [$mediaExportKey, $mediaExportTone] = match ($event->media_export_status) {
+            'ready' => ['ready', 'emerald'],
+            'pending', 'processing' => ['running', 'sky'],
+            'failed' => ['failed', 'rose'],
+            default => ['idle', 'zinc'],
         };
+
+        return [
+            'key' => $mediaExportKey,
+            'label' => __("dashboard.business.badges.media_export.{$mediaExportKey}"),
+            'tone' => $mediaExportTone,
+        ];
     }
 
     private function onboardingStepUrl(Event $event): string
@@ -1120,32 +1148,38 @@ class DashboardController extends Controller
             'statusOptions' => [
                 [
                     'value' => self::BUSINESS_STATUS_ALL,
-                    'label' => 'All workspaces',
+                    'labelKey' => 'all',
+                    'label' => __('dashboard.business.filters.options.all'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_ALL],
                 ],
                 [
                     'value' => self::BUSINESS_STATUS_ATTENTION,
-                    'label' => 'Needs attention',
+                    'labelKey' => 'attention',
+                    'label' => __('dashboard.business.filters.options.attention'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_ATTENTION],
                 ],
                 [
                     'value' => self::BUSINESS_STATUS_UNPAID,
-                    'label' => 'Unpaid',
+                    'labelKey' => 'unpaid',
+                    'label' => __('dashboard.business.filters.options.unpaid'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_UNPAID],
                 ],
                 [
                     'value' => self::BUSINESS_STATUS_OVERDUE,
-                    'label' => 'Overdue',
+                    'labelKey' => 'overdue',
+                    'label' => __('dashboard.business.filters.options.overdue'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_OVERDUE],
                 ],
                 [
                     'value' => self::BUSINESS_STATUS_LIVE,
-                    'label' => 'Live now',
+                    'labelKey' => 'live',
+                    'label' => __('dashboard.business.filters.options.live'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_LIVE],
                 ],
                 [
                     'value' => self::BUSINESS_STATUS_EXPORT_READY,
-                    'label' => 'Exports ready',
+                    'labelKey' => 'export_ready',
+                    'label' => __('dashboard.business.filters.options.export_ready'),
                     'count' => $statusCounts[self::BUSINESS_STATUS_EXPORT_READY],
                 ],
             ],
@@ -1167,13 +1201,13 @@ class DashboardController extends Controller
                 ->filter(fn (array $event): bool => ! (bool) ($event['isPaid'] ?? false))
                 ->count(),
             self::BUSINESS_STATUS_OVERDUE => $ownedEvents
-                ->filter(fn (array $event): bool => ($event['billingLabel'] ?? null) === 'Payment overdue')
+                ->filter(fn (array $event): bool => ($event['billingKey'] ?? null) === 'payment_overdue')
                 ->count(),
             self::BUSINESS_STATUS_LIVE => $ownedEvents
-                ->filter(fn (array $event): bool => ($event['statusLabel'] ?? null) === 'Live now')
+                ->filter(fn (array $event): bool => ($event['statusKey'] ?? null) === 'live')
                 ->count(),
             self::BUSINESS_STATUS_EXPORT_READY => $ownedEvents
-                ->filter(fn (array $event): bool => ($event['mediaExportStatus'] ?? null) === 'ready')
+                ->filter(fn (array $event): bool => ($event['mediaExportKey'] ?? null) === 'ready')
                 ->count(),
         ];
     }
@@ -1202,8 +1236,8 @@ class DashboardController extends Controller
             ->filter(fn (array $event): bool => $this->businessAttentionMatchesSearch($event, $filters['search']))
             ->filter(function (array $event) use ($filters): bool {
                 return match ($filters['status']) {
-                    self::BUSINESS_STATUS_UNPAID => ($event['billingLabel'] ?? null) !== 'Paid',
-                    self::BUSINESS_STATUS_OVERDUE => ($event['billingLabel'] ?? null) === 'Payment overdue',
+                    self::BUSINESS_STATUS_UNPAID => ($event['billingKey'] ?? null) !== 'paid',
+                    self::BUSINESS_STATUS_OVERDUE => ($event['billingKey'] ?? null) === 'payment_overdue',
                     default => true,
                 };
             })
@@ -1341,9 +1375,9 @@ class DashboardController extends Controller
         return match ($status) {
             self::BUSINESS_STATUS_ATTENTION => $this->dashboardEventNeedsBusinessAttention($event),
             self::BUSINESS_STATUS_UNPAID => ! (bool) ($event['isPaid'] ?? false),
-            self::BUSINESS_STATUS_OVERDUE => ($event['billingLabel'] ?? null) === 'Payment overdue',
-            self::BUSINESS_STATUS_LIVE => ($event['statusLabel'] ?? null) === 'Live now',
-            self::BUSINESS_STATUS_EXPORT_READY => ($event['mediaExportStatus'] ?? null) === 'ready',
+            self::BUSINESS_STATUS_OVERDUE => ($event['billingKey'] ?? null) === 'payment_overdue',
+            self::BUSINESS_STATUS_LIVE => ($event['statusKey'] ?? null) === 'live',
+            self::BUSINESS_STATUS_EXPORT_READY => ($event['mediaExportKey'] ?? null) === 'ready',
             default => true,
         };
     }
@@ -1361,11 +1395,11 @@ class DashboardController extends Controller
             return true;
         }
 
-        if (in_array($event['statusLabel'] ?? null, ['Locked', 'Expired'], true)) {
+        if (in_array($event['statusKey'] ?? null, ['locked', 'expired'], true)) {
             return true;
         }
 
-        return ($event['mediaExportStatus'] ?? null) === 'failed';
+        return ($event['mediaExportKey'] ?? null) === 'failed';
     }
 
     /**
@@ -1460,9 +1494,14 @@ class DashboardController extends Controller
     private function moneyLabel(string $currency, int $priceCents): string
     {
         if ($priceCents === 0) {
-            return 'Free';
+            return __('dashboard.business.wallet.price_free');
         }
 
         return sprintf('%s %.2f', strtoupper($currency), $priceCents / 100);
+    }
+
+    private function primaryActionLabel(string $key): string
+    {
+        return __("dashboard.business.actions.primary.{$key}");
     }
 }

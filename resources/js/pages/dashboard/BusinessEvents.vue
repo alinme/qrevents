@@ -10,6 +10,7 @@ import {
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { badgeClass, formatBytes, formatDateOnly, formatDateTime } from '@/lib/dashboard';
 import type {
@@ -31,57 +32,81 @@ const props = defineProps<{
     ownedEventsPagination: PaginationMeta;
 }>();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const { locale, t } = useTranslations();
+
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('app.nav.dashboard'),
         href: props.dashboardLinks.overview,
     },
     {
-        title: 'Business',
+        title: t('app.nav.business'),
         href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
     },
     {
-        title: 'Events',
+        title: t('app.nav.events'),
         href: props.dashboardLinks.ownedEvents,
     },
-];
+]);
 
 const search = ref(props.filters.search);
 
+const formatNumber = (value: number): string =>
+    new Intl.NumberFormat(
+        locale.value === 'ro'
+            ? 'ro-RO'
+            : locale.value === 'el'
+              ? 'el-GR'
+              : 'en-GB',
+    ).format(value);
+
+const formatLocalizedDateOnly = (value: string | null): string =>
+    formatDateOnly(value, {
+        locale: locale.value,
+        emptyLabel: t('event_home.fallback.not_set'),
+    });
+
+const formatLocalizedDateTime = (value: string | null): string =>
+    formatDateTime(value, {
+        locale: locale.value,
+        emptyLabel: t('dashboard.business.events.event.no_activity'),
+    });
+
 const summaryCards = computed(() => [
     {
-        label: 'Events',
-        value: props.filters.ownedEventTotalCount,
-        detail: 'All owned workspaces in the business account.',
+        label: t('dashboard.business.events.metrics.events.label'),
+        value: formatNumber(props.filters.ownedEventTotalCount),
+        detail: t('dashboard.business.events.metrics.events.detail'),
     },
     {
-        label: 'Live',
-        value: props.businessOverview.liveEventCount,
-        detail: 'Currently open for uploads.',
+        label: t('dashboard.business.events.metrics.live.label'),
+        value: formatNumber(props.businessOverview.liveEventCount),
+        detail: t('dashboard.business.events.metrics.live.detail'),
     },
     {
-        label: 'To setup',
-        value: props.summary.pendingSetupCount,
-        detail: 'Still in onboarding.',
+        label: t('dashboard.business.events.metrics.setup.label'),
+        value: formatNumber(props.summary.pendingSetupCount),
+        detail: t('dashboard.business.events.metrics.setup.detail'),
     },
     {
-        label: 'Attention',
-        value: props.filters.attentionTotalCount,
-        detail: 'Need billing or follow-up.',
+        label: t('dashboard.business.events.metrics.attention.label'),
+        value: formatNumber(props.filters.attentionTotalCount),
+        detail: t('dashboard.business.events.metrics.attention.detail'),
     },
 ]);
 
 const applyFilters = (overrides?: {
     status?: BusinessDashboardFilters['status'];
     page?: number;
-}) => {
+}): void => {
     router.get(
         props.dashboardLinks.ownedEvents,
         {
             search: search.value.trim() !== '' ? search.value.trim() : undefined,
-            status: (overrides?.status ?? props.filters.status) !== 'all'
-                ? (overrides?.status ?? props.filters.status)
-                : undefined,
+            status:
+                (overrides?.status ?? props.filters.status) !== 'all'
+                    ? (overrides?.status ?? props.filters.status)
+                    : undefined,
             page: overrides?.page && overrides.page > 1 ? overrides.page : undefined,
         },
         {
@@ -94,7 +119,7 @@ const applyFilters = (overrides?: {
 </script>
 
 <template>
-    <Head title="Business events" />
+    <Head :title="t('dashboard.business.events.page_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-full bg-brand-canvas">
@@ -103,25 +128,25 @@ const applyFilters = (overrides?: {
                     <div class="dashboard-panel-divider flex flex-col gap-4 pb-5 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <p class="dashboard-eyebrow">
-                                Business
+                                {{ t('dashboard.business.hero.kicker') }}
                             </p>
                             <h1 class="dashboard-title mt-2">
-                                Events
+                                {{ t('dashboard.business.events.hero.title') }}
                             </h1>
                             <p class="dashboard-body mt-2">
-                                Every business workspace in one place, with direct routes into workspace, media, billing, and settings.
+                                {{ t('dashboard.business.events.hero.description') }}
                             </p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                 <Link :href="props.dashboardLinks.business ?? props.dashboardLinks.overview">
-                                    Back to business
+                                    {{ t('dashboard.business.events.actions.back') }}
                                 </Link>
                             </Button>
                             <Button as-child class="bg-brand-ink text-brand-inverse hover:bg-brand-accent">
                                 <Link :href="props.dashboardLinks.createBusiness ?? '/dashboard/business/events/create'">
-                                    Create event
+                                    {{ t('dashboard.business.events.actions.create') }}
                                 </Link>
                             </Button>
                         </div>
@@ -156,7 +181,7 @@ const applyFilters = (overrides?: {
                                 <Input
                                     v-model="search"
                                     class="h-auto border-0 bg-transparent px-0 py-0 text-sm text-brand-ink shadow-none focus-visible:ring-0"
-                                    placeholder="Search events"
+                                    :placeholder="t('dashboard.business.events.search_placeholder')"
                                     @keydown.enter.prevent="applyFilters()"
                                 />
                             </div>
@@ -171,7 +196,7 @@ const applyFilters = (overrides?: {
                                     :class="option.value === props.filters.status ? 'border-brand-ink bg-brand-highlight/25' : ''"
                                     @click="applyFilters({ status: option.value, page: 1 })"
                                 >
-                                    {{ option.label }} ({{ option.count }})
+                                    {{ option.label }} ({{ formatNumber(option.count) }})
                                 </Button>
                             </div>
                         </div>
@@ -183,9 +208,11 @@ const applyFilters = (overrides?: {
                                 <FolderKanban class="size-7" />
                             </div>
                             <div class="space-y-2">
-                                <h2 class="text-xl font-semibold text-brand-ink">No events match this view</h2>
+                                <h2 class="text-xl font-semibold text-brand-ink">
+                                    {{ t('dashboard.business.events.empty.title') }}
+                                </h2>
                                 <p class="dashboard-body">
-                                    Adjust the search or status filter, or create a new event from the business workspace.
+                                    {{ t('dashboard.business.events.empty.description') }}
                                 </p>
                             </div>
                         </div>
@@ -199,9 +226,9 @@ const applyFilters = (overrides?: {
                         >
                             <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                                 <div class="min-w-0 space-y-3">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.roleTone)">
-                                        {{ event.roleLabel }}
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.roleTone)">
+                                            {{ event.roleLabel }}
                                         </span>
                                         <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="badgeClass(event.statusTone)">
                                             {{ event.statusLabel }}
@@ -216,16 +243,16 @@ const applyFilters = (overrides?: {
                                             {{ event.name }}
                                         </h2>
                                         <p class="dashboard-body">
-                                            {{ event.plan }} · {{ formatDateOnly(event.eventDate) }} · {{ event.timezone }}
+                                            {{ event.plan }} · {{ formatLocalizedDateOnly(event.eventDate) }} · {{ event.timezone }}
                                         </p>
                                     </div>
 
                                     <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-brand-muted">
-                                        <span>{{ event.guestCount }} guests</span>
-                                        <span>{{ event.assetCount }} uploads</span>
-                                        <span>{{ event.processingCount }} pending</span>
+                                        <span>{{ t('dashboard.business.events.event.guests', { count: formatNumber(event.guestCount) }) }}</span>
+                                        <span>{{ t('dashboard.business.events.event.uploads', { count: formatNumber(event.assetCount) }) }}</span>
+                                        <span>{{ t('dashboard.business.events.event.pending', { count: formatNumber(event.processingCount) }) }}</span>
                                         <span>{{ formatBytes(event.storageUsedBytes) }} / {{ formatBytes(event.storageLimitBytes) }}</span>
-                                        <span>{{ formatDateTime(event.lastUploadAt) }}</span>
+                                        <span>{{ formatLocalizedDateTime(event.lastUploadAt) }}</span>
                                     </div>
                                 </div>
 
@@ -233,24 +260,24 @@ const applyFilters = (overrides?: {
                                     <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                         <Link :href="event.links.dashboard">
                                             <ArrowUpRight class="size-4" />
-                                            Workspace
+                                            {{ t('app.nav.workspace') }}
                                         </Link>
                                     </Button>
                                     <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                         <Link :href="event.links.media">
                                             <Camera class="size-4" />
-                                            Media
+                                            {{ t('app.nav.media') }}
                                         </Link>
                                     </Button>
                                     <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                         <Link :href="event.links.billing">
-                                            Billing
+                                            {{ t('app.nav.billing') }}
                                         </Link>
                                     </Button>
                                     <Button as-child variant="outline" class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20">
                                         <Link :href="event.links.settings">
                                             <Settings class="size-4" />
-                                            Settings
+                                            {{ t('app.nav.settings') }}
                                         </Link>
                                     </Button>
                                 </div>
@@ -263,8 +290,11 @@ const applyFilters = (overrides?: {
                         class="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border/70 px-5 py-4 md:px-6"
                     >
                         <p class="dashboard-body">
-                            Showing {{ props.ownedEventsPagination.from ?? 0 }}-{{ props.ownedEventsPagination.to ?? 0 }}
-                            of {{ props.ownedEventsPagination.total }}
+                            {{ t('dashboard.business.pagination.showing_compact', {
+                                from: formatNumber(props.ownedEventsPagination.from ?? 0),
+                                to: formatNumber(props.ownedEventsPagination.to ?? 0),
+                                total: formatNumber(props.ownedEventsPagination.total),
+                            }) }}
                         </p>
 
                         <div class="flex flex-wrap gap-2">
