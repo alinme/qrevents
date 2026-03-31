@@ -138,7 +138,7 @@ store.form = storeForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -153,7 +153,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -162,7 +162,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -182,7 +182,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -192,7 +192,7 @@ const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -202,7 +202,7 @@ indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:143
+* @see app/Http/Controllers/DashboardController.php:134
 * @route '/dashboard/business/events'
 */
 indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

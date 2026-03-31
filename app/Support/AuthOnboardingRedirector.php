@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Models\Event;
 use App\Models\EventCollaborator;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,10 +13,6 @@ class AuthOnboardingRedirector
         $latestOwnedEvent = $user->events()
             ->latest('id')
             ->first();
-
-        if ($latestOwnedEvent instanceof Event && ! $this->hasCompletedOwnedEvent($user)) {
-            return redirect()->to($this->onboardingStepPath($latestOwnedEvent));
-        }
 
         if ($user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()) {
             return to_route('dashboard.business.onboarding');
@@ -42,14 +37,9 @@ class AuthOnboardingRedirector
 
         return $dashboardRedirect !== null
             ? $dashboardRedirect->getTargetUrl()
-            : route('dashboard', absolute: false);
-    }
-
-    private function hasCompletedOwnedEvent(User $user): bool
-    {
-        return $user->events()
-            ->whereNotNull('onboarding_completed_at')
-            ->exists();
+            : ($user->isBusinessAccount()
+                ? route('dashboard.business', absolute: false)
+                : route('dashboard.account', absolute: false));
     }
 
     private function hasActiveCollaboratorEvent(User $user): bool
@@ -58,14 +48,5 @@ class AuthOnboardingRedirector
             ->where('user_id', $user->id)
             ->whereIn('status', ['active', 'accepted'])
             ->exists();
-    }
-
-    private function onboardingStepPath(Event $event): string
-    {
-        return match ($event->onboarding_step) {
-            'creating' => route('onboarding.creating', $event, absolute: false),
-            'photos' => route('onboarding.photos', $event, absolute: false),
-            default => route('onboarding.create', absolute: false),
-        };
     }
 }

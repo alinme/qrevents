@@ -10,7 +10,7 @@ it('redirects guests to registration before onboarding begins', function () {
         ->assertRedirect(route('register'));
 });
 
-it('sends single-event owners back into onboarding when onboarding is in progress', function () {
+it('sends single-event owners into the account dashboard when onboarding is in progress', function () {
     $user = User::factory()->create();
     $event = Event::factory()->for($user)->create([
         'onboarding_step' => 'photos',
@@ -20,7 +20,7 @@ it('sends single-event owners back into onboarding when onboarding is in progres
     $this->actingAs($user);
 
     $this->get(route('dashboard'))
-        ->assertRedirect(route('onboarding.photos', $event));
+        ->assertRedirect(route('dashboard.account'));
 });
 
 it('redirects completed users away from onboarding unless restart is requested', function () {
@@ -34,7 +34,7 @@ it('redirects completed users away from onboarding unless restart is requested',
 
     $response = $this->get(route('onboarding.create'));
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('dashboard.account'));
 });
 
 it('allows completed users to restart onboarding using restart query', function () {
@@ -356,7 +356,7 @@ it('completes regular onboarding from the first-photos screen', function () {
         ->assertInertia(fn ($page) => $page
             ->component('onboarding/FirstPhotos')
             ->where('businessMode', false)
-            ->where('dashboardUrl', route('dashboard'))
+            ->where('dashboardUrl', route('dashboard.account'))
         );
 
     $event->refresh();
@@ -773,7 +773,7 @@ it('marks onboarding complete when the ready route is opened', function () {
 
     $response = $this->get(route('onboarding.ready', $event));
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('dashboard.account'));
 
     $event->refresh();
 

@@ -49,7 +49,7 @@ class EventOnboardingController extends Controller
         if ($latestEvent !== null) {
             return $latestEvent->onboarding_completed_at === null
                 ? $this->redirectToStep($latestEvent)
-                : to_route('dashboard');
+                : to_route('dashboard.account');
         }
 
         return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
@@ -156,7 +156,7 @@ class EventOnboardingController extends Controller
             'wallShortUrl' => $publicShortLinks['wallShortUrl'],
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'businessMode' => $businessMode,
-            'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard'),
+            'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard.account'),
         ]);
     }
 
@@ -173,7 +173,7 @@ class EventOnboardingController extends Controller
 
         $request->session()->flash('show_dashboard_modal', true);
 
-        return to_route('dashboard');
+        return to_route('dashboard.account');
     }
 
     /**
@@ -213,7 +213,7 @@ class EventOnboardingController extends Controller
         return match ($event->onboarding_step) {
             'creating' => to_route('onboarding.photos', $event),
             'photos' => to_route('onboarding.photos', $event),
-            'completed' => to_route('dashboard'),
+            'completed' => to_route('dashboard.account'),
             default => to_route('onboarding.photos', $event),
         };
     }

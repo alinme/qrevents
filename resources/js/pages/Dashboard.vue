@@ -98,11 +98,59 @@ const ownerName = computed(() => page.props.auth?.user?.name ?? 'You');
 const workspaceLabel = (event: DashboardEvent): string =>
     event.onboardingComplete ? 'Workspace' : event.primaryAction.label;
 
+const needsBillingAttention = (event: DashboardEvent): boolean =>
+    event.planDetails.priceCents > 0 && !event.isPaid;
+
 const managementLink = (event: DashboardEvent): string =>
-    !event.isPaid ? event.links.billing : event.links.settings;
+    needsBillingAttention(event) ? event.links.billing : event.links.settings;
 
 const managementLabel = (event: DashboardEvent): string =>
-    !event.isPaid ? 'Billing' : 'Settings';
+    needsBillingAttention(event) ? 'Billing' : 'Settings';
+
+const numberFormatter = new Intl.NumberFormat();
+
+const formatStorageLimit = (bytes: number): string => {
+    if (bytes >= 1024 ** 3) {
+        const gigabytes = bytes / 1024 ** 3;
+        const value = Number.isInteger(gigabytes)
+            ? gigabytes.toString()
+            : gigabytes.toFixed(1);
+
+        return `${value} GB storage`;
+    }
+
+    return `${Math.max(1, Math.round(bytes / 1024 ** 2))} MB storage`;
+};
+
+const uploadWindowLabel = (days: number): string =>
+    `${numberFormatter.format(days)}-day upload window`;
+
+const planSummary = (event: DashboardEvent): string =>
+    [
+        formatStorageLimit(event.planDetails.storageLimitBytes),
+        `${numberFormatter.format(event.planDetails.uploadLimit)} uploads`,
+        uploadWindowLabel(event.planDetails.uploadWindowDays),
+    ].join(' · ');
+
+const planCapabilities = (event: DashboardEvent): string[] => {
+    const capabilities: string[] = [];
+
+    if (event.planDetails.downloadAllEnabled) {
+        capabilities.push('Full downloads');
+    } else {
+        capabilities.push('QR Events branding');
+    }
+
+    if (event.planDetails.moderationToolsEnabled) {
+        capabilities.push('Moderation tools');
+    }
+
+    if (event.planDetails.removeAppBranding) {
+        capabilities.push('White-label album');
+    }
+
+    return capabilities;
+};
 </script>
 
 <template>
@@ -214,8 +262,11 @@ const managementLabel = (event: DashboardEvent): string =>
                                                 >
                                                     {{ event.billingLabel }}
                                                 </span>
-                                                <span class="text-xs text-brand-muted">
-                                                    {{ event.plan }}
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
+                                                    :class="badgeClass(event.planDetails.tone)"
+                                                >
+                                                    {{ event.planDetails.name }}
                                                 </span>
                                             </div>
 
@@ -236,6 +287,18 @@ const managementLabel = (event: DashboardEvent): string =>
                                                             : 'No guest uploads yet'
                                                     }}
                                                 </p>
+                                                <p class="dashboard-meta mt-1">
+                                                    {{ planSummary(event) }}
+                                                </p>
+                                                <div class="mt-2 flex flex-wrap gap-2">
+                                                    <span
+                                                        v-for="capability in planCapabilities(event)"
+                                                        :key="`${event.id}-${capability}`"
+                                                        class="inline-flex rounded-full bg-brand-panel-strong/35 px-2.5 py-1 text-[0.72rem] font-medium text-brand-muted"
+                                                    >
+                                                        {{ capability }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -289,6 +352,12 @@ const managementLabel = (event: DashboardEvent): string =>
                                                 >
                                                     {{ event.statusLabel }}
                                                 </span>
+                                                <span
+                                                    class="inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
+                                                    :class="badgeClass(event.planDetails.tone)"
+                                                >
+                                                    {{ event.planDetails.name }}
+                                                </span>
                                             </div>
 
                                             <div>
@@ -300,6 +369,18 @@ const managementLabel = (event: DashboardEvent): string =>
                                                     {{ event.assetCount }} uploads ·
                                                     {{ event.processingCount }} pending
                                                 </p>
+                                                <p class="dashboard-meta mt-1">
+                                                    {{ planSummary(event) }}
+                                                </p>
+                                                <div class="mt-2 flex flex-wrap gap-2">
+                                                    <span
+                                                        v-for="capability in planCapabilities(event)"
+                                                        :key="`${event.id}-${capability}`"
+                                                        class="inline-flex rounded-full bg-brand-panel-strong/35 px-2.5 py-1 text-[0.72rem] font-medium text-brand-muted"
+                                                    >
+                                                        {{ capability }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 

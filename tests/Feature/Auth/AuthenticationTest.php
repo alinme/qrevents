@@ -22,7 +22,7 @@ test('users can authenticate using the login screen', function () {
     $response->assertRedirect(route('onboarding.create', absolute: false));
 });
 
-test('users with an incomplete owned event are redirected back into onboarding after login', function () {
+test('users with an incomplete owned event land on the account dashboard after login', function () {
     $user = User::factory()->create();
     $event = \App\Models\Event::factory()->for($user)->create([
         'onboarding_step' => 'photos',
@@ -35,7 +35,7 @@ test('users with an incomplete owned event are redirected back into onboarding a
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('onboarding.photos', $event, absolute: false));
+    $response->assertRedirect(route('dashboard.account', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

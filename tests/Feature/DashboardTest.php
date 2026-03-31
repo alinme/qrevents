@@ -6,6 +6,7 @@ use App\Models\EventAsset;
 use App\Models\EventCollaborator;
 use App\Models\EventGuest;
 use App\Models\ExchangeRate;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -59,7 +60,7 @@ test('collaborator-only users can still enter the dashboard flow without owner o
 
     $this->actingAs($collaborator)
         ->get(route('dashboard'))
-        ->assertRedirect(route('events.show', $event));
+        ->assertRedirect(route('dashboard.account'));
 });
 
 test('multi-event user accounts stay on the main dashboard without business tools', function () {
@@ -96,6 +97,10 @@ test('multi-event user accounts stay on the main dashboard without business tool
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
+        ->assertRedirect(route('dashboard.account'));
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.account'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
@@ -184,7 +189,7 @@ test('business accounts land on the business home from the main dashboard route'
         ->assertRedirect(route('dashboard.business'));
 });
 
-test('normal owned-event users are sent straight into their only event workspace from the dashboard landing page', function () {
+test('normal owned-event users are sent to the account dashboard from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Spring Wedding',
@@ -192,10 +197,10 @@ test('normal owned-event users are sent straight into their only event workspace
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('events.show', $event));
+        ->assertRedirect(route('dashboard.account'));
 });
 
-test('single-event owners in onboarding are sent straight back into onboarding from the dashboard landing page', function () {
+test('single-event owners in onboarding are sent to the account dashboard from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create([
         'name' => 'Spring Wedding',
@@ -205,7 +210,7 @@ test('single-event owners in onboarding are sent straight back into onboarding f
 
     $this->actingAs($owner)
         ->get(route('dashboard'))
-        ->assertRedirect(route('onboarding.photos', $event));
+        ->assertRedirect(route('dashboard.account'));
 });
 
 test('event workspace exposes guest upload settings summary for owners', function () {
@@ -316,14 +321,15 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
             ->where('summary.totalUploadCount', 2)
             ->where('summary.pendingModerationCount', 1)
             ->where('summary.readyExportCount', 1)
-            ->where('dashboardLinks.ownedEvents', route('dashboard').'#events')
-            ->where('dashboardLinks.recentActivity', route('dashboard').'#activity')
+            ->where('dashboardLinks.ownedEvents', route('dashboard.account').'#events')
+            ->where('dashboardLinks.recentActivity', route('dashboard.account').'#activity')
             ->where('continueSetupEvent.name', 'Rooftop Rehearsal')
             ->where('continueSetupEvent.primaryAction.url', route('onboarding.photos', $setupEvent))
             ->where(
                 'ownedEvents',
                 fn ($events): bool => collect($events)->contains(
                     fn (array $event): bool => $event['name'] === 'Spring Wedding'
+                        && $event['planDetails']['slug'] !== null
                         && $event['roleLabel'] === 'Owner'
                         && $event['mediaExportLabel'] === 'Export ready'
                         && $event['assetCount'] === 2
@@ -345,7 +351,7 @@ test('account dashboard shows owned event summaries, onboarding continuation, an
         );
 });
 
-test('single collaborator event users land directly in the shared workspace from the dashboard landing page', function () {
+test('single collaborator event users land on the account dashboard from the dashboard landing page', function () {
     $owner = User::factory()->create();
     $collaboratorUser = User::factory()->create([
         'email' => 'collab@example.com',
@@ -378,7 +384,125 @@ test('single collaborator event users land directly in the shared workspace from
 
     $this->actingAs($collaboratorUser)
         ->get(route('dashboard'))
-        ->assertRedirect(route('events.show', $sharedEvent));
+        ->assertRedirect(route('dashboard.account'));
+});
+
+test('account dashboard exposes free plus and pro plan tiers for normal users', function () {
+    $owner = User::factory()->create();
+
+    $freePlan = Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'storage_limit_bytes' => 3221225472,
+        'upload_limit' => 100,
+        'upload_window_days' => 1,
+        'download_all_enabled' => false,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'is_default' => true,
+    ]);
+
+    $plusPlan = Plan::factory()->create([
+        'name' => 'Plus',
+        'slug' => 'plus',
+        'price_cents' => 4900,
+        'storage_limit_bytes' => 12884901888,
+        'upload_limit' => 500,
+        'upload_window_days' => 30,
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'is_default' => false,
+    ]);
+
+    $proPlan = Plan::factory()->create([
+        'name' => 'Pro',
+        'slug' => 'pro',
+        'price_cents' => 9900,
+        'storage_limit_bytes' => 32212254720,
+        'upload_limit' => 1000000,
+        'upload_window_days' => 365,
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => true,
+        'remove_app_branding' => true,
+        'is_default' => false,
+    ]);
+
+    Event::factory()->for($owner)->for($freePlan)->create([
+        'name' => 'Free Event',
+        'is_paid' => true,
+        'download_all_enabled' => false,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'storage_limit_bytes' => $freePlan->storage_limit_bytes,
+        'upload_limit' => $freePlan->upload_limit,
+        'upload_window_days' => $freePlan->upload_window_days,
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $plusEvent = Event::factory()->for($owner)->for($plusPlan)->create([
+        'name' => 'Plus Event',
+        'is_paid' => false,
+        'payment_due_at' => now()->addDay(),
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => false,
+        'remove_app_branding' => false,
+        'storage_limit_bytes' => $plusPlan->storage_limit_bytes,
+        'upload_limit' => $plusPlan->upload_limit,
+        'upload_window_days' => $plusPlan->upload_window_days,
+        'onboarding_completed_at' => now(),
+    ]);
+
+    Event::factory()->for($owner)->for($proPlan)->create([
+        'name' => 'Pro Event',
+        'is_paid' => true,
+        'download_all_enabled' => true,
+        'moderation_tools_enabled' => true,
+        'remove_app_branding' => true,
+        'storage_limit_bytes' => $proPlan->storage_limit_bytes,
+        'upload_limit' => $proPlan->upload_limit,
+        'upload_window_days' => $proPlan->upload_window_days,
+        'onboarding_completed_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard.account'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('dashboardLinks.overview', route('dashboard.account'))
+            ->where(
+                'ownedEvents',
+                fn ($events): bool => collect($events)->contains(
+                    fn (array $event): bool => $event['name'] === 'Free Event'
+                        && $event['planDetails']['slug'] === 'free'
+                        && $event['planDetails']['priceCents'] === 0
+                        && $event['planDetails']['storageLimitBytes'] === 3221225472
+                        && $event['planDetails']['uploadLimit'] === 100
+                        && $event['planDetails']['downloadAllEnabled'] === false
+                        && $event['planDetails']['moderationToolsEnabled'] === false
+                        && $event['planDetails']['removeAppBranding'] === false,
+                ) && collect($events)->contains(
+                    fn (array $event): bool => $event['name'] === 'Plus Event'
+                        && $event['planDetails']['slug'] === 'plus'
+                        && $event['planDetails']['priceCents'] === 4900
+                        && $event['planDetails']['storageLimitBytes'] === 12884901888
+                        && $event['planDetails']['uploadLimit'] === 500
+                        && $event['planDetails']['downloadAllEnabled'] === true
+                        && $event['planDetails']['moderationToolsEnabled'] === false
+                        && $event['links']['billing'] === route('events.settings', ['event' => $plusEvent, 'tab' => 'billing']),
+                ) && collect($events)->contains(
+                    fn (array $event): bool => $event['name'] === 'Pro Event'
+                        && $event['planDetails']['slug'] === 'pro'
+                        && $event['planDetails']['priceCents'] === 9900
+                        && $event['planDetails']['storageLimitBytes'] === 32212254720
+                        && $event['planDetails']['uploadLimit'] === 1000000
+                        && $event['planDetails']['moderationToolsEnabled'] === true
+                        && $event['planDetails']['removeAppBranding'] === true,
+                ),
+            )
+        );
 });
 
 test('super admins can still open their account dashboard explicitly', function () {
@@ -877,7 +1001,7 @@ test('owned events page renders all owned event workspaces', function () {
 
     $this->actingAs($owner)
         ->get(route('dashboard.events'))
-        ->assertRedirect(route('dashboard').'#events');
+        ->assertRedirect(route('dashboard.account').'#events');
 });
 
 test('business accounts open the account events page from the events shortcut', function () {
@@ -924,7 +1048,7 @@ test('recent activity page links directly to the matching asset in media', funct
 
     $this->actingAs($owner)
         ->get(route('dashboard.activity'))
-        ->assertRedirect(route('dashboard').'#activity');
+        ->assertRedirect(route('dashboard.account').'#activity');
 });
 
 test('business accounts open the account activity page from the activity shortcut', function () {

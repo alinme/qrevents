@@ -55,16 +55,7 @@ class DashboardController extends Controller
             return to_route('dashboard.business');
         }
 
-        $singleAccessibleEvent = $this->singleAccessibleEvent($request);
-        if ($singleAccessibleEvent !== null) {
-            if ($singleAccessibleEvent->user_id === $request->user()->id && $singleAccessibleEvent->onboarding_completed_at === null) {
-                return redirect()->to($this->onboardingStepUrl($singleAccessibleEvent));
-            }
-
-            return to_route('events.show', $singleAccessibleEvent);
-        }
-
-        return $this->account($request);
+        return to_route('dashboard.account');
     }
 
     public function account(Request $request): Response|RedirectResponse
@@ -537,9 +528,7 @@ class DashboardController extends Controller
 
     private function accountOverviewUrl(Request $request): string
     {
-        return $request->user()->canAccessAdmin() || $request->user()->canAccessBusinessDashboard()
-            ? route('dashboard.account')
-            : route('dashboard');
+        return route('dashboard.account');
     }
 
     /**
@@ -858,12 +847,26 @@ class DashboardController extends Controller
         [$statusLabel, $statusTone] = $this->eventStatusMeta($event);
         [$billingLabel, $billingTone] = $this->billingMeta($event);
         [$mediaExportLabel, $mediaExportTone] = $this->mediaExportMeta($event);
+        [$planSlug, $planTone] = $this->dashboardPlanMeta($event);
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
+        $planName = $event->plan?->name ?? 'Custom plan';
 
         return [
             'id' => $event->id,
             'name' => $event->name,
-            'plan' => $event->plan?->name ?? 'Custom plan',
+            'plan' => $planName,
+            'planDetails' => [
+                'name' => $planName,
+                'slug' => $planSlug,
+                'tone' => $planTone,
+                'priceCents' => (int) ($event->plan?->price_cents ?? 0),
+                'storageLimitBytes' => (int) ($event->plan?->storage_limit_bytes ?? $event->storage_limit_bytes),
+                'uploadLimit' => (int) ($event->plan?->upload_limit ?? $event->upload_limit),
+                'uploadWindowDays' => (int) ($event->plan?->upload_window_days ?? $event->upload_window_days),
+                'downloadAllEnabled' => (bool) $event->download_all_enabled,
+                'moderationToolsEnabled' => (bool) $event->moderation_tools_enabled,
+                'removeAppBranding' => (bool) $event->remove_app_branding,
+            ],
             'eventDate' => $event->event_date?->toDateString(),
             'timezone' => $event->timezone,
             'roleLabel' => $roleLabel,
@@ -912,6 +915,25 @@ class DashboardController extends Controller
             ],
             'canManage' => $context === 'owner' || $collaboration?->role === 'manager',
         ];
+    }
+
+    /**
+     * @return array{0: string|null, 1: string}
+     */
+    private function dashboardPlanMeta(Event $event): array
+    {
+        if (! is_string($event->plan?->slug) || $event->plan->slug === '') {
+            return [null, 'dark'];
+        }
+
+        $planSlug = Str::lower($event->plan->slug);
+
+        return match ($planSlug) {
+            'free' => ['free', 'zinc'],
+            'plus' => ['plus', 'sky'],
+            'pro' => ['pro', 'emerald'],
+            default => [$planSlug, 'dark'],
+        };
     }
 
     /**
@@ -989,45 +1011,6 @@ class DashboardController extends Controller
             'photos' => route('onboarding.photos', $event),
             default => route('onboarding.create'),
         };
-    }
-
-    private function singleAccessibleEvent(Request $request): ?Event
-    {
-        if ($request->user()->canAccessBusinessDashboard()) {
-            return null;
-        }
-
-        $ownedEvents = $request->user()
-            ->events()
-            ->latest('id')
-            ->limit(2)
-            ->get();
-
-        if ($ownedEvents->count() > 1) {
-            return null;
-        }
-
-        $collaboratorEventIds = EventCollaborator::query()
-            ->where('user_id', $request->user()->id)
-            ->whereIn('status', ['active', 'accepted'])
-            ->whereNotIn('event_id', $ownedEvents->pluck('id')->all())
-            ->latest('id')
-            ->limit(2)
-            ->pluck('event_id');
-
-        if ($ownedEvents->count() + $collaboratorEventIds->count() !== 1) {
-            return null;
-        }
-
-        if ($ownedEvents->count() === 1) {
-            return $ownedEvents->first();
-        }
-
-        $collaboratorEventId = $collaboratorEventIds->first();
-
-        return $collaboratorEventId !== null
-            ? Event::query()->find($collaboratorEventId)
-            : null;
     }
 
     /**

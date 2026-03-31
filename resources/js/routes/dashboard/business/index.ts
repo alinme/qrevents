@@ -142,7 +142,7 @@ onboarding.form = onboardingForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 export const billingQueue = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -157,7 +157,7 @@ billingQueue.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 billingQueue.url = (options?: RouteQueryOptions) => {
@@ -166,7 +166,7 @@ billingQueue.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 billingQueue.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -176,7 +176,7 @@ billingQueue.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 billingQueue.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -186,7 +186,7 @@ billingQueue.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 const billingQueueForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -196,7 +196,7 @@ const billingQueueForm = (options?: RouteQueryOptions): RouteFormDefinition<'get
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 billingQueueForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -206,7 +206,7 @@ billingQueueForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'>
 
 /**
 * @see \App\Http\Controllers\DashboardController::billingQueue
-* @see app/Http/Controllers/DashboardController.php:318
+* @see app/Http/Controllers/DashboardController.php:309
 * @route '/dashboard/business/actions/billing-queue'
 */
 billingQueueForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

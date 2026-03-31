@@ -84,6 +84,18 @@ export type DashboardEvent = {
     id: number;
     name: string;
     plan: string;
+    planDetails: {
+        name: string;
+        slug: string | null;
+        tone: Tone;
+        priceCents: number;
+        storageLimitBytes: number;
+        uploadLimit: number;
+        uploadWindowDays: number;
+        downloadAllEnabled: boolean;
+        moderationToolsEnabled: boolean;
+        removeAppBranding: boolean;
+    };
     eventDate: string | null;
     timezone: string;
     roleLabel: string;
