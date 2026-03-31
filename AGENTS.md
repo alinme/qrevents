@@ -41,6 +41,13 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 - `fortify-development` — Laravel Fortify headless authentication backend development. Activate when implementing authentication features including login, registration, password reset, email verification, two-factor authentication (2FA/TOTP), profile updates, headless auth, authentication scaffolding, or auth guards in Laravel applications.
 
+## Global Tooling
+
+- If `gstack` skills are available in the current Codex session, prefer the matching `gstack-*` skill for browser-heavy investigation, QA, release, review, or planning work.
+- Prefer `gstack-browse` for supported web browsing and browser automation tasks when it is available and the task benefits from it.
+- Do not block on `gstack`. If the skills are unavailable in the current session, continue with the built-in tools and the repo-local skills already defined here.
+- Higher-priority system and developer instructions still win if they conflict with a `gstack` workflow.
+
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
