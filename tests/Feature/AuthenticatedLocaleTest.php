@@ -30,6 +30,7 @@ it('shares localized strings on event media and settings pages', function () {
             ->where('locale.current', 'ro')
             ->where('translations.media.page.kicker', 'Workspace eveniment')
             ->where('translations.media.bulk.delete', 'Sterge selectate')
+            ->where('translations.media.attendees.title', 'Participanti')
             ->where('eventNavigation.1.title', 'Media')
         );
 
@@ -41,6 +42,7 @@ it('shares localized strings on event media and settings pages', function () {
             ->component('events/Settings')
             ->where('locale.current', 'ro')
             ->where('translations.event_settings.page.title', 'Setari')
+            ->where('translations.event_settings.general.name_title', 'Numele evenimentului')
             ->where('translations.event_settings.billing.owner_upgrade_title', 'Upgradeaza acest eveniment')
             ->where('eventNavigation.3.title', 'Setari')
         );

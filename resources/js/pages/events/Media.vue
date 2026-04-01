@@ -1560,16 +1560,16 @@ const statCards = computed(() => [
                     class="flex justify-center"
                 >
                     <Button variant="outline" @click="visibleCount += 24">
-                        Load more
+                        {{ t('media.actions.load_more') }}
                     </Button>
                 </div>
             </section>
 
             <section class="space-y-4">
                 <div>
-                    <h2 class="text-xl font-semibold">Attendees</h2>
+                    <h2 class="text-xl font-semibold">{{ t('media.attendees.title') }}</h2>
                     <p class="mt-1 text-sm text-muted-foreground">
-                        See who uploaded, how much they shared, and drill into their media.
+                        {{ t('media.attendees.description') }}
                     </p>
                 </div>
 
@@ -1577,12 +1577,12 @@ const statCards = computed(() => [
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Attendee</TableHead>
-                                <TableHead>Photos</TableHead>
-                                <TableHead>Videos</TableHead>
-                                <TableHead>Text</TableHead>
-                                <TableHead>Last Upload</TableHead>
-                                <TableHead class="text-right">Action</TableHead>
+                                <TableHead>{{ t('media.attendees.table.attendee') }}</TableHead>
+                                <TableHead>{{ t('media.attendees.table.photos') }}</TableHead>
+                                <TableHead>{{ t('media.attendees.table.videos') }}</TableHead>
+                                <TableHead>{{ t('media.attendees.table.text') }}</TableHead>
+                                <TableHead>{{ t('media.attendees.table.last_upload') }}</TableHead>
+                                <TableHead class="text-right">{{ t('media.attendees.table.action') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1595,9 +1595,9 @@ const statCards = computed(() => [
                                         <EmptyMedia variant="icon">
                                             <UserRound class="size-5" />
                                         </EmptyMedia>
-                                        <EmptyTitle>No attendees yet</EmptyTitle>
+                                        <EmptyTitle>{{ t('media.attendees.empty_title') }}</EmptyTitle>
                                         <EmptyDescription>
-                                            Attendees will appear here automatically once someone uploads to the album.
+                                            {{ t('media.attendees.empty_description') }}
                                         </EmptyDescription>
                                     </EmptyHeader>
                                 </Empty>
@@ -1629,7 +1629,7 @@ const statCards = computed(() => [
                                         variant="outline"
                                         @click="openAttendee(attendee.key)"
                                     >
-                                        View uploads
+                                        {{ t('media.attendees.view_uploads') }}
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -1642,7 +1642,7 @@ const statCards = computed(() => [
                     class="flex items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3"
                 >
                     <p class="text-sm text-slate-500">
-                        Page {{ attendeePage }} of {{ attendeePageCount }}
+                        {{ t('media.attendees.page_of', { page: attendeePage, total: attendeePageCount }) }}
                     </p>
                     <div class="flex items-center gap-2">
                         <Button
@@ -1651,7 +1651,7 @@ const statCards = computed(() => [
                             :disabled="!attendeeHasPreviousPage"
                             @click="attendeePage = Math.max(1, attendeePage - 1)"
                         >
-                            Previous
+                            {{ t('media.attendees.previous') }}
                         </Button>
                         <Button
                             size="sm"
@@ -1659,7 +1659,7 @@ const statCards = computed(() => [
                             :disabled="!attendeeHasNextPage"
                             @click="attendeePage = Math.min(attendeePageCount, attendeePage + 1)"
                         >
-                            Next
+                            {{ t('media.attendees.next') }}
                         </Button>
                     </div>
                 </div>
@@ -1674,16 +1674,16 @@ const statCards = computed(() => [
             <DialogContent class="max-w-5xl rounded-[2rem] p-0">
                 <div class="space-y-5 p-6">
                     <DialogHeader class="text-left">
-                        <DialogTitle>{{ selectedAttendee?.guestName ?? 'Attendee uploads' }}</DialogTitle>
+                        <DialogTitle>{{ selectedAttendee?.guestName ?? t('media.attendees.uploads_dialog_title') }}</DialogTitle>
                         <DialogDescription class="space-y-1">
                             <span class="block">
-                                {{ selectedAttendee?.uploadCount ?? 0 }} uploads
+                                {{ t('media.attendees.uploads_count', { count: selectedAttendee?.uploadCount ?? 0 }) }}
                             </span>
                             <span
                                 v-if="selectedAttendee?.latestCreatedAt"
                                 class="block"
                             >
-                                Last upload: {{ formatDateTime(selectedAttendee.latestCreatedAt) }}
+                                {{ t('media.attendees.last_upload_label') }} {{ formatDateTime(selectedAttendee.latestCreatedAt) }}
                             </span>
                         </DialogDescription>
                     </DialogHeader>
@@ -1720,9 +1720,9 @@ const statCards = computed(() => [
                             <EmptyMedia variant="icon">
                                 <ImageIcon class="size-5" />
                             </EmptyMedia>
-                            <EmptyTitle>No uploads for this attendee</EmptyTitle>
+                            <EmptyTitle>{{ t('media.attendees.no_uploads_title') }}</EmptyTitle>
                             <EmptyDescription>
-                                This attendee does not have any photos, videos, or text posts yet.
+                                {{ t('media.attendees.no_uploads_description') }}
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
@@ -1783,7 +1783,7 @@ const statCards = computed(() => [
                                 >
                                     <LoaderCircle class="size-7 animate-spin text-slate-400" />
                                     <p class="text-xs font-semibold text-slate-700">
-                                        Processing video
+                                        {{ t('media.shared.processing_video') }}
                                     </p>
                                 </div>
                                 <div
@@ -1795,7 +1795,7 @@ const statCards = computed(() => [
                                         class="line-clamp-6 whitespace-pre-wrap text-sm font-medium"
                                         :style="textPostTextStyle(asset)"
                                     >
-                                        {{ asset.text ?? 'Text post' }}
+                                        {{ asset.text ?? t('media.kind.text') }}
                                     </p>
                                 </div>
 

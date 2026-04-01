@@ -567,32 +567,32 @@ const billingForm = useForm({
 
 type AlbumPermissionToggle = 'view' | 'upload' | 'download';
 
-const albumPermissionCardOptions = [
+const albumPermissionCardOptions = computed(() => [
     {
         value: 'view' as const,
-        title: 'View',
-        description: 'Guests can open and browse the album.',
+        title: t('event_settings.album_permissions.view_title'),
+        description: t('event_settings.album_permissions.view_description'),
         icon: IconEye,
     },
     {
         value: 'upload' as const,
-        title: 'Upload',
-        description: 'Guests can send photos, videos, and text wishes.',
+        title: t('event_settings.album_permissions.upload_title'),
+        description: t('event_settings.album_permissions.upload_description'),
         icon: IconUpload,
     },
     {
         value: 'download' as const,
-        title: 'Download',
-        description: 'Guests can save approved media to their device.',
+        title: t('event_settings.album_permissions.download_title'),
+        description: t('event_settings.album_permissions.download_description'),
         icon: IconDownload,
     },
-] as const;
+]);
 
-const mediaTypeOptions = [
-    { value: 'photo', label: 'Photos', icon: IconPhoto },
-    { value: 'video', label: 'Videos', icon: IconVideo },
-    { value: 'text', label: 'Text wishes', icon: IconFileText },
-] as const;
+const mediaTypeOptions = computed(() => [
+    { value: 'photo', label: t('media.stats.photos'), icon: IconPhoto },
+    { value: 'video', label: t('media.stats.videos'), icon: IconVideo },
+    { value: 'text', label: t('event_settings.uploads.text_wishes'), icon: IconFileText },
+]);
 
 const albumPermissionSelection = computed(() => ({
     view: ['view_upload', 'view_only'].includes(form.album_permission),
@@ -630,13 +630,13 @@ const toggleAlbumPermissionSelection = (
 };
 const collaboratorRoleOptions = ['manager', 'viewer'] as const;
 
-const moderationFilterOptions = [
-    { value: 'adult', label: 'Adult Content' },
-    { value: 'nudity', label: 'Nudity' },
-    { value: 'violence', label: 'Violence' },
-    { value: 'suggestive', label: 'Suggestive' },
-    { value: 'hate', label: 'Hate Symbols' },
-] as const;
+const moderationFilterOptions = computed(() => [
+    { value: 'adult', label: t('event_settings.moderation.categories.adult') },
+    { value: 'nudity', label: t('event_settings.moderation.categories.nudity') },
+    { value: 'violence', label: t('event_settings.moderation.categories.violence') },
+    { value: 'suggestive', label: t('event_settings.moderation.categories.suggestive') },
+    { value: 'hate', label: t('event_settings.moderation.categories.hate') },
+]);
 
 const welcomeScreenFontOptions = [
     { value: 'montserrat', label: 'Montserrat' },
@@ -645,19 +645,19 @@ const welcomeScreenFontOptions = [
     { value: 'dm_sans', label: 'DM Sans' },
 ] as const;
 
-const welcomeFieldTypeOptions = [
-    { value: 'text', label: 'Text' },
-    { value: 'email', label: 'Email' },
-    { value: 'phone', label: 'Phone' },
-    { value: 'number', label: 'Number' },
-] as const;
+const welcomeFieldTypeOptions = computed(() => [
+    { value: 'text', label: t('event_settings.welcome.field_types.text') },
+    { value: 'email', label: t('event_settings.welcome.field_types.email') },
+    { value: 'phone', label: t('event_settings.welcome.field_types.phone') },
+    { value: 'number', label: t('event_settings.welcome.field_types.number') },
+]);
 
-const attachToOptions = [
-    { value: '', label: 'None' },
-    { value: 'caption_title', label: 'Caption Title' },
-    { value: 'caption_subtitle', label: 'Caption Subtitle' },
-    { value: 'file_name', label: 'File Name' },
-] as const;
+const attachToOptions = computed(() => [
+    { value: '', label: t('event_settings.welcome.attach.none') },
+    { value: 'caption_title', label: t('event_settings.welcome.attach.caption_title') },
+    { value: 'caption_subtitle', label: t('event_settings.welcome.attach.caption_subtitle') },
+    { value: 'file_name', label: t('event_settings.welcome.attach.file_name') },
+]);
 
 const isDatePickerOpen = ref(false);
 const isTimezonePickerOpen = ref(false);
@@ -775,7 +775,7 @@ const selectedDateLabel = computed(() => {
         }
     }
 
-    return 'Pick a date';
+    return t('event_settings.general.pick_date');
 });
 
 const currentLogoUrl = computed(() => {
@@ -799,7 +799,7 @@ const logoFileName = computed(() => {
         return form.logo_file.name;
     }
 
-    return 'No file selected';
+    return t('event_settings.shared.no_file_selected');
 });
 
 const currentWelcomeScreenBackgroundUrl = computed(() => {
@@ -824,10 +824,10 @@ const welcomeScreenFileName = computed(() => {
     }
 
     if (currentWelcomeScreenBackgroundUrl.value !== null) {
-        return 'Background selected';
+        return t('event_settings.shared.background_selected');
     }
 
-    return 'No file selected';
+    return t('event_settings.shared.no_file_selected');
 });
 
 const selectedAlbumBackgroundPreset = computed(() => {
@@ -873,7 +873,7 @@ const albumBackgroundFileName = computed(() => {
         return selectedAlbumBackgroundPreset.value.name;
     }
 
-    return 'No file selected';
+    return t('event_settings.shared.no_file_selected');
 });
 
 const ownerEmail = computed(
@@ -932,14 +932,14 @@ const autoSavePayload = computed(() => ({
 
 const saveHintText = computed(() => {
     if (form.processing || isAutoSaving.value) {
-        return 'Saving changes...';
+        return t('event_settings.shared.saving_changes');
     }
 
     if (form.recentlySuccessful) {
-        return 'Changes saved';
+        return t('event_settings.shared.changes_saved');
     }
 
-    return 'Changes save automatically';
+    return t('event_settings.shared.changes_auto_saved');
 });
 
 const billingStatusLabel = computed(() => {
@@ -1032,12 +1032,12 @@ const welcomeScreenPreviewSubtitle = computed(() => {
     const value = form.welcome_screen_subtitle?.trim();
     return value && value.length > 0
         ? value
-        : 'Share your photos & videos with us!';
+        : t('event_settings.welcome.defaults.subtitle');
 });
 
 const welcomeScreenPreviewButtonText = computed(() => {
     const value = form.welcome_screen_button_text?.trim();
-    return value && value.length > 0 ? value : 'Continue';
+    return value && value.length > 0 ? value : t('event_settings.welcome.defaults.button');
 });
 
 const welcomeScreenPreviewFontClass = computed(() => {
@@ -1053,17 +1053,49 @@ const welcomeScreenPreviewFontClass = computed(() => {
     }
 });
 
+const welcomeFieldTypeLabel = (type: WelcomeScreenField['type']): string => {
+    switch (type) {
+        case 'email':
+            return t('event_settings.welcome.field_types.email');
+        case 'phone':
+            return t('event_settings.welcome.field_types.phone');
+        case 'number':
+            return t('event_settings.welcome.field_types.number');
+        default:
+            return t('event_settings.welcome.field_types.text');
+    }
+};
+
+const welcomeFieldDefaultLabel = (type: WelcomeScreenField['type']): string => {
+    switch (type) {
+        case 'email':
+            return t('event_settings.welcome.defaults.email_label');
+        case 'phone':
+            return t('event_settings.welcome.defaults.phone_label');
+        case 'number':
+            return t('event_settings.welcome.defaults.number_label');
+        default:
+            return t('event_settings.welcome.defaults.text_label');
+    }
+};
+
+const welcomeFieldDefaultHelpText = (type: WelcomeScreenField['type']): string => {
+    switch (type) {
+        case 'email':
+            return t('event_settings.welcome.defaults.email_help');
+        case 'phone':
+            return t('event_settings.welcome.defaults.phone_help');
+        case 'number':
+            return t('event_settings.welcome.defaults.number_help');
+        default:
+            return t('event_settings.welcome.defaults.text_help');
+    }
+};
+
 const welcomeScreenConfiguredFields = computed(() =>
     normalizeWelcomeScreenFields(form.welcome_screen_fields).map((field) => ({
         ...field,
-        typeLabel:
-            field.type === 'email'
-                ? 'Email'
-                : field.type === 'phone'
-                  ? 'Phone'
-                  : field.type === 'number'
-                    ? 'Number'
-                    : 'Text',
+        typeLabel: welcomeFieldTypeLabel(field.type),
         icon:
             field.type === 'email'
                 ? Mail
@@ -1087,9 +1119,9 @@ const welcomeScreenGuestFields = computed(() => {
         {
             id: 'name',
             type: 'text',
-            typeLabel: 'Text',
-            label: 'Name',
-            help_text: 'Write your name',
+            typeLabel: welcomeFieldTypeLabel('text'),
+            label: t('public.shared.name'),
+            help_text: t('event_settings.welcome.defaults.name_help'),
             attach_to: null,
             required: true,
             enabled: true,
@@ -1286,22 +1318,8 @@ const addWelcomeField = (): void => {
     const nextField: WelcomeScreenField = {
         id: `field_${type}_${now}`,
         type,
-        label:
-            type === 'email'
-                ? 'Email'
-                : type === 'phone'
-                  ? 'Phone'
-                  : type === 'number'
-                    ? 'Guests Count'
-                    : 'Text Field',
-        help_text:
-            type === 'email'
-                ? 'Write your email'
-                : type === 'phone'
-                  ? 'Write your phone'
-                  : type === 'number'
-                    ? 'Write a number'
-                    : 'Write your answer',
+        label: welcomeFieldDefaultLabel(type),
+        help_text: welcomeFieldDefaultHelpText(type),
         attach_to: null,
         required: false,
         enabled: true,
@@ -1701,11 +1719,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Event Name
+                                        {{ t('event_settings.general.name_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        It will be shown across the app and to
-                                        your guests.
+                                        {{ t('event_settings.general.name_description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1713,7 +1730,7 @@ function resolveSupportedTimezones(): string[] {
                                         id="name"
                                         v-model="form.name"
                                         class="h-11"
-                                        placeholder="My Wedding"
+                                        :placeholder="t('event_settings.general.name_placeholder')"
                                     />
                                     <InputError :message="form.errors.name" />
                                 </div>
@@ -1724,11 +1741,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Event Date
+                                        {{ t('event_settings.general.date_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Set when your event is scheduled to
-                                        start.
+                                        {{ t('event_settings.general.date_description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1766,7 +1782,7 @@ function resolveSupportedTimezones(): string[] {
                                         class="h-auto px-3 text-sm"
                                         @click="clearEventDate"
                                     >
-                                        Clear date
+                                        {{ t('event_settings.general.clear_date') }}
                                     </Button>
                                     <InputError
                                         :message="form.errors.event_date"
@@ -1779,11 +1795,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Timezone
+                                        {{ t('event_settings.general.timezone_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Search and select the timezone for this
-                                        event.
+                                        {{ t('event_settings.general.timezone_description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1798,7 +1813,7 @@ function resolveSupportedTimezones(): string[] {
                                             >
                                                 {{
                                                     form.timezone ||
-                                                    'Select timezone'
+                                                    t('event_settings.general.timezone_select')
                                                 }}
                                             </Button>
                                         </PopoverTrigger>
@@ -1809,7 +1824,7 @@ function resolveSupportedTimezones(): string[] {
                                             <InputGroup class="mb-2 h-11">
                                                 <InputGroupInput
                                                     v-model="timezoneQuery"
-                                                    placeholder="Search timezone..."
+                                                    :placeholder="t('event_settings.general.timezone_search')"
                                                 />
                                                 <InputGroupAddon
                                                     align="inline-end"
@@ -1863,7 +1878,7 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="px-3 py-4 text-sm text-muted-foreground"
                                                 >
-                                                    No timezone found.
+                                                    {{ t('event_settings.general.timezone_empty') }}
                                                 </p>
                                             </div>
                                         </PopoverContent>
@@ -1879,11 +1894,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Event Type
+                                        {{ t('event_settings.general.type_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        We adjust the experience according to
-                                        your event type.
+                                        {{ t('event_settings.general.type_description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1911,27 +1925,23 @@ function resolveSupportedTimezones(): string[] {
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            Wedding Details
+                                            {{ t('event_settings.general.wedding_details_title') }}
                                         </h3>
                                         <Badge
                                             variant="secondary"
                                             class="border-rose-200 bg-white text-rose-700"
                                         >
-                                            Optional
+                                            {{ t('event_settings.general.optional') }}
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        Keep this light for now. These names
-                                        will help us prepare wedding invitations
-                                        later, and you can refine them anytime.
+                                        {{ t('event_settings.general.wedding_details_description') }}
                                     </p>
                                     <p
                                         v-if="!hasWeddingDetails"
                                         class="text-sm text-rose-700/80"
                                     >
-                                        Start with the couple names only if you
-                                        want. Parents and godparents can be
-                                        added later.
+                                        {{ t('event_settings.general.wedding_details_hint') }}
                                     </p>
                                 </div>
 
@@ -1942,7 +1952,7 @@ function resolveSupportedTimezones(): string[] {
                                                 class="text-sm font-medium text-slate-700"
                                                 for="partner-one-name"
                                             >
-                                                Partner one
+                                                {{ t('event_settings.general.partner_one') }}
                                             </label>
                                             <Input
                                                 id="partner-one-name"
@@ -1951,7 +1961,7 @@ function resolveSupportedTimezones(): string[] {
                                                         .partner_one_name
                                                 "
                                                 class="h-11 bg-white"
-                                                placeholder="Ana"
+                                                :placeholder="t('event_settings.general.partner_one_placeholder')"
                                             />
                                             <InputError
                                                 :message="
@@ -1966,7 +1976,7 @@ function resolveSupportedTimezones(): string[] {
                                                 class="text-sm font-medium text-slate-700"
                                                 for="partner-two-name"
                                             >
-                                                Partner two
+                                                {{ t('event_settings.general.partner_two') }}
                                             </label>
                                             <Input
                                                 id="partner-two-name"
@@ -1975,7 +1985,7 @@ function resolveSupportedTimezones(): string[] {
                                                         .partner_two_name
                                                 "
                                                 class="h-11 bg-white"
-                                                placeholder="Andrei"
+                                                :placeholder="t('event_settings.general.partner_two_placeholder')"
                                             />
                                             <InputError
                                                 :message="
@@ -1992,7 +2002,7 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="family-name"
                                         >
-                                            Shared last name
+                                            {{ t('event_settings.general.family_name') }}
                                         </label>
                                         <Input
                                             id="family-name"
@@ -2000,14 +2010,12 @@ function resolveSupportedTimezones(): string[] {
                                                 form.wedding_details.family_name
                                             "
                                             class="h-11 bg-white"
-                                            placeholder="Miller"
+                                            :placeholder="t('event_settings.general.family_name_placeholder')"
                                         />
                                         <p
                                             class="text-xs text-muted-foreground"
                                         >
-                                            Keep the shared last name here and
-                                            choose later if the invitation
-                                            should show it.
+                                            {{ t('event_settings.general.family_name_hint') }}
                                         </p>
                                         <label
                                             class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
@@ -2024,14 +2032,12 @@ function resolveSupportedTimezones(): string[] {
                                                 <span
                                                     class="block text-sm font-medium text-slate-700"
                                                 >
-                                                    Show last name on the
-                                                    invitation
+                                                    {{ t('event_settings.general.show_family_name') }}
                                                 </span>
                                                 <span
                                                     class="block text-xs text-muted-foreground"
                                                 >
-                                                    Example: Jessica &amp; Simon
-                                                    Miller
+                                                    {{ t('event_settings.general.show_family_name_example') }}
                                                 </span>
                                             </span>
                                         </label>
@@ -2056,7 +2062,7 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="bride-parents"
                                         >
-                                            Bride's parents
+                                            {{ t('event_settings.general.bride_parents') }}
                                         </label>
                                         <Input
                                             id="bride-parents"
@@ -2065,7 +2071,7 @@ function resolveSupportedTimezones(): string[] {
                                                     .bride_parents
                                             "
                                             class="h-11 bg-white"
-                                            placeholder="Maria and Ion Popescu"
+                                            :placeholder="t('event_settings.general.bride_parents_placeholder')"
                                         />
                                         <InputError
                                             :message="
@@ -2081,7 +2087,7 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="groom-parents"
                                         >
-                                            Groom's parents
+                                            {{ t('event_settings.general.groom_parents') }}
                                         </label>
                                         <Input
                                             id="groom-parents"
@@ -2090,7 +2096,7 @@ function resolveSupportedTimezones(): string[] {
                                                     .groom_parents
                                             "
                                             class="h-11 bg-white"
-                                            placeholder="Elena and Mihai Ionescu"
+                                            :placeholder="t('event_settings.general.groom_parents_placeholder')"
                                         />
                                         <InputError
                                             :message="
@@ -2106,7 +2112,7 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="godparents"
                                         >
-                                            Godparents
+                                            {{ t('event_settings.general.godparents') }}
                                         </label>
                                         <Input
                                             id="godparents"
@@ -2114,7 +2120,7 @@ function resolveSupportedTimezones(): string[] {
                                                 form.wedding_details.godparents
                                             "
                                             class="h-11 bg-white"
-                                            placeholder="Raluca and Stefan Marin"
+                                            :placeholder="t('event_settings.general.godparents_placeholder')"
                                         />
                                         <InputError
                                             :message="
@@ -2131,7 +2137,7 @@ function resolveSupportedTimezones(): string[] {
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            Digital Album Permissions
+                                            {{ t('event_settings.album_permissions.title') }}
                                         </h3>
                                         <Badge variant="secondary">
                                             <Sparkles />
@@ -2139,8 +2145,7 @@ function resolveSupportedTimezones(): string[] {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        Control how guests interact with your
-                                        digital album.
+                                        {{ t('event_settings.album_permissions.description') }}
                                     </p>
                                 </div>
                                 <div class="grid gap-3 md:grid-cols-3">
@@ -2195,7 +2200,7 @@ function resolveSupportedTimezones(): string[] {
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            Guest Uploads
+                                            {{ t('event_settings.uploads.title') }}
                                         </h3>
                                         <Badge variant="secondary">
                                             <Sparkles />
@@ -2203,9 +2208,7 @@ function resolveSupportedTimezones(): string[] {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        Choose which guest upload actions stay
-                                        available in the public album, including
-                                        text wishes.
+                                        {{ t('event_settings.uploads.description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -2232,8 +2235,7 @@ function resolveSupportedTimezones(): string[] {
                                         </ToggleGroupItem>
                                     </ToggleGroup>
                                     <p class="text-xs text-muted-foreground">
-                                        At least one media type must stay
-                                        enabled.
+                                        {{ t('event_settings.uploads.hint') }}
                                     </p>
                                     <InputError
                                         :message="
@@ -2833,16 +2835,19 @@ function resolveSupportedTimezones(): string[] {
                                 class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600"
                             >
                                 <p class="font-semibold text-slate-900">
-                                    Current plan:
-                                    {{ props.currentEvent.billing.planName }}
+                                    {{
+                                        t('event_settings.appearance.current_plan', {
+                                            plan: props.currentEvent.billing.planName,
+                                        })
+                                    }}
                                 </p>
                                 <p class="mt-2">
                                     {{
                                         canEditAdvancedAppearance
-                                            ? 'Advanced branding is active for this event.'
+                                            ? t('event_settings.appearance.plan_advanced')
                                             : canEditLogo
-                                              ? 'This plan includes logo-level customization. Colors and custom backgrounds stay on Pro.'
-                                              : 'This plan keeps branding simple. Upgrade to Plus for logos or Pro for advanced appearance controls.'
+                                              ? t('event_settings.appearance.plan_logo')
+                                              : t('event_settings.appearance.plan_simple')
                                     }}
                                 </p>
                             </div>
@@ -2852,11 +2857,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Event Logo
+                                        {{ t('event_settings.appearance.logo_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Brand your event with a logo shown
-                                        through public pages.
+                                        {{ t('event_settings.appearance.logo_description') }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -2873,7 +2877,7 @@ function resolveSupportedTimezones(): string[] {
                                     >
                                         <img
                                             :src="currentLogoUrl"
-                                            alt="Event logo"
+                                            :alt="t('public.shared.alt.event_logo')"
                                             class="h-24 w-24 rounded-xl border object-cover"
                                         />
                                         <button
@@ -2899,7 +2903,7 @@ function resolveSupportedTimezones(): string[] {
                                                 :disabled="!canEditLogo"
                                                 @click="openLogoPicker"
                                             >
-                                                Browse
+                                                {{ t('event_settings.shared.browse') }}
                                             </InputGroupButton>
                                         </InputGroupAddon>
                                     </InputGroup>
@@ -2910,7 +2914,7 @@ function resolveSupportedTimezones(): string[] {
                                         v-if="!canEditLogo"
                                         class="text-xs text-muted-foreground"
                                     >
-                                        Logo uploads unlock on Plus and Pro.
+                                        {{ t('event_settings.appearance.logo_locked') }}
                                     </p>
                                 </div>
                             </div>
@@ -2920,13 +2924,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Display Language
+                                        {{ t('event_settings.appearance.display_language_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Localize the experience according to
-                                        your audience. With Automatic, each
-                                        guest sees the app in browser language
-                                        when available.
+                                        {{ t('event_settings.appearance.display_language_description') }}
                                     </p>
                                 </div>
                                 <NativeSelect
@@ -2934,16 +2935,16 @@ function resolveSupportedTimezones(): string[] {
                                     class="h-11"
                                 >
                                     <NativeSelectOption value="automatic">
-                                        Automatic
+                                        {{ t('event_settings.appearance.language_automatic') }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="ro">
-                                        Romanian
+                                        {{ t('event_settings.appearance.language_romanian') }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="en">
-                                        English
+                                        {{ t('event_settings.appearance.language_english') }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="el">
-                                        Greek
+                                        {{ t('event_settings.appearance.language_greek') }}
                                     </NativeSelectOption>
                                 </NativeSelect>
                             </div>
@@ -2953,11 +2954,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Theme Color
+                                        {{ t('event_settings.appearance.theme_color_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Choose a theme color for your brand.
-                                        We'll use that across public pages.
+                                        {{ t('event_settings.appearance.theme_color_description') }}
                                     </p>
                                 </div>
                                 <InputGroup class="h-11">
@@ -2986,7 +2986,7 @@ function resolveSupportedTimezones(): string[] {
                                                 form.branding.primary_color = ''
                                             "
                                         >
-                                            Reset
+                                            {{ t('event_settings.shared.reset') }}
                                         </InputGroupButton>
                                     </InputGroupAddon>
                                 </InputGroup>
@@ -2997,12 +2997,10 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        Welcome Screen
+                                        {{ t('event_settings.appearance.welcome_title') }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        Set up an intro screen for guests' first
-                                        visit, with a form to collect their
-                                        info.
+                                        {{ t('event_settings.appearance.welcome_description') }}
                                     </p>
                                 </div>
                                 <div
@@ -3016,7 +3014,7 @@ function resolveSupportedTimezones(): string[] {
                                             isWelcomeScreenDialogOpen = true
                                         "
                                     >
-                                        Configure
+                                        {{ t('event_settings.appearance.configure') }}
                                     </Button>
 
                                     <Switch
@@ -3234,8 +3232,7 @@ function resolveSupportedTimezones(): string[] {
                                 class="flex items-center justify-between gap-4"
                             >
                                 <p class="text-sm text-muted-foreground">
-                                    Invite members who can access and manage
-                                    this event.
+                                    {{ t('event_settings.collaborators.description') }}
                                 </p>
                                 <Button
                                     type="button"
@@ -3244,7 +3241,7 @@ function resolveSupportedTimezones(): string[] {
                                         isCollaboratorInviteSheetOpen = true
                                     "
                                 >
-                                    Invite Collaborator
+                                    {{ t('event_settings.collaborators.invite_cta') }}
                                 </Button>
                             </div>
 
@@ -3252,9 +3249,9 @@ function resolveSupportedTimezones(): string[] {
                                 <div
                                     class="grid grid-cols-[2fr_1fr_1fr] border-b bg-muted/20 px-4 py-3 text-sm font-semibold"
                                 >
-                                    <p>Collaborator</p>
-                                    <p>Role</p>
-                                    <p>Status</p>
+                                    <p>{{ t('event_settings.collaborators.table.collaborator') }}</p>
+                                    <p>{{ t('event_settings.collaborators.table.role') }}</p>
+                                    <p>{{ t('event_settings.collaborators.table.status') }}</p>
                                 </div>
                                 <div
                                     v-for="collaborator in collaboratorRows"
@@ -3280,8 +3277,8 @@ function resolveSupportedTimezones(): string[] {
                                                 ['accepted', 'active'].includes(
                                                     collaborator.status,
                                                 )
-                                                    ? 'active'
-                                                    : 'invited'
+                                                    ? t('event_settings.collaborators.active')
+                                                    : t('event_settings.collaborators.invited')
                                             }}
                                         </Badge>
                                     </div>
@@ -3305,13 +3302,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div class="border-b pb-4">
                                         <h2 class="text-2xl font-semibold">
-                                            Welcome Screen Settings
+                                            {{ t('event_settings.welcome.dialog_title') }}
                                         </h2>
                                         <p
                                             class="mt-1 text-sm text-muted-foreground"
                                         >
-                                            Set up a welcome screen that appears
-                                            once for first-time guests.
+                                            {{ t('event_settings.welcome.dialog_description') }}
                                         </p>
                                     </div>
                                     <div class="pt-3 pb-1">
@@ -3330,7 +3326,7 @@ function resolveSupportedTimezones(): string[] {
                                                         'appearance'
                                                 "
                                             >
-                                                Appearance
+                                                {{ t('event_settings.welcome.tab_appearance') }}
                                             </button>
                                             <button
                                                 type="button"
@@ -3346,7 +3342,7 @@ function resolveSupportedTimezones(): string[] {
                                                         'guest_form'
                                                 "
                                             >
-                                                Guest Form
+                                                {{ t('event_settings.welcome.tab_guest_form') }}
                                             </button>
                                         </div>
                                     </div>
@@ -3374,13 +3370,12 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    Title
+                                                    {{ t('event_settings.welcome.title_label') }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    Enter the main title for
-                                                    your welcome screen.
+                                                    {{ t('event_settings.welcome.title_description') }}
                                                 </p>
                                                 <div
                                                     class="grid gap-2 lg:grid-cols-[minmax(0,1fr)_210px]"
@@ -3391,7 +3386,7 @@ function resolveSupportedTimezones(): string[] {
                                                                 .welcome_message
                                                         "
                                                         class="h-11"
-                                                        placeholder="My Wedding"
+                                                        :placeholder="t('event_settings.general.name_placeholder')"
                                                     />
                                                     <NativeSelect
                                                         v-model="
@@ -3433,13 +3428,12 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    Description
+                                                    {{ t('event_settings.welcome.subtitle_label') }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    Add intro text below the
-                                                    title.
+                                                    {{ t('event_settings.welcome.subtitle_description') }}
                                                 </p>
                                                 <Textarea
                                                     v-model="
@@ -3447,7 +3441,7 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="min-h-24"
                                                     maxlength="220"
-                                                    placeholder="Share your photos & videos with us!"
+                                                    :placeholder="t('event_settings.welcome.defaults.subtitle')"
                                                 />
                                                 <InputError
                                                     :message="
@@ -3461,12 +3455,12 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    Button
+                                                    {{ t('event_settings.welcome.button_label') }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    Set the submit button text.
+                                                    {{ t('event_settings.welcome.button_description') }}
                                                 </p>
                                                 <Input
                                                     v-model="
@@ -3474,7 +3468,7 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="h-11 max-w-[280px]"
                                                     maxlength="40"
-                                                    placeholder="Continue"
+                                                    :placeholder="t('event_settings.welcome.defaults.button')"
                                                 />
                                                 <InputError
                                                     :message="
@@ -3488,13 +3482,12 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    Background
+                                                    {{ t('event_settings.welcome.background_label') }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    Set a background for the
-                                                    welcome screen.
+                                                    {{ t('event_settings.welcome.background_description') }}
                                                 </p>
                                                 <p
                                                     v-if="
@@ -3502,8 +3495,7 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="text-xs font-medium text-amber-700"
                                                 >
-                                                    Welcome screen backgrounds
-                                                    are available on Pro.
+                                                    {{ t('event_settings.welcome.background_locked') }}
                                                 </p>
                                                 <div
                                                     class="grid gap-3 sm:grid-cols-[1fr_auto]"
@@ -3530,7 +3522,7 @@ function resolveSupportedTimezones(): string[] {
                                                                     openWelcomeScreenBackgroundPicker
                                                                 "
                                                             >
-                                                                Change
+                                                                {{ t('public.shared.change') }}
                                                             </InputGroupButton>
                                                         </InputGroupAddon>
                                                     </InputGroup>
@@ -3548,7 +3540,7 @@ function resolveSupportedTimezones(): string[] {
                                                             removeWelcomeScreenBackgroundImage
                                                         "
                                                     >
-                                                        Remove
+                                                        {{ t('public.shared.remove') }}
                                                     </Button>
                                                 </div>
                                                 <div
@@ -3561,7 +3553,7 @@ function resolveSupportedTimezones(): string[] {
                                                             class="size-4"
                                                         />
                                                         <p class="text-sm">
-                                                            Animated
+                                                            {{ t('event_settings.welcome.animated') }}
                                                         </p>
                                                     </div>
                                                     <Switch
@@ -3583,9 +3575,7 @@ function resolveSupportedTimezones(): string[] {
                                             <p
                                                 class="text-sm text-muted-foreground"
                                             >
-                                                Create a form to collect guest
-                                                information before they proceed
-                                                to your album.
+                                                {{ t('event_settings.welcome.form_description') }}
                                             </p>
 
                                             <div
@@ -3643,8 +3633,8 @@ function resolveSupportedTimezones(): string[] {
                                                         >
                                                             {{
                                                                 field.enabled
-                                                                    ? 'Enabled'
-                                                                    : 'Hidden'
+                                                                    ? t('event_settings.welcome.status_enabled')
+                                                                    : t('event_settings.welcome.status_hidden')
                                                             }}
                                                         </Badge>
                                                     </div>
@@ -3677,7 +3667,7 @@ function resolveSupportedTimezones(): string[] {
                                                     @click="addWelcomeField"
                                                 >
                                                     <Plus class="mr-2 size-4" />
-                                                    Add New Field
+                                                    {{ t('event_settings.welcome.add_field') }}
                                                 </Button>
                                             </div>
 
@@ -4593,17 +4583,16 @@ function resolveSupportedTimezones(): string[] {
                         <div class="flex h-full flex-col">
                             <SheetHeader class="border-b px-6 py-5 text-left">
                                 <SheetTitle class="text-base font-semibold">
-                                    Invite Collaborator
+                                    {{ t('event_settings.collaborators.sheet_title') }}
                                 </SheetTitle>
                                 <SheetDescription>
-                                    Prepare invitations for team members who
-                                    help manage this event.
+                                    {{ t('event_settings.collaborators.sheet_description') }}
                                 </SheetDescription>
                             </SheetHeader>
                             <div class="flex-1 space-y-5 overflow-y-auto p-6">
                                 <div class="space-y-2">
                                     <h4 class="text-sm font-semibold">
-                                        Email Address
+                                        {{ t('event_settings.collaborators.email_address') }}
                                     </h4>
                                     <InputGroup class="h-11">
                                         <InputGroupAddon
@@ -4615,7 +4604,7 @@ function resolveSupportedTimezones(): string[] {
                                         <InputGroupInput
                                             v-model="collaboratorForm.email"
                                             type="email"
-                                            placeholder="teammate@example.com"
+                                            :placeholder="t('event_settings.collaborators.email_placeholder')"
                                         />
                                     </InputGroup>
                                     <InputError
@@ -4624,7 +4613,7 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <div class="space-y-2">
-                                    <h4 class="text-sm font-semibold">Role</h4>
+                                    <h4 class="text-sm font-semibold">{{ t('event_settings.collaborators.role') }}</h4>
                                     <ToggleGroup
                                         type="single"
                                         variant="outline"
@@ -4638,13 +4627,13 @@ function resolveSupportedTimezones(): string[] {
                                             value="manager"
                                             class="h-11 flex-1"
                                         >
-                                            Manager
+                                            {{ t('event_settings.collaborators.manager') }}
                                         </ToggleGroupItem>
                                         <ToggleGroupItem
                                             value="viewer"
                                             class="h-11 flex-1"
                                         >
-                                            Viewer
+                                            {{ t('event_settings.collaborators.viewer') }}
                                         </ToggleGroupItem>
                                     </ToggleGroup>
                                     <InputError
@@ -4653,8 +4642,7 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <p class="text-sm text-muted-foreground">
-                                    Invitation sending will be enabled when the
-                                    collaborator backend module is ready.
+                                    {{ t('event_settings.collaborators.pending_note') }}
                                 </p>
                             </div>
                             <SheetFooter class="border-t px-6 py-4">
@@ -4666,8 +4654,8 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     {{
                                         collaboratorForm.processing
-                                            ? 'Inviting...'
-                                            : 'Send Invite'
+                                            ? t('event_settings.collaborators.inviting')
+                                            : t('event_settings.collaborators.send_invite')
                                     }}
                                 </Button>
                                 <Button
@@ -4678,7 +4666,7 @@ function resolveSupportedTimezones(): string[] {
                                         isCollaboratorInviteSheetOpen = false
                                     "
                                 >
-                                    Close
+                                    {{ t('event_settings.shared.close') }}
                                 </Button>
                             </SheetFooter>
                         </div>
