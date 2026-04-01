@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Copy, ExternalLink, FileOutput, Printer } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -31,6 +31,14 @@ const selectedPreset = ref<PrintPackPreset>('welcome_sign');
 const selectedPaperSize = ref<PaperSize>('A4');
 const selectedTheme = ref<ThemeKey>('bloom');
 const layoutMode = ref<'preview' | 'controls'>('preview');
+const previewViewport = ref<HTMLElement | null>(null);
+const previewDataUrl = ref<string | null>(null);
+const previewViewportWidth = ref(0);
+const isRenderingPreview = ref(false);
+const previewRenderFailed = ref(false);
+
+let previewResizeObserver: ResizeObserver | null = null;
+let previewRenderToken = 0;
 
 const presetMeta = computed<Record<PrintPackPreset, {
     title: string;
@@ -136,6 +144,7 @@ const selectedTargetMeta = computed(
 );
 const activePresetMeta = computed(() => presetMeta.value[selectedPreset.value]);
 const activeThemeMeta = computed(() => themeMeta[selectedTheme.value]);
+const activeSizeMeta = computed(() => sizeMeta[selectedPaperSize.value]);
 
 const controlsExpanded = computed(() => layoutMode.value === 'controls');
 const layoutClass = computed(() =>
@@ -143,6 +152,16 @@ const layoutClass = computed(() =>
         ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]'
         : 'xl:grid-cols-[minmax(20rem,0.42fr)_minmax(0,0.58fr)]',
 );
+const previewAspectRatio = computed(() => `${activeSizeMeta.value.width} / ${activeSizeMeta.value.height}`);
+const previewDisplayWidth = computed(() => {
+    if (previewViewportWidth.value === 0) {
+        return null;
+    }
+
+    const layoutMaxWidth = controlsExpanded.value ? 560 : 860;
+
+    return Math.min(previewViewportWidth.value, layoutMaxWidth);
+});
 
 const posterFilenameBase = computed(() => {
     const slug = props.eventName
@@ -151,15 +170,6 @@ const posterFilenameBase = computed(() => {
         .replace(/^-|-$/g, '');
 
     return `${slug || 'eventsmart'}-${selectedPreset.value}-${selectedTarget.value}-${selectedTheme.value}`;
-});
-
-const previewStyle = computed(() => {
-    const size = sizeMeta[selectedPaperSize.value];
-
-    return {
-        aspectRatio: `${size.width} / ${size.height}`,
-        backgroundImage: `linear-gradient(${activeThemeMeta.value.tint}, ${activeThemeMeta.value.tint}), url(${activeThemeMeta.value.imageUrl})`,
-    };
 });
 
 const targetLabel = computed(() => {
@@ -310,6 +320,37 @@ const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
     return canvas;
 };
 
+const syncPreviewViewportWidth = (): void => {
+    previewViewportWidth.value = previewViewport.value?.clientWidth ?? 0;
+};
+
+const refreshPreviewImage = async (): Promise<void> => {
+    const renderToken = ++previewRenderToken;
+    isRenderingPreview.value = true;
+    previewRenderFailed.value = false;
+
+    try {
+        const canvas = await renderPosterCanvas();
+        if (renderToken !== previewRenderToken) {
+            return;
+        }
+
+        previewDataUrl.value = canvas?.toDataURL('image/png') ?? null;
+        previewRenderFailed.value = canvas === null;
+    } catch {
+        if (renderToken !== previewRenderToken) {
+            return;
+        }
+
+        previewDataUrl.value = null;
+        previewRenderFailed.value = true;
+    } finally {
+        if (renderToken === previewRenderToken) {
+            isRenderingPreview.value = false;
+        }
+    }
+};
+
 const copySelectedTarget = async (): Promise<void> => {
     if (
         selectedTargetMeta.value === null
@@ -357,18 +398,18 @@ const downloadSvg = (): void => {
     link.click();
 };
 
-const printPack = (): void => {
-    const target = selectedTargetMeta.value;
-    if (target === null) {
+const printPack = async (): Promise<void> => {
+    const canvas = await renderPosterCanvas();
+    if (canvas === null) {
         return;
     }
 
+    const posterDataUrl = canvas.toDataURL('image/png');
     const printWindow = window.open('', '_blank', 'width=1200,height=900');
     if (!printWindow) {
         return;
     }
 
-    const theme = activeThemeMeta.value;
     const html = `
         <html>
             <head>
@@ -383,47 +424,19 @@ const printPack = (): void => {
                         background: #efe8de;
                         font-family: Inter, Arial, sans-serif;
                     }
-                    .sheet {
+                    img {
                         width: min(820px, 100%);
-                        aspect-ratio: ${sizeMeta[selectedPaperSize.value].width} / ${sizeMeta[selectedPaperSize.value].height};
-                        background-image: linear-gradient(${theme.tint}, ${theme.tint}), url(${theme.imageUrl});
-                        background-size: cover;
-                        background-position: center;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: space-between;
-                        text-align: center;
-                        padding: 6.5%;
-                        box-sizing: border-box;
+                        height: auto;
+                        display: block;
+                        box-shadow: 0 28px 80px rgba(23,20,17,0.18);
+                        border-radius: 32px;
                     }
-                    .eyebrow { font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase; color: ${theme.mutedColor}; }
-                    .title { margin: 18px 0 0; font: 600 48px Georgia, serif; color: ${theme.textColor}; line-height: 1.1; }
-                    .body { margin: 18px 0 0; max-width: 34rem; font-size: 18px; line-height: 1.6; color: ${theme.mutedColor}; }
-                    .qr-frame { margin-top: 24px; background: ${theme.qrFrame}; border-radius: 28px; padding: 26px; }
-                    .qr { display: block; width: min(320px, 58vw); height: auto; }
-                    .footer { color: ${theme.textColor}; font-weight: 600; font-size: 18px; }
-                    .url { margin-top: 10px; font-size: 14px; color: ${theme.mutedColor}; word-break: break-word; }
                 </style>
             </head>
             <body>
-                <div class="sheet">
-                    <div>
-                        <div class="eyebrow">${activePresetMeta.value.title}</div>
-                        <div class="title">${props.eventName}</div>
-                        <div class="body">${activePresetMeta.value.instruction}</div>
-                    </div>
-                    <div class="qr-frame">
-                        <img id="print-qr" class="qr" src="${target.qrDataUrl}" alt="QR code" />
-                    </div>
-                    <div>
-                        <div class="body">${t('event_home.print_pack.footer.scan_hint')}</div>
-                        <div class="footer">${footerLabel.value}</div>
-                        <div class="url">${target.url}</div>
-                    </div>
-                </div>
+                <img id="print-pack" src="${posterDataUrl}" alt="QR print pack preview" />
                 <script>
-                    const image = document.getElementById('print-qr');
+                    const image = document.getElementById('print-pack');
                     const runPrint = () => {
                         window.focus();
                         window.print();
@@ -445,6 +458,34 @@ const printPack = (): void => {
     printWindow.document.write(html);
     printWindow.document.close();
 };
+
+watch(
+    [selectedTarget, selectedPreset, selectedPaperSize, selectedTheme, footerLabel, () => props.eventName],
+    () => {
+        void refreshPreviewImage();
+    },
+    { immediate: true },
+);
+
+onMounted(() => {
+    syncPreviewViewportWidth();
+
+    if (typeof ResizeObserver === 'undefined') {
+        return;
+    }
+
+    previewResizeObserver = new ResizeObserver(() => {
+        syncPreviewViewportWidth();
+    });
+
+    if (previewViewport.value) {
+        previewResizeObserver.observe(previewViewport.value);
+    }
+});
+
+onBeforeUnmount(() => {
+    previewResizeObserver?.disconnect();
+});
 </script>
 
 <template>
@@ -624,48 +665,28 @@ const printPack = (): void => {
                 </div>
             </div>
 
-            <div class="mt-5 rounded-[2rem] bg-[#ede4d7] p-4 sm:p-6">
-                <div class="mx-auto max-w-[52rem]">
+            <div ref="previewViewport" class="mt-5">
+                <div class="mx-auto" :style="previewDisplayWidth ? { width: `${previewDisplayWidth}px` } : undefined">
                     <div
-                        class="relative overflow-hidden rounded-[2rem] bg-cover bg-center bg-no-repeat shadow-[0_28px_80px_rgba(23,20,17,0.18)]"
-                        :style="previewStyle"
+                        class="relative"
+                        :style="{ aspectRatio: previewAspectRatio }"
                     >
-                        <div class="absolute inset-0" :style="{ background: activeThemeMeta.tint }" />
-                        <div class="relative flex min-h-[42rem] flex-col items-center justify-between px-[9%] py-[8%] text-center sm:min-h-[48rem]">
-                            <div>
-                                <p class="text-[0.72rem] font-semibold uppercase tracking-[0.28em]" :style="{ color: activeThemeMeta.mutedColor }">
-                                    {{ activePresetMeta.title }}
-                                </p>
-                                <h2
-                                    class="mx-auto mt-4 max-w-3xl text-balance font-semibold tracking-tight"
-                                    :style="{ color: activeThemeMeta.textColor, fontFamily: 'Georgia, serif', fontSize: selectedPaperSize === 'card' ? '2.4rem' : 'clamp(2.8rem,5vw,4.8rem)', lineHeight: 1.05 }"
-                                >
-                                    {{ eventName }}
-                                </h2>
-                                <p class="mx-auto mt-5 max-w-2xl text-balance text-base leading-7 sm:text-lg" :style="{ color: activeThemeMeta.mutedColor }">
-                                    {{ activePresetMeta.instruction }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-[2rem] p-5 shadow-[0_18px_40px_rgba(23,20,17,0.12)]" :style="{ backgroundColor: activeThemeMeta.qrFrame }">
-                                <img
-                                    v-if="selectedTargetMeta"
-                                    :src="selectedTargetMeta.qrDataUrl"
-                                    :alt="t('event_home.print_pack.preview_alt')"
-                                    class="block aspect-square w-[min(54vw,19rem)] sm:w-[18rem]"
-                                />
-                            </div>
-
-                            <div>
-                                <p class="text-sm leading-6 sm:text-base" :style="{ color: activeThemeMeta.mutedColor }">
-                                    {{ t('event_home.print_pack.footer.scan_hint') }}
-                                </p>
-                                <p class="mt-3 text-base font-semibold sm:text-lg" :style="{ color: activeThemeMeta.textColor }">
-                                    {{ footerLabel }}
-                                </p>
-                                <p class="mt-3 break-all text-xs leading-5 sm:text-sm" :style="{ color: activeThemeMeta.mutedColor }">
-                                    {{ selectedTargetMeta?.url }}
-                                </p>
+                        <img
+                            v-if="previewDataUrl"
+                            :src="previewDataUrl"
+                            :alt="t('event_home.print_pack.preview_alt')"
+                            class="block h-full w-full rounded-[2rem] object-cover shadow-[0_28px_80px_rgba(23,20,17,0.18)]"
+                        />
+                        <div
+                            v-else
+                            class="absolute inset-0 flex items-center justify-center rounded-[2rem] bg-[linear-gradient(135deg,#f4ece1,#e8dccd)]"
+                        >
+                            <div v-if="isRenderingPreview" class="h-14 w-14 animate-pulse rounded-full bg-white/80 shadow-[0_14px_40px_rgba(23,20,17,0.12)]" />
+                            <div
+                                v-else-if="previewRenderFailed"
+                                class="rounded-full bg-white/88 px-5 py-2 text-sm font-medium text-zinc-600 shadow-[0_14px_40px_rgba(23,20,17,0.12)]"
+                            >
+                                {{ t('event_home.print_pack.preview_title') }}
                             </div>
                         </div>
                     </div>
