@@ -1181,6 +1181,7 @@
     "event_home.print_pack.presets_title": "Choose a preset",
     "event_home.print_pack.target_title": "QR target",
     "event_home.print_pack.size_title": "Paper size",
+    "event_home.print_pack.preview_title": "Live preview",
     "event_home.print_pack.preview_alt": "QR print pack preview",
     "event_home.print_pack.quick_actions_title": "Quick actions",
     "event_home.print_pack.targets.album": "Album",

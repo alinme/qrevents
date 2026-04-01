@@ -1181,6 +1181,7 @@
     "event_home.print_pack.presets_title": "Alege un preset",
     "event_home.print_pack.target_title": "Destinatie QR",
     "event_home.print_pack.size_title": "Dimensiune hartie",
+    "event_home.print_pack.preview_title": "Preview live",
     "event_home.print_pack.preview_alt": "Preview pachet QR pentru print",
     "event_home.print_pack.quick_actions_title": "Actiuni rapide",
     "event_home.print_pack.targets.album": "Album",

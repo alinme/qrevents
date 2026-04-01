@@ -88,7 +88,6 @@ const activePresetMeta = computed(() => presetMeta.value[selectedPreset.value]);
 const previewStyle = computed(() => ({
     '--print-primary': props.branding.primaryColor ?? '#171411',
     '--print-accent': props.branding.accentColor ?? '#d97706',
-    width: sizeMeta[selectedPaperSize.value].width,
     aspectRatio: sizeMeta[selectedPaperSize.value].aspectRatio,
 }));
 
@@ -160,7 +159,7 @@ const printPack = async (): Promise<void> => {
         return;
     }
 
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1100,height=900');
+    const printWindow = window.open('', '_blank', 'width=1100,height=900');
     if (!printWindow) {
         return;
     }
@@ -170,15 +169,18 @@ const printPack = async (): Promise<void> => {
             <head>
                 <title>${props.eventName} Print Pack</title>
                 <style>
-                    body { margin: 0; font-family: Arial, sans-serif; background: #f7f4ef; color: #171411; }
+                    @page { margin: 0; size: auto; }
+                    html, body { margin: 0; padding: 0; font-family: Georgia, serif; background: #f7f4ef; color: #171411; }
                     .sheet { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px; }
-                    .card { width: min(720px, 100%); background: white; border-radius: 28px; padding: 28px; border: 1px solid rgba(23,20,17,0.08); box-shadow: 0 30px 70px rgba(23,20,17,0.12); }
+                    .card { width: min(720px, 100%); background: linear-gradient(180deg, #fffdf9, #ffffff); border-radius: 28px; padding: 28px; border: 1px solid rgba(23,20,17,0.08); box-shadow: 0 30px 70px rgba(23,20,17,0.12); }
                     .eyebrow { font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: #6b645c; }
                     .title { margin: 16px 0 0; font-size: 36px; line-height: 1.1; }
                     .body { margin: 12px 0 0; font-size: 16px; line-height: 1.6; color: #59524a; }
-                    .qr { margin: 28px auto 0; display: block; width: 280px; height: 280px; background: white; padding: 16px; border-radius: 24px; }
+                    .qr-wrap { margin: 28px auto 0; width: fit-content; background: white; padding: 16px; border-radius: 24px; border: 1px solid rgba(23,20,17,0.08); }
+                    .qr { display: block; width: 280px; height: 280px; }
                     .footer { margin-top: 24px; display: grid; gap: 8px; text-align: center; color: #59524a; }
                     .code { letter-spacing: 0.24em; font-weight: 700; text-transform: uppercase; }
+                    .hint { margin-top: 18px; text-align: center; font-size: 13px; color: #7a7268; }
                 </style>
             </head>
             <body>
@@ -187,13 +189,32 @@ const printPack = async (): Promise<void> => {
                         <div class="eyebrow">${activePresetMeta.value.title}</div>
                         <h1 class="title">${props.eventName}</h1>
                         <p class="body">${activePresetMeta.value.instruction}</p>
-                        <img class="qr" src="${selectedTargetMeta.value.qrDataUrl}" alt="QR code" />
+                        <div class="qr-wrap">
+                            <img id="print-qr" class="qr" src="${selectedTargetMeta.value.qrDataUrl}" alt="QR code" />
+                        </div>
+                        <p class="hint">Scan with your phone camera</p>
                         <div class="footer">
                             <div class="code">${props.albumAccessCode}</div>
                             <div>${selectedTargetMeta.value.url}</div>
                         </div>
                     </div>
                 </div>
+                <script>
+                    const image = document.getElementById('print-qr');
+                    const runPrint = () => {
+                        window.focus();
+                        window.print();
+                    };
+
+                    if (image && image.complete) {
+                        setTimeout(runPrint, 180);
+                    } else if (image) {
+                        image.addEventListener('load', () => setTimeout(runPrint, 180), { once: true });
+                        image.addEventListener('error', () => setTimeout(runPrint, 180), { once: true });
+                    } else {
+                        setTimeout(runPrint, 180);
+                    }
+                <\/script>
             </body>
         </html>
     `;
@@ -201,8 +222,6 @@ const printPack = async (): Promise<void> => {
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
 };
 
 const applyPreset = (preset: PrintPackPreset): void => {
@@ -213,8 +232,8 @@ const applyPreset = (preset: PrintPackPreset): void => {
 </script>
 
 <template>
-    <section class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6">
-        <div class="flex items-center justify-between gap-3 border-b border-black/5 pb-4">
+    <section class="overflow-hidden rounded-[1.9rem] border border-black/5 bg-[linear-gradient(180deg,#fffdf9,#fbf7f0)] shadow-sm">
+        <div class="flex items-center justify-between gap-3 border-b border-black/5 px-5 py-5 md:px-6">
             <div>
                 <h2 class="text-base font-semibold text-[#171411] sm:text-lg">
                     {{ t('event_home.print_pack.title') }}
@@ -228,22 +247,22 @@ const applyPreset = (preset: PrintPackPreset): void => {
             </div>
         </div>
 
-        <div class="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div class="space-y-5">
+        <div class="grid gap-0 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
+            <div class="border-b border-black/5 px-5 py-5 lg:border-b-0 lg:border-r md:px-6">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
                         {{ t('event_home.print_pack.presets_title') }}
                     </p>
-                    <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                         <button
                             v-for="preset in presetKeys"
                             :key="preset"
                             type="button"
                             :class="[
-                                'rounded-[1.25rem] border p-4 text-left transition',
+                                'rounded-[1.2rem] px-4 py-4 text-left transition',
                                 selectedPreset === preset
-                                    ? 'border-[#171411] bg-[#171411] text-white shadow-sm'
-                                    : 'border-black/10 bg-[#fbf8f4] text-[#171411] hover:border-black/20',
+                                    ? 'bg-[#171411] text-white shadow-sm'
+                                    : 'bg-white/70 text-[#171411] ring-1 ring-black/8 hover:bg-white hover:ring-black/15',
                             ]"
                             @click="applyPreset(preset)"
                         >
@@ -255,8 +274,8 @@ const applyPreset = (preset: PrintPackPreset): void => {
                     </div>
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div class="rounded-[1.25rem] border border-black/10 bg-[#fbf8f4] p-4">
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    <div class="border-t border-black/5 pt-4">
                         <p class="text-sm font-semibold text-[#171411]">
                             {{ t('event_home.print_pack.target_title') }}
                         </p>
@@ -269,7 +288,7 @@ const applyPreset = (preset: PrintPackPreset): void => {
                                     'rounded-full px-4 py-2 text-sm font-medium transition',
                                     selectedTarget === target.key
                                         ? 'bg-[#171411] text-white'
-                                        : 'bg-white text-[#171411] ring-1 ring-black/10 hover:ring-black/20',
+                                        : 'bg-white/85 text-[#171411] ring-1 ring-black/10 hover:bg-white hover:ring-black/20',
                                 ]"
                                 @click="selectedTarget = target.key"
                             >
@@ -278,7 +297,7 @@ const applyPreset = (preset: PrintPackPreset): void => {
                         </div>
                     </div>
 
-                    <div class="rounded-[1.25rem] border border-black/10 bg-[#fbf8f4] p-4">
+                    <div class="border-t border-black/5 pt-4">
                         <p class="text-sm font-semibold text-[#171411]">
                             {{ t('event_home.print_pack.size_title') }}
                         </p>
@@ -291,7 +310,7 @@ const applyPreset = (preset: PrintPackPreset): void => {
                                     'rounded-full px-4 py-2 text-sm font-medium transition',
                                     selectedPaperSize === paperSize
                                         ? 'bg-[#171411] text-white'
-                                        : 'bg-white text-[#171411] ring-1 ring-black/10 hover:ring-black/20',
+                                        : 'bg-white/85 text-[#171411] ring-1 ring-black/10 hover:bg-white hover:ring-black/20',
                                 ]"
                                 @click="selectedPaperSize = paperSize"
                             >
@@ -301,7 +320,11 @@ const applyPreset = (preset: PrintPackPreset): void => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
+                <div class="mt-5 border-t border-black/5 pt-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                        {{ t('event_home.print_pack.quick_actions_title') }}
+                    </p>
+                    <div class="mt-3 flex flex-wrap gap-2">
                     <Button class="rounded-full px-5" @click="printPack">
                         <Printer class="mr-2 size-4" />
                         {{ t('event_home.print_pack.actions.print_pdf') }}
@@ -320,15 +343,32 @@ const applyPreset = (preset: PrintPackPreset): void => {
                             {{ t('event_home.print_pack.actions.download_svg') }}
                         </a>
                     </Button>
+                    <Button variant="outline" class="rounded-full px-5" @click="openSelectedTarget">
+                        <QrCode class="mr-2 size-4" />
+                        {{ t('event_home.print_pack.actions.open_target') }}
+                    </Button>
+                    <Button variant="outline" class="rounded-full px-5" @click="copySelectedTarget">
+                        <Copy class="mr-2 size-4" />
+                        {{ t('event_home.print_pack.actions.copy_target') }}
+                    </Button>
+                    </div>
                 </div>
             </div>
 
-            <div class="space-y-4">
+            <div class="bg-[radial-gradient(circle_at_top,rgba(217,119,6,0.12),transparent_35%),linear-gradient(180deg,#f8f2e8,#f5efe4)] px-5 py-5 md:px-6">
+                <div class="mb-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                        {{ t('event_home.print_pack.preview_title') }}
+                    </p>
+                    <p class="mt-1 text-sm text-zinc-600">
+                        {{ activePresetMeta.body }}
+                    </p>
+                </div>
                 <div
-                    class="mx-auto overflow-hidden rounded-[1.8rem] border border-black/10 bg-[linear-gradient(180deg,#f8f4ed,#ffffff)] p-4 shadow-sm"
+                    class="mx-auto max-w-[28rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[linear-gradient(180deg,#fffefb,#ffffff)] p-4 shadow-[0_24px_60px_rgba(23,20,17,0.12)]"
                     :style="previewStyle"
                 >
-                    <div class="flex h-full flex-col justify-between rounded-[1.3rem] border border-black/8 bg-white/90 p-5">
+                    <div class="flex h-full flex-col justify-between rounded-[1.5rem] bg-transparent p-2">
                         <div>
                             <p class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-zinc-500">
                                 {{ activePresetMeta.title }}
@@ -341,7 +381,7 @@ const applyPreset = (preset: PrintPackPreset): void => {
                             </p>
                         </div>
 
-                        <div class="my-6 rounded-[1.4rem] border border-black/10 bg-white p-4 shadow-sm">
+                        <div class="my-6 mx-auto w-fit rounded-[1.6rem] bg-white p-4 shadow-[0_12px_32px_rgba(23,20,17,0.08)]">
                             <img
                                 v-if="selectedTargetMeta"
                                 :src="selectedTargetMeta.qrDataUrl"
@@ -358,22 +398,6 @@ const applyPreset = (preset: PrintPackPreset): void => {
                                 {{ selectedTargetMeta?.url }}
                             </p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="rounded-[1.25rem] border border-black/10 bg-[#fbf8f4] p-4">
-                    <p class="text-sm font-semibold text-[#171411]">
-                        {{ t('event_home.print_pack.quick_actions_title') }}
-                    </p>
-                    <div class="mt-3 flex flex-col gap-2">
-                        <Button variant="outline" class="justify-start rounded-full px-5" @click="openSelectedTarget">
-                            <QrCode class="mr-2 size-4" />
-                            {{ t('event_home.print_pack.actions.open_target') }}
-                        </Button>
-                        <Button variant="outline" class="justify-start rounded-full px-5" @click="copySelectedTarget">
-                            <Copy class="mr-2 size-4" />
-                            {{ t('event_home.print_pack.actions.copy_target') }}
-                        </Button>
                     </div>
                 </div>
             </div>
