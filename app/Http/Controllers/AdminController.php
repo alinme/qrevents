@@ -9,16 +9,18 @@ use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\Plan;
 use App\Models\User;
+use App\Support\EventDataPurger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminController extends Controller
 {
+    public function __construct(private readonly EventDataPurger $eventDataPurger) {}
+
     public function index(Request $request): Response
     {
         $this->assertSuperAdmin($request);
@@ -705,7 +707,7 @@ class AdminController extends Controller
 
     private function handleClearExportCleanup(Event $event): RedirectResponse
     {
-        $cleared = $this->clearEventExportArchive($event);
+        $cleared = $this->eventDataPurger->clearEventExportArchive($event);
 
         return back()->with(
             $cleared ? 'success' : 'info',
@@ -726,7 +728,7 @@ class AdminController extends Controller
             ]);
         }
 
-        $result = $this->purgeEventMedia($event);
+        $result = $this->eventDataPurger->purgeEventMedia($event);
 
         if ($result['deletedAssetCount'] === 0 && ! $result['clearedExport']) {
             return back()->with('info', 'This event had no stored media or export archive to purge.');
@@ -854,96 +856,6 @@ class AdminController extends Controller
             'candidateAt' => $candidateAt?->toIso8601String(),
             'canRunCleanup' => false,
         ];
-    }
-
-    private function clearEventExportArchive(Event $event): bool
-    {
-        return DB::transaction(function () use ($event): bool {
-            $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
-            $hadArchive = $this->eventHasStoredExportArchive($lockedEvent);
-
-            if ($hadArchive) {
-                Storage::disk((string) $lockedEvent->media_export_disk)->delete((string) $lockedEvent->media_export_path);
-            }
-
-            $this->resetEventExportState($lockedEvent);
-
-            return $hadArchive;
-        });
-    }
-
-    /**
-     * @return array{deletedAssetCount: int, reclaimedStorageBytes: int, clearedExport: bool}
-     */
-    private function purgeEventMedia(Event $event): array
-    {
-        return DB::transaction(function () use ($event): array {
-            $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
-            $assets = EventAsset::query()
-                ->where('event_id', $lockedEvent->id)
-                ->lockForUpdate()
-                ->get();
-
-            $deletedAssetCount = $assets->count();
-            $reclaimedStorageBytes = (int) $assets->sum('size_bytes');
-
-            foreach ($assets as $asset) {
-                $this->deleteEventAssetFiles($asset);
-                $asset->delete();
-            }
-
-            $clearedExport = $this->eventHasStoredExportArchive($lockedEvent);
-            $this->resetEventExportState($lockedEvent, deleteStoredFile: $clearedExport);
-
-            $lockedEvent->forceFill([
-                'storage_used_bytes' => max(0, (int) $lockedEvent->storage_used_bytes - $reclaimedStorageBytes),
-                'upload_count' => max(0, (int) $lockedEvent->upload_count - $deletedAssetCount),
-                'cleanup_review_state' => 'completed',
-                'cleanup_reviewed_at' => now(),
-            ])->save();
-
-            return [
-                'deletedAssetCount' => $deletedAssetCount,
-                'reclaimedStorageBytes' => $reclaimedStorageBytes,
-                'clearedExport' => $clearedExport,
-            ];
-        });
-    }
-
-    private function deleteEventAssetFiles(EventAsset $asset): void
-    {
-        Storage::disk($asset->disk)->delete(array_values(array_filter([
-            $asset->path,
-            $asset->thumbnail_path,
-            $asset->preview_path,
-            $asset->watermarked_thumbnail_path,
-            $asset->watermarked_preview_path,
-            $asset->watermarked_download_path,
-            $asset->video_thumbnail_path,
-            $asset->watermarked_video_thumbnail_path,
-            $asset->video_preview_path,
-            $asset->watermarked_video_preview_path,
-            $asset->watermarked_video_download_path,
-        ])));
-    }
-
-    private function resetEventExportState(Event $event, bool $deleteStoredFile = false): void
-    {
-        if ($deleteStoredFile && $this->eventHasStoredExportArchive($event)) {
-            Storage::disk((string) $event->media_export_disk)->delete((string) $event->media_export_path);
-        }
-
-        $event->forceFill([
-            'media_export_status' => null,
-            'media_export_token' => null,
-            'media_export_disk' => null,
-            'media_export_path' => null,
-            'media_export_requested_at' => null,
-            'media_export_started_at' => null,
-            'media_export_completed_at' => null,
-            'media_export_failed_at' => null,
-            'media_export_error' => null,
-        ])->save();
     }
 
     private function humanBytes(int $bytes): string

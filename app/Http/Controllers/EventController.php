@@ -2398,6 +2398,7 @@ class EventController extends Controller
     {
         $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
         $albumUrl = $this->publicAlbumUrl($event);
+        $publicInvitationUrl = route('events.guests.public-invitation.show', $this->ensurePublicInvitationToken($event));
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
@@ -2595,8 +2596,10 @@ class EventController extends Controller
                 'albumEntryShortcut' => 'https://is.gd/evsmrt',
                 'wall' => route('events.wall', $event->publicAlbumCode()),
                 'wallShortUrl' => $publicShortLinks['wallShortUrl'],
+                'invitation' => $publicInvitationUrl,
                 'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
                 'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->publicAlbumCode())),
+                'invitationQrDataUrl' => $this->createQrCodeDataUrl($publicInvitationUrl),
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
             'eventNavigation' => array_values(array_filter([
@@ -2675,8 +2678,8 @@ class EventController extends Controller
     private function guestPartyProps(Event $event): array
     {
         $publicInvitationToken = $this->ensurePublicInvitationToken($event);
-        $invitationSettings = $this->eventInvitationSettings($event);
         $branding = $this->resolvedEventBranding($event);
+        $invitationSettings = $this->eventInvitationSettings($event, $branding);
         $guestParties = $event->guestParties()
             ->with(['invitationActivities', 'table'])
             ->orderBy('name')
@@ -2913,34 +2916,129 @@ class EventController extends Controller
      *   message: string,
      *   closing: string,
      *   contactPhone: string|null,
-     *   publicRsvpEnabled: bool
+     *   publicRsvpEnabled: bool,
+     *   content: array<string, mixed>,
+     *   visibility: array<string, bool>
      * }
      */
-    private function eventInvitationSettings(Event $event): array
+    private function eventInvitationSettings(Event $event, ?array $branding = null): array
     {
         $settings = is_array($event->invitation_settings) ? $event->invitation_settings : [];
+        $branding ??= $this->resolvedEventBranding($event);
         $template = is_string($settings['template'] ?? null) ? $settings['template'] : 'classic';
 
         if (! in_array($template, ['classic', 'floral', 'midnight', 'canva_cream', 'canva_brown', 'canva_watercolor'], true)) {
             $template = 'classic';
         }
 
+        $headline = is_string($settings['headline'] ?? null) && trim((string) $settings['headline']) !== ''
+            ? trim((string) $settings['headline'])
+            : $event->name;
+        $message = is_string($settings['message'] ?? null) && trim((string) $settings['message']) !== ''
+            ? trim((string) $settings['message'])
+            : 'We would love to celebrate together. Please let us know if you can join us and how many will attend.';
+        $closing = is_string($settings['closing'] ?? null) && trim((string) $settings['closing']) !== ''
+            ? trim((string) $settings['closing'])
+            : 'Please answer when you can so we can plan every seat with care.';
+        $contactPhone = is_string($settings['contact_phone'] ?? null) && trim((string) $settings['contact_phone']) !== ''
+            ? trim((string) $settings['contact_phone'])
+            : null;
+        $content = $this->normalizeInvitationStudioContent(
+            $event,
+            is_array($settings['content'] ?? null) ? $settings['content'] : [],
+            $branding,
+        );
+        $visibility = $this->normalizeInvitationStudioVisibility(
+            is_array($settings['visibility'] ?? null) ? $settings['visibility'] : [],
+            $content,
+            $contactPhone,
+        );
+
         return [
             'template' => $template,
-            'headline' => is_string($settings['headline'] ?? null) && trim((string) $settings['headline']) !== ''
-                ? trim((string) $settings['headline'])
-                : $event->name,
-            'message' => is_string($settings['message'] ?? null) && trim((string) $settings['message']) !== ''
-                ? trim((string) $settings['message'])
-                : 'We would love to celebrate together. Please let us know if you can join us and how many will attend.',
-            'closing' => is_string($settings['closing'] ?? null) && trim((string) $settings['closing']) !== ''
-                ? trim((string) $settings['closing'])
-                : 'Please answer when you can so we can plan every seat with care.',
-            'contactPhone' => is_string($settings['contact_phone'] ?? null) && trim((string) $settings['contact_phone']) !== ''
-                ? trim((string) $settings['contact_phone'])
-                : null,
+            'headline' => $headline,
+            'message' => $message,
+            'closing' => $closing,
+            'contactPhone' => $contactPhone,
             'publicRsvpEnabled' => (bool) ($settings['public_rsvp_enabled'] ?? true),
+            'content' => [
+                'partnerOneName' => $content['partner_one_name'],
+                'partnerTwoName' => $content['partner_two_name'],
+                'familyName' => $content['family_name'],
+                'showFamilyName' => $content['show_family_name'],
+                'brideParents' => $content['bride_parents'],
+                'groomParents' => $content['groom_parents'],
+                'godparents' => $content['godparents'],
+                'dateText' => $content['date_text'],
+                'venueText' => $content['venue_text'],
+            ],
+            'visibility' => [
+                'couple' => $visibility['couple'],
+                'parents' => $visibility['parents'],
+                'godparents' => $visibility['godparents'],
+                'date' => $visibility['date'],
+                'venue' => $visibility['venue'],
+                'contactPhone' => $visibility['contact_phone'],
+            ],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $branding
+     * @return array<string, mixed>
+     */
+    private function normalizeInvitationStudioContent(Event $event, array $content, array $branding): array
+    {
+        $weddingDetails = $this->weddingDetailsPayload($branding['wedding_details'] ?? []);
+
+        return [
+            'partner_one_name' => $this->trimmedString($content['partner_one_name'] ?? null) ?? $weddingDetails['partnerOneName'],
+            'partner_two_name' => $this->trimmedString($content['partner_two_name'] ?? null) ?? $weddingDetails['partnerTwoName'],
+            'family_name' => $this->trimmedString($content['family_name'] ?? null) ?? $weddingDetails['familyName'],
+            'show_family_name' => array_key_exists('show_family_name', $content)
+                ? (bool) $content['show_family_name']
+                : (bool) $weddingDetails['showFamilyName'],
+            'bride_parents' => $this->trimmedString($content['bride_parents'] ?? null) ?? $weddingDetails['brideParents'],
+            'groom_parents' => $this->trimmedString($content['groom_parents'] ?? null) ?? $weddingDetails['groomParents'],
+            'godparents' => $this->trimmedString($content['godparents'] ?? null) ?? $weddingDetails['godparents'],
+            'date_text' => $this->trimmedString($content['date_text'] ?? null) ?? $this->invitationPrimaryDateLabel($event),
+            'venue_text' => $this->trimmedString($content['venue_text'] ?? null) ?? $this->invitationVenueAddress($event),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $visibility
+     * @param  array<string, mixed>  $content
+     * @return array<string, bool>
+     */
+    private function normalizeInvitationStudioVisibility(array $visibility, array $content, ?string $contactPhone): array
+    {
+        return [
+            'couple' => array_key_exists('couple', $visibility) ? (bool) $visibility['couple'] : true,
+            'parents' => array_key_exists('parents', $visibility)
+                ? (bool) $visibility['parents']
+                : ($content['bride_parents'] !== null || $content['groom_parents'] !== null),
+            'godparents' => array_key_exists('godparents', $visibility)
+                ? (bool) $visibility['godparents']
+                : ($content['godparents'] !== null),
+            'date' => array_key_exists('date', $visibility) ? (bool) $visibility['date'] : ($content['date_text'] !== null),
+            'venue' => array_key_exists('venue', $visibility) ? (bool) $visibility['venue'] : ($content['venue_text'] !== null),
+            'contact_phone' => array_key_exists('contact_phone', $visibility)
+                ? (bool) $visibility['contact_phone']
+                : ($contactPhone !== null),
+        ];
+    }
+
+    private function trimmedString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     private function ensurePublicInvitationToken(Event $event): string
@@ -3275,7 +3373,7 @@ class EventController extends Controller
     ): array {
         $branding = $this->resolvedEventBranding($event);
         app()->setLocale(FrontendLocalization::resolveEventLocale($request, $branding));
-        $settings = $this->eventInvitationSettings($event);
+        $settings = $this->eventInvitationSettings($event, $branding);
         $token = $isPublicInvite
             ? $this->ensurePublicInvitationToken($event)
             : $this->ensureGuestPartyInvitationToken($guestParty);
@@ -3303,6 +3401,8 @@ class EventController extends Controller
                 'message' => $settings['message'],
                 'closing' => $settings['closing'],
                 'contactPhone' => $settings['contactPhone'],
+                'content' => $settings['content'],
+                'visibility' => $settings['visibility'],
             ],
             'eventDetails' => [
                 'dateLabel' => $this->invitationPrimaryDateLabel($event),

@@ -205,6 +205,9 @@ test('authenticated dashboard pages share localized host workspace strings', fun
             ->where('translations.event_home.hero.kicker', 'Workspace')
             ->where('translations.event_home.section.share_title', 'Linkuri de distribuit')
             ->where('translations.event_home.media_types.text', 'Mesaje text')
+            ->where('translations.event_home.print_pack.title', 'Pachet QR pentru print')
+            ->where('eventLinks.invitation', route('events.guests.public-invitation.show', $event->public_invitation_token))
+            ->where('eventLinks.invitationQrDataUrl', fn ($value) => is_string($value) && str_starts_with($value, 'data:image/svg+xml'))
         );
 });
 

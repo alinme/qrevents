@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\EnforceEventLifecycle;
+use App\Console\Commands\PruneTemporaryEventFiles;
 use App\Console\Commands\SendCleanupDigest;
 use App\Console\Commands\SendGuestLedgerExportReminders;
 use App\Console\Commands\SyncExchangeRates;
@@ -13,6 +14,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(EnforceEventLifecycle::class)->hourly()->withoutOverlapping();
+Schedule::command(PruneTemporaryEventFiles::class)->hourly()->withoutOverlapping();
 Schedule::command(SyncExchangeRates::class)->hourly()->withoutOverlapping();
 Schedule::command(SendGuestLedgerExportReminders::class)
     ->dailyAt(sprintf(

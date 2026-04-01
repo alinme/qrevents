@@ -23,6 +23,25 @@ it('allows an event owner to update invitation settings', function () {
             'closing' => 'We cannot wait to see you there.',
             'contact_phone' => '0722123456',
             'public_rsvp_enabled' => true,
+            'content' => [
+                'partner_one_name' => 'Luca',
+                'partner_two_name' => 'Danielle',
+                'family_name' => 'Miller',
+                'show_family_name' => true,
+                'bride_parents' => 'Maria and Daniel',
+                'groom_parents' => 'Elena and Victor',
+                'godparents' => 'Bianca and Stefan',
+                'date_text' => 'Saturday, 15 November 2026, 18:00',
+                'venue_text' => 'Sun Garden Resort, Bucharest',
+            ],
+            'visibility' => [
+                'couple' => true,
+                'parents' => true,
+                'godparents' => true,
+                'date' => true,
+                'venue' => true,
+                'contact_phone' => true,
+            ],
         ])
         ->assertRedirect();
 
@@ -35,6 +54,25 @@ it('allows an event owner to update invitation settings', function () {
         'closing' => 'We cannot wait to see you there.',
         'contact_phone' => '0722123456',
         'public_rsvp_enabled' => true,
+        'content' => [
+            'partner_one_name' => 'Luca',
+            'partner_two_name' => 'Danielle',
+            'family_name' => 'Miller',
+            'show_family_name' => true,
+            'bride_parents' => 'Maria and Daniel',
+            'groom_parents' => 'Elena and Victor',
+            'godparents' => 'Bianca and Stefan',
+            'date_text' => 'Saturday, 15 November 2026, 18:00',
+            'venue_text' => 'Sun Garden Resort, Bucharest',
+        ],
+        'visibility' => [
+            'couple' => true,
+            'parents' => true,
+            'godparents' => true,
+            'date' => true,
+            'venue' => true,
+            'contact_phone' => true,
+        ],
     ]);
 });
 
@@ -89,6 +127,8 @@ it('shows a guest invitation page and records the open', function () {
             ->where('isPublicInvite', false)
             ->where('invitation.template', 'canva_cream')
             ->where('invitation.headline', $event->name)
+            ->where('invitation.content.partnerOneName', 'Jessica')
+            ->where('invitation.visibility.parents', true)
             ->where('eventDetails.venueAddress', 'Sun Garden Resort, Bucharest')
             ->where('eventDetails.weddingDetails.partnerOneName', 'Jessica')
             ->where('eventDetails.weddingDetails.familyName', 'Miller')

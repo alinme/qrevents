@@ -2,12 +2,12 @@
 import { CalendarDays, MapPin, Phone } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
-    
-    invitationTemplateMap
-    
-    
+    findInvitationTemplateStudioZone,
+    invitationTemplateMap,
 } from '@/lib/invitation-templates';
 import type {InvitationTemplateDetailsConfig, InvitationTemplateTextBlockConfig, InvitationTemplateId} from '@/lib/invitation-templates';
+
+type InvitationFontSizeBlock = Pick<InvitationTemplateTextBlockConfig, 'fontSizeLive' | 'fontSizePreview'>;
 
 const props = withDefaults(defineProps<{
     template: InvitationTemplateId;
@@ -130,7 +130,7 @@ const resolveFontFamily = (fontFamily?: string): string | undefined => {
     return `"${fontFamily}", var(--font-sans)`;
 };
 
-const resolveFontSize = (block: InvitationTemplateTextBlockConfig): string | undefined => {
+const resolveFontSize = (block: InvitationFontSizeBlock): string | undefined => {
     if (isPreviewMode.value) {
         return block.fontSizePreview ?? block.fontSizeLive;
     }
@@ -154,7 +154,45 @@ const scaleCssSize = (value?: string): string | undefined => {
     return `${(numericValue * paperScale.value).toFixed(4).replace(/\.?0+$/, '')}${unit}`;
 };
 
-const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, string> => {
+const contentAwareFontSize = (
+    block: InvitationFontSizeBlock,
+    zoneId?: 'lead_in' | 'couple' | 'message' | 'rsvp_note' | 'parents',
+    textValue?: string,
+): string | undefined => {
+    const fontSize = resolveFontSize(block);
+    if (!fontSize) {
+        return undefined;
+    }
+
+    if (!zoneId || !textValue) {
+        return scaleCssSize(fontSize) ?? fontSize;
+    }
+
+    const zone = findInvitationTemplateStudioZone(props.template, zoneId);
+    if (zone === null || textValue.length <= zone.safeLength) {
+        return scaleCssSize(fontSize) ?? fontSize;
+    }
+
+    const match = fontSize.trim().match(/^(-?\d*\.?\d+)(rem|px)$/);
+    if (!match) {
+        return scaleCssSize(fontSize) ?? fontSize;
+    }
+
+    const numericValue = Number.parseFloat(match[1]);
+    const unit = match[2];
+    const scale = Math.max(zone.minScale, zone.safeLength / textValue.length);
+    const scaledValue = `${(numericValue * scale).toFixed(4).replace(/\.?0+$/, '')}${unit}`;
+
+    return scaleCssSize(scaledValue) ?? scaledValue;
+};
+
+const blockStyle = (
+    block: InvitationTemplateTextBlockConfig,
+    options: {
+        zoneId?: 'lead_in' | 'couple' | 'message' | 'rsvp_note' | 'parents';
+        textValue?: string;
+    } = {},
+): Record<string, string> => {
     const style: Record<string, string> = {
         top: block.top,
         left: block.left,
@@ -162,9 +200,9 @@ const blockStyle = (block: InvitationTemplateTextBlockConfig): Record<string, st
         textAlign: block.align,
     };
 
-    const fontSize = resolveFontSize(block);
+    const fontSize = contentAwareFontSize(block, options.zoneId, options.textValue);
     if (fontSize) {
-        style.fontSize = scaleCssSize(fontSize) ?? fontSize;
+        style.fontSize = fontSize;
     }
 
     if (block.lineHeight) {
@@ -218,6 +256,46 @@ const detailsStyle = computed<Record<string, string> | null>(() => {
     };
 });
 
+const detailLineStyle = computed<Record<string, string> | null>(() => {
+    if (detailsBlock.value === null) {
+        return null;
+    }
+
+    const fontSize = contentAwareFontSize(detailsBlock.value, 'parents', props.detailLines.join(' '));
+    const style: Record<string, string> = {};
+
+    if (fontSize) {
+        style.fontSize = fontSize;
+    }
+
+    if (detailsBlock.value.lineHeight) {
+        style.lineHeight = detailsBlock.value.lineHeight;
+    }
+
+    if (detailsBlock.value.letterSpacing) {
+        style.letterSpacing = detailsBlock.value.letterSpacing;
+    }
+
+    if (detailsBlock.value.fontWeight) {
+        style.fontWeight = detailsBlock.value.fontWeight;
+    }
+
+    if (detailsBlock.value.color) {
+        style.color = detailsBlock.value.color;
+    }
+
+    const fontFamily = resolveFontFamily(detailsBlock.value.fontFamily);
+    if (fontFamily) {
+        style.fontFamily = fontFamily;
+    }
+
+    if (detailsBlock.value.uppercase) {
+        style.textTransform = 'uppercase';
+    }
+
+    return style;
+});
+
 const footerMetaStyle = computed<Record<string, string>>(() => {
     const footer = templateLayout.value.footer;
 
@@ -236,12 +314,10 @@ const footerClosingStyle = computed<Record<string, string>>(() => {
         maxWidth: closing.maxWidth,
     };
 
-    const fontSize = isPreviewMode.value
-        ? (closing.fontSizePreview ?? closing.fontSizeLive)
-        : (closing.fontSizeLive ?? closing.fontSizePreview);
+    const fontSize = contentAwareFontSize(closing, 'rsvp_note', props.closing);
 
     if (fontSize) {
-        style.fontSize = scaleCssSize(fontSize) ?? fontSize;
+        style.fontSize = fontSize;
     }
 
     if (closing.lineHeight) {
@@ -337,7 +413,7 @@ onBeforeUnmount(() => {
             <div v-if="templateLayout.header.enabled" class="absolute inset-0">
                 <p
                     :class="['absolute', mutedTextClass]"
-                    :style="blockStyle(templateLayout.header.eventName)"
+                    :style="blockStyle(templateLayout.header.eventName, { zoneId: 'lead_in', textValue: eventName })"
                 >
                     {{ eventName }}
                 </p>
@@ -353,13 +429,13 @@ onBeforeUnmount(() => {
             <div class="absolute inset-0">
                 <h2
                     class="absolute"
-                    :style="blockStyle(templateLayout.headline)"
+                    :style="blockStyle(templateLayout.headline, { zoneId: 'couple', textValue: headline })"
                 >
                     {{ headline }}
                 </h2>
                 <p
                     :class="['absolute', mutedTextClass]"
-                    :style="blockStyle(templateLayout.message)"
+                    :style="blockStyle(templateLayout.message, { zoneId: 'message', textValue: message })"
                 >
                     {{ message }}
                 </p>
@@ -375,6 +451,7 @@ onBeforeUnmount(() => {
                     v-for="(detailLine, index) in detailLines"
                     :key="`${detailLine}-${index}`"
                     class="text-center"
+                    :style="detailLineStyle ?? undefined"
                 >
                     {{ detailLine }}
                 </p>

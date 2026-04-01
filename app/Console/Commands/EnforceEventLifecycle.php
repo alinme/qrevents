@@ -3,10 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Event;
-use App\Models\EventAsset;
+use App\Support\EventDataPurger;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 
 class EnforceEventLifecycle extends Command
 {
@@ -14,13 +13,15 @@ class EnforceEventLifecycle extends Command
 
     protected $description = 'Enforce event payment/retention lifecycle, lock status, and timed deletions.';
 
-    public function handle(): int
+    public function handle(EventDataPurger $eventDataPurger): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $checked = 0;
         $updated = 0;
         $deleted = 0;
         $deletedAssets = 0;
+        $deletedFiles = 0;
+        $reclaimableStorageBytes = 0;
 
         Event::query()
             ->orderBy('id')
@@ -29,6 +30,9 @@ class EnforceEventLifecycle extends Command
                 &$updated,
                 &$deleted,
                 &$deletedAssets,
+                &$deletedFiles,
+                &$reclaimableStorageBytes,
+                $eventDataPurger,
                 $dryRun
             ): void {
                 foreach ($events as $event) {
@@ -40,9 +44,17 @@ class EnforceEventLifecycle extends Command
 
                     if ($retentionEnded || $unpaidGraceEnded) {
                         $deleted++;
+                        $inspection = $eventDataPurger->inspectEventForDeletion($event);
+                        $reclaimableStorageBytes += $inspection['reclaimableStorageBytes'];
+                        $deletedAssets += $inspection['assetCount'];
+                        $deletedFiles += $inspection['storedFileCount'];
+
                         if (! $dryRun) {
-                            $deletedAssets += $this->purgeEventData($event);
+                            $result = $eventDataPurger->purgeEventForDeletion($event);
+                            $deletedAssets = $deletedAssets - $inspection['assetCount'] + $result['deletedAssetCount'];
+                            $deletedFiles = $deletedFiles - $inspection['storedFileCount'] + $result['deletedFileCount'];
                         }
+
                         continue;
                     }
 
@@ -69,7 +81,12 @@ class EnforceEventLifecycle extends Command
         $this->info("Checked {$checked} events.");
         $this->info("Updated {$updated} events.");
         $this->info("Deleted {$deleted} events.");
-        if (! $dryRun) {
+        $this->info("Affected {$deletedAssets} assets.");
+        $this->info("Affected {$deletedFiles} stored files.");
+        $this->info("Reclaimable storage: {$this->humanBytes($reclaimableStorageBytes)}.");
+        if ($dryRun) {
+            $this->info('Dry run complete. No events were deleted.');
+        } else {
             $this->info("Deleted {$deletedAssets} assets from storage.");
         }
 
@@ -101,19 +118,16 @@ class EnforceEventLifecycle extends Command
         return Event::STATUS_GRACE;
     }
 
-    private function purgeEventData(Event $event): int
+    private function humanBytes(int $bytes): string
     {
-        $assets = EventAsset::query()
-            ->where('event_id', $event->id)
-            ->get(['id', 'disk', 'path']);
-
-        foreach ($assets as $asset) {
-            Storage::disk($asset->disk)->delete($asset->path);
+        if ($bytes <= 0) {
+            return '0 B';
         }
 
-        $deletedAssets = $assets->count();
-        $event->forceDelete();
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $power = min((int) floor(log($bytes, 1024)), count($units) - 1);
+        $value = $bytes / (1024 ** $power);
 
-        return $deletedAssets;
+        return sprintf('%s %s', $value >= 10 || $power === 0 ? number_format($value, 0) : number_format($value, 1), $units[$power]);
     }
 }

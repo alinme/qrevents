@@ -45,6 +45,9 @@ return [
         'hour' => (int) env('EVENTS_CLEANUP_DIGEST_HOUR', 8),
         'minute' => (int) env('EVENTS_CLEANUP_DIGEST_MINUTE', 5),
     ],
+    'maintenance' => [
+        'temp_file_prune_after_hours' => (int) env('EVENTS_TEMP_FILE_PRUNE_AFTER_HOURS', 12),
+    ],
     'guest_ledger_export_reminder' => [
         'hour' => (int) env('EVENTS_GUEST_LEDGER_EXPORT_REMINDER_HOUR', 9),
         'minute' => (int) env('EVENTS_GUEST_LEDGER_EXPORT_REMINDER_MINUTE', 15),

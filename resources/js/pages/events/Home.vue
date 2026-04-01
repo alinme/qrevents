@@ -14,6 +14,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import QrPrintPackBuilder from '@/components/events/QrPrintPackBuilder.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -66,6 +67,11 @@ type EventPayload = {
         statusHint: string;
         canManage: boolean;
     };
+    branding: {
+        primaryColor: string | null;
+        accentColor: string | null;
+        logoUrl: string | null;
+    };
 };
 
 type DashboardStats = {
@@ -104,8 +110,10 @@ type EventLinks = {
     albumEntryShortcut: string;
     wall: string;
     wallShortUrl?: string | null;
+    invitation: string;
     albumQrDataUrl: string;
     wallQrDataUrl: string;
+    invitationQrDataUrl: string;
 };
 
 const props = defineProps<{
@@ -339,6 +347,24 @@ const qrPreviewData = computed(() => {
 
     return null;
 });
+
+const printPackTargets = computed(() => [
+    {
+        key: 'album' as const,
+        url: props.eventLinks.album,
+        qrDataUrl: props.eventLinks.albumQrDataUrl,
+    },
+    {
+        key: 'wall' as const,
+        url: props.eventLinks.wall,
+        qrDataUrl: props.eventLinks.wallQrDataUrl,
+    },
+    {
+        key: 'invitation' as const,
+        url: props.eventLinks.invitation,
+        qrDataUrl: props.eventLinks.invitationQrDataUrl,
+    },
+]);
 
 const copyText = async (value: string, successMessage: string): Promise<void> => {
     if (
@@ -791,6 +817,14 @@ onUnmounted(() => {
                         </div>
                     </aside>
                 </div>
+
+                <QrPrintPackBuilder
+                    class="mt-5"
+                    :event-name="currentEvent.name"
+                    :album-access-code="eventLinks.albumAccessCode"
+                    :branding="currentEvent.branding"
+                    :targets="printPackTargets"
+                />
             </div>
         </div>
     </AppLayout>

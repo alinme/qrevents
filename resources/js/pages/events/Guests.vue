@@ -50,10 +50,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
-    composeInvitationPaperPresentation
+    composeInvitationPaperPresentation,
+    resolveInvitationFooterMeta,
 } from '@/lib/invitation-presentation';
-import type { InvitationWeddingDetails } from '@/lib/invitation-presentation';
+import type { InvitationStudioContent, InvitationStudioVisibility, InvitationWeddingDetails } from '@/lib/invitation-presentation';
 import {
+    findInvitationTemplateStudioZone,
     invitationTemplateDefinitions
 } from '@/lib/invitation-templates';
 import type { InvitationTemplateId } from '@/lib/invitation-templates';
@@ -95,6 +97,8 @@ type EventInvitationSettings = {
     closing: string;
     contactPhone: string | null;
     publicRsvpEnabled: boolean;
+    content: InvitationStudioContent;
+    visibility: InvitationStudioVisibility;
 };
 
 type GuestParty = {
@@ -174,6 +178,13 @@ type InvitationTemplatePreviewContent = {
     venueAddress: string | null;
 };
 
+type InvitationOverflowWarning = {
+    key: string;
+    tone: 'warning' | 'danger';
+    label: string;
+    message: string;
+};
+
 type GuestSection = 'invitees' | 'invitation' | 'ledger' | 'guest_list';
 
 const props = defineProps<{
@@ -213,7 +224,6 @@ const guestListInfoDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const guestListInfoParty = ref<GuestParty | null>(null);
 const savingInvitationSettings = ref(false);
-const showInvitationAdvanced = ref(false);
 const showGuestAdvanced = ref(false);
 const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
 const editingTableId = ref<number | null>(null);
@@ -274,6 +284,25 @@ const invitationSettingsForm = useForm({
     closing: props.eventInvitationSettings.closing,
     contact_phone: props.eventInvitationSettings.contactPhone ?? '',
     public_rsvp_enabled: props.eventInvitationSettings.publicRsvpEnabled,
+    content: {
+        partner_one_name: props.eventInvitationSettings.content.partnerOneName,
+        partner_two_name: props.eventInvitationSettings.content.partnerTwoName,
+        family_name: props.eventInvitationSettings.content.familyName,
+        show_family_name: props.eventInvitationSettings.content.showFamilyName,
+        bride_parents: props.eventInvitationSettings.content.brideParents,
+        groom_parents: props.eventInvitationSettings.content.groomParents,
+        godparents: props.eventInvitationSettings.content.godparents,
+        date_text: props.eventInvitationSettings.content.dateText,
+        venue_text: props.eventInvitationSettings.content.venueText,
+    },
+    visibility: {
+        couple: props.eventInvitationSettings.visibility.couple,
+        parents: props.eventInvitationSettings.visibility.parents,
+        godparents: props.eventInvitationSettings.visibility.godparents,
+        date: props.eventInvitationSettings.visibility.date,
+        venue: props.eventInvitationSettings.visibility.venue,
+        contact_phone: props.eventInvitationSettings.visibility.contactPhone,
+    },
 });
 
 const invitationBulkForm = useForm({
@@ -518,6 +547,27 @@ const previewingInvitationTemplateCard = computed(() => {
     return invitationTemplateCards.find((template) => template.id === previewingInvitationTemplateId.value) ?? null;
 });
 
+const invitationStudioContent = computed<InvitationStudioContent>(() => ({
+    partnerOneName: invitationSettingsForm.content.partner_one_name,
+    partnerTwoName: invitationSettingsForm.content.partner_two_name,
+    familyName: invitationSettingsForm.content.family_name,
+    showFamilyName: invitationSettingsForm.content.show_family_name,
+    brideParents: invitationSettingsForm.content.bride_parents,
+    groomParents: invitationSettingsForm.content.groom_parents,
+    godparents: invitationSettingsForm.content.godparents,
+    dateText: invitationSettingsForm.content.date_text,
+    venueText: invitationSettingsForm.content.venue_text,
+}));
+
+const invitationStudioVisibility = computed<InvitationStudioVisibility>(() => ({
+    couple: invitationSettingsForm.visibility.couple,
+    parents: invitationSettingsForm.visibility.parents,
+    godparents: invitationSettingsForm.visibility.godparents,
+    date: invitationSettingsForm.visibility.date,
+    venue: invitationSettingsForm.visibility.venue,
+    contactPhone: invitationSettingsForm.visibility.contact_phone,
+}));
+
 const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): InvitationTemplatePreviewContent => {
     if (templateId === 'canva_cream') {
         const samplePresentation = composeInvitationPaperPresentation({
@@ -607,6 +657,16 @@ const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): Inv
         eventName: currentEvent.name,
         eventType: currentEvent.type,
         headline: invitationSettingsForm.headline || currentEvent.name,
+        content: invitationStudioContent.value,
+        visibility: invitationStudioVisibility.value,
+        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+    });
+    const footerMeta = resolveInvitationFooterMeta({
+        defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
+        defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
+        contactPhone: invitationSettingsForm.contact_phone || null,
+        content: invitationStudioContent.value,
+        visibility: invitationStudioVisibility.value,
         weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
     });
 
@@ -617,8 +677,8 @@ const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): Inv
         message: invitationSettingsForm.message || t('guests.invitation.default_message'),
         closing: invitationSettingsForm.closing || t('guests.invitation.default_closing'),
         detailLines: presentation.detailLines,
-        dateLabel: props.invitationPreview.eventDetails.dateLabel,
-        venueAddress: props.invitationPreview.eventDetails.venueAddress,
+        dateLabel: footerMeta.dateLabel,
+        venueAddress: footerMeta.venueAddress,
     };
 };
 
@@ -627,9 +687,114 @@ const activeInvitationPresentation = computed(() =>
         eventName: currentEvent.name,
         eventType: currentEvent.type,
         headline: invitationSettingsForm.headline || currentEvent.name,
+        content: invitationStudioContent.value,
+        visibility: invitationStudioVisibility.value,
         weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
     }),
 );
+
+const activeInvitationFooterMeta = computed(() =>
+    resolveInvitationFooterMeta({
+        defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
+        defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
+        contactPhone: invitationSettingsForm.contact_phone || null,
+        content: invitationStudioContent.value,
+        visibility: invitationStudioVisibility.value,
+        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+    }),
+);
+
+const invitationOverflowWarnings = computed<InvitationOverflowWarning[]>(() => {
+    const titleZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'couple');
+    const leadInZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'lead_in');
+    const messageZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'message');
+    const rsvpZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'rsvp_note');
+    const parentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'parents');
+    const godparentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'godparents');
+    const venueZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'venue');
+    const dateZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'date');
+    const warnings: InvitationOverflowWarning[] = [];
+
+    const pushZoneWarning = (
+        key: string,
+        label: string,
+        value: string | null,
+        safeLength: number | undefined,
+        maxLength: number | undefined,
+    ): void => {
+        const length = value?.trim().length ?? 0;
+        if (length === 0 || safeLength === undefined || maxLength === undefined) {
+            return;
+        }
+
+        if (length > maxLength) {
+            warnings.push({
+                key,
+                tone: 'danger',
+                label,
+                message: t('guests.invitation.fit_error', { label, max: maxLength }),
+            });
+
+            return;
+        }
+
+        if (length > safeLength) {
+            warnings.push({
+                key,
+                tone: 'warning',
+                label,
+                message: t('guests.invitation.fit_warning', { label, max: maxLength }),
+            });
+        }
+    };
+
+    pushZoneWarning('lead_in', t('guests.invitation.lead_in_label'), invitationSettingsForm.headline, leadInZone?.safeLength, leadInZone?.maxLength);
+    pushZoneWarning('couple', t('guests.invitation.couple_title'), activeInvitationPresentation.value.title, titleZone?.safeLength, titleZone?.maxLength);
+    pushZoneWarning('message', t('guests.invitation.message_label'), invitationSettingsForm.message, messageZone?.safeLength, messageZone?.maxLength);
+    pushZoneWarning('rsvp_note', t('guests.invitation.rsvp_note_label'), invitationSettingsForm.closing, rsvpZone?.safeLength, rsvpZone?.maxLength);
+
+    if (invitationSettingsForm.visibility.parents) {
+        pushZoneWarning(
+            'parents',
+            t('guests.invitation.parents_title'),
+            [invitationSettingsForm.content.bride_parents, invitationSettingsForm.content.groom_parents].filter(Boolean).join(' '),
+            parentsZone?.safeLength,
+            parentsZone?.maxLength,
+        );
+    }
+
+    if (invitationSettingsForm.visibility.godparents) {
+        pushZoneWarning(
+            'godparents',
+            t('guests.invitation.godparents_label'),
+            invitationSettingsForm.content.godparents,
+            godparentsZone?.safeLength,
+            godparentsZone?.maxLength,
+        );
+    }
+
+    if (invitationSettingsForm.visibility.date) {
+        pushZoneWarning(
+            'date',
+            t('guests.invitation.date_text_label'),
+            activeInvitationFooterMeta.value.dateLabel,
+            dateZone?.safeLength,
+            dateZone?.maxLength,
+        );
+    }
+
+    if (invitationSettingsForm.visibility.venue) {
+        pushZoneWarning(
+            'venue',
+            t('guests.invitation.venue_text_label'),
+            activeInvitationFooterMeta.value.venueAddress,
+            venueZone?.safeLength,
+            venueZone?.maxLength,
+        );
+    }
+
+    return warnings;
+});
 
 const invitationSummaryCards = computed(() => [
     {
@@ -963,12 +1128,12 @@ const toggleGuestDetails = (guestPartyId: number): void => {
 
 const invitationMessageForParty = (party: GuestParty): string => {
     return [
-        props.eventInvitationSettings.headline,
+        invitationSettingsForm.headline,
         `${party.name},`,
-        props.eventInvitationSettings.message,
-        props.eventInvitationSettings.closing,
-        props.eventInvitationSettings.contactPhone
-            ? t('guests.messages.contact_line', { phone: props.eventInvitationSettings.contactPhone })
+        invitationSettingsForm.message,
+        invitationSettingsForm.closing,
+        invitationSettingsForm.visibility.contact_phone && invitationSettingsForm.contact_phone
+            ? t('guests.messages.contact_line', { phone: invitationSettingsForm.contact_phone })
             : null,
         t('guests.messages.rsvp_line', { url: party.inviteUrl }),
     ]
@@ -986,10 +1151,10 @@ const reminderMessageForParty = (party: GuestParty): string => {
     return [
         `${party.name},`,
         t('guests.messages.reminder_intro'),
-        props.eventInvitationSettings.headline,
-        props.eventInvitationSettings.message,
-        props.eventInvitationSettings.contactPhone
-            ? t('guests.messages.contact_line', { phone: props.eventInvitationSettings.contactPhone })
+        invitationSettingsForm.headline,
+        invitationSettingsForm.message,
+        invitationSettingsForm.visibility.contact_phone && invitationSettingsForm.contact_phone
+            ? t('guests.messages.contact_line', { phone: invitationSettingsForm.contact_phone })
             : null,
         t('guests.messages.rsvp_line', { url: party.inviteUrl }),
     ]
@@ -1522,12 +1687,13 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 :closing="invitationSettingsForm.closing"
                 :public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled"
                 :contact-phone="invitationSettingsForm.contact_phone"
-                :show-advanced="showInvitationAdvanced"
+                :invitation-content="invitationStudioContent"
+                :invitation-visibility="invitationStudioVisibility"
+                :invitation-overflow-warnings="invitationOverflowWarnings"
                 :public-invitation-url="publicInvitationUrl"
                 :logo-url="props.invitationPreview.branding.logoUrl"
-                :event-date-label="props.invitationPreview.eventDetails.dateLabel"
-                :event-venue-address="props.invitationPreview.eventDetails.venueAddress"
                 :active-invitation-presentation="activeInvitationPresentation"
+                :active-invitation-footer-meta="activeInvitationFooterMeta"
                 :invitation-summary-cards="invitationSummaryCards"
                 :invitation-recent-activity="invitationRecentActivity"
                 :saving-invitation-settings="savingInvitationSettings"
@@ -1540,8 +1706,26 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 @update:message="invitationSettingsForm.message = $event"
                 @update:closing="invitationSettingsForm.closing = $event"
                 @update:public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled = $event"
-                @update:show-advanced="showInvitationAdvanced = $event"
                 @update:contact-phone="invitationSettingsForm.contact_phone = $event"
+                @update:content="invitationSettingsForm.content = {
+                    partner_one_name: $event.partnerOneName,
+                    partner_two_name: $event.partnerTwoName,
+                    family_name: $event.familyName,
+                    show_family_name: $event.showFamilyName,
+                    bride_parents: $event.brideParents,
+                    groom_parents: $event.groomParents,
+                    godparents: $event.godparents,
+                    date_text: $event.dateText,
+                    venue_text: $event.venueText,
+                }"
+                @update:visibility="invitationSettingsForm.visibility = {
+                    couple: $event.couple,
+                    parents: $event.parents,
+                    godparents: $event.godparents,
+                    date: $event.date,
+                    venue: $event.venue,
+                    contact_phone: $event.contactPhone,
+                }"
                 @preview-template="previewingInvitationTemplateId = $event"
                 @open-invite="openInvite"
                 @save-preview="saveInvitationPreview"

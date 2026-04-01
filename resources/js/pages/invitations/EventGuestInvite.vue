@@ -21,10 +21,10 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import {
-    composeInvitationPaperPresentation
-    
+    composeInvitationPaperPresentation,
+    resolveInvitationFooterMeta,
 } from '@/lib/invitation-presentation';
-import type {InvitationWeddingDetails} from '@/lib/invitation-presentation';
+import type {InvitationStudioContent, InvitationStudioVisibility, InvitationWeddingDetails} from '@/lib/invitation-presentation';
 import type {InvitationTemplateId} from '@/lib/invitation-templates';
 
 type GuestParty = {
@@ -44,6 +44,8 @@ type InvitationCopy = {
     message: string;
     closing: string;
     contactPhone: string | null;
+    content: InvitationStudioContent;
+    visibility: InvitationStudioVisibility;
 };
 
 type EventDetails = {
@@ -150,6 +152,19 @@ const invitationPresentation = computed(() =>
         eventName: props.eventName,
         eventType: props.eventType,
         headline: props.invitation.headline,
+        content: props.invitation.content,
+        visibility: props.invitation.visibility,
+        weddingDetails: props.eventDetails.weddingDetails,
+    }),
+);
+
+const invitationFooterMeta = computed(() =>
+    resolveInvitationFooterMeta({
+        defaultDateLabel: props.eventDetails.dateLabel,
+        defaultVenueAddress: props.eventDetails.venueAddress,
+        contactPhone: props.invitation.contactPhone,
+        content: props.invitation.content,
+        visibility: props.invitation.visibility,
         weddingDetails: props.eventDetails.weddingDetails,
     }),
 );
@@ -241,9 +256,9 @@ onMounted(() => {
                     :message="invitation.message"
                     :closing="invitation.closing"
                     :detail-lines="invitationPresentation.detailLines"
-                    :contact-phone="invitation.contactPhone"
-                    :date-label="eventDetails.dateLabel"
-                    :venue-address="eventDetails.venueAddress || t('invitations.venue_pending')"
+                    :contact-phone="invitationFooterMeta.contactPhone"
+                    :date-label="invitationFooterMeta.dateLabel"
+                    :venue-address="invitationFooterMeta.venueAddress || t('invitations.venue_pending')"
                     mode="live"
                 />
 
