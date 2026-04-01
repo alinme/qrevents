@@ -1182,6 +1182,7 @@
     "event_home.print_pack.page_kicker": "Papetarie QR",
     "event_home.print_pack.page_description": "Construieste afise de bun venit, carduri de masa, inserturi pentru invitatie si semnalistica pentru wall pe o pagina dedicata, cu preview real de poster.",
     "event_home.print_pack.workspace_description": "Deschide Studio QR pentru preview-uri reale, stiluri de fundal si exporturi pe intreaga pagina.",
+    "event_home.print_pack.back_to_workspace": "Inapoi la workspace",
     "event_home.print_pack.open_studio": "Deschide Studio QR",
     "event_home.print_pack.open_preview": "Deschide pagina dedicata",
     "event_home.print_pack.presets_title": "Alege un preset",

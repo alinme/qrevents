@@ -1182,6 +1182,7 @@
     "event_home.print_pack.page_kicker": "QR stationery",
     "event_home.print_pack.page_description": "Build welcome signs, table cards, invitation inserts, and wall signage on a dedicated page with a real poster preview.",
     "event_home.print_pack.workspace_description": "Open the dedicated QR Studio for real poster previews, background styles, and full-page exports.",
+    "event_home.print_pack.back_to_workspace": "Back to workspace",
     "event_home.print_pack.open_studio": "Open QR Studio",
     "event_home.print_pack.open_preview": "Open dedicated page",
     "event_home.print_pack.presets_title": "Choose a preset",

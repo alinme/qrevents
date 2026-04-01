@@ -10,11 +10,6 @@ import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {
     name: string;
-    branding: {
-        primaryColor: string | null;
-        accentColor: string | null;
-        logoUrl: string | null;
-    };
 };
 
 type EventLinks = {
@@ -72,42 +67,41 @@ const printPackTargets = computed(() => [
 
         <div class="min-h-screen bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
             <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-                <section class="overflow-hidden rounded-[2rem] border border-black/5 bg-white/70 shadow-[0_20px_60px_rgba(23,20,17,0.08)] backdrop-blur">
-                    <div class="flex flex-col gap-5 border-b border-black/5 px-5 py-6 md:px-7 lg:flex-row lg:items-end lg:justify-between">
-                        <div class="max-w-3xl">
-                            <p class="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-zinc-500">
-                                {{ t('event_home.print_pack.page_kicker') }}
-                            </p>
-                            <div class="mt-3 flex items-start gap-3">
-                                <div class="rounded-[1rem] bg-[#171411] p-3 text-white">
-                                    <QrCode class="size-5" />
-                                </div>
-                                <div>
-                                    <h1 class="text-3xl font-semibold tracking-tight text-[#171411]">
-                                        {{ t('event_home.print_pack.title') }}
-                                    </h1>
-                                    <p class="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
-                                        {{ t('event_home.print_pack.page_description') }}
-                                    </p>
-                                </div>
+                <div class="flex flex-col gap-5 py-2 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="max-w-3xl">
+                        <p class="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-zinc-500">
+                            {{ t('event_home.print_pack.page_kicker') }}
+                        </p>
+                        <div class="mt-3 flex items-start gap-3">
+                            <div class="rounded-[1rem] bg-[#171411] p-3 text-white">
+                                <QrCode class="size-5" />
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-semibold tracking-tight text-[#171411]">
+                                    {{ t('event_home.print_pack.title') }}
+                                </h1>
+                                <p class="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
+                                    {{ t('event_home.print_pack.page_description') }}
+                                </p>
                             </div>
                         </div>
-
-                        <Button as-child variant="outline" class="rounded-full px-5">
-                            <Link :href="eventLinks.dashboard">
-                                <ArrowLeft class="mr-2 size-4" />
-                                {{ t('event_home.print_pack.back_to_workspace') }}
-                            </Link>
-                        </Button>
                     </div>
 
+                    <Button as-child variant="outline" class="rounded-full bg-white/80 px-5">
+                        <Link :href="eventLinks.dashboard">
+                            <ArrowLeft class="mr-2 size-4" />
+                            {{ t('event_home.print_pack.back_to_workspace') }}
+                        </Link>
+                    </Button>
+                </div>
+
+                <div class="mt-6">
                     <QrPrintPackBuilder
                         :event-name="currentEvent.name"
                         :album-access-code="eventLinks.albumAccessCode"
-                        :branding="currentEvent.branding"
                         :targets="printPackTargets"
                     />
-                </section>
+                </div>
             </div>
         </div>
     </AppLayout>
