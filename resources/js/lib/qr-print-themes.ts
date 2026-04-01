@@ -8,7 +8,8 @@ export type QrPrintThemeId =
 
 export type QrPrintOrientation = 'portrait' | 'landscape';
 
-type QrPrintTextBlockConfig = {
+export type QrPrintTextBlockConfig = {
+    centerX?: number;
     y: number;
     width: number;
     fontSize: number;
@@ -19,8 +20,9 @@ type QrPrintTextBlockConfig = {
     minScale: number;
 };
 
-type QrPrintLayoutConfig = {
+export type QrPrintLayoutConfig = {
     paddingX: number;
+    qrCenterX?: number;
     qrSize: number;
     qrY: number;
     qrFramePadding: number;

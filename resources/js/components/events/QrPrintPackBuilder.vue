@@ -14,11 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
+import { analyzeQrPrintThemeSvg } from '@/lib/qr-print-svg-layout';
 import {
     qrPrintThemeMap,
     qrPrintThemes,
 } from '@/lib/qr-print-themes';
-import type { QrPrintOrientation, QrPrintThemeConfig, QrPrintThemeId } from '@/lib/qr-print-themes';
+import type { QrPrintLayoutConfig, QrPrintOrientation, QrPrintThemeConfig, QrPrintThemeId } from '@/lib/qr-print-themes';
 
 const props = defineProps<{
     eventName: string;
@@ -35,6 +36,10 @@ const previewDataUrl = ref<string | null>(null);
 const previewViewportWidth = ref(0);
 const isRenderingPreview = ref(false);
 const previewRenderFailed = ref(false);
+const derivedSvgLayout = ref<Record<QrPrintOrientation, Partial<QrPrintLayoutConfig>>>({
+    portrait: {},
+    landscape: {},
+});
 
 const selectedTheme = ref<QrPrintThemeId>('beige_simple');
 const selectedOrientation = ref<QrPrintOrientation>('portrait');
@@ -52,7 +57,34 @@ let previewResizeObserver: ResizeObserver | null = null;
 let previewRenderToken = 0;
 
 const activeTheme = computed(() => qrPrintThemeMap[selectedTheme.value]);
-const activeLayout = computed(() => activeTheme.value.layout[selectedOrientation.value]);
+const mergeTextBlock = (
+    base: QrPrintLayoutConfig['title'],
+    derived?: Partial<QrPrintLayoutConfig['title']>,
+): QrPrintLayoutConfig['title'] => {
+    if (!derived) {
+        return base;
+    }
+
+    return {
+        ...base,
+        ...derived,
+    };
+};
+const activeLayout = computed<QrPrintLayoutConfig>(() => {
+    const base = activeTheme.value.layout[selectedOrientation.value];
+    const derived = derivedSvgLayout.value[selectedOrientation.value] ?? {};
+
+    return {
+        ...base,
+        ...derived,
+        eyebrow: mergeTextBlock(base.eyebrow, derived.eyebrow),
+        title: mergeTextBlock(base.title, derived.title),
+        body: mergeTextBlock(base.body, derived.body),
+        scanHint: mergeTextBlock(base.scanHint, derived.scanHint),
+        footer: mergeTextBlock(base.footer, derived.footer),
+        url: mergeTextBlock(base.url, derived.url),
+    };
+});
 const orientations: QrPrintOrientation[] = ['portrait', 'landscape'];
 const controlsExpanded = computed(() => layoutMode.value === 'controls');
 const layoutClass = computed(() =>
@@ -212,7 +244,7 @@ const drawTextBlock = (
     context.font = `${themeBlock.fontWeight ?? '400'} ${fitted.fontSize}px ${themeBlock.fontFamily}`;
 
     fitted.lines.forEach((line, index) => {
-        context.fillText(line, width / 2, startY + index * lineGap);
+        context.fillText(line, width * (themeBlock.centerX ?? 0.5), startY + index * lineGap);
     });
 };
 
@@ -245,7 +277,7 @@ const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
     drawTextBlock(context, bodyText.value, layout.body, canvas.width, canvas.height, theme.mutedColor);
 
     const qrSize = Math.min(canvas.width, canvas.height) * layout.qrSize;
-    const qrX = (canvas.width - qrSize) / 2;
+    const qrX = canvas.width * (layout.qrCenterX ?? 0.5) - qrSize / 2;
     const qrY = canvas.height * layout.qrY;
     const framePadding = Math.min(canvas.width, canvas.height) * layout.qrFramePadding;
 
@@ -396,10 +428,19 @@ const openAlbum = (): void => {
 };
 
 watch(
+    activeTheme,
+    async (theme) => {
+        derivedSvgLayout.value = await analyzeQrPrintThemeSvg(theme.artworkUrl, theme.layout);
+    },
+    { immediate: true },
+);
+
+watch(
     [
         selectedTheme,
         selectedOrientation,
         layoutMode,
+        derivedSvgLayout,
         eyebrowText,
         titleText,
         bodyText,
