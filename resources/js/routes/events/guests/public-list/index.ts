@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 export const show = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 show.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -43,7 +43,7 @@ show.url = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 show.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ show.get = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 show.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ show.head = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 const showForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ const showForm = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 showForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -83,7 +83,7 @@ showForm.get = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:243
+* @see app/Http/Controllers/EventController.php:252
 * @route '/guest-list/{shareToken}'
 */
 showForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -100,7 +100,7 @@ show.form = showForm
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:257
+* @see app/Http/Controllers/EventController.php:266
 * @route '/guest-list/{shareToken}/{guestParty}'
 */
 export const update = (args: { shareToken: string | number, guestParty: string | number | { id: string | number } } | [shareToken: string | number, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -115,7 +115,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:257
+* @see app/Http/Controllers/EventController.php:266
 * @route '/guest-list/{shareToken}/{guestParty}'
 */
 update.url = (args: { shareToken: string | number, guestParty: string | number | { id: string | number } } | [shareToken: string | number, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
@@ -143,7 +143,7 @@ update.url = (args: { shareToken: string | number, guestParty: string | number |
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:257
+* @see app/Http/Controllers/EventController.php:266
 * @route '/guest-list/{shareToken}/{guestParty}'
 */
 update.patch = (args: { shareToken: string | number, guestParty: string | number | { id: string | number } } | [shareToken: string | number, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -153,7 +153,7 @@ update.patch = (args: { shareToken: string | number, guestParty: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:257
+* @see app/Http/Controllers/EventController.php:266
 * @route '/guest-list/{shareToken}/{guestParty}'
 */
 const updateForm = (args: { shareToken: string | number, guestParty: string | number | { id: string | number } } | [shareToken: string | number, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -168,7 +168,7 @@ const updateForm = (args: { shareToken: string | number, guestParty: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:257
+* @see app/Http/Controllers/EventController.php:266
 * @route '/guest-list/{shareToken}/{guestParty}'
 */
 updateForm.patch = (args: { shareToken: string | number, guestParty: string | number | { id: string | number } } | [shareToken: string | number, guestParty: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

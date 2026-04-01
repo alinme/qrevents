@@ -173,6 +173,7 @@ test('event workspace exposes guest upload settings summary for owners', functio
         ->assertInertia(fn (Assert $page) => $page
             ->component('events/Home')
             ->where('currentEvent.allowedMediaTypes', ['photo', 'text'])
+            ->where('eventLinks.printPack', route('events.print-pack', $event))
         );
 });
 
@@ -206,7 +207,9 @@ test('authenticated dashboard pages share localized host workspace strings', fun
             ->where('translations.event_home.section.share_title', 'Linkuri de distribuit')
             ->where('translations.event_home.media_types.text', 'Mesaje text')
             ->where('translations.event_home.print_pack.title', 'Pachet QR pentru print')
+            ->where('translations.event_home.print_pack.open_studio', 'Deschide Studio QR')
             ->where('eventLinks.invitation', route('events.guests.public-invitation.show', $event->public_invitation_token))
+            ->where('eventLinks.printPack', route('events.print-pack', $event))
             ->where('eventLinks.invitationQrDataUrl', fn ($value) => is_string($value) && str_starts_with($value, 'data:image/svg+xml'))
         );
 });

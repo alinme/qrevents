@@ -14,7 +14,6 @@ import {
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import QrPrintPackBuilder from '@/components/events/QrPrintPackBuilder.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -99,6 +98,7 @@ type RecentUpload = {
 type EventLinks = {
     accountDashboard: string | null;
     dashboard: string;
+    printPack: string;
     media: string;
     mediaExportStart: string;
     mediaExportDownload: string;
@@ -347,24 +347,6 @@ const qrPreviewData = computed(() => {
 
     return null;
 });
-
-const printPackTargets = computed(() => [
-    {
-        key: 'album' as const,
-        url: props.eventLinks.album,
-        qrDataUrl: props.eventLinks.albumQrDataUrl,
-    },
-    {
-        key: 'wall' as const,
-        url: props.eventLinks.wall,
-        qrDataUrl: props.eventLinks.wallQrDataUrl,
-    },
-    {
-        key: 'invitation' as const,
-        url: props.eventLinks.invitation,
-        qrDataUrl: props.eventLinks.invitationQrDataUrl,
-    },
-]);
 
 const copyText = async (value: string, successMessage: string): Promise<void> => {
     if (
@@ -818,13 +800,29 @@ onUnmounted(() => {
                     </aside>
                 </div>
 
-                <QrPrintPackBuilder
-                    class="mt-5"
-                    :event-name="currentEvent.name"
-                    :album-access-code="eventLinks.albumAccessCode"
-                    :branding="currentEvent.branding"
-                    :targets="printPackTargets"
-                />
+                <section class="mt-5 overflow-hidden rounded-[1.75rem] border border-black/5 bg-[linear-gradient(135deg,#171411_0%,#2b211d_42%,#6a4c3a_100%)] text-white shadow-[0_18px_44px_rgba(23,20,17,0.14)]">
+                    <div class="flex flex-col gap-5 px-5 py-6 md:px-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="max-w-3xl">
+                            <p class="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/60">
+                                {{ t('event_home.print_pack.page_kicker') }}
+                            </p>
+                            <h2 class="mt-3 text-2xl font-semibold tracking-tight">
+                                {{ t('event_home.print_pack.title') }}
+                            </h2>
+                            <p class="mt-3 text-sm leading-6 text-white/75 sm:text-base">
+                                {{ t('event_home.print_pack.workspace_description') }}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <Button as-child class="rounded-full border-0 bg-white text-[#171411] hover:bg-white/90">
+                                <Link :href="eventLinks.printPack">
+                                    {{ t('event_home.print_pack.open_studio') }}
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </AppLayout>

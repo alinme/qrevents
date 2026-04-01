@@ -9,6 +9,7 @@ import {
     FolderKanban,
     LayoutGrid,
     Package,
+    QrCode,
     Settings,
     Shield,
     Users,
@@ -57,11 +58,16 @@ const eventNavigation = computed(() => page.props.eventNavigation ?? []);
 const adminNavigation = computed(() => page.props.adminNavigation ?? []);
 const businessNavigation = computed(() => page.props.businessNavigation ?? []);
 
+const matchesTranslatedTitle = (title: string, english: string, translated: string): boolean => {
+    return title === english || title === translated;
+};
+
 const translatedNavTitle = (title: string): string => {
     const knownLabels: Record<string, string> = {
         Dashboard: t('app.nav.dashboard'),
         Events: t('app.nav.events'),
         Workspace: t('app.nav.workspace'),
+        'QR Studio': t('app.nav.print_pack'),
         Media: t('app.nav.media'),
         Guests: t('app.nav.guests'),
         Settings: t('app.nav.settings'),
@@ -83,7 +89,9 @@ const translatedNavTitle = (title: string): string => {
 
 const footerBackItem = computed<NavItem | null>(() => {
     const eventBackItem = eventNavigation.value.find(
-        (item) => item.title === 'Dashboard' || item.title === 'Events',
+        (item) =>
+            matchesTranslatedTitle(item.title, 'Dashboard', t('app.nav.dashboard'))
+            || matchesTranslatedTitle(item.title, 'Events', t('app.nav.events')),
     );
 
     if (eventBackItem) {
@@ -108,19 +116,21 @@ const footerBackItem = computed<NavItem | null>(() => {
 const mainNavItems = computed<NavItem[]>(() => {
     if (eventNavigation.value.length > 0) {
         return eventNavigation.value
-            .filter((item) => item.title !== 'Dashboard')
+            .filter((item) => !matchesTranslatedTitle(item.title, 'Dashboard', t('app.nav.dashboard')))
             .map((item) => ({
                 title: translatedNavTitle(item.title),
                 href: item.href,
                 icon:
-                    item.title === 'Workspace'
+                    matchesTranslatedTitle(item.title, 'Workspace', t('app.nav.workspace'))
                         ? LayoutGrid
-                        : item.title === 'Guests'
+                        : matchesTranslatedTitle(item.title, 'Guests', t('app.nav.guests'))
                           ? Users
-                        : item.title === 'Media'
+                        : matchesTranslatedTitle(item.title, 'Media', t('app.nav.media'))
                           ? Camera
-                          : item.title === 'Settings'
+                          : matchesTranslatedTitle(item.title, 'Settings', t('app.nav.settings'))
                             ? Settings
+                            : matchesTranslatedTitle(item.title, 'QR Studio', t('app.nav.print_pack'))
+                              ? QrCode
                             : LayoutGrid,
             }));
     }

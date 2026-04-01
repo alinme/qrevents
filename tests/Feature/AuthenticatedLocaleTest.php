@@ -17,7 +17,7 @@ it('shares localized strings on the login page', function () {
         );
 });
 
-it('shares localized strings on event media and settings pages', function () {
+it('shares localized strings on event media, settings, and print pages', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create();
 
@@ -45,6 +45,18 @@ it('shares localized strings on event media and settings pages', function () {
             ->where('translations.event_settings.general.name_title', 'Numele evenimentului')
             ->where('translations.event_settings.billing.owner_upgrade_title', 'Upgradeaza acest eveniment')
             ->where('eventNavigation.3.title', 'Setari')
+        );
+
+    $this->actingAs($owner)
+        ->withUnencryptedCookies(['site_locale' => 'ro'])
+        ->get(route('events.print-pack', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/PrintPack')
+            ->where('locale.current', 'ro')
+            ->where('translations.event_home.print_pack.open_studio', 'Deschide Studio QR')
+            ->where('translations.event_home.print_pack.background_title', 'Stil fundal')
+            ->where('eventNavigation.4.title', 'Studio QR')
         );
 });
 

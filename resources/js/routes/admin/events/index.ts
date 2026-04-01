@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\AdminController::cleanupReview
-* @see app/Http/Controllers/AdminController.php:120
+* @see app/Http/Controllers/AdminController.php:122
 * @route '/admin/events/{event}/cleanup-review'
 */
 export const cleanupReview = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ cleanupReview.definition = {
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanupReview
-* @see app/Http/Controllers/AdminController.php:120
+* @see app/Http/Controllers/AdminController.php:122
 * @route '/admin/events/{event}/cleanup-review'
 */
 cleanupReview.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ cleanupReview.url = (args: { event: number | { id: number } } | [event: number |
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanupReview
-* @see app/Http/Controllers/AdminController.php:120
+* @see app/Http/Controllers/AdminController.php:122
 * @route '/admin/events/{event}/cleanup-review'
 */
 cleanupReview.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ cleanupReview.post = (args: { event: number | { id: number } } | [event: number 
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanupReview
-* @see app/Http/Controllers/AdminController.php:120
+* @see app/Http/Controllers/AdminController.php:122
 * @route '/admin/events/{event}/cleanup-review'
 */
 const cleanupReviewForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -69,7 +69,7 @@ const cleanupReviewForm = (args: { event: number | { id: number } } | [event: nu
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanupReview
-* @see app/Http/Controllers/AdminController.php:120
+* @see app/Http/Controllers/AdminController.php:122
 * @route '/admin/events/{event}/cleanup-review'
 */
 cleanupReviewForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -81,7 +81,7 @@ cleanupReview.form = cleanupReviewForm
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanup
-* @see app/Http/Controllers/AdminController.php:109
+* @see app/Http/Controllers/AdminController.php:111
 * @route '/admin/events/{event}/cleanup'
 */
 export const cleanup = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -96,7 +96,7 @@ cleanup.definition = {
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanup
-* @see app/Http/Controllers/AdminController.php:109
+* @see app/Http/Controllers/AdminController.php:111
 * @route '/admin/events/{event}/cleanup'
 */
 cleanup.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -129,7 +129,7 @@ cleanup.url = (args: { event: number | { id: number } } | [event: number | { id:
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanup
-* @see app/Http/Controllers/AdminController.php:109
+* @see app/Http/Controllers/AdminController.php:111
 * @route '/admin/events/{event}/cleanup'
 */
 cleanup.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -139,7 +139,7 @@ cleanup.post = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanup
-* @see app/Http/Controllers/AdminController.php:109
+* @see app/Http/Controllers/AdminController.php:111
 * @route '/admin/events/{event}/cleanup'
 */
 const cleanupForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -149,7 +149,7 @@ const cleanupForm = (args: { event: number | { id: number } } | [event: number |
 
 /**
 * @see \App\Http\Controllers\AdminController::cleanup
-* @see app/Http/Controllers/AdminController.php:109
+* @see app/Http/Controllers/AdminController.php:111
 * @route '/admin/events/{event}/cleanup'
 */
 cleanupForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

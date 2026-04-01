@@ -130,6 +130,15 @@ class EventController extends Controller
         ]);
     }
 
+    public function printPack(Request $request, Event $event): Response
+    {
+        $this->assertCanViewEvent($request, $event);
+
+        return Inertia::render('events/PrintPack', [
+            ...$this->eventProps($request, $event),
+        ]);
+    }
+
     public function guests(Request $request, Event $event): Response
     {
         $this->assertCanManageEvent($request, $event);
@@ -2572,6 +2581,7 @@ class EventController extends Controller
             'eventLinks' => [
                 'accountDashboard' => $eventOverviewUrl,
                 'dashboard' => route('events.show', $event),
+                'printPack' => route('events.print-pack', $event),
                 'guests' => route('events.guests', $event),
                 'guestReport' => route('events.guests.report', $event),
                 'media' => route('events.media', $event),
@@ -2607,6 +2617,7 @@ class EventController extends Controller
                 ['title' => __('app.nav.media'), 'href' => route('events.media', $event)],
                 ['title' => __('app.nav.guests'), 'href' => route('events.guests', $event)],
                 ['title' => __('app.nav.settings'), 'href' => route('events.settings', $event)],
+                ['title' => __('app.nav.print_pack'), 'href' => route('events.print-pack', $event)],
             ])),
             'backNavigation' => $eventOverviewUrl !== null
                 ? ['title' => __('app.nav.events'), 'href' => $eventOverviewUrl]
