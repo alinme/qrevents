@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateEventCheckoutSessionRequest extends FormRequest
 {
@@ -21,6 +22,14 @@ class CreateEventCheckoutSessionRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'plan_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('plans', 'id')->where(
+                    fn ($query) => $query->where('is_active', true),
+                ),
+            ],
+        ];
     }
 }

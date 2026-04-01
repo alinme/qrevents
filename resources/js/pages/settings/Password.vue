@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
-import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/user-password';
+import { edit, update as updatePassword } from '@/routes/user-password';
 import type { BreadcrumbItem } from '@/types';
+
+const { t } = useTranslations();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: t('account_settings.password.page_title'),
         href: edit(),
     },
 ];
@@ -21,20 +23,20 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Password settings" />
+        <Head :title="t('account_settings.password.page_title')" />
 
-        <h1 class="sr-only">Password settings</h1>
+        <h1 class="sr-only">{{ t('account_settings.password.page_title') }}</h1>
 
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    :title="t('account_settings.password.title')"
+                    :description="t('account_settings.password.description')"
                 />
 
                 <Form
-                    v-bind="PasswordController.update.form()"
+                    v-bind="updatePassword.form()"
                     :options="{
                         preserveScroll: true,
                     }"
@@ -48,39 +50,39 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
+                        <Label for="current_password">{{ t('account_settings.password.current_password') }}</Label>
                         <PasswordInput
                             id="current_password"
                             name="current_password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            placeholder="Current password"
+                            :placeholder="t('account_settings.password.current_password')"
                         />
                         <InputError :message="errors.current_password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">New password</Label>
+                        <Label for="password">{{ t('account_settings.password.new_password') }}</Label>
                         <PasswordInput
                             id="password"
                             name="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="New password"
+                            :placeholder="t('account_settings.password.new_password')"
                         />
                         <InputError :message="errors.password" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="password_confirmation"
-                            >Confirm password</Label
+                            >{{ t('auth.shared.confirm_password') }}</Label
                         >
                         <PasswordInput
                             id="password_confirmation"
                             name="password_confirmation"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="Confirm password"
+                            :placeholder="t('auth.shared.confirm_password')"
                         />
                         <InputError :message="errors.password_confirmation" />
                     </div>
@@ -89,7 +91,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"
-                            >Save password</Button
+                            >{{ t('account_settings.password.save') }}</Button
                         >
 
                         <Transition
@@ -102,7 +104,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                {{ t('auth.shared.saved') }}
                             </p>
                         </Transition>
                     </div>

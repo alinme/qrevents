@@ -5,16 +5,19 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { store } from '@/routes/password/confirm';
+
+const { t } = useTranslations();
 </script>
 
 <template>
     <AuthLayout
-        title="Confirm your password"
-        description="This is a secure area of the application. Please confirm your password before continuing."
+        :title="t('auth.confirm_password.title')"
+        :description="t('auth.confirm_password.description')"
     >
-        <Head title="Confirm password" />
+        <Head :title="t('auth.confirm_password.head_title')" />
 
         <Form
             v-bind="store.form()"
@@ -24,7 +27,7 @@ import { store } from '@/routes/password/confirm';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label for="password" class="text-promo-ink">Password</Label>
+                    <Label for="password" class="text-promo-ink">{{ t('auth.shared.password') }}</Label>
                     <PasswordInput
                         id="password"
                         name="password"
@@ -44,7 +47,7 @@ import { store } from '@/routes/password/confirm';
                         data-test="confirm-password-button"
                     >
                         <Spinner v-if="processing" />
-                        Confirm password
+                        {{ t('auth.confirm_password.submit') }}
                     </Button>
                 </div>
             </div>

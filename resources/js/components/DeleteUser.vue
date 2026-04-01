@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import { useTemplateRef } from 'vue';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -17,30 +16,33 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
+import { destroy } from '@/routes/profile';
 
 const passwordInput = useTemplateRef('passwordInput');
+const { t } = useTranslations();
 </script>
 
 <template>
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Delete account"
-            description="Delete your account and all of its resources"
+            :title="t('account_settings.delete_account.title')"
+            :description="t('account_settings.delete_account.description')"
         />
         <div class="space-y-4 border-t border-brand-border/70 pt-6">
             <p class="text-sm leading-6 text-brand-muted">
-                Deleting your account permanently removes your events, uploads, billing history, and collaborators. This cannot be undone.
+                {{ t('account_settings.delete_account.warning') }}
             </p>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="destructive" data-test="delete-user-button"
-                        >Delete account</Button
+                        >{{ t('account_settings.delete_account.trigger') }}</Button
                     >
                 </DialogTrigger>
                 <DialogContent class="sm:max-w-md">
                     <Form
-                        v-bind="ProfileController.destroy.form()"
+                        v-bind="destroy.form()"
                         reset-on-success
                         @error="() => passwordInput?.focus()"
                         :options="{
@@ -51,23 +53,22 @@ const passwordInput = useTemplateRef('passwordInput');
                     >
                         <DialogHeader class="space-y-2 text-left">
                             <DialogTitle>
-                                Are you sure you want to delete your account?
+                                {{ t('account_settings.delete_account.confirm_title') }}
                             </DialogTitle>
                             <DialogDescription>
-                                Enter your password to permanently delete this
-                                account and all of its data.
+                                {{ t('account_settings.delete_account.confirm_description') }}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div class="grid gap-2">
                             <Label for="password" class="sr-only"
-                                >Password</Label
+                                >{{ t('auth.shared.password') }}</Label
                             >
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 ref="passwordInput"
-                                placeholder="Password"
+                                :placeholder="t('auth.shared.password')"
                             />
                             <InputError :message="errors.password" />
                         </div>
@@ -83,7 +84,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                         }
                                     "
                                 >
-                                    Cancel
+                                    {{ t('auth.shared.cancel') }}
                                 </Button>
                             </DialogClose>
 
@@ -93,7 +94,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                 :disabled="processing"
                                 data-test="confirm-delete-user-button"
                             >
-                                Delete account
+                                {{ t('account_settings.delete_account.trigger') }}
                             </Button>
                         </DialogFooter>
                     </Form>

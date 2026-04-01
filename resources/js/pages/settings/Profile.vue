@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/profile';
+import { edit, update as updateProfile } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { BreadcrumbItem } from '@/types';
 
@@ -21,9 +21,11 @@ type Props = {
 
 defineProps<Props>();
 
+const { t } = useTranslations();
+
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: t('account_settings.profile.page_title'),
         href: edit(),
     },
 ];
@@ -34,25 +36,25 @@ const user = computed(() => page.props.auth.user);
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Profile settings" />
+        <Head :title="t('account_settings.profile.page_title')" />
 
-        <h1 class="sr-only">Profile settings</h1>
+        <h1 class="sr-only">{{ t('account_settings.profile.page_title') }}</h1>
 
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Profile information"
-                    description="Update your name and email address"
+                    :title="t('account_settings.profile.title')"
+                    :description="t('account_settings.profile.description')"
                 />
 
                 <Form
-                    v-bind="ProfileController.update.form()"
+                    v-bind="updateProfile.form()"
                     class="space-y-6"
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="name">Name</Label>
+                        <Label for="name">{{ t('auth.shared.name') }}</Label>
                         <Input
                             id="name"
                             class="mt-1 block w-full"
@@ -60,13 +62,13 @@ const user = computed(() => page.props.auth.user);
                             :default-value="user.name"
                             required
                             autocomplete="name"
-                            placeholder="Full name"
+                            :placeholder="t('auth.shared.full_name')"
                         />
                         <InputError class="mt-2" :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">Email address</Label>
+                        <Label for="email">{{ t('auth.shared.email_address') }}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -75,20 +77,20 @@ const user = computed(() => page.props.auth.user);
                             :default-value="user.email"
                             required
                             autocomplete="username"
-                            placeholder="Email address"
+                            :placeholder="t('auth.shared.email_address')"
                         />
                         <InputError class="mt-2" :message="errors.email" />
                     </div>
 
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
-                            Your email address is unverified.
+                            {{ t('account_settings.profile.unverified_email') }}
                             <Link
                                 :href="send()"
                                 as="button"
                                 class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             >
-                                Click here to resend the verification email.
+                                {{ t('account_settings.profile.resend_verification') }}
                             </Link>
                         </p>
 
@@ -96,8 +98,7 @@ const user = computed(() => page.props.auth.user);
                             v-if="status === 'verification-link-sent'"
                             class="mt-2 text-sm font-medium text-green-600"
                         >
-                            A new verification link has been sent to your email
-                            address.
+                            {{ t('account_settings.profile.verification_sent') }}
                         </div>
                     </div>
 
@@ -105,7 +106,7 @@ const user = computed(() => page.props.auth.user);
                         <Button
                             :disabled="processing"
                             data-test="update-profile-button"
-                            >Save</Button
+                            >{{ t('auth.shared.save') }}</Button
                         >
 
                         <Transition
@@ -118,7 +119,7 @@ const user = computed(() => page.props.auth.user);
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                {{ t('auth.shared.saved') }}
                             </p>
                         </Transition>
                     </div>

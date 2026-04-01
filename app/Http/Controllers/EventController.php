@@ -1216,17 +1216,30 @@ class EventController extends Controller
         StripeCheckoutGateway $stripeCheckoutGateway,
     ): RedirectResponse|HttpResponse {
         $event->loadMissing(['user:id,email', 'plan']);
+        $targetPlanId = $request->integer('plan_id');
+        $targetPlan = $targetPlanId > 0
+            ? Plan::query()
+                ->whereKey($targetPlanId)
+                ->where('is_active', true)
+                ->firstOrFail()
+            : $event->plan;
 
-        if ($event->is_paid) {
-            return back()->with('info', 'This event is already paid.');
-        }
-
-        if (! $event->plan instanceof Plan || ! $event->plan->is_active) {
+        if (! $targetPlan instanceof Plan || ! $targetPlan->is_active) {
             return back()->with('error', 'This event does not have an active billing plan yet.');
         }
 
-        if ((int) $event->plan->price_cents <= 0) {
-            return back()->with('info', 'This plan does not require an online payment.');
+        $checkoutQuote = app(EventBillingManager::class)->checkoutQuote($event, $targetPlan);
+
+        if ($checkoutQuote['isCurrentPlan'] && $event->is_paid) {
+            return back()->with('info', 'This event is already on that plan.');
+        }
+
+        if ($checkoutQuote['isDowngrade']) {
+            return back()->with('info', 'Plan downgrades are handled manually right now.');
+        }
+
+        if (! $checkoutQuote['canCheckout']) {
+            return back()->with('info', 'Choose a paid plan to continue.');
         }
 
         if (! $stripeCheckoutGateway->isConfigured()) {
@@ -1253,24 +1266,32 @@ class EventController extends Controller
             'payment_method_types' => ['card'],
             'metadata' => [
                 'event_id' => (string) $event->id,
-                'plan_id' => (string) $event->plan->id,
+                'plan_id' => (string) $targetPlan->id,
                 'owner_id' => (string) $event->user_id,
+                'billing_mode' => $checkoutQuote['isUpgrade'] ? 'upgrade' : 'purchase',
+                'credited_amount_cents' => (string) $checkoutQuote['creditedAmountCents'],
             ],
             'payment_intent_data' => [
                 'metadata' => [
                     'event_id' => (string) $event->id,
-                    'plan_id' => (string) $event->plan->id,
+                    'plan_id' => (string) $targetPlan->id,
                     'owner_id' => (string) $event->user_id,
+                    'billing_mode' => $checkoutQuote['isUpgrade'] ? 'upgrade' : 'purchase',
+                    'credited_amount_cents' => (string) $checkoutQuote['creditedAmountCents'],
                 ],
             ],
             'line_items' => [[
                 'quantity' => 1,
                 'price_data' => [
-                    'currency' => strtolower((string) $event->plan->currency),
-                    'unit_amount' => (int) $event->plan->price_cents,
+                    'currency' => strtolower((string) $targetPlan->currency),
+                    'unit_amount' => $checkoutQuote['amountDueCents'],
                     'product_data' => [
-                        'name' => "{$event->plan->name} - {$event->name}",
-                        'description' => 'EventSmart event hosting and storage plan',
+                        'name' => $checkoutQuote['isUpgrade']
+                            ? "{$targetPlan->name} upgrade - {$event->name}"
+                            : "{$targetPlan->name} - {$event->name}",
+                        'description' => $checkoutQuote['isUpgrade']
+                            ? "Upgrade this event from {$event->plan?->name} to {$targetPlan->name}."
+                            : 'EventSmart event hosting and storage plan',
                     ],
                 ],
             ]],
@@ -2414,6 +2435,7 @@ class EventController extends Controller
             $captionTheme = 'dark';
         }
         [$billingStatusCode, $billingStatusLabel, $billingStatusHint, $billingStatusTone] = $this->billingStatusMeta($event);
+        $ownerCheckoutPlanIds = $this->ownerCheckoutPlanIds($event);
         $storageQuota = $this->storageQuotaMeta(
             (int) $event->storage_limit_bytes,
             (int) $event->storage_used_bytes,
@@ -2448,7 +2470,7 @@ class EventController extends Controller
                 'name' => $event->name,
                 'type' => $event->type,
                 'status' => $event->status,
-                'plan' => $event->plan?->name ?? 'Free',
+                'plan' => $event->plan?->name ?? __('event_settings.billing.free_plan'),
                 'planId' => $event->plan_id,
                 'planFeatures' => $planFeatures,
                 'currency' => $event->currency,
@@ -2471,8 +2493,9 @@ class EventController extends Controller
                 'autoModerationEnabled' => $event->auto_moderation_enabled,
                 'billing' => [
                     'planId' => $event->plan_id,
-                    'planName' => $event->plan?->name ?? 'Custom plan',
+                    'planName' => $event->plan?->name ?? __('event_settings.billing.custom_plan'),
                     'planPriceLabel' => $this->planPriceLabel($event->plan),
+                    'planPriceCents' => $event->plan instanceof Plan ? (int) $event->plan->price_cents : 0,
                     'planFeatures' => $planFeatures,
                     'isPaid' => $event->is_paid,
                     'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
@@ -2486,10 +2509,13 @@ class EventController extends Controller
                     'statusTone' => $billingStatusTone,
                     'isLocked' => $this->isPaymentLocked($event),
                     'canManage' => $canManageBilling,
-                    'canCheckout' => $canCheckoutBilling,
-                    'checkoutLabel' => $canCheckoutBilling ? "Pay {$this->planPriceLabel($event->plan)}" : null,
-                    'checkoutHint' => $canCheckoutBilling
-                        ? 'Complete payment online to unlock the paid retention window for this event.'
+                    'canCheckout' => ! $canManageBilling && $ownerCheckoutPlanIds !== [],
+                    'checkoutPlanIds' => $ownerCheckoutPlanIds,
+                    'checkoutLabel' => ! $canManageBilling && $ownerCheckoutPlanIds !== []
+                        ? __('event_settings.billing.choose_plan_cta')
+                        : null,
+                    'checkoutHint' => ! $canManageBilling && $ownerCheckoutPlanIds !== []
+                        ? __('event_settings.billing.choose_plan_hint')
                         : null,
                     'storage' => $storageQuota,
                 ],
@@ -2574,13 +2600,13 @@ class EventController extends Controller
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
             'eventNavigation' => array_values(array_filter([
-                ['title' => 'Workspace', 'href' => route('events.show', $event)],
-                ['title' => 'Media', 'href' => route('events.media', $event)],
-                ['title' => 'Guests', 'href' => route('events.guests', $event)],
-                ['title' => 'Settings', 'href' => route('events.settings', $event)],
+                ['title' => __('app.nav.workspace'), 'href' => route('events.show', $event)],
+                ['title' => __('app.nav.media'), 'href' => route('events.media', $event)],
+                ['title' => __('app.nav.guests'), 'href' => route('events.guests', $event)],
+                ['title' => __('app.nav.settings'), 'href' => route('events.settings', $event)],
             ])),
             'backNavigation' => $eventOverviewUrl !== null
-                ? ['title' => 'Events', 'href' => $eventOverviewUrl]
+                ? ['title' => __('app.nav.events'), 'href' => $eventOverviewUrl]
                 : null,
         ];
     }
@@ -3788,10 +3814,10 @@ class EventController extends Controller
         if ($event->is_paid) {
             return [
                 'paid',
-                'Paid',
+                __('event_settings.billing.status.paid.label'),
                 $event->retention_ends_at !== null
-                    ? 'Access stays available until the retention window ends.'
-                    : 'Payment is confirmed for this event.',
+                    ? __('event_settings.billing.status.paid.hint_retention')
+                    : __('event_settings.billing.status.paid.hint_confirmed'),
                 'emerald',
             ];
         }
@@ -3799,8 +3825,8 @@ class EventController extends Controller
         if ($this->isPaymentLocked($event)) {
             return [
                 'locked',
-                'Locked until payment',
-                'Guests cannot upload until payment is completed.',
+                __('event_settings.billing.status.locked.label'),
+                __('event_settings.billing.status.locked.hint'),
                 'rose',
             ];
         }
@@ -3809,16 +3835,16 @@ class EventController extends Controller
         if ($paymentDueAt !== null) {
             return [
                 'pending',
-                'Payment pending',
-                'Payment is still outstanding before the event locks.',
+                __('event_settings.billing.status.pending.label'),
+                __('event_settings.billing.status.pending.hint'),
                 'amber',
             ];
         }
 
         return [
             'pending',
-            'Billing pending',
-            'A billing plan still needs to be confirmed for this event.',
+            __('event_settings.billing.status.unconfirmed.label'),
+            __('event_settings.billing.status.unconfirmed.hint'),
             'amber',
         ];
     }
@@ -3863,9 +3889,15 @@ class EventController extends Controller
             ->map(fn (Plan $plan): array => [
                 'id' => $plan->id,
                 'name' => $plan->name,
+                'slug' => $plan->slug,
+                'currency' => $plan->currency,
+                'priceCents' => (int) $plan->price_cents,
                 'priceLabel' => $this->planPriceLabel($plan),
                 'description' => (string) $plan->description,
-                'limitsLabel' => "{$plan->upload_limit} uploads · ".round($plan->storage_limit_bytes / 1073741824).' GB storage',
+                'limitsLabel' => __('event_settings.billing.limits_label', [
+                    'uploads' => $plan->upload_limit,
+                    'storage' => round($plan->storage_limit_bytes / 1073741824),
+                ]),
             ])
             ->values()
             ->all();
@@ -3874,12 +3906,35 @@ class EventController extends Controller
     private function planPriceLabel(?Plan $plan): string
     {
         if (! $plan instanceof Plan) {
-            return 'Custom pricing';
+            return __('event_settings.billing.custom_pricing');
+        }
+
+        if ((int) $plan->price_cents <= 0) {
+            return __('event_settings.billing.free_price');
         }
 
         $amount = number_format($plan->price_cents / 100, 2, '.', '');
 
         return "{$amount} {$plan->currency}";
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function ownerCheckoutPlanIds(Event $event): array
+    {
+        $currentPlanPriceCents = $event->plan instanceof Plan
+            ? max(0, (int) $event->plan->price_cents)
+            : 0;
+
+        return Plan::query()
+            ->where('is_active', true)
+            ->where('price_cents', '>', $event->is_paid ? $currentPlanPriceCents : 0)
+            ->orderBy('currency')
+            ->orderBy('price_cents')
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
     }
 
     private function publicGuestDownloadsEnabled(Event $event): bool

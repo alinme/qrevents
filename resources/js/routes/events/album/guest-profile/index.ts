@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 export const show = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 show.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -43,7 +43,7 @@ show.url = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 show.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ show.get = (args: { shareToken: string | number } | [shareToken: string | number
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 show.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ show.head = (args: { shareToken: string | number } | [shareToken: string | numbe
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 const showForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ const showForm = (args: { shareToken: string | number } | [shareToken: string | 
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 showForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -83,7 +83,7 @@ showForm.get = (args: { shareToken: string | number } | [shareToken: string | nu
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:1594
+* @see app/Http/Controllers/EventController.php:1615
 * @route '/a/{shareToken}/guest-profile'
 */
 showForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -100,7 +100,7 @@ show.form = showForm
 
 /**
 * @see \App\Http\Controllers\EventController::upsert
-* @see app/Http/Controllers/EventController.php:1626
+* @see app/Http/Controllers/EventController.php:1647
 * @route '/a/{shareToken}/guest-profile'
 */
 export const upsert = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -115,7 +115,7 @@ upsert.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::upsert
-* @see app/Http/Controllers/EventController.php:1626
+* @see app/Http/Controllers/EventController.php:1647
 * @route '/a/{shareToken}/guest-profile'
 */
 upsert.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -142,7 +142,7 @@ upsert.url = (args: { shareToken: string | number } | [shareToken: string | numb
 
 /**
 * @see \App\Http\Controllers\EventController::upsert
-* @see app/Http/Controllers/EventController.php:1626
+* @see app/Http/Controllers/EventController.php:1647
 * @route '/a/{shareToken}/guest-profile'
 */
 upsert.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -152,7 +152,7 @@ upsert.post = (args: { shareToken: string | number } | [shareToken: string | num
 
 /**
 * @see \App\Http\Controllers\EventController::upsert
-* @see app/Http/Controllers/EventController.php:1626
+* @see app/Http/Controllers/EventController.php:1647
 * @route '/a/{shareToken}/guest-profile'
 */
 const upsertForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -162,7 +162,7 @@ const upsertForm = (args: { shareToken: string | number } | [shareToken: string 
 
 /**
 * @see \App\Http\Controllers\EventController::upsert
-* @see app/Http/Controllers/EventController.php:1626
+* @see app/Http/Controllers/EventController.php:1647
 * @route '/a/{shareToken}/guest-profile'
 */
 upsertForm.post = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

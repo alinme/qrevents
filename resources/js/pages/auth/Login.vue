@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
@@ -21,14 +22,16 @@ defineProps<{
     googleAuthUrl: string | null;
     socialAuthError?: string | null;
 }>();
+
+const { t } = useTranslations();
 </script>
 
 <template>
     <AuthBase
-        title="Log in to your account"
-        description="Enter your email and password below to log in"
+        :title="t('auth.login.title')"
+        :description="t('auth.login.description')"
     >
-        <Head title="Log in" />
+        <Head :title="t('auth.login.head_title')" />
 
         <div
             v-if="status"
@@ -50,14 +53,14 @@ defineProps<{
                 variant="outline"
                 class="h-11 w-full rounded-full border-zinc-300 bg-white text-promo-ink hover:bg-zinc-50"
             >
-                <a :href="googleAuthUrl!"> Continue with Google </a>
+                <a :href="googleAuthUrl!"> {{ t('auth.shared.continue_with_google') }} </a>
             </Button>
 
             <div
                 class="flex items-center gap-3 text-xs tracking-[0.18em] text-promo-muted uppercase"
             >
                 <span class="h-px flex-1 bg-zinc-200" />
-                <span>Or use email</span>
+                <span>{{ t('auth.login.divider') }}</span>
                 <span class="h-px flex-1 bg-zinc-200" />
             </div>
         </div>
@@ -71,7 +74,7 @@ defineProps<{
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="email" class="text-promo-ink"
-                        >Email address</Label
+                        >{{ t('auth.shared.email_address') }}</Label
                     >
                     <Input
                         id="email"
@@ -80,7 +83,7 @@ defineProps<{
                         required
                         autofocus
                         autocomplete="email"
-                        placeholder="email@example.com"
+                        :placeholder="t('auth.shared.email_placeholder')"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -88,14 +91,14 @@ defineProps<{
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
                         <Label for="password" class="text-promo-ink"
-                            >Password</Label
+                            >{{ t('auth.shared.password') }}</Label
                         >
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
                             class="text-sm"
                         >
-                            Forgot password?
+                            {{ t('auth.login.forgot_password') }}
                         </TextLink>
                     </div>
                     <PasswordInput
@@ -103,7 +106,7 @@ defineProps<{
                         name="password"
                         required
                         autocomplete="current-password"
-                        placeholder="Password"
+                        :placeholder="t('auth.shared.password')"
                     />
                     <InputError :message="errors.password" />
                 </div>
@@ -111,7 +114,7 @@ defineProps<{
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" name="remember" />
-                        <span>Remember me</span>
+                        <span>{{ t('auth.login.remember_me') }}</span>
                     </Label>
                 </div>
 
@@ -122,7 +125,7 @@ defineProps<{
                     data-test="login-button"
                 >
                     <Spinner v-if="processing" />
-                    Log in
+                    {{ t('auth.login.submit') }}
                 </Button>
             </div>
 
@@ -130,8 +133,8 @@ defineProps<{
                 class="text-center text-sm text-promo-muted"
                 v-if="canRegister"
             >
-                Don't have an account?
-                <TextLink :href="register()">Sign up</TextLink>
+                {{ t('auth.login.no_account') }}
+                <TextLink :href="register()">{{ t('auth.login.register') }}</TextLink>
             </div>
         </Form>
     </AuthBase>

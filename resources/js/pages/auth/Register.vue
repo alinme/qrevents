@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
@@ -16,14 +17,16 @@ defineProps<{
     googleAuthUrl: string | null;
     socialAuthError?: string | null;
 }>();
+
+const { t } = useTranslations();
 </script>
 
 <template>
     <AuthBase
-        title="Create an account"
-        description="Enter your details below to create your account"
+        :title="t('auth.register.title')"
+        :description="t('auth.register.description')"
     >
-        <Head title="Register" />
+        <Head :title="t('auth.register.head_title')" />
 
         <div
             v-if="socialAuthError"
@@ -38,14 +41,14 @@ defineProps<{
                 variant="outline"
                 class="h-11 w-full rounded-full border-zinc-300 bg-white text-promo-ink hover:bg-zinc-50"
             >
-                <a :href="googleAuthUrl!"> Continue with Google </a>
+                <a :href="googleAuthUrl!"> {{ t('auth.shared.continue_with_google') }} </a>
             </Button>
 
             <div
                 class="flex items-center gap-3 text-xs tracking-[0.18em] text-promo-muted uppercase"
             >
                 <span class="h-px flex-1 bg-zinc-200" />
-                <span>Or create with email</span>
+                <span>{{ t('auth.register.divider') }}</span>
                 <span class="h-px flex-1 bg-zinc-200" />
             </div>
         </div>
@@ -58,7 +61,7 @@ defineProps<{
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name" class="text-promo-ink">Name</Label>
+                    <Label for="name" class="text-promo-ink">{{ t('auth.shared.name') }}</Label>
                     <Input
                         id="name"
                         type="text"
@@ -66,14 +69,14 @@ defineProps<{
                         autofocus
                         autocomplete="name"
                         name="name"
-                        placeholder="Full name"
+                        :placeholder="t('auth.shared.full_name')"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="email" class="text-promo-ink"
-                        >Email address</Label
+                        >{{ t('auth.shared.email_address') }}</Label
                     >
                     <Input
                         id="email"
@@ -81,35 +84,35 @@ defineProps<{
                         required
                         autocomplete="email"
                         name="email"
-                        placeholder="email@example.com"
+                        :placeholder="t('auth.shared.email_placeholder')"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="password" class="text-promo-ink"
-                        >Password</Label
+                        >{{ t('auth.shared.password') }}</Label
                     >
                     <PasswordInput
                         id="password"
                         required
                         autocomplete="new-password"
                         name="password"
-                        placeholder="Password"
+                        :placeholder="t('auth.shared.password')"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="password_confirmation" class="text-promo-ink"
-                        >Confirm password</Label
+                        >{{ t('auth.shared.confirm_password') }}</Label
                     >
                     <PasswordInput
                         id="password_confirmation"
                         required
                         autocomplete="new-password"
                         name="password_confirmation"
-                        placeholder="Confirm password"
+                        :placeholder="t('auth.shared.confirm_password')"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
@@ -121,14 +124,14 @@ defineProps<{
                     data-test="register-user-button"
                 >
                     <Spinner v-if="processing" />
-                    Create account
+                    {{ t('auth.register.submit') }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-promo-muted">
-                Already have an account?
+                {{ t('auth.register.has_account') }}
                 <TextLink :href="login()" class="underline underline-offset-4"
-                    >Log in</TextLink
+                    >{{ t('auth.login.submit') }}</TextLink
                 >
             </div>
         </Form>

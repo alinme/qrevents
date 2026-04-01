@@ -82,7 +82,7 @@ class HandleInertiaRequests extends Middleware
         if ($user->canAccessAdmin()) {
             return [
                 [
-                    'title' => 'Admin',
+                    'title' => __('app.nav.admin'),
                     'href' => route('admin.overview'),
                 ],
             ];
@@ -91,11 +91,11 @@ class HandleInertiaRequests extends Middleware
         if ($user->canAccessBusinessDashboard()) {
             return [
                 [
-                    'title' => 'Events',
+                    'title' => __('app.nav.events'),
                     'href' => route('dashboard.business.events.index'),
                 ],
                 [
-                    'title' => 'Business',
+                    'title' => __('app.nav.business'),
                     'href' => route('dashboard.business'),
                 ],
             ];
@@ -103,7 +103,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             [
-                'title' => 'Events',
+                'title' => __('app.nav.events'),
                 'href' => route('dashboard'),
             ],
         ];
@@ -122,15 +122,15 @@ class HandleInertiaRequests extends Middleware
 
         return [
             [
-                'title' => 'Business',
+                'title' => __('app.nav.business'),
                 'href' => route('dashboard.business'),
             ],
             [
-                'title' => 'Billing',
+                'title' => __('app.nav.billing'),
                 'href' => route('dashboard.business.wallet.history'),
             ],
             [
-                'title' => 'Events',
+                'title' => __('app.nav.events'),
                 'href' => route('dashboard.business.events.index'),
             ],
         ];
@@ -145,10 +145,10 @@ class HandleInertiaRequests extends Middleware
         }
 
         if ($user->canAccessAdmin()) {
-            return 'Admin';
+            return __('app.nav.admin');
         }
 
-        return 'Account';
+        return __('app.nav.account');
     }
 
     private function resolveLocale(Request $request): string

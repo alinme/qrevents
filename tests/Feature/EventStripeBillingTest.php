@@ -28,7 +28,8 @@ test('event owners can see online checkout when stripe billing is configured', f
             ->component('events/Settings')
             ->where('currentEvent.billing.canManage', false)
             ->where('currentEvent.billing.canCheckout', true)
-            ->where('currentEvent.billing.checkoutLabel', 'Pay 49.00 EUR')
+            ->where('currentEvent.billing.checkoutLabel', 'Choose plan')
+            ->where('currentEvent.billing.checkoutPlanIds', [$plan->id])
             ->where('eventLinks.billingCheckout', route('events.billing.checkout', $event))
         );
 });
@@ -70,6 +71,100 @@ test('event owners can start a stripe checkout session for unpaid events', funct
         ])
         ->assertStatus(409)
         ->assertHeader('X-Inertia-Location', 'https://checkout.stripe.test/session/cs_test_123');
+});
+
+test('event owners can start checkout for a higher plan from a free event', function () {
+    config(['services.stripe.secret' => 'sk_test_123']);
+
+    $owner = User::factory()->create();
+    $freePlan = Plan::factory()->create([
+        'name' => 'Free',
+        'currency' => 'EUR',
+        'price_cents' => 0,
+        'is_active' => true,
+    ]);
+    $plusPlan = Plan::factory()->create([
+        'name' => 'Plus',
+        'currency' => 'EUR',
+        'price_cents' => 2500,
+        'is_active' => true,
+    ]);
+    $event = Event::factory()->for($owner)->for($freePlan)->create([
+        'is_paid' => false,
+    ]);
+
+    $gateway = \Mockery::mock(StripeCheckoutGateway::class);
+    $gateway->shouldReceive('isConfigured')->once()->andReturn(true);
+    $gateway->shouldReceive('createCheckoutSession')
+        ->once()
+        ->with(\Mockery::on(function (array $payload) use ($plusPlan): bool {
+            return $payload['metadata']['plan_id'] === (string) $plusPlan->id
+                && $payload['line_items'][0]['price_data']['unit_amount'] === 2500;
+        }))
+        ->andReturn([
+            'id' => 'cs_test_upgrade_from_free',
+            'url' => 'https://checkout.stripe.test/session/cs_test_upgrade_from_free',
+        ]);
+    app()->instance(StripeCheckoutGateway::class, $gateway);
+
+    $this->actingAs($owner)
+        ->post(route('events.billing.checkout', $event), [
+            'plan_id' => $plusPlan->id,
+        ], [
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', 'https://checkout.stripe.test/session/cs_test_upgrade_from_free');
+});
+
+test('event owners upgrading a paid event only pay the difference', function () {
+    config(['services.stripe.secret' => 'sk_test_123']);
+
+    $owner = User::factory()->create();
+    $plusPlan = Plan::factory()->create([
+        'name' => 'Plus',
+        'currency' => 'EUR',
+        'price_cents' => 2500,
+        'is_active' => true,
+    ]);
+    $proPlan = Plan::factory()->create([
+        'name' => 'Pro',
+        'currency' => 'EUR',
+        'price_cents' => 5000,
+        'is_active' => true,
+    ]);
+    $event = Event::factory()->for($owner)->for($plusPlan)->create([
+        'is_paid' => true,
+        'paid_at' => now()->subDay(),
+    ]);
+
+    $gateway = \Mockery::mock(StripeCheckoutGateway::class);
+    $gateway->shouldReceive('isConfigured')->once()->andReturn(true);
+    $gateway->shouldReceive('createCheckoutSession')
+        ->once()
+        ->with(\Mockery::on(function (array $payload) use ($event, $proPlan): bool {
+            return $payload['metadata']['plan_id'] === (string) $proPlan->id
+                && $payload['metadata']['billing_mode'] === 'upgrade'
+                && $payload['metadata']['credited_amount_cents'] === '2500'
+                && $payload['line_items'][0]['price_data']['unit_amount'] === 2500
+                && $payload['line_items'][0]['price_data']['product_data']['name'] === "Pro upgrade - {$event->name}";
+        }))
+        ->andReturn([
+            'id' => 'cs_test_plus_to_pro',
+            'url' => 'https://checkout.stripe.test/session/cs_test_plus_to_pro',
+        ]);
+    app()->instance(StripeCheckoutGateway::class, $gateway);
+
+    $this->actingAs($owner)
+        ->post(route('events.billing.checkout', $event), [
+            'plan_id' => $proPlan->id,
+        ], [
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', 'https://checkout.stripe.test/session/cs_test_plus_to_pro');
 });
 
 test('stripe webhook marks the event paid after checkout completion', function () {

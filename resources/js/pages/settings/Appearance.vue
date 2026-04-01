@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import type { BreadcrumbItem } from '@/types';
 
+const { t } = useTranslations();
+
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
+        title: t('account_settings.appearance.page_title'),
         href: '/settings/profile',
     },
 ];
@@ -15,19 +18,19 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Appearance settings" />
+        <Head :title="t('account_settings.appearance.page_title')" />
 
-        <h1 class="sr-only">Appearance settings</h1>
+        <h1 class="sr-only">{{ t('account_settings.appearance.page_title') }}</h1>
 
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Appearance settings"
-                    description="This app now uses a single light appearance."
+                    :title="t('account_settings.appearance.title')"
+                    :description="t('account_settings.appearance.description')"
                 />
                 <p class="text-sm text-muted-foreground">
-                    Dark mode is disabled for this project. There are no appearance controls to change here.
+                    {{ t('account_settings.appearance.body') }}
                 </p>
             </div>
         </SettingsLayout>

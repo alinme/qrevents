@@ -64,6 +64,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { DEFAULT_ALBUM_LOGO_URL } from '@/lib/album-defaults';
 import type { BreadcrumbItem } from '@/types';
@@ -163,6 +164,7 @@ type EventPayload = {
         planId: number | null;
         planName: string;
         planPriceLabel: string;
+        planPriceCents: number;
         planFeatures: EventPlanFeatures;
         isPaid: boolean;
         paymentDueAt: string | null;
@@ -177,6 +179,7 @@ type EventPayload = {
         isLocked: boolean;
         canManage: boolean;
         canCheckout: boolean;
+        checkoutPlanIds: number[];
         checkoutLabel: string | null;
         checkoutHint: string | null;
         storage: {
@@ -222,7 +225,10 @@ type TabId =
 
 type BillingPlanOption = {
     id: number;
+    slug: string;
     name: string;
+    currency: string;
+    priceCents: number;
     priceLabel: string;
     description: string;
     limitsLabel: string;
@@ -256,6 +262,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage<PageProps>();
+const { locale, t } = useTranslations();
 const currentAccountType = computed(
     () => page.props.auth?.user?.accountType ?? 'user',
 );
@@ -265,16 +272,16 @@ const checkoutState = computed(() => {
     return new URLSearchParams(query).get('stripe_checkout');
 });
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: props.currentEvent.name,
         href: props.eventLinks.settings,
     },
     {
-        title: 'Settings',
+        title: t('event_settings.page.title'),
         href: props.eventLinks.settings,
     },
-];
+]);
 
 const defaultWelcomeScreenFields: WelcomeScreenField[] = [
     {
@@ -415,14 +422,14 @@ const normalizeWelcomeScreenFields = (value: unknown): WelcomeScreenField[] => {
 };
 
 const activeTab = ref<TabId>('general');
-const allTabItems: Array<{ id: TabId; label: string; icon: unknown }> = [
-    { id: 'general', label: 'General', icon: SlidersHorizontal },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'photo_wall', label: 'Photo Wall', icon: Camera },
-    { id: 'moderation', label: 'Moderation', icon: ShieldCheck },
-    { id: 'collaborators', label: 'Collaborators', icon: Users },
-];
+const allTabItems = computed<Array<{ id: TabId; label: string; icon: unknown }>>(() => [
+    { id: 'general', label: t('event_settings.tabs.general'), icon: SlidersHorizontal },
+    { id: 'billing', label: t('event_settings.tabs.billing'), icon: CreditCard },
+    { id: 'appearance', label: t('event_settings.tabs.appearance'), icon: Palette },
+    { id: 'photo_wall', label: t('event_settings.tabs.photo_wall'), icon: Camera },
+    { id: 'moderation', label: t('event_settings.tabs.moderation'), icon: ShieldCheck },
+    { id: 'collaborators', label: t('event_settings.tabs.collaborators'), icon: Users },
+]);
 
 const planFeatures = computed(() => props.currentEvent.planFeatures);
 const canEditLogo = computed(
@@ -448,7 +455,7 @@ const hasWeddingDetails = computed(() => {
     ].some((value) => value.trim().length > 0);
 });
 const visibleTabItems = computed(() =>
-    allTabItems.filter(
+    allTabItems.value.filter(
         (tab) => tab.id !== 'moderation' || canUseModeration.value,
     ),
 );
@@ -938,6 +945,69 @@ const saveHintText = computed(() => {
 const billingStatusLabel = computed(() => {
     return props.currentEvent.billing.statusLabel;
 });
+
+const intlLocale = computed(() => {
+    if (locale.value === 'ro') {
+        return 'ro-RO';
+    }
+
+    if (locale.value === 'el') {
+        return 'el-GR';
+    }
+
+    return 'en-GB';
+});
+
+const ownerCheckoutPlans = computed(() =>
+    props.availableBillingPlans.filter((plan) =>
+        props.currentEvent.billing.checkoutPlanIds.includes(plan.id),
+    ),
+);
+
+const formatCurrencyFromCents = (amountCents: number, currency: string): string =>
+    new Intl.NumberFormat(intlLocale.value, {
+        style: 'currency',
+        currency,
+    }).format(amountCents / 100);
+
+const checkoutAmountDue = (plan: BillingPlanOption): number => {
+    if (!props.currentEvent.billing.isPaid) {
+        return plan.priceCents;
+    }
+
+    return Math.max(
+        0,
+        plan.priceCents - props.currentEvent.billing.planPriceCents,
+    );
+};
+
+const checkoutActionLabel = (plan: BillingPlanOption): string => {
+    const amountLabel = formatCurrencyFromCents(
+        checkoutAmountDue(plan),
+        plan.currency,
+    );
+
+    if (props.currentEvent.billing.isPaid) {
+        return t('event_settings.billing.upgrade_cta', { amount: amountLabel });
+    }
+
+    return t('event_settings.billing.pay_cta', { amount: amountLabel });
+};
+
+const checkoutHelperLabel = (plan: BillingPlanOption): string => {
+    if (!props.currentEvent.billing.isPaid) {
+        return t('event_settings.billing.plan_helper_full', {
+            amount: plan.priceLabel,
+            limits: plan.limitsLabel,
+        });
+    }
+
+    return t('event_settings.billing.plan_helper_upgrade', {
+        amount: formatCurrencyFromCents(checkoutAmountDue(plan), plan.currency),
+        currentPlan: props.currentEvent.billing.planName,
+        targetPlan: plan.name,
+    });
+};
 
 const billingStatusClass = computed(() => {
     if (props.currentEvent.billing.statusTone === 'emerald') {
@@ -1443,10 +1513,10 @@ const clearTimezoneQuery = (): void => {
 
 const formatBillingDate = (value: string | null): string => {
     if (!value) {
-        return 'Not set';
+        return t('event_settings.shared.not_set');
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(intlLocale.value, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -1455,10 +1525,10 @@ const formatBillingDate = (value: string | null): string => {
 
 const formatBillingDateTime = (value: string | null): string => {
     if (!value) {
-        return 'Not set';
+        return t('event_settings.shared.not_set');
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(intlLocale.value, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -1595,7 +1665,7 @@ function resolveSupportedTimezones(): string[] {
 </script>
 
 <template>
-    <Head title="Settings" />
+    <Head :title="t('event_settings.page.title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4">
@@ -2188,7 +2258,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                                         >
-                                            Billing overview
+                                            {{ t('event_settings.billing.overview') }}
                                         </p>
                                         <h3
                                             class="text-lg font-semibold text-slate-900"
@@ -2211,7 +2281,7 @@ function resolveSupportedTimezones(): string[] {
                                                         .planFeatures
                                                         .customizationTier
                                                 }}
-                                                customization
+                                                {{ t('event_settings.billing.customization_suffix') }}
                                             </Badge>
                                             <Badge
                                                 :variant="
@@ -2226,8 +2296,8 @@ function resolveSupportedTimezones(): string[] {
                                                     props.currentEvent.billing
                                                         .planFeatures
                                                         .allowsDownloadAll
-                                                        ? 'ZIP export included'
-                                                        : 'ZIP export locked'
+                                                        ? t('event_settings.billing.download_enabled')
+                                                        : t('event_settings.billing.download_locked')
                                                 }}
                                             </Badge>
                                             <Badge
@@ -2243,8 +2313,8 @@ function resolveSupportedTimezones(): string[] {
                                                     props.currentEvent.billing
                                                         .planFeatures
                                                         .allowsModerationTools
-                                                        ? 'Moderation included'
-                                                        : 'Moderation locked'
+                                                        ? t('event_settings.billing.moderation_enabled')
+                                                        : t('event_settings.billing.moderation_locked')
                                                 }}
                                             </Badge>
                                         </div>
@@ -2269,7 +2339,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Payment due
+                                            {{ t('event_settings.billing.payment_due') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2288,7 +2358,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Paid at
+                                            {{ t('event_settings.billing.paid_at') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2307,7 +2377,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Grace ends
+                                            {{ t('event_settings.billing.grace_ends') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2326,7 +2396,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Retention ends
+                                            {{ t('event_settings.billing.retention_ends') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2345,7 +2415,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Storage used
+                                            {{ t('event_settings.billing.storage_used') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2364,7 +2434,7 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            Storage free
+                                            {{ t('event_settings.billing.storage_free') }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2389,7 +2459,7 @@ function resolveSupportedTimezones(): string[] {
                                             <p
                                                 class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                             >
-                                                Plan storage quota
+                                                {{ t('event_settings.billing.storage_quota') }}
                                             </p>
                                             <p
                                                 class="mt-1 text-sm text-slate-700"
@@ -2401,7 +2471,7 @@ function resolveSupportedTimezones(): string[] {
                                                             .usedBytes,
                                                     )
                                                 }}
-                                                used of
+                                                {{ t('event_settings.billing.used_of') }}
                                                 {{
                                                     formatBytes(
                                                         props.currentEvent
@@ -2460,14 +2530,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            Billing Plan
+                                            {{ t('event_settings.billing.admin_plan_title') }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            Choose the commercial plan for this
-                                            event. Event storage and upload
-                                            limits update when you save.
+                                            {{ t('event_settings.billing.admin_plan_description') }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2519,14 +2587,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            Mark As Paid
+                                            {{ t('event_settings.billing.admin_paid_title') }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            Paid events stay available through
-                                            the retention window instead of
-                                            locking at the payment due date.
+                                            {{ t('event_settings.billing.admin_paid_description') }}
                                         </p>
                                     </div>
                                     <div class="flex justify-end">
@@ -2539,13 +2605,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            Payment Due Date
+                                            {{ t('event_settings.billing.admin_due_date_title') }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            Used to determine when unpaid events
-                                            become locked.
+                                            {{ t('event_settings.billing.admin_due_date_description') }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2568,14 +2633,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            Paid At
+                                            {{ t('event_settings.billing.admin_paid_at_title') }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            Optional manual override. Leave
-                                            blank to use the current time when
-                                            marking this event paid.
+                                            {{ t('event_settings.billing.admin_paid_at_description') }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2598,21 +2661,19 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            Admin Billing Note
+                                            {{ t('event_settings.billing.admin_note_title') }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            Internal note for invoice status,
-                                            payment method, or next follow-up.
-                                            Customers do not see this.
+                                            {{ t('event_settings.billing.admin_note_description') }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
                                         <Textarea
                                             v-model="billingForm.billing_note"
                                             rows="4"
-                                            placeholder="Example: Paid via bank transfer, invoice copy still pending."
+                                            :placeholder="t('event_settings.billing.admin_note_placeholder')"
                                         />
                                         <InputError
                                             :message="
@@ -2629,7 +2690,7 @@ function resolveSupportedTimezones(): string[] {
                                         :disabled="billingForm.processing"
                                         @click="submitBilling"
                                     >
-                                        Save Billing
+                                        {{ t('event_settings.billing.admin_save') }}
                                     </Button>
                                 </div>
                             </div>
@@ -2643,9 +2704,7 @@ function resolveSupportedTimezones(): string[] {
                                         v-if="checkoutState === 'success'"
                                         class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900"
                                     >
-                                        Stripe checkout completed. Payment
-                                        confirmation should appear here as soon
-                                        as the webhook is processed.
+                                        {{ t('event_settings.billing.checkout_success') }}
                                     </div>
                                     <div
                                         v-else-if="
@@ -2653,64 +2712,75 @@ function resolveSupportedTimezones(): string[] {
                                         "
                                         class="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-700"
                                     >
-                                        Checkout was cancelled. Your event is
-                                        still unpaid.
+                                        {{ t('event_settings.billing.checkout_cancelled') }}
                                     </div>
 
-                                    <template
-                                        v-if="
-                                            props.currentEvent.billing
-                                                .canCheckout
-                                        "
-                                    >
+                                    <template v-if="ownerCheckoutPlans.length > 0">
                                         <div class="space-y-2">
                                             <h3 class="text-sm font-semibold">
-                                                Pay online
+                                                {{
+                                                    props.currentEvent.billing.isPaid
+                                                        ? t('event_settings.billing.owner_upgrade_title')
+                                                        : t('event_settings.billing.owner_choose_title')
+                                                }}
                                             </h3>
                                             <p class="text-sm leading-6">
                                                 {{
-                                                    props.currentEvent.billing
-                                                        .checkoutHint
+                                                    props.currentEvent.billing.isPaid
+                                                        ? t('event_settings.billing.owner_upgrade_description')
+                                                        : t('event_settings.billing.owner_choose_description')
                                                 }}
                                             </p>
                                         </div>
 
-                                        <Button as-child class="h-11">
-                                            <Link
-                                                :href="
-                                                    props.eventLinks
-                                                        .billingCheckout
-                                                "
-                                                method="post"
-                                                as="button"
+                                        <div class="divide-y divide-amber-200/80 border-y border-amber-200/80">
+                                            <div
+                                                v-for="plan in ownerCheckoutPlans"
+                                                :key="plan.id"
+                                                class="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between"
                                             >
-                                                <CreditCard class="size-4" />
-                                                {{
-                                                    props.currentEvent.billing
-                                                        .checkoutLabel
-                                                }}
-                                            </Link>
-                                        </Button>
+                                                <div class="space-y-1">
+                                                    <p class="text-sm font-semibold text-slate-900">
+                                                        {{ plan.name }}
+                                                    </p>
+                                                    <p class="text-sm text-slate-700">
+                                                        {{ plan.priceLabel }}
+                                                    </p>
+                                                    <p class="text-sm leading-6 text-slate-600">
+                                                        {{ checkoutHelperLabel(plan) }}
+                                                    </p>
+                                                </div>
+
+                                                <Button as-child class="h-11 shrink-0">
+                                                    <Link
+                                                        :href="props.eventLinks.billingCheckout"
+                                                        method="post"
+                                                        as="button"
+                                                        :data="{ plan_id: plan.id }"
+                                                    >
+                                                        <CreditCard class="size-4" />
+                                                        {{ checkoutActionLabel(plan) }}
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </template>
                                     <div
                                         v-if="
                                             currentAccountType !== 'business' &&
                                             currentAccountType !== 'super_admin'
                                         "
-                                        class="rounded-xl border border-promo-primary/20 bg-white px-4 py-4"
+                                        class="border-t border-amber-200/80 pt-4"
                                     >
                                         <h3
                                             class="text-sm font-semibold text-promo-ink"
                                         >
-                                            Need multiple paid events?
+                                            {{ t('event_settings.billing.business_title') }}
                                         </h3>
                                         <p
                                             class="mt-2 text-sm leading-6 text-promo-muted"
                                         >
-                                            Switch this account to Business, top
-                                            up credits once, and create Plus or
-                                            Pro events without repeating the
-                                            normal billing flow each time.
+                                            {{ t('event_settings.billing.business_description') }}
                                         </p>
                                         <Button
                                             as-child
@@ -2724,20 +2794,16 @@ function resolveSupportedTimezones(): string[] {
                                                 method="post"
                                                 as="button"
                                             >
-                                                Upgrade to Business
+                                                {{ t('event_settings.billing.business_cta') }}
                                             </Link>
                                         </Button>
                                     </div>
                                     <p
                                         v-if="
-                                            !props.currentEvent.billing
-                                                .canCheckout
+                                            ownerCheckoutPlans.length === 0
                                         "
                                     >
-                                        Billing for this event is managed by QR
-                                        Events admin. If you need plan or
-                                        payment changes, contact the platform
-                                        administrator.
+                                        {{ t('event_settings.billing.no_self_serve') }}
                                     </p>
                                 </div>
                             </div>
@@ -2751,7 +2817,7 @@ function resolveSupportedTimezones(): string[] {
                                 <p
                                     class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                                 >
-                                    Admin note
+                                    {{ t('event_settings.billing.admin_note_public_title') }}
                                 </p>
                                 <p class="mt-2 whitespace-pre-line">
                                     {{ props.currentEvent.billing.note }}

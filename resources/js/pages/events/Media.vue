@@ -75,6 +75,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -150,6 +151,8 @@ const props = defineProps<{
     canManageMedia: boolean;
 }>();
 
+const { locale, t } = useTranslations();
+
 const avatarToneClasses = [
     'bg-amber-100 text-amber-700',
     'bg-sky-100 text-sky-700',
@@ -159,16 +162,16 @@ const avatarToneClasses = [
     'bg-orange-100 text-orange-700',
 ];
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: props.currentEvent.name,
         href: props.eventLinks.media,
     },
     {
-        title: 'Media',
+        title: t('media.page.title'),
         href: props.eventLinks.media,
     },
-];
+]);
 
 const assetItems = ref<MediaAsset[]>([...props.mediaAssets]);
 const selectedAttendeeKey = ref<string | null>(null);
@@ -221,8 +224,8 @@ watch(
             ).length;
             toast.success(
                 newAssetCount === 1
-                    ? 'A new upload just arrived.'
-                    : `${newAssetCount} new uploads just arrived.`,
+                    ? t('media.feedback.new_upload_single')
+                    : t('media.feedback.new_upload_plural', { count: newAssetCount }),
             );
         }
 
@@ -234,10 +237,16 @@ watch(
 
 const formatDateTime = (value: string | null): string => {
     if (!value) {
-        return 'Unknown';
+        return t('media.shared.unknown');
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
+    const intlLocale = locale.value === 'ro'
+        ? 'ro-RO'
+        : locale.value === 'el'
+          ? 'el-GR'
+          : 'en-GB';
+
+    return new Intl.DateTimeFormat(intlLocale, {
         dateStyle: 'medium',
         timeStyle: 'medium',
     }).format(new Date(value));
@@ -261,24 +270,24 @@ const formatBytes = (bytes: number): string => {
 const moderationPipelineLabel = (pipeline: MediaAsset['moderationPipeline']): string => {
     switch (pipeline) {
         case 'automatic':
-            return 'Automatic filter';
+            return t('media.pipeline.automatic');
         case 'manual':
-            return 'Manual review';
+            return t('media.pipeline.manual');
         case 'disabled':
-            return 'Moderation off';
+            return t('media.pipeline.disabled');
         default:
-            return 'Unknown';
+            return t('media.shared.unknown');
     }
 };
 
 const wallVisibilityMetaText = (visibility: MediaAsset['wallVisibility']): string => {
     switch (visibility) {
         case 'approved':
-            return 'Shown on wall';
+            return t('media.wall_visibility.approved');
         case 'rejected':
-            return 'Hidden from wall';
+            return t('media.wall_visibility.rejected');
         default:
-            return 'Waiting for wall review';
+            return t('media.wall_visibility.pending');
     }
 };
 
@@ -292,6 +301,30 @@ const showsGridAssetAvatar = (): boolean => mediaView.value === 'relaxed';
 
 const moderationMatchLabel = (match: MediaAsset['moderationMatches'][number]): string =>
     `${match.category}: ${match.keyword}`;
+
+const kindLabel = (kind: MediaAsset['kind']): string => {
+    switch (kind) {
+        case 'video':
+            return t('media.kind.video');
+        case 'text':
+            return t('media.kind.text');
+        default:
+            return t('media.kind.photo');
+    }
+};
+
+const moderationStatusLabel = (
+    status: MediaAsset['moderationStatus'],
+): string => {
+    switch (status) {
+        case 'approved':
+            return t('media.filters.approved');
+        case 'rejected':
+            return t('media.filters.rejected');
+        default:
+            return t('media.filters.processing');
+    }
+};
 
 const kindIcon = (kind: MediaAsset['kind']) => {
     switch (kind) {
@@ -331,21 +364,21 @@ const wallVisibilityAriaLabel = (
     visibility: MediaAsset['wallVisibility'],
 ): string =>
     visibility === 'approved'
-        ? `Show ${asset.guestName} upload on photo wall`
-        : `Hide ${asset.guestName} upload from photo wall`;
+        ? t('media.actions.show_on_wall', { guest: asset.guestName })
+        : t('media.actions.hide_from_wall', { guest: asset.guestName });
 
 const moderationAriaLabel = (
     asset: MediaAsset,
     moderationStatus: MediaAsset['moderationStatus'],
 ): string =>
     moderationStatus === 'approved'
-        ? `Approve ${asset.guestName} upload`
-        : `Reject ${asset.guestName} upload`;
+        ? t('media.actions.approve_upload', { guest: asset.guestName })
+        : t('media.actions.reject_upload', { guest: asset.guestName });
 
 const guestInitials = (value: string | null): string => {
     const normalized = (value ?? '').trim();
     if (normalized.length === 0) {
-        return 'G';
+        return t('media.shared.guest').charAt(0).toUpperCase();
     }
 
     return normalized
@@ -366,13 +399,13 @@ const avatarFallbackClass = (value: string | null): string => {
 };
 
 const generatedDisplayFilename = (asset: MediaAsset): string => {
-    const guest = (asset.guestName ?? 'Guest').trim() || 'Guest';
+    const guest = (asset.guestName ?? t('media.shared.guest')).trim() || t('media.shared.guest');
     const label =
         asset.kind === 'photo'
-            ? 'photo'
+            ? t('media.kind.photo')
             : asset.kind === 'video'
-              ? 'video'
-              : 'text post';
+              ? t('media.kind.video')
+              : t('media.kind.text');
 
     return `${guest} ${label}`;
 };
@@ -421,7 +454,7 @@ const groupedAttendees = computed<MediaAttendee[]>(() => {
     const groups = new Map<string, MediaAttendee>();
 
     for (const asset of assetItems.value) {
-        const guestName = asset.guestName.trim() || 'Guest';
+        const guestName = asset.guestName.trim() || t('media.shared.guest');
         const key = asset.guestKey.trim() || guestName.toLowerCase();
         const existing = groups.get(key);
 
@@ -715,7 +748,7 @@ const copyText = async (value: string, message: string): Promise<void> => {
         !navigator.clipboard ||
         typeof navigator.clipboard.writeText !== 'function'
     ) {
-        toast.error('Copy is not available on this device.');
+        toast.error(t('media.feedback.copy_unavailable'));
         return;
     }
 
@@ -745,11 +778,11 @@ const csrfToken = (): string =>
 
 const copyAssetLink = async (asset: MediaAsset): Promise<void> => {
     if (!asset.previewUrl) {
-        toast.error('This upload does not have a file link to copy.');
+        toast.error(t('media.feedback.no_link'));
         return;
     }
 
-    await copyText(asset.previewUrl, 'Upload link copied.');
+    await copyText(asset.previewUrl, t('media.feedback.link_copied'));
     copiedAssetId.value = asset.id;
     window.setTimeout(() => {
         if (copiedAssetId.value === asset.id) {
@@ -797,14 +830,14 @@ const deleteAsset = (asset: MediaAsset): void => {
     })
         .then(async (response) => {
             if (!response.ok) {
-                throw new Error('Unable to delete the selected upload.');
+                throw new Error(t('media.feedback.delete_failed'));
             }
 
             removeAssetLocally(asset.id);
-            toast.success('Media deleted.');
+            toast.success(t('media.feedback.delete_success'));
         })
         .catch(() => {
-            toast.error('Unable to delete the selected upload right now.');
+            toast.error(t('media.feedback.delete_failed'));
         })
         .finally(() => {
             deletingAssetId.value = null;
@@ -816,7 +849,7 @@ const requestDeleteAsset = (asset: MediaAsset): void => {
         return;
     }
 
-    if (! window.confirm('Delete this upload? This cannot be undone.')) {
+    if (! window.confirm(t('media.feedback.delete_confirm'))) {
         return;
     }
 
@@ -957,8 +990,8 @@ const updateWallVisibility = (
 
                 toast.success(
                     wallVisibility === 'approved'
-                        ? 'Added to the photo wall.'
-                        : 'Removed from the photo wall.',
+                        ? t('media.feedback.wall_added')
+                        : t('media.feedback.wall_removed'),
                 );
             },
             onFinish: () => {
@@ -1069,25 +1102,25 @@ onUnmounted(() => {
 const statCards = computed(() => [
     {
         key: 'photos',
-        title: 'Photos',
+        title: t('media.stats.photos'),
         value: stats.value.photos,
         icon: ImageIcon,
     },
     {
         key: 'videos',
-        title: 'Videos',
+        title: t('media.stats.videos'),
         value: stats.value.videos,
         icon: Video,
     },
     {
         key: 'texts',
-        title: 'Text Posts',
+        title: t('media.stats.texts'),
         value: stats.value.texts,
         icon: MessageSquareText,
     },
     {
         key: 'attendees',
-        title: 'Attendees',
+        title: t('media.stats.attendees'),
         value: stats.value.attendees,
         icon: UserRound,
     },
@@ -1095,7 +1128,7 @@ const statCards = computed(() => [
 </script>
 
 <template>
-    <Head title="Media" />
+    <Head :title="t('media.page.title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -1104,13 +1137,13 @@ const statCards = computed(() => [
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="max-w-3xl">
                         <div class="dashboard-eyebrow">
-                            Event workspace
+                            {{ t('media.page.kicker') }}
                         </div>
                         <h1 class="dashboard-title mt-2">
-                            Media
+                            {{ t('media.page.title') }}
                         </h1>
                         <p class="dashboard-body mt-2">
-                            Review uploads, filter fast, and take action without digging through a heavy dashboard.
+                            {{ t('media.page.description') }}
                         </p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
@@ -1122,7 +1155,7 @@ const statCards = computed(() => [
                         >
                             <a :href="eventLinks.accountDashboard">
                                 <ExternalLink class="mr-2 size-4" />
-                                Events
+                                {{ t('app.nav.events') }}
                             </a>
                         </Button>
                         <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
@@ -1130,31 +1163,31 @@ const statCards = computed(() => [
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full transition"
                             :class="pillToggleClass(mediaView === 'relaxed')"
-                            title="Relaxed gallery view"
+                            :title="t('media.views.relaxed')"
                             @click="mediaView = 'relaxed'"
                         >
                             <Columns2 :class="pillToggleIconClass(mediaView === 'relaxed')" />
-                            <span class="sr-only">Relaxed gallery view</span>
+                            <span class="sr-only">{{ t('media.views.relaxed') }}</span>
                         </button>
                         <button
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full transition"
                             :class="pillToggleClass(mediaView === 'balanced')"
-                            title="Balanced gallery view"
+                            :title="t('media.views.balanced')"
                             @click="mediaView = 'balanced'"
                         >
                             <Columns3 :class="pillToggleIconClass(mediaView === 'balanced')" />
-                            <span class="sr-only">Balanced gallery view</span>
+                            <span class="sr-only">{{ t('media.views.balanced') }}</span>
                         </button>
                         <button
                             type="button"
                             class="inline-flex size-9 items-center justify-center rounded-full transition"
                             :class="pillToggleClass(mediaView === 'dense')"
-                            title="Dense gallery view"
+                            :title="t('media.views.dense')"
                             @click="mediaView = 'dense'"
                         >
                             <Grid2x2 :class="pillToggleIconClass(mediaView === 'dense')" />
-                            <span class="sr-only">Dense gallery view</span>
+                            <span class="sr-only">{{ t('media.views.dense') }}</span>
                         </button>
                         </div>
                     </div>
@@ -1181,7 +1214,7 @@ const statCards = computed(() => [
                         <input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Search attendee or filename..."
+                            :placeholder="t('media.filters.search_placeholder')"
                             class="h-10 min-w-[16rem] flex-1 rounded-xl border border-brand-border bg-brand-inverse px-3 text-sm text-brand-ink placeholder:text-brand-muted/80"
                         />
                         <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
@@ -1189,41 +1222,41 @@ const statCards = computed(() => [
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full transition"
                                 :class="pillToggleClass(kindFilter === 'all')"
-                                title="All uploads"
+                                :title="t('media.filters.all_uploads')"
                                 @click="kindFilter = 'all'"
                             >
                                 <Grid2x2 :class="pillToggleIconClass(kindFilter === 'all')" />
-                                <span class="sr-only">All uploads</span>
+                                <span class="sr-only">{{ t('media.filters.all_uploads') }}</span>
                             </button>
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full transition"
                                 :class="pillToggleClass(kindFilter === 'photo')"
-                                title="Photos"
+                                :title="t('media.stats.photos')"
                                 @click="kindFilter = 'photo'"
                             >
                                 <IconPhoto :class="pillToggleIconClass(kindFilter === 'photo')" />
-                                <span class="sr-only">Photos</span>
+                                <span class="sr-only">{{ t('media.stats.photos') }}</span>
                             </button>
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full transition"
                                 :class="pillToggleClass(kindFilter === 'video')"
-                                title="Videos"
+                                :title="t('media.stats.videos')"
                                 @click="kindFilter = 'video'"
                             >
                                 <IconVideo :class="pillToggleIconClass(kindFilter === 'video')" />
-                                <span class="sr-only">Videos</span>
+                                <span class="sr-only">{{ t('media.stats.videos') }}</span>
                             </button>
                             <button
                                 type="button"
                                 class="inline-flex size-9 items-center justify-center rounded-full transition"
                                 :class="pillToggleClass(kindFilter === 'text')"
-                                title="Text posts"
+                                :title="t('media.stats.texts')"
                                 @click="kindFilter = 'text'"
                             >
                                 <IconFileText :class="pillToggleIconClass(kindFilter === 'text')" />
-                                <span class="sr-only">Text posts</span>
+                                <span class="sr-only">{{ t('media.stats.texts') }}</span>
                             </button>
                         </div>
                     </div>
@@ -1233,28 +1266,28 @@ const statCards = computed(() => [
                             :variant="moderationFilter === 'all' ? 'secondary' : 'outline'"
                             @click="moderationFilter = 'all'"
                         >
-                            Any status
+                            {{ t('media.filters.any_status') }}
                         </Button>
                         <Button
                             size="sm"
                             :variant="moderationFilter === 'approved' ? 'secondary' : 'outline'"
                             @click="moderationFilter = 'approved'"
                         >
-                            Approved
+                            {{ t('media.filters.approved') }}
                         </Button>
                         <Button
                             size="sm"
                             :variant="moderationFilter === 'processing' ? 'secondary' : 'outline'"
                             @click="moderationFilter = 'processing'"
                         >
-                            Processing
+                            {{ t('media.filters.processing') }}
                         </Button>
                         <Button
                             size="sm"
                             :variant="moderationFilter === 'rejected' ? 'secondary' : 'outline'"
                             @click="moderationFilter = 'rejected'"
                         >
-                            Rejected
+                            {{ t('media.filters.rejected') }}
                         </Button>
                     </div>
                 </div>
@@ -1264,17 +1297,17 @@ const statCards = computed(() => [
                     class="mt-1 flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
                 >
                     <p class="text-sm text-slate-700">
-                        {{ selectedCount }} selected
+                        {{ t('media.bulk.selected', { count: selectedCount }) }}
                     </p>
                     <Button size="sm" variant="outline" @click="toggleSelectAllVisible">
                         {{
                             allVisibleSelected
-                                ? 'Unselect visible'
-                                : `Select visible (${visibleAssets.length})`
+                                ? t('media.bulk.unselect_visible')
+                                : t('media.bulk.select_visible', { count: visibleAssets.length })
                         }}
                     </Button>
                     <Button size="sm" variant="outline" @click="selectedAssetIds = []">
-                        Clear selection
+                        {{ t('media.bulk.clear_selection') }}
                     </Button>
                     <Button
                         size="sm"
@@ -1284,7 +1317,7 @@ const statCards = computed(() => [
                         @click="bulkUpdateModeration('approved')"
                     >
                         <Check class="mr-2 size-4" />
-                        Approve selected
+                        {{ t('media.bulk.approve') }}
                     </Button>
                     <Button
                         size="sm"
@@ -1293,11 +1326,11 @@ const statCards = computed(() => [
                         @click="bulkUpdateModeration('rejected')"
                     >
                         <X class="mr-2 size-4" />
-                        Reject selected
+                        {{ t('media.bulk.reject') }}
                     </Button>
                     <Button size="sm" variant="destructive" @click="bulkDeleteOpen = true">
                         <Trash2 class="mr-2 size-4" />
-                        Delete selected
+                        {{ t('media.bulk.delete') }}
                     </Button>
                 </div>
 
@@ -1309,9 +1342,9 @@ const statCards = computed(() => [
                         <EmptyMedia variant="icon">
                             <ImageIcon class="size-5" />
                         </EmptyMedia>
-                        <EmptyTitle>No photos or videos yet</EmptyTitle>
+                        <EmptyTitle>{{ t('media.empty.none_title') }}</EmptyTitle>
                         <EmptyDescription>
-                            Guest uploads will appear here as soon as someone shares a photo, video, or text post.
+                            {{ t('media.empty.none_description') }}
                         </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
@@ -1324,14 +1357,14 @@ const statCards = computed(() => [
                         <EmptyMedia variant="icon">
                             <X class="size-5" />
                         </EmptyMedia>
-                        <EmptyTitle>No uploads match these filters</EmptyTitle>
+                        <EmptyTitle>{{ t('media.empty.filtered_title') }}</EmptyTitle>
                         <EmptyDescription>
-                            Try a different attendee name, media type, or moderation status.
+                            {{ t('media.empty.filtered_description') }}
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent v-if="hasMediaFiltersApplied">
                         <Button variant="outline" @click="resetMediaFilters">
-                            Clear filters
+                            {{ t('media.filters.clear') }}
                         </Button>
                     </EmptyContent>
                 </Empty>
@@ -1393,7 +1426,7 @@ const statCards = computed(() => [
                             >
                                 <LoaderCircle class="size-7 animate-spin text-slate-400" />
                                 <p class="text-xs font-semibold text-slate-700">
-                                    Processing video
+                                    {{ t('media.shared.processing_video') }}
                                 </p>
                             </div>
                             <div
@@ -1405,14 +1438,14 @@ const statCards = computed(() => [
                                     class="line-clamp-6 whitespace-pre-wrap text-sm font-medium"
                                     :style="textPostTextStyle(asset)"
                                 >
-                                    {{ asset.text ?? 'Text post' }}
+                                    {{ asset.text ?? t('media.kind.text') }}
                                 </p>
                             </div>
                             <div
                                 v-else
                                 class="flex h-full w-full items-center justify-center text-sm text-muted-foreground"
                             >
-                                Preview unavailable
+                                {{ t('media.shared.preview_unavailable') }}
                             </div>
 
                             <div
@@ -1445,14 +1478,14 @@ const statCards = computed(() => [
                                 </label>
                                 <span
                                     class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                    :title="asset.kind"
+                                    :title="kindLabel(asset.kind)"
                                 >
                                     <component :is="kindIcon(asset.kind)" class="size-4" />
                                 </span>
                                 <span
                                     class="inline-flex size-8 items-center justify-center rounded-full"
                                     :class="moderationBadgeClass(asset.moderationStatus)"
-                                    :title="asset.moderationStatus"
+                                    :title="moderationStatusLabel(asset.moderationStatus)"
                                 >
                                     <component
                                         :is="moderationIcon(asset.moderationStatus)"
@@ -1771,14 +1804,14 @@ const statCards = computed(() => [
                                 <div class="absolute left-3 top-3 flex items-center gap-2">
                                     <span
                                         class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                        :title="asset.kind"
+                                        :title="kindLabel(asset.kind)"
                                     >
                                         <component :is="kindIcon(asset.kind)" class="size-4" />
                                     </span>
                                     <span
                                         class="inline-flex size-8 items-center justify-center rounded-full"
                                         :class="moderationBadgeClass(asset.moderationStatus)"
-                                        :title="asset.moderationStatus"
+                                        :title="moderationStatusLabel(asset.moderationStatus)"
                                     >
                                         <component
                                             :is="moderationIcon(asset.moderationStatus)"
@@ -1910,10 +1943,10 @@ const statCards = computed(() => [
                             <LoaderCircle class="size-10 animate-spin text-white/55" />
                             <div class="space-y-1">
                                 <p class="text-base font-semibold text-white">
-                                    Processing video
+                                    {{ t('media.shared.processing_video') }}
                                 </p>
                                 <p class="text-sm text-white/68">
-                                    Preview is still being generated.
+                                    {{ t('media.shared.preview_generating') }}
                                 </p>
                             </div>
                         </div>
@@ -1929,7 +1962,7 @@ const statCards = computed(() => [
                                     class="max-w-[78%] whitespace-pre-wrap text-center text-xl font-semibold leading-relaxed sm:text-2xl"
                                     :style="textPostTextStyle(activeAsset)"
                                 >
-                                    {{ activeAsset.text ?? 'Text post' }}
+                                    {{ activeAsset.text ?? t('media.kind.text') }}
                                 </p>
                             </div>
                         </div>
@@ -1937,7 +1970,7 @@ const statCards = computed(() => [
                             type="button"
                             class="absolute left-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
                             :disabled="!hasPreviousAsset"
-                            aria-label="Previous upload"
+                            :aria-label="t('media.actions.previous_upload')"
                             @click="goToPreviousAsset"
                         >
                             <ChevronLeft class="size-5" />
@@ -1946,7 +1979,7 @@ const statCards = computed(() => [
                             type="button"
                             class="absolute right-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
                             :disabled="!hasNextAsset"
-                            aria-label="Next upload"
+                            :aria-label="t('media.actions.next_upload')"
                             @click="goToNextAsset"
                         >
                             <ChevronRight class="size-5" />
@@ -1965,8 +1998,8 @@ const statCards = computed(() => [
                                         v-if="activeAsset.previewUrl"
                                         type="button"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
-                                        title="Copy file link"
-                                        aria-label="Copy file link"
+                                        :title="t('media.actions.copy_link')"
+                                        :aria-label="t('media.actions.copy_link')"
                                         @click="copyAssetLink(activeAsset)"
                                     >
                                         <Copy class="size-4" />
@@ -1977,8 +2010,8 @@ const statCards = computed(() => [
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
-                                        title="Download or open file"
-                                        aria-label="Download or open file"
+                                        :title="t('media.actions.download_or_open')"
+                                        :aria-label="t('media.actions.download_or_open')"
                                     >
                                         <Download class="size-4" />
                                     </a>
@@ -1990,7 +2023,7 @@ const statCards = computed(() => [
                                             wallVisibilityAssetId === activeAsset.id ||
                                             activeAsset.wallVisibility === 'approved'
                                         "
-                                        title="Show on photo wall"
+                                        :title="t('media.actions.show_on_wall_short')"
                                         :aria-label="wallVisibilityAriaLabel(activeAsset, 'approved')"
                                         :aria-pressed="activeAsset.wallVisibility === 'approved'"
                                         @click="updateWallVisibility(activeAsset, 'approved')"
@@ -2005,7 +2038,7 @@ const statCards = computed(() => [
                                             wallVisibilityAssetId === activeAsset.id ||
                                             activeAsset.wallVisibility === 'rejected'
                                         "
-                                        title="Hide from photo wall"
+                                        :title="t('media.actions.hide_from_wall_short')"
                                         :aria-label="wallVisibilityAriaLabel(activeAsset, 'rejected')"
                                         :aria-pressed="activeAsset.wallVisibility === 'rejected'"
                                         @click="updateWallVisibility(activeAsset, 'rejected')"
@@ -2020,7 +2053,7 @@ const statCards = computed(() => [
                                             moderationAssetId === activeAsset.id ||
                                             activeAsset.moderationStatus === 'approved'
                                         "
-                                        title="Approve"
+                                        :title="t('media.actions.approve')"
                                         :aria-label="moderationAriaLabel(activeAsset, 'approved')"
                                         :aria-pressed="activeAsset.moderationStatus === 'approved'"
                                         @click="updateModeration(activeAsset, 'approved')"
@@ -2035,7 +2068,7 @@ const statCards = computed(() => [
                                             moderationAssetId === activeAsset.id ||
                                             activeAsset.moderationStatus === 'rejected'
                                         "
-                                        title="Reject"
+                                        :title="t('media.actions.reject')"
                                         :aria-label="moderationAriaLabel(activeAsset, 'rejected')"
                                         :aria-pressed="activeAsset.moderationStatus === 'rejected'"
                                         @click="updateModeration(activeAsset, 'rejected')"
@@ -2046,8 +2079,8 @@ const statCards = computed(() => [
                                         v-if="canManageMedia"
                                         type="button"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/70 text-white ring-1 ring-rose-200/20 backdrop-blur transition hover:bg-rose-500/84"
-                                        title="Delete"
-                                        :aria-label="`Delete ${activeAsset.guestName} upload`"
+                                        :title="t('media.actions.delete')"
+                                        :aria-label="t('media.actions.delete_upload', { guest: activeAsset.guestName })"
                                         @click="requestDeleteAsset(activeAsset)"
                                     >
                                         <Trash2 class="size-4" />
@@ -2072,15 +2105,15 @@ const statCards = computed(() => [
                 >
                     <DrawerHeader class="relative border-b border-[#e7dccb] px-6 py-5 pr-16 text-left">
                         <DrawerTitle class="text-lg font-semibold text-slate-900">
-                            Upload info
+                            {{ t('media.drawer.title') }}
                         </DrawerTitle>
                         <DrawerDescription class="text-xs text-slate-600">
-                            Attendee details, file metadata, and quick actions for this upload.
+                            {{ t('media.drawer.description') }}
                         </DrawerDescription>
                         <button
                             type="button"
                             class="absolute right-5 top-5 inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-white/70 hover:text-slate-900"
-                            aria-label="Close upload info"
+                            :aria-label="t('media.drawer.close')"
                             @click="assetInfoId = null"
                         >
                             <X class="size-5" />
@@ -2109,7 +2142,7 @@ const statCards = computed(() => [
                         <div class="grid gap-x-6 gap-y-4 border-b border-[#e7dccb] py-5 sm:grid-cols-2">
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    File
+                                    {{ t('media.drawer.file') }}
                                 </p>
                                 <p class="break-words text-xs text-slate-700">
                                     {{ displayAssetFilename(assetInfoAsset) }}
@@ -2117,7 +2150,7 @@ const statCards = computed(() => [
                             </div>
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Size
+                                    {{ t('media.drawer.size') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
                                     {{ formatBytes(assetInfoAsset.sizeBytes) }}
@@ -2125,23 +2158,23 @@ const statCards = computed(() => [
                             </div>
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Type
+                                    {{ t('media.drawer.type') }}
                                 </p>
                                 <p class="text-xs capitalize text-slate-700">
-                                    {{ assetInfoAsset.kind }}
+                                    {{ kindLabel(assetInfoAsset.kind) }}
                                 </p>
                             </div>
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Status
+                                    {{ t('media.drawer.status') }}
                                 </p>
                                 <p class="text-xs capitalize text-slate-700">
-                                    {{ assetInfoAsset.moderationStatus }}
+                                    {{ moderationStatusLabel(assetInfoAsset.moderationStatus) }}
                                 </p>
                             </div>
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Pipeline
+                                    {{ t('media.drawer.pipeline') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
                                     {{ moderationPipelineLabel(assetInfoAsset.moderationPipeline) }}
@@ -2152,7 +2185,7 @@ const statCards = computed(() => [
                                 class="space-y-1"
                             >
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Score
+                                    {{ t('media.drawer.score') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
                                     {{ assetInfoAsset.moderationScore }}/100
@@ -2163,7 +2196,7 @@ const statCards = computed(() => [
                                 class="space-y-1"
                             >
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Reviewed
+                                    {{ t('media.drawer.reviewed') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
                                     {{ formatDateTime(assetInfoAsset.reviewedAt) }}
@@ -2174,7 +2207,7 @@ const statCards = computed(() => [
                                 class="space-y-1 sm:col-span-2"
                             >
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Format
+                                    {{ t('media.drawer.format') }}
                                 </p>
                                 <p class="break-all text-xs text-slate-700">
                                     {{ assetInfoAsset.mimeType }}
@@ -2185,7 +2218,7 @@ const statCards = computed(() => [
                                 class="space-y-2 sm:col-span-2"
                             >
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                    Matched rules
+                                    {{ t('media.drawer.matched_rules') }}
                                 </p>
                                 <div class="flex flex-wrap gap-2">
                                     <span
@@ -2204,7 +2237,7 @@ const statCards = computed(() => [
                             class="space-y-3 border-b border-[#e7dccb] py-5"
                         >
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                Contact
+                                {{ t('media.drawer.contact') }}
                             </p>
                             <div class="space-y-2">
                                 <div
@@ -2233,7 +2266,7 @@ const statCards = computed(() => [
                             class="space-y-2 border-b border-[#e7dccb] py-5"
                         >
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                Guest message
+                                {{ t('media.drawer.guest_message') }}
                             </p>
                             <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
                                 {{ assetInfoAsset.message }}
@@ -2245,7 +2278,7 @@ const statCards = computed(() => [
                             class="space-y-2 border-b border-[#e7dccb] py-5"
                         >
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                Text post
+                                {{ t('media.drawer.text_post') }}
                             </p>
                             <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
                                 {{ assetInfoAsset.text }}
@@ -2257,8 +2290,8 @@ const statCards = computed(() => [
                                 v-if="assetInfoAsset.previewUrl"
                                 size="icon"
                                 variant="outline"
-                                title="Copy file link"
-                                aria-label="Copy file link"
+                                :title="t('media.actions.copy_link')"
+                                :aria-label="t('media.actions.copy_link')"
                                 @click="copyAssetLink(assetInfoAsset)"
                             >
                                 <Copy class="size-4" />
@@ -2273,8 +2306,8 @@ const statCards = computed(() => [
                                     :href="assetInfoAsset.previewUrl"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    title="Open file"
-                                    aria-label="Open file"
+                                    :title="t('media.actions.open_file')"
+                                    :aria-label="t('media.actions.open_file')"
                                 >
                                     <ExternalLink class="size-4" />
                                 </a>
@@ -2282,8 +2315,8 @@ const statCards = computed(() => [
                             <Button
                                 size="icon"
                                 variant="outline"
-                                title="Open preview"
-                                aria-label="Open preview"
+                                :title="t('media.actions.open_preview')"
+                                :aria-label="t('media.actions.open_preview')"
                                 @click="assetInfoId = null; openAssetDetails(assetInfoAsset)"
                             >
                                 <Eye class="size-4" />
@@ -2296,7 +2329,7 @@ const statCards = computed(() => [
                                         wallVisibilityAssetId === assetInfoAsset.id ||
                                         assetInfoAsset.wallVisibility === 'approved'
                                     "
-                                    title="Show on photo wall"
+                                    :title="t('media.actions.show_on_wall_short')"
                                     :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'approved')"
                                     :aria-pressed="assetInfoAsset.wallVisibility === 'approved'"
                                     @click="updateWallVisibility(assetInfoAsset, 'approved')"
@@ -2310,7 +2343,7 @@ const statCards = computed(() => [
                                         wallVisibilityAssetId === assetInfoAsset.id ||
                                         assetInfoAsset.wallVisibility === 'rejected'
                                     "
-                                    title="Hide from photo wall"
+                                    :title="t('media.actions.hide_from_wall_short')"
                                     :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'rejected')"
                                     :aria-pressed="assetInfoAsset.wallVisibility === 'rejected'"
                                     @click="updateWallVisibility(assetInfoAsset, 'rejected')"
@@ -2324,7 +2357,7 @@ const statCards = computed(() => [
                                         moderationAssetId === assetInfoAsset.id ||
                                         assetInfoAsset.moderationStatus === 'approved'
                                     "
-                                    title="Approve"
+                                    :title="t('media.actions.approve')"
                                     :aria-label="moderationAriaLabel(assetInfoAsset, 'approved')"
                                     :aria-pressed="assetInfoAsset.moderationStatus === 'approved'"
                                     @click="updateModeration(assetInfoAsset, 'approved')"
@@ -2338,7 +2371,7 @@ const statCards = computed(() => [
                                         moderationAssetId === assetInfoAsset.id ||
                                         assetInfoAsset.moderationStatus === 'rejected'
                                     "
-                                    title="Reject"
+                                    :title="t('media.actions.reject')"
                                     :aria-label="moderationAriaLabel(assetInfoAsset, 'rejected')"
                                     :aria-pressed="assetInfoAsset.moderationStatus === 'rejected'"
                                     @click="updateModeration(assetInfoAsset, 'rejected')"
@@ -2348,8 +2381,8 @@ const statCards = computed(() => [
                                 <Button
                                     size="icon"
                                     variant="destructive"
-                                    title="Delete"
-                                    :aria-label="`Delete ${assetInfoAsset.guestName} upload`"
+                                    :title="t('media.actions.delete')"
+                                    :aria-label="t('media.actions.delete_upload', { guest: assetInfoAsset.guestName })"
                                     @click="requestDeleteAsset(assetInfoAsset)"
                                 >
                                     <Trash2 class="size-4" />
@@ -2368,13 +2401,13 @@ const statCards = computed(() => [
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete selected media?</AlertDialogTitle>
+                    <AlertDialogTitle>{{ t('media.bulk_dialog.title') }}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will delete {{ selectedCount }} selected uploads from the event.
+                        {{ t('media.bulk_dialog.description', { count: selectedCount }) }}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{{ t('auth.shared.cancel') }}</AlertDialogCancel>
                     <AlertDialogAction
                         class="bg-destructive text-white hover:bg-destructive/90"
                         :disabled="deletingAssetId !== null || selectedCount === 0"
@@ -2382,8 +2415,8 @@ const statCards = computed(() => [
                     >
                         {{
                             deletingAssetId === -1
-                                ? 'Deleting...'
-                                : `Delete ${selectedCount} item${selectedCount === 1 ? '' : 's'}`
+                                ? t('media.bulk_dialog.deleting')
+                                : t('media.bulk_dialog.delete_count', { count: selectedCount })
                         }}
                     </AlertDialogAction>
                 </AlertDialogFooter>

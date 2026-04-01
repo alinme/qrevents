@@ -4,23 +4,26 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useTranslations } from '@/composables/useTranslations';
 import { toUrl } from '@/lib/utils';
 import { edit as editProfile } from '@/routes/profile';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import type { NavItem } from '@/types';
 
+const { t } = useTranslations();
+
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: t('account_settings.layout.profile'),
         href: editProfile(),
     },
     {
-        title: 'Password',
+        title: t('account_settings.layout.password'),
         href: editPassword(),
     },
     {
-        title: 'Two-factor auth',
+        title: t('account_settings.layout.two_factor'),
         href: show(),
     },
 ];
@@ -33,17 +36,17 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
         <div class="dashboard-shell max-w-5xl">
             <div class="space-y-2">
                 <p class="dashboard-eyebrow">
-                    Account
+                    {{ t('account_settings.layout.eyebrow') }}
                 </p>
                 <Heading
-                    title="Settings"
-                    description="Manage your profile and account settings"
+                    :title="t('account_settings.layout.title')"
+                    :description="t('account_settings.layout.description')"
                 />
             </div>
 
             <nav
                 class="flex flex-wrap gap-2 border-b border-brand-border/70 pb-4"
-                aria-label="Settings"
+                :aria-label="t('account_settings.layout.title')"
             >
                 <Button
                     v-for="item in sidebarNavItems"

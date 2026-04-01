@@ -9,6 +9,52 @@ use Carbon\CarbonInterface;
 
 class EventBillingManager
 {
+    /**
+     * @return array{
+     *   targetPriceCents: int,
+     *   currentPriceCents: int,
+     *   creditedAmountCents: int,
+     *   amountDueCents: int,
+     *   isCurrentPlan: bool,
+     *   isUpgrade: bool,
+     *   isDowngrade: bool,
+     *   canCheckout: bool
+     * }
+     */
+    public function checkoutQuote(Event $event, Plan $targetPlan): array
+    {
+        $currentPlan = $event->plan;
+        $targetPriceCents = max(0, (int) $targetPlan->price_cents);
+        $currentPriceCents = $currentPlan instanceof Plan
+            ? max(0, (int) $currentPlan->price_cents)
+            : 0;
+        $isCurrentPlan = $currentPlan instanceof Plan && $currentPlan->is($targetPlan);
+        $isUpgrade = $event->is_paid
+            && $currentPlan instanceof Plan
+            && $targetPriceCents > $currentPriceCents;
+        $isDowngrade = $event->is_paid
+            && $currentPlan instanceof Plan
+            && $targetPriceCents < $currentPriceCents;
+        $creditedAmountCents = $isUpgrade ? $currentPriceCents : 0;
+        $amountDueCents = $event->is_paid
+            ? max(0, $targetPriceCents - $creditedAmountCents)
+            : $targetPriceCents;
+        $canCheckout = $event->is_paid
+            ? $isUpgrade && $amountDueCents > 0
+            : $amountDueCents > 0;
+
+        return [
+            'targetPriceCents' => $targetPriceCents,
+            'currentPriceCents' => $currentPriceCents,
+            'creditedAmountCents' => $creditedAmountCents,
+            'amountDueCents' => $amountDueCents,
+            'isCurrentPlan' => $isCurrentPlan,
+            'isUpgrade' => $isUpgrade,
+            'isDowngrade' => $isDowngrade,
+            'canCheckout' => $canCheckout,
+        ];
+    }
+
     public function applyAdminUpdate(
         Event $event,
         Plan $plan,
