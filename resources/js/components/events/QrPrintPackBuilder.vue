@@ -7,7 +7,7 @@ import { useTranslations } from '@/composables/useTranslations';
 
 type PrintPackTarget = 'album' | 'wall' | 'invitation';
 type PrintPackPreset = 'welcome_sign' | 'table_card' | 'invitation_insert' | 'wall_sign' | 'small_card';
-type PaperSize = 'A4' | 'A5' | '5x7' | 'card';
+type Orientation = 'portrait' | 'landscape';
 type ThemeKey = 'bloom' | 'garden' | 'classic' | 'midnight';
 
 const props = defineProps<{
@@ -23,12 +23,12 @@ const props = defineProps<{
 const { t } = useTranslations();
 
 const presetKeys: PrintPackPreset[] = ['welcome_sign', 'table_card', 'invitation_insert', 'wall_sign', 'small_card'];
-const paperSizes: PaperSize[] = ['A4', 'A5', '5x7', 'card'];
+const orientations: Orientation[] = ['portrait', 'landscape'];
 const themeKeys: ThemeKey[] = ['bloom', 'garden', 'classic', 'midnight'];
 
 const selectedTarget = ref<PrintPackTarget>(props.targets[0]?.key ?? 'album');
 const selectedPreset = ref<PrintPackPreset>('welcome_sign');
-const selectedPaperSize = ref<PaperSize>('A4');
+const selectedOrientation = ref<Orientation>('portrait');
 const selectedTheme = ref<ThemeKey>('bloom');
 const layoutMode = ref<'preview' | 'controls'>('preview');
 const previewViewport = ref<HTMLElement | null>(null);
@@ -44,7 +44,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
     title: string;
     body: string;
     defaultTarget: PrintPackTarget;
-    defaultPaperSize: PaperSize;
+    defaultOrientation: Orientation;
     defaultTheme: ThemeKey;
     instruction: string;
 }>>(() => ({
@@ -52,7 +52,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
         title: t('event_home.print_pack.presets.welcome_sign.title'),
         body: t('event_home.print_pack.presets.welcome_sign.body'),
         defaultTarget: 'album',
-        defaultPaperSize: 'A4',
+        defaultOrientation: 'portrait',
         defaultTheme: 'bloom',
         instruction: t('event_home.print_pack.instructions.album'),
     },
@@ -60,7 +60,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
         title: t('event_home.print_pack.presets.table_card.title'),
         body: t('event_home.print_pack.presets.table_card.body'),
         defaultTarget: 'album',
-        defaultPaperSize: 'card',
+        defaultOrientation: 'landscape',
         defaultTheme: 'garden',
         instruction: t('event_home.print_pack.instructions.album'),
     },
@@ -68,7 +68,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
         title: t('event_home.print_pack.presets.invitation_insert.title'),
         body: t('event_home.print_pack.presets.invitation_insert.body'),
         defaultTarget: 'invitation',
-        defaultPaperSize: '5x7',
+        defaultOrientation: 'portrait',
         defaultTheme: 'classic',
         instruction: t('event_home.print_pack.instructions.invitation'),
     },
@@ -76,7 +76,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
         title: t('event_home.print_pack.presets.wall_sign.title'),
         body: t('event_home.print_pack.presets.wall_sign.body'),
         defaultTarget: 'wall',
-        defaultPaperSize: 'A4',
+        defaultOrientation: 'portrait',
         defaultTheme: 'midnight',
         instruction: t('event_home.print_pack.instructions.wall'),
     },
@@ -84,7 +84,7 @@ const presetMeta = computed<Record<PrintPackPreset, {
         title: t('event_home.print_pack.presets.small_card.title'),
         body: t('event_home.print_pack.presets.small_card.body'),
         defaultTarget: 'album',
-        defaultPaperSize: 'card',
+        defaultOrientation: 'landscape',
         defaultTheme: 'classic',
         instruction: t('event_home.print_pack.instructions.album'),
     },
@@ -132,11 +132,9 @@ const themeMeta: Record<ThemeKey, {
     },
 };
 
-const sizeMeta: Record<PaperSize, { width: number; height: number; label: string }> = {
-    A4: { width: 1240, height: 1754, label: 'A4' },
-    A5: { width: 874, height: 1240, label: 'A5' },
-    '5x7': { width: 1000, height: 1400, label: '5x7' },
-    card: { width: 1120, height: 720, label: t('event_home.print_pack.sizes.card') },
+const orientationMeta: Record<Orientation, { width: number; height: number; label: string }> = {
+    portrait: { width: 1240, height: 1754, label: t('event_home.print_pack.orientation.portrait') },
+    landscape: { width: 1754, height: 1240, label: t('event_home.print_pack.orientation.landscape') },
 };
 
 const selectedTargetMeta = computed(
@@ -144,7 +142,8 @@ const selectedTargetMeta = computed(
 );
 const activePresetMeta = computed(() => presetMeta.value[selectedPreset.value]);
 const activeThemeMeta = computed(() => themeMeta[selectedTheme.value]);
-const activeSizeMeta = computed(() => sizeMeta[selectedPaperSize.value]);
+const activeOrientationMeta = computed(() => orientationMeta[selectedOrientation.value]);
+const isLandscape = computed(() => selectedOrientation.value === 'landscape');
 
 const controlsExpanded = computed(() => layoutMode.value === 'controls');
 const layoutClass = computed(() =>
@@ -152,7 +151,7 @@ const layoutClass = computed(() =>
         ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]'
         : 'xl:grid-cols-[minmax(20rem,0.42fr)_minmax(0,0.58fr)]',
 );
-const previewAspectRatio = computed(() => `${activeSizeMeta.value.width} / ${activeSizeMeta.value.height}`);
+const previewAspectRatio = computed(() => `${activeOrientationMeta.value.width} / ${activeOrientationMeta.value.height}`);
 const previewDisplayWidth = computed(() => {
     if (previewViewportWidth.value === 0) {
         return null;
@@ -188,7 +187,7 @@ const applyPreset = (preset: PrintPackPreset): void => {
     const config = presetMeta.value[preset];
     selectedPreset.value = preset;
     selectedTarget.value = config.defaultTarget;
-    selectedPaperSize.value = config.defaultPaperSize;
+    selectedOrientation.value = config.defaultOrientation;
     selectedTheme.value = config.defaultTheme;
 };
 
@@ -249,7 +248,7 @@ const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
         return null;
     }
 
-    const size = sizeMeta[selectedPaperSize.value];
+    const size = orientationMeta[selectedOrientation.value];
     const theme = activeThemeMeta.value;
     const qrImage = await loadImage(target.qrDataUrl);
     const backgroundImage = await loadImage(theme.imageUrl);
@@ -267,29 +266,37 @@ const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
     context.fillStyle = theme.tint;
     context.fillRect(0, 0, size.width, size.height);
 
-    const padding = size.width * (selectedPaperSize.value === 'card' ? 0.08 : 0.1);
-    const qrSize = selectedPaperSize.value === 'card' ? size.height * 0.42 : size.width * 0.36;
+    const padding = size.width * (isLandscape.value ? 0.075 : 0.1);
+    const qrSize = isLandscape.value ? Math.min(size.width * 0.27, size.height * 0.39) : size.width * 0.36;
     const qrX = (size.width - qrSize) / 2;
-    const qrY = selectedPaperSize.value === 'card' ? size.height * 0.3 : size.height * 0.42;
+    const qrY = size.height * (isLandscape.value ? 0.41 : 0.42);
     const titleWidth = size.width - padding * 2;
 
     context.textAlign = 'center';
     context.fillStyle = theme.mutedColor;
     context.font = `${Math.round(size.width * 0.018)}px Inter, Arial, sans-serif`;
-    context.fillText(activePresetMeta.value.title.toUpperCase(), size.width / 2, size.height * 0.11);
+    context.fillText(activePresetMeta.value.title.toUpperCase(), size.width / 2, size.height * (isLandscape.value ? 0.1 : 0.11));
 
     context.fillStyle = theme.textColor;
-    context.font = `600 ${Math.round(selectedPaperSize.value === 'card' ? size.width * 0.052 : size.width * 0.062)}px Georgia, serif`;
+    context.font = `600 ${Math.round(size.width * (isLandscape.value ? 0.05 : 0.062))}px Georgia, serif`;
     const titleLines = wrapCanvasText(context, props.eventName, titleWidth);
     titleLines.slice(0, 3).forEach((line, index) => {
-        context.fillText(line, size.width / 2, size.height * 0.19 + index * size.width * 0.055);
+        context.fillText(
+            line,
+            size.width / 2,
+            size.height * (isLandscape.value ? 0.18 : 0.19) + index * size.width * (isLandscape.value ? 0.043 : 0.055),
+        );
     });
 
     context.fillStyle = theme.mutedColor;
-    context.font = `${Math.round(size.width * 0.024)}px Inter, Arial, sans-serif`;
+    context.font = `${Math.round(size.width * (isLandscape.value ? 0.018 : 0.024))}px Inter, Arial, sans-serif`;
     const instructionLines = wrapCanvasText(context, activePresetMeta.value.instruction, size.width - padding * 2.2);
     instructionLines.slice(0, 4).forEach((line, index) => {
-        context.fillText(line, size.width / 2, size.height * 0.33 + index * size.width * 0.03);
+        context.fillText(
+            line,
+            size.width / 2,
+            size.height * (isLandscape.value ? 0.31 : 0.33) + index * size.width * (isLandscape.value ? 0.022 : 0.03),
+        );
     });
 
     const framePadding = Math.round(qrSize * 0.12);
@@ -301,20 +308,32 @@ const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
 
     context.fillStyle = theme.mutedColor;
     context.font = `${Math.round(size.width * 0.018)}px Inter, Arial, sans-serif`;
-    context.fillText(t('event_home.print_pack.footer.scan_hint'), size.width / 2, qrY + qrSize + size.width * 0.05);
+    context.fillText(
+        t('event_home.print_pack.footer.scan_hint'),
+        size.width / 2,
+        qrY + qrSize + size.width * (isLandscape.value ? 0.032 : 0.05),
+    );
 
     context.fillStyle = theme.textColor;
-    context.font = `600 ${Math.round(size.width * 0.022)}px Inter, Arial, sans-serif`;
+    context.font = `600 ${Math.round(size.width * (isLandscape.value ? 0.018 : 0.022))}px Inter, Arial, sans-serif`;
     const footerLines = wrapCanvasText(context, footerLabel.value, size.width - padding * 2.4);
     footerLines.slice(0, 2).forEach((line, index) => {
-        context.fillText(line, size.width / 2, size.height * 0.85 + index * size.width * 0.026);
+        context.fillText(
+            line,
+            size.width / 2,
+            size.height * (isLandscape.value ? 0.82 : 0.85) + index * size.width * (isLandscape.value ? 0.02 : 0.026),
+        );
     });
 
     context.fillStyle = theme.mutedColor;
-    context.font = `${Math.round(size.width * 0.017)}px Inter, Arial, sans-serif`;
+    context.font = `${Math.round(size.width * (isLandscape.value ? 0.015 : 0.017))}px Inter, Arial, sans-serif`;
     const urlLines = wrapCanvasText(context, target.url, size.width - padding * 2.4);
     urlLines.slice(0, 2).forEach((line, index) => {
-        context.fillText(line, size.width / 2, size.height * 0.91 + index * size.width * 0.022);
+        context.fillText(
+            line,
+            size.width / 2,
+            size.height * (isLandscape.value ? 0.89 : 0.91) + index * size.width * (isLandscape.value ? 0.017 : 0.022),
+        );
     });
 
     return canvas;
@@ -460,7 +479,7 @@ const printPack = async (): Promise<void> => {
 };
 
 watch(
-    [selectedTarget, selectedPreset, selectedPaperSize, selectedTheme, footerLabel, () => props.eventName],
+    [selectedTarget, selectedPreset, selectedOrientation, selectedTheme, footerLabel, () => props.eventName],
     () => {
         void refreshPreviewImage();
     },
@@ -572,22 +591,22 @@ onBeforeUnmount(() => {
 
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                        {{ t('event_home.print_pack.size_title') }}
+                        {{ t('event_home.print_pack.orientation_title') }}
                     </p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button
-                            v-for="paperSize in paperSizes"
-                            :key="paperSize"
+                            v-for="orientation in orientations"
+                            :key="orientation"
                             type="button"
                             :class="[
                                 'rounded-full px-4 py-2 text-sm font-medium transition',
-                                selectedPaperSize === paperSize
+                                selectedOrientation === orientation
                                     ? 'bg-[#171411] text-white'
                                     : 'bg-white text-[#171411] ring-1 ring-black/8 hover:ring-black/16',
                             ]"
-                            @click="selectedPaperSize = paperSize"
+                            @click="selectedOrientation = orientation"
                         >
-                            {{ sizeMeta[paperSize].label }}
+                            {{ orientationMeta[orientation].label }}
                         </button>
                     </div>
                 </div>
