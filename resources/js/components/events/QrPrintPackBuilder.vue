@@ -30,6 +30,7 @@ const selectedTarget = ref<PrintPackTarget>(props.targets[0]?.key ?? 'album');
 const selectedPreset = ref<PrintPackPreset>('welcome_sign');
 const selectedPaperSize = ref<PaperSize>('A4');
 const selectedTheme = ref<ThemeKey>('bloom');
+const layoutMode = ref<'preview' | 'controls'>('preview');
 
 const presetMeta = computed<Record<PrintPackPreset, {
     title: string;
@@ -135,6 +136,13 @@ const selectedTargetMeta = computed(
 );
 const activePresetMeta = computed(() => presetMeta.value[selectedPreset.value]);
 const activeThemeMeta = computed(() => themeMeta[selectedTheme.value]);
+
+const controlsExpanded = computed(() => layoutMode.value === 'controls');
+const layoutClass = computed(() =>
+    controlsExpanded.value
+        ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]'
+        : 'xl:grid-cols-[minmax(20rem,0.42fr)_minmax(0,0.58fr)]',
+);
 
 const posterFilenameBase = computed(() => {
     const slug = props.eventName
@@ -440,13 +448,44 @@ const printPack = (): void => {
 </script>
 
 <template>
-    <div class="grid gap-8 xl:grid-cols-[22rem_minmax(0,1fr)]">
-        <aside class="space-y-6 border-b border-black/6 pb-6 xl:border-r xl:border-b-0 xl:pb-0 xl:pr-8">
+    <div class="space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                    {{ t('event_home.print_pack.layout_title') }}
+                </p>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ t('event_home.print_pack.layout_description') }}
+                </p>
+            </div>
+
+            <div class="inline-flex rounded-full bg-white p-1 ring-1 ring-black/8">
+                <button
+                    type="button"
+                    class="rounded-full px-4 py-2 text-sm font-medium transition"
+                    :class="layoutMode === 'preview' ? 'bg-[#171411] text-white' : 'text-zinc-600 hover:text-zinc-900'"
+                    @click="layoutMode = 'preview'"
+                >
+                    {{ t('event_home.print_pack.layout.preview_focus') }}
+                </button>
+                <button
+                    type="button"
+                    class="rounded-full px-4 py-2 text-sm font-medium transition"
+                    :class="layoutMode === 'controls' ? 'bg-[#171411] text-white' : 'text-zinc-600 hover:text-zinc-900'"
+                    @click="layoutMode = 'controls'"
+                >
+                    {{ t('event_home.print_pack.layout.controls_focus') }}
+                </button>
+            </div>
+        </div>
+
+        <div class="grid gap-8" :class="layoutClass">
+        <aside class="space-y-6 border-b border-black/6 pb-6 xl:max-h-[calc(100vh-13rem)] xl:overflow-y-auto xl:border-r xl:border-b-0 xl:pb-0 xl:pr-6">
             <section>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                     {{ t('event_home.print_pack.presets_title') }}
                 </p>
-                <div class="mt-3 flex flex-col gap-2.5">
+                <div class="mt-3 grid gap-2.5" :class="controlsExpanded ? 'xl:grid-cols-2' : ''">
                     <button
                         v-for="preset in presetKeys"
                         :key="preset"
@@ -516,7 +555,7 @@ const printPack = (): void => {
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                         {{ t('event_home.print_pack.background_title') }}
                     </p>
-                    <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2" :class="controlsExpanded ? 'xl:grid-cols-2' : 'xl:grid-cols-1'">
                         <button
                             v-for="theme in themeKeys"
                             :key="theme"
@@ -570,6 +609,7 @@ const printPack = (): void => {
         </aside>
 
         <section>
+            <div class="xl:sticky xl:top-6">
             <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -631,6 +671,8 @@ const printPack = (): void => {
                     </div>
                 </div>
             </div>
+            </div>
         </section>
+        </div>
     </div>
 </template>
