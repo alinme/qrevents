@@ -288,8 +288,8 @@ const copyInvitationLink = async (): Promise<void> => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="`${currentEvent.name} · ${t('app.nav.invite_studio')}`" />
 
-        <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-4 p-4 md:p-6">
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="flex h-[calc(100svh-4rem)] flex-col gap-3 overflow-hidden p-3 md:p-4">
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
                 <div class="flex flex-wrap items-center gap-2">
                     <button
                         v-for="theme in invitationSheetThemes"
@@ -357,9 +357,9 @@ const copyInvitationLink = async (): Promise<void> => {
                 </div>
             </div>
 
-            <section class="flex min-h-0 flex-1 items-center justify-center overflow-hidden py-2">
+            <section class="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
                 <InvitationSheet
-                    class="h-full max-h-[calc(100vh-15rem)] w-auto max-w-full"
+                    class="block h-full max-h-full w-auto max-w-full"
                     :template="invitationSettingsForm.template"
                     :guest-label="t('guests.invitation.preview_guest_label')"
                     :logo-url="invitationPreview.branding.logoUrl"

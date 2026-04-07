@@ -43,9 +43,10 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="`${currentEvent.name} · ${t('event_home.print_pack.title')}`" />
 
-        <div class="min-h-screen bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
-            <div class="mx-auto max-w-[1560px] px-4 py-4 sm:px-6 lg:px-8">
+        <div class="h-[calc(100svh-4rem)] overflow-hidden bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
+            <div class="mx-auto flex h-full max-w-[1560px] flex-col px-4 py-3 sm:px-6 lg:px-8">
                 <QrPrintPackBuilder
+                    class="min-h-0 flex-1"
                     :event-id="currentEvent.id"
                     :event-name="currentEvent.name"
                     :album-url="eventLinks.album"

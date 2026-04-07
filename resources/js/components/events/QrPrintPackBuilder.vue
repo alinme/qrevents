@@ -136,8 +136,8 @@ const copyAlbumLink = async (): Promise<void> => {
 </script>
 
 <template>
-    <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-6 py-2">
-        <div class="flex flex-wrap items-center gap-2">
+    <div class="flex h-full min-h-0 flex-col gap-3 overflow-hidden py-1">
+        <div class="flex shrink-0 flex-wrap items-center gap-2">
             <div class="flex flex-wrap items-center gap-2">
                 <button
                     v-for="theme in qrTemplateDefinitions"
@@ -170,10 +170,10 @@ const copyAlbumLink = async (): Promise<void> => {
             </div>
         </div>
 
-        <div class="flex min-h-0 flex-1 items-center justify-center overflow-hidden py-2">
+        <div class="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
             <component
                 :is="activeTemplate.component"
-                class="h-full max-h-[calc(100vh-15rem)] w-auto max-w-full"
+                class="block h-full max-h-full w-auto max-w-full"
                 :subtitle="subtitleText"
                 :title="titleText"
                 :slogan="sloganText"
