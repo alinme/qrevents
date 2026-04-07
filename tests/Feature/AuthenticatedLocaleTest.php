@@ -42,6 +42,7 @@ it('shares localized strings on event media, invite studio, settings, and print 
             ->component('events/InviteStudio')
             ->where('locale.current', 'ro')
             ->where('translations.guests.invitation.studio_title', 'Invitation Studio')
+            ->where('translations.guests.invitation.simple_description', 'Alege fundalul, editeaza textul si deschide sau tipareste invitatia live dintr-un singur loc linistit.')
             ->where('translations.app.nav.invite_studio', 'Studio invitatii')
             ->where('eventNavigation.3.title', 'Studio invitatii')
         );

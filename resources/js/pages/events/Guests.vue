@@ -79,7 +79,7 @@ type EventTable = {
 };
 
 type EventInvitationSettings = {
-    template: InvitationTemplateId;
+    template: string;
     headline: string;
     message: string;
     closing: string;

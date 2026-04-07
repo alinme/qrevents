@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Copy, ExternalLink, Printer, Save } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { toast } from 'vue-sonner';
-import GuestInvitationPanel from '@/components/events/guests/GuestInvitationPanel.vue';
-import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import InputError from '@/components/InputError.vue';
+import InvitationSheet from '@/components/invitations/InvitationSheet.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
@@ -23,10 +21,9 @@ import type {
     InvitationWeddingDetails,
 } from '@/lib/invitation-presentation';
 import {
-    findInvitationTemplateStudioZone,
-    invitationTemplateDefinitions,
-} from '@/lib/invitation-templates';
-import type { InvitationTemplateId } from '@/lib/invitation-templates';
+    invitationSheetThemes,
+    normalizeInvitationSheetTheme,
+} from '@/lib/invitation-sheet-themes';
 import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {
@@ -38,11 +35,10 @@ type EventPayload = {
 type EventLinks = {
     inviteStudio: string;
     invitationSettingsUpdate: string;
-    guestInvitationsBulkUpdate: string;
 };
 
 type EventInvitationSettings = {
-    template: InvitationTemplateId;
+    template: string;
     headline: string;
     message: string;
     closing: string;
@@ -63,58 +59,15 @@ type InvitationPreviewPayload = {
     };
 };
 
-type GuestParty = {
-    id: number;
-    name: string;
-    attendanceStatus: 'pending' | 'accepted' | 'declined';
-    invitationOpenCount: number;
-    reminderCount: number;
-    respondedAt: string | null;
-    inviteUrl: string;
-    invitationHistory: Array<{
-        type: 'sent_online' | 'delivered_in_person' | 'reminded' | 'opened' | 'responded';
-        deliveryChannel: string | null;
-        createdAt: string | null;
-        meta: Record<string, unknown>;
-    }>;
-};
-
-type InvitationTemplatePreviewContent = {
-    eventName: string;
-    guestLabel: string | null;
-    headline: string;
-    message: string;
-    closing: string;
-    detailLines: string[];
-    dateLabel: string | null;
-    venueAddress: string | null;
-};
-
-type InvitationOverflowWarning = {
-    key: string;
-    tone: 'warning' | 'danger';
-    label: string;
-    message: string;
-};
-
-type InvitationActivity = {
-    guestName: string;
-    type: 'sent_online' | 'delivered_in_person' | 'reminded' | 'opened' | 'responded';
-    deliveryChannel: string | null;
-    createdAt: string | null;
-    meta: Record<string, unknown>;
-};
-
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
     invitationPreview: InvitationPreviewPayload;
-    guestParties: GuestParty[];
 }>();
 
-const { locale, t } = useTranslations();
+const { t } = useTranslations();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
@@ -128,7 +81,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const invitationSettingsForm = useForm({
-    template: props.eventInvitationSettings.template,
+    template: normalizeInvitationSheetTheme(props.eventInvitationSettings.template),
     headline: props.eventInvitationSettings.headline,
     message: props.eventInvitationSettings.message,
     closing: props.eventInvitationSettings.closing,
@@ -155,40 +108,6 @@ const invitationSettingsForm = useForm({
     },
 });
 
-const invitationBulkForm = useForm({
-    guest_party_ids: [] as number[],
-    action: 'mark_sent_online' as 'mark_delivered_in_person' | 'mark_sent_online' | 'mark_reminded_online',
-    delivery_channel: 'other' as 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
-});
-
-const savingInvitationSettings = ref(false);
-const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
-const invitationTemplateCards = invitationTemplateDefinitions;
-
-const localeFormat = computed(() => {
-    if (locale.value === 'ro') {
-        return 'ro-RO';
-    }
-
-    if (locale.value === 'el') {
-        return 'el-GR';
-    }
-
-    return 'en-GB';
-});
-
-const pendingInvitationParties = computed(() => {
-    return props.guestParties.filter((party) => party.attendanceStatus === 'pending');
-});
-
-const previewingInvitationTemplateCard = computed(() => {
-    if (!previewingInvitationTemplateId.value) {
-        return null;
-    }
-
-    return invitationTemplateCards.find((template) => template.id === previewingInvitationTemplateId.value) ?? null;
-});
-
 const invitationStudioContent = computed<InvitationStudioContent>(() => ({
     partnerOneName: invitationSettingsForm.content.partner_one_name,
     partnerTwoName: invitationSettingsForm.content.partner_two_name,
@@ -210,121 +129,7 @@ const invitationStudioVisibility = computed<InvitationStudioVisibility>(() => ({
     contactPhone: invitationSettingsForm.visibility.contact_phone,
 }));
 
-const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): InvitationTemplatePreviewContent => {
-    if (templateId === 'canva_cream') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Luca',
-                partnerTwoName: 'Danielle',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Maria and Daniel',
-                groomParents: 'Elena and Victor',
-                godparents: 'Bianca and Stefan',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'We are getting married!',
-            closing: 'See you there',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Saturday • 15 November 2023 • 6 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    if (templateId === 'canva_brown') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Elena',
-                partnerTwoName: 'Matei',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Adriana and Pavel',
-                groomParents: 'Monica and Sorin',
-                godparents: 'Bianca and Vlad',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'We are getting married!',
-            closing: 'With love',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Saturday • 20 September 2026 • 10 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    if (templateId === 'canva_watercolor') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Francois',
-                partnerTwoName: 'Juliana',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Sofia and Mircea',
-                groomParents: 'Camelia and Adrian',
-                godparents: 'Andreea and Stefan',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'Join us for our wedding celebration.',
-            closing: 'Please respond when you can',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Sunday • 28 January 2027 • 10 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    const presentation = composeInvitationPaperPresentation({
-        eventName: props.currentEvent.name,
-        eventType: props.currentEvent.type,
-        headline: invitationSettingsForm.headline || props.currentEvent.name,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    });
-    const footerMeta = resolveInvitationFooterMeta({
-        defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
-        defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
-        contactPhone: invitationSettingsForm.contact_phone || null,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    });
-
-    return {
-        eventName: presentation.leadIn,
-        guestLabel: t('guests.invitation.preview_guest_label'),
-        headline: presentation.title,
-        message: invitationSettingsForm.message || t('guests.invitation.default_message'),
-        closing: invitationSettingsForm.closing || t('guests.invitation.default_closing'),
-        detailLines: presentation.detailLines,
-        dateLabel: footerMeta.dateLabel,
-        venueAddress: footerMeta.venueAddress,
-    };
-};
-
-const activeInvitationPresentation = computed(() => composeInvitationPaperPresentation({
+const invitationPresentation = computed(() => composeInvitationPaperPresentation({
     eventName: props.currentEvent.name,
     eventType: props.currentEvent.type,
     headline: invitationSettingsForm.headline || props.currentEvent.name,
@@ -333,7 +138,7 @@ const activeInvitationPresentation = computed(() => composeInvitationPaperPresen
     weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
 }));
 
-const activeInvitationFooterMeta = computed(() => resolveInvitationFooterMeta({
+const invitationFooterMeta = computed(() => resolveInvitationFooterMeta({
     defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
     defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
     contactPhone: invitationSettingsForm.contact_phone || null,
@@ -342,336 +147,35 @@ const activeInvitationFooterMeta = computed(() => resolveInvitationFooterMeta({
     weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
 }));
 
-const invitationOverflowWarnings = computed<InvitationOverflowWarning[]>(() => {
-    const titleZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'couple');
-    const leadInZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'lead_in');
-    const messageZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'message');
-    const rsvpZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'rsvp_note');
-    const parentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'parents');
-    const godparentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'godparents');
-    const venueZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'venue');
-    const dateZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'date');
-    const warnings: InvitationOverflowWarning[] = [];
+const liveInvitationPrintUrl = computed(() => {
+    const separator = props.publicInvitationUrl.includes('?') ? '&' : '?';
 
-    const pushZoneWarning = (
-        key: string,
-        label: string,
-        value: string | null,
-        safeLength: number | undefined,
-        maxLength: number | undefined,
-    ): void => {
-        const length = value?.trim().length ?? 0;
-        if (length === 0 || safeLength === undefined || maxLength === undefined) {
-            return;
-        }
-
-        if (length > maxLength) {
-            warnings.push({
-                key,
-                tone: 'danger',
-                label,
-                message: t('guests.invitation.fit_error', { label, max: maxLength }),
-            });
-
-            return;
-        }
-
-        if (length > safeLength) {
-            warnings.push({
-                key,
-                tone: 'warning',
-                label,
-                message: t('guests.invitation.fit_warning', { label, max: maxLength }),
-            });
-        }
-    };
-
-    pushZoneWarning('lead_in', t('guests.invitation.lead_in_label'), invitationSettingsForm.headline, leadInZone?.safeLength, leadInZone?.maxLength);
-    pushZoneWarning('couple', t('guests.invitation.couple_title'), activeInvitationPresentation.value.title, titleZone?.safeLength, titleZone?.maxLength);
-    pushZoneWarning('message', t('guests.invitation.message_label'), invitationSettingsForm.message, messageZone?.safeLength, messageZone?.maxLength);
-    pushZoneWarning('rsvp_note', t('guests.invitation.rsvp_note_label'), invitationSettingsForm.closing, rsvpZone?.safeLength, rsvpZone?.maxLength);
-
-    if (invitationSettingsForm.visibility.parents) {
-        pushZoneWarning(
-            'parents',
-            t('guests.invitation.parents_title'),
-            [invitationSettingsForm.content.bride_parents, invitationSettingsForm.content.groom_parents].filter(Boolean).join(' '),
-            parentsZone?.safeLength,
-            parentsZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.godparents) {
-        pushZoneWarning(
-            'godparents',
-            t('guests.invitation.godparents_label'),
-            invitationSettingsForm.content.godparents,
-            godparentsZone?.safeLength,
-            godparentsZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.date) {
-        pushZoneWarning(
-            'date',
-            t('guests.invitation.date_text_label'),
-            activeInvitationFooterMeta.value.dateLabel,
-            dateZone?.safeLength,
-            dateZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.venue) {
-        pushZoneWarning(
-            'venue',
-            t('guests.invitation.venue_text_label'),
-            activeInvitationFooterMeta.value.venueAddress,
-            venueZone?.safeLength,
-            venueZone?.maxLength,
-        );
-    }
-
-    return warnings;
-});
-
-const invitationSummaryCards = computed(() => [
-    {
-        label: t('guests.invitation.summary.pending'),
-        value: pendingInvitationParties.value.length,
-    },
-    {
-        label: t('guests.invitation.summary.opened'),
-        value: props.guestParties.filter((party) => party.invitationOpenCount > 0).length,
-    },
-    {
-        label: t('guests.invitation.summary.answered'),
-        value: props.guestParties.filter((party) => party.respondedAt !== null).length,
-    },
-    {
-        label: t('guests.invitation.summary.reminded'),
-        value: props.guestParties.filter((party) => party.reminderCount > 0).length,
-    },
-]);
-
-const invitationRecentActivity = computed<InvitationActivity[]>(() => {
-    return props.guestParties
-        .flatMap((party) => party.invitationHistory.map((activity) => ({
-            ...activity,
-            guestName: party.name,
-        })))
-        .sort((left, right) => {
-            const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
-            const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
-
-            return rightTime - leftTime;
-        })
-        .slice(0, 6);
+    return `${props.publicInvitationUrl}${separator}print=1`;
 });
 
 const saveInvitationSettings = (): void => {
-    savingInvitationSettings.value = true;
-
     invitationSettingsForm.patch(props.eventLinks.invitationSettingsUpdate, {
         preserveScroll: true,
         onSuccess: () => {
             toast.success(t('guests.messages.invitation_saved'));
         },
-        onFinish: () => {
-            savingInvitationSettings.value = false;
-        },
     });
 };
 
-const formatDateTime = (value: string | null): string => {
-    if (!value) {
-        return t('guests.shared.not_yet');
-    }
-
-    return new Intl.DateTimeFormat(localeFormat.value, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    }).format(new Date(value));
+const openLiveInvitation = (): void => {
+    window.open(props.publicInvitationUrl, '_blank', 'noopener,noreferrer');
 };
 
-const invitationHistoryLabel = (activity: GuestParty['invitationHistory'][number]): string => {
-    const attendanceStatus = typeof activity.meta.attendanceStatus === 'string' ? activity.meta.attendanceStatus : null;
-
-    return {
-        sent_online: t('guests.history.sent_online'),
-        delivered_in_person: t('guests.history.delivered'),
-        reminded: t('guests.history.reminded'),
-        opened: t('guests.history.opened'),
-        responded: attendanceStatus === 'accepted'
-            ? t('guests.history.responded_accepted')
-            : attendanceStatus === 'declined'
-                ? t('guests.history.responded_declined')
-                : t('guests.history.responded_updated'),
-    }[activity.type];
+const printLiveInvitation = (): void => {
+    window.open(liveInvitationPrintUrl.value, '_blank', 'noopener,noreferrer');
 };
 
-const copyLink = async (url: string, label: string): Promise<void> => {
+const copyInvitationLink = async (): Promise<void> => {
     try {
-        await navigator.clipboard.writeText(url);
-        toast.success(t('guests.messages.label_copied', { label }));
+        await navigator.clipboard.writeText(props.publicInvitationUrl);
+        toast.success(t('guests.messages.label_copied', { label: t('guests.invitation.preview_link_label') }));
     } catch {
-        toast.error(t('guests.messages.copy_label_failed', { label: label.toLowerCase() }));
-    }
-};
-
-const openInvite = (url: string): void => {
-    window.open(url, '_blank', 'noopener,noreferrer');
-};
-
-const saveInvitationPreview = (): void => {
-    const separator = props.publicInvitationUrl.includes('?') ? '&' : '?';
-
-    window.open(`${props.publicInvitationUrl}${separator}print=1`, '_blank', 'noopener,noreferrer');
-};
-
-const invitationMessageForParty = (party: GuestParty): string => {
-    return [
-        invitationSettingsForm.headline,
-        `${party.name},`,
-        invitationSettingsForm.message,
-        invitationSettingsForm.closing,
-        invitationSettingsForm.visibility.contact_phone && invitationSettingsForm.contact_phone
-            ? t('guests.messages.contact_line', { phone: invitationSettingsForm.contact_phone })
-            : null,
-        t('guests.messages.rsvp_line', { url: party.inviteUrl }),
-    ]
-        .filter((line): line is string => Boolean(line && line.trim() !== ''))
-        .join('\n\n');
-};
-
-const invitationMessageForParties = (parties: GuestParty[]): string => {
-    return parties
-        .map((party) => invitationMessageForParty(party))
-        .join('\n\n--------------------\n\n');
-};
-
-const reminderMessageForParty = (party: GuestParty): string => {
-    return [
-        `${party.name},`,
-        t('guests.messages.reminder_intro'),
-        invitationSettingsForm.headline,
-        invitationSettingsForm.message,
-        invitationSettingsForm.visibility.contact_phone && invitationSettingsForm.contact_phone
-            ? t('guests.messages.contact_line', { phone: invitationSettingsForm.contact_phone })
-            : null,
-        t('guests.messages.rsvp_line', { url: party.inviteUrl }),
-    ]
-        .filter((line): line is string => Boolean(line && line.trim() !== ''))
-        .join('\n\n');
-};
-
-const reminderMessageForParties = (parties: GuestParty[]): string => {
-    return parties
-        .map((party) => reminderMessageForParty(party))
-        .join('\n\n--------------------\n\n');
-};
-
-const updateInvitationDelivery = (
-    guestPartyIds: number[],
-    action: 'mark_delivered_in_person' | 'mark_sent_online' | 'mark_reminded_online',
-    deliveryChannel: 'in_person' | 'phone' | 'whatsapp' | 'facebook' | 'public_link' | 'other',
-): void => {
-    if (guestPartyIds.length === 0) {
-        return;
-    }
-
-    invitationBulkForm.guest_party_ids = guestPartyIds;
-    invitationBulkForm.action = action;
-    invitationBulkForm.delivery_channel = deliveryChannel;
-
-    invitationBulkForm.post(props.eventLinks.guestInvitationsBulkUpdate, {
-        preserveScroll: true,
-    });
-};
-
-const shareGuestPartyBundle = async (
-    parties: GuestParty[],
-    mode: 'invite' | 'reminder',
-): Promise<void> => {
-    if (parties.length === 0) {
-        toast.error(
-            mode === 'reminder'
-                ? t('guests.messages.no_pending_reminders')
-                : t('guests.messages.select_invitee_first'),
-        );
-
-        return;
-    }
-
-    const text = mode === 'reminder'
-        ? reminderMessageForParties(parties)
-        : invitationMessageForParties(parties);
-    const title = mode === 'reminder'
-        ? `${props.currentEvent.name} reminder`
-        : `${props.currentEvent.name} invitations`;
-
-    try {
-        if (navigator.share) {
-            await navigator.share({
-                title,
-                text,
-            });
-        } else {
-            await navigator.clipboard.writeText(text);
-            toast.success(
-                mode === 'reminder'
-                    ? t('guests.messages.reminder_bundle_copied')
-                    : t('guests.messages.invitation_bundle_copied'),
-            );
-        }
-
-        updateInvitationDelivery(
-            parties.map((party) => party.id),
-            mode === 'reminder' ? 'mark_reminded_online' : 'mark_sent_online',
-            'other',
-        );
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            return;
-        }
-
-        toast.error(
-            mode === 'reminder'
-                ? t('guests.messages.share_reminder_failed')
-                : t('guests.messages.share_invitation_failed'),
-        );
-    }
-};
-
-const sharePendingInvites = async (): Promise<void> => {
-    await shareGuestPartyBundle(pendingInvitationParties.value, 'invite');
-};
-
-const remindPendingInvites = async (): Promise<void> => {
-    await shareGuestPartyBundle(pendingInvitationParties.value, 'reminder');
-};
-
-const copyPendingInvites = async (): Promise<void> => {
-    if (pendingInvitationParties.value.length === 0) {
-        toast.error(t('guests.messages.no_pending_to_copy'));
-
-        return;
-    }
-
-    try {
-        await navigator.clipboard.writeText(invitationMessageForParties(pendingInvitationParties.value));
-        toast.success(t('guests.messages.pending_bundle_copied'));
-    } catch {
-        toast.error(t('guests.messages.pending_bundle_copy_failed'));
-    }
-};
-
-const closeInvitationTemplatePreview = (): void => {
-    previewingInvitationTemplateId.value = null;
-};
-
-const handleInvitationTemplatePreviewOpenChange = (open: boolean): void => {
-    if (!open) {
-        closeInvitationTemplatePreview();
+        toast.error(t('guests.messages.copy_label_failed', { label: t('guests.invitation.preview_link_label').toLowerCase() }));
     }
 };
 </script>
@@ -680,103 +184,326 @@ const handleInvitationTemplatePreviewOpenChange = (open: boolean): void => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="`${currentEvent.name} · ${t('app.nav.invite_studio')}`" />
 
-        <div class="space-y-5 p-4 md:p-6">
-            <section class="space-y-2">
-                <h1 class="text-xl font-semibold tracking-tight text-neutral-950">
-                    {{ t('guests.invitation.studio_title') }}
-                </h1>
-                <p class="max-w-3xl text-sm text-neutral-600">
-                    {{ t('guests.invitation.studio_description') }}
-                </p>
+        <div class="grid gap-6 p-4 lg:grid-cols-[24rem_minmax(0,1fr)] lg:items-start md:p-6">
+            <section class="rounded-[2rem] border border-neutral-200/80 bg-white/90 shadow-sm backdrop-blur">
+                <div class="space-y-4 p-5">
+                    <div class="space-y-2">
+                        <h1 class="text-xl font-semibold tracking-tight text-neutral-950">
+                            {{ t('guests.invitation.studio_title') }}
+                        </h1>
+                        <p class="text-sm leading-6 text-neutral-600">
+                            {{ t('guests.invitation.simple_description') }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            class="rounded-full"
+                            :aria-label="t('guests.invitation.open_live')"
+                            @click="openLiveInvitation"
+                        >
+                            <ExternalLink class="size-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            class="rounded-full"
+                            :aria-label="t('guests.invitation.copy_live')"
+                            @click="copyInvitationLink"
+                        >
+                            <Copy class="size-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            class="rounded-full"
+                            :aria-label="t('guests.invitation.print_live')"
+                            @click="printLiveInvitation"
+                        >
+                            <Printer class="size-4" />
+                        </Button>
+                        <Button
+                            class="ml-auto rounded-full px-4"
+                            :disabled="invitationSettingsForm.processing"
+                            @click="saveInvitationSettings"
+                        >
+                            <Save class="size-4" />
+                            {{ t('guests.invitation.save_changes') }}
+                        </Button>
+                    </div>
+                </div>
+
+                <div class="border-t border-neutral-200/80 p-5">
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.template') }}
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                {{ t('guests.invitation.style_picker_description') }}
+                            </p>
+                        </div>
+
+                        <div class="overflow-x-auto pb-1">
+                            <div class="flex min-w-max gap-3">
+                                <button
+                                    v-for="theme in invitationSheetThemes"
+                                    :key="theme.id"
+                                    type="button"
+                                    class="group w-28 shrink-0 text-left"
+                                    @click="invitationSettingsForm.template = theme.id"
+                                >
+                                    <span
+                                        class="block overflow-hidden rounded-[1.4rem] border transition"
+                                        :class="invitationSettingsForm.template === theme.id ? 'border-neutral-950 shadow-sm' : 'border-neutral-200 group-hover:border-neutral-400'"
+                                    >
+                                        <img
+                                            :src="theme.previewUrl"
+                                            :alt="theme.label"
+                                            class="aspect-[1240/1748] w-full object-cover"
+                                        >
+                                    </span>
+                                    <span class="mt-2 block text-sm font-medium text-neutral-900">
+                                        {{ theme.label }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-neutral-200/80">
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.couple_title') }}
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                {{ t('guests.invitation.couple_description') }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-900">
+                                    {{ t('guests.invitation.partner_one_label') }}
+                                </label>
+                                <Input v-model="invitationSettingsForm.content.partner_one_name" class="rounded-2xl" />
+                                <InputError :message="invitationSettingsForm.errors['content.partner_one_name']" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-neutral-900">
+                                    {{ t('guests.invitation.partner_two_label') }}
+                                </label>
+                                <Input v-model="invitationSettingsForm.content.partner_two_name" class="rounded-2xl" />
+                                <InputError :message="invitationSettingsForm.errors['content.partner_two_name']" />
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.family_name_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.family_name" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.family_name']" />
+                        </div>
+
+                        <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                            <span class="pr-4 text-sm text-neutral-700">
+                                {{ t('guests.invitation.show_family_name') }}
+                            </span>
+                            <Switch v-model="invitationSettingsForm.content.show_family_name" />
+                        </label>
+                    </div>
+
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.copy_title') }}
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                {{ t('guests.invitation.edit_description') }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.lead_in_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.headline" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors.headline" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.message_label') }}
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.message"
+                                rows="5"
+                                :placeholder="t('guests.invitation.message_placeholder')"
+                                class="min-h-28 rounded-[1.6rem]"
+                            />
+                            <InputError :message="invitationSettingsForm.errors.message" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.closing_label') }}
+                            </label>
+                            <Textarea
+                                v-model="invitationSettingsForm.closing"
+                                rows="3"
+                                :placeholder="t('guests.invitation.closing_placeholder')"
+                                class="min-h-20 rounded-[1.6rem]"
+                            />
+                            <InputError :message="invitationSettingsForm.errors.closing" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.schedule_title') }}
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                {{ t('guests.invitation.schedule_description_simple') }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.date_text_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.date_text" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.date_text']" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.venue_text_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.venue_text" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.venue_text']" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.contact_phone') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.contact_phone" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors.contact_phone" />
+                        </div>
+
+                        <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                            <span class="pr-4 text-sm text-neutral-700">
+                                {{ t('guests.invitation.public_rsvp_enabled') }}
+                            </span>
+                            <Switch v-model="invitationSettingsForm.public_rsvp_enabled" />
+                        </label>
+
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                <span class="pr-4 text-sm text-neutral-700">
+                                    {{ t('guests.invitation.show_date') }}
+                                </span>
+                                <Switch v-model="invitationSettingsForm.visibility.date" />
+                            </label>
+
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                <span class="pr-4 text-sm text-neutral-700">
+                                    {{ t('guests.invitation.show_venue') }}
+                                </span>
+                                <Switch v-model="invitationSettingsForm.visibility.venue" />
+                            </label>
+
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                                <span class="pr-4 text-sm text-neutral-700">
+                                    {{ t('guests.invitation.show_contact_phone') }}
+                                </span>
+                                <Switch v-model="invitationSettingsForm.visibility.contact_phone" />
+                            </label>
+                        </div>
+                    </div>
+
+                    <details class="group p-5">
+                        <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-neutral-900">
+                                    {{ t('guests.invitation.extras_title') }}
+                                </p>
+                                <p class="mt-1 text-sm text-neutral-600">
+                                    {{ t('guests.invitation.extras_description') }}
+                                </p>
+                            </div>
+                            <span class="text-sm text-neutral-500 transition group-open:rotate-45">+</span>
+                        </summary>
+
+                        <div class="mt-4 space-y-4">
+                            <div class="grid gap-3">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-neutral-900">
+                                        {{ t('guests.invitation.bride_parents_label') }}
+                                    </label>
+                                    <Input v-model="invitationSettingsForm.content.bride_parents" class="rounded-2xl" />
+                                    <InputError :message="invitationSettingsForm.errors['content.bride_parents']" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-neutral-900">
+                                        {{ t('guests.invitation.groom_parents_label') }}
+                                    </label>
+                                    <Input v-model="invitationSettingsForm.content.groom_parents" class="rounded-2xl" />
+                                    <InputError :message="invitationSettingsForm.errors['content.groom_parents']" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-neutral-900">
+                                        {{ t('guests.invitation.godparents_label') }}
+                                    </label>
+                                    <Input v-model="invitationSettingsForm.content.godparents" class="rounded-2xl" />
+                                    <InputError :message="invitationSettingsForm.errors['content.godparents']" />
+                                </div>
+                            </div>
+
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                                <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                    <span class="pr-4 text-sm text-neutral-700">
+                                        {{ t('guests.invitation.show_family_lines') }}
+                                    </span>
+                                    <Switch v-model="invitationSettingsForm.visibility.parents" />
+                                </label>
+
+                                <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                    <span class="pr-4 text-sm text-neutral-700">
+                                        {{ t('guests.invitation.show_godparents') }}
+                                    </span>
+                                    <Switch v-model="invitationSettingsForm.visibility.godparents" />
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+                </div>
             </section>
 
-            <GuestInvitationPanel
-                :current-event-name="currentEvent.name"
-                :invitation-template-cards="invitationTemplateCards"
-                :selected-template="invitationSettingsForm.template"
-                :headline="invitationSettingsForm.headline"
-                :message="invitationSettingsForm.message"
-                :closing="invitationSettingsForm.closing"
-                :public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled"
-                :contact-phone="invitationSettingsForm.contact_phone"
-                :invitation-content="invitationStudioContent"
-                :invitation-visibility="invitationStudioVisibility"
-                :invitation-overflow-warnings="invitationOverflowWarnings"
-                :public-invitation-url="publicInvitationUrl"
-                :logo-url="invitationPreview.branding.logoUrl"
-                :active-invitation-presentation="activeInvitationPresentation"
-                :active-invitation-footer-meta="activeInvitationFooterMeta"
-                :invitation-summary-cards="invitationSummaryCards"
-                :invitation-recent-activity="invitationRecentActivity"
-                :saving-invitation-settings="savingInvitationSettings"
-                :invitation-settings-processing="invitationSettingsForm.processing"
-                :invitation-template-preview-content="invitationTemplatePreviewContent"
-                :invitation-history-label="invitationHistoryLabel"
-                :format-date-time="formatDateTime"
-                @update:selected-template="invitationSettingsForm.template = $event"
-                @update:headline="invitationSettingsForm.headline = $event"
-                @update:message="invitationSettingsForm.message = $event"
-                @update:closing="invitationSettingsForm.closing = $event"
-                @update:public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled = $event"
-                @update:contact-phone="invitationSettingsForm.contact_phone = $event"
-                @update:content="invitationSettingsForm.content = {
-                    partner_one_name: $event.partnerOneName,
-                    partner_two_name: $event.partnerTwoName,
-                    family_name: $event.familyName,
-                    show_family_name: $event.showFamilyName,
-                    bride_parents: $event.brideParents,
-                    groom_parents: $event.groomParents,
-                    godparents: $event.godparents,
-                    date_text: $event.dateText,
-                    venue_text: $event.venueText,
-                }"
-                @update:visibility="invitationSettingsForm.visibility = {
-                    couple: $event.couple,
-                    parents: $event.parents,
-                    godparents: $event.godparents,
-                    date: $event.date,
-                    venue: $event.venue,
-                    contact_phone: $event.contactPhone,
-                }"
-                @preview-template="previewingInvitationTemplateId = $event"
-                @open-invite="openInvite"
-                @save-preview="saveInvitationPreview"
-                @copy-link="(url, label) => copyLink(url, label)"
-                @share-pending="sharePendingInvites"
-                @copy-pending="copyPendingInvites"
-                @remind-pending="remindPendingInvites"
-                @save-settings="saveInvitationSettings"
-            />
+            <section class="lg:sticky lg:top-6">
+                <InvitationSheet
+                    :template="invitationSettingsForm.template"
+                    :guest-label="t('guests.invitation.preview_guest_label')"
+                    :logo-url="invitationPreview.branding.logoUrl"
+                    :lead-in="invitationPresentation.leadIn"
+                    :title="invitationPresentation.title"
+                    :message="invitationSettingsForm.message || t('guests.invitation.default_message')"
+                    :closing="invitationSettingsForm.closing || t('guests.invitation.default_closing')"
+                    :detail-lines="invitationPresentation.detailLines"
+                    :date-label="invitationFooterMeta.dateLabel"
+                    :venue-address="invitationFooterMeta.venueAddress"
+                    :contact-phone="invitationFooterMeta.contactPhone"
+                />
+            </section>
         </div>
-
-        <Dialog :open="previewingInvitationTemplateCard !== null" @update:open="handleInvitationTemplatePreviewOpenChange">
-            <DialogContent class="max-w-[min(96vw,46rem)] p-4 sm:p-5">
-                <DialogHeader>
-                    <DialogTitle>
-                        {{ previewingInvitationTemplateCard?.label ?? t('guests.invitation.preview_guest_label') }}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {{ t('guests.dialogs.preview.description') }}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
-                    <InvitationPaper
-                        v-if="previewingInvitationTemplateCard"
-                        :template="previewingInvitationTemplateCard.id"
-                        :event-name="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).eventName"
-                        :logo-url="invitationPreview.branding.logoUrl"
-                        :guest-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).guestLabel"
-                        :headline="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).headline"
-                        :message="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).message"
-                        :closing="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).closing"
-                        :detail-lines="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).detailLines"
-                        :date-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).dateLabel"
-                        :venue-address="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).venueAddress"
-                        mode="preview"
-                    />
-                </div>
-            </DialogContent>
-        </Dialog>
     </AppLayout>
 </template>

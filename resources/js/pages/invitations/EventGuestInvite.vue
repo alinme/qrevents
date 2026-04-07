@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { CheckCircle2, Download, ExternalLink, Minus, Plus } from 'lucide-vue-next';
+import { CheckCircle2, ExternalLink, Minus, Plus, Printer } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
-import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
+import InvitationSheet from '@/components/invitations/InvitationSheet.vue';
 import { Button } from '@/components/ui/button';
 import {
     DialogClose,
@@ -25,7 +25,6 @@ import {
     resolveInvitationFooterMeta,
 } from '@/lib/invitation-presentation';
 import type {InvitationStudioContent, InvitationStudioVisibility, InvitationWeddingDetails} from '@/lib/invitation-presentation';
-import type {InvitationTemplateId} from '@/lib/invitation-templates';
 
 type GuestParty = {
     name: string;
@@ -39,7 +38,7 @@ type GuestParty = {
 };
 
 type InvitationCopy = {
-    template: InvitationTemplateId;
+    template: string;
     headline: string;
     message: string;
     closing: string;
@@ -140,10 +139,8 @@ const adjustConfirmedCount = (delta: number): void => {
 const invitationSurfaceStyle = computed(() => ({
     '--invite-primary': props.branding.primaryColor,
     '--invite-accent': props.branding.accentColor,
-    backgroundImage: props.branding.albumBackgroundImageUrl
-        ? `linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(15, 23, 42, 0.68)), url(${props.branding.albumBackgroundImageUrl})`
-        : `radial-gradient(circle at top, ${props.branding.accentColor}10, transparent 40%), linear-gradient(180deg, #fffaf3 0%, #ffffff 52%, ${props.branding.primaryColor}05 100%)`,
-    backgroundSize: props.branding.albumBackgroundImageUrl ? 'cover' : 'auto',
+    backgroundImage: `radial-gradient(circle at top, ${props.branding.accentColor}14, transparent 38%), linear-gradient(180deg, #fff8f2 0%, #fffdf9 48%, ${props.branding.primaryColor}08 100%)`,
+    backgroundSize: 'auto',
     backgroundPosition: 'center',
 }));
 
@@ -247,19 +244,18 @@ onMounted(() => {
 
         <div class="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl items-center print:min-h-0 print:max-w-none">
             <div class="w-full space-y-5 print:space-y-0">
-                <InvitationPaper
+                <InvitationSheet
                     :template="invitation.template"
-                    :event-name="invitationPresentation.leadIn"
                     :logo-url="branding.logoUrl"
                     :guest-label="guestParty && !isPublicInvite ? guestParty.name : t('invitations.badge')"
-                    :headline="invitationPresentation.title"
+                    :lead-in="invitationPresentation.leadIn"
+                    :title="invitationPresentation.title"
                     :message="invitation.message"
                     :closing="invitation.closing"
                     :detail-lines="invitationPresentation.detailLines"
                     :contact-phone="invitationFooterMeta.contactPhone"
                     :date-label="invitationFooterMeta.dateLabel"
                     :venue-address="invitationFooterMeta.venueAddress || t('invitations.venue_pending')"
-                    mode="live"
                 />
 
                 <section class="rounded-[30px] border border-brand-border/70 bg-brand-panel/94 p-5 print:hidden sm:p-6">
@@ -374,8 +370,8 @@ onMounted(() => {
 
                 <div class="flex flex-col items-center gap-3 text-center print:hidden">
                     <Button variant="outline" class="rounded-full px-5" @click="printInvitation">
-                        <Download class="mr-2 size-4" />
-                        Save or print invitation
+                        <Printer class="mr-2 size-4" />
+                        {{ t('invitations.print_invitation') }}
                     </Button>
 
                     <Link
