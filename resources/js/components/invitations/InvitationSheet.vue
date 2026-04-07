@@ -68,7 +68,7 @@ const sheetStyle = computed<Record<string, string>>(() => ({
 
 <template>
     <article
-        class="invitation-sheet relative isolate aspect-[1/1.4142] w-full overflow-hidden rounded-[2rem] border border-black/8 shadow-[0_28px_80px_rgba(40,24,12,0.14)]"
+        class="invitation-sheet relative isolate aspect-[1/1.4142] h-full w-auto max-w-full overflow-hidden rounded-[2rem] border border-black/8 shadow-[0_28px_80px_rgba(40,24,12,0.14)]"
         :style="sheetStyle"
     >
         <div class="invitation-sheet__art absolute inset-0" />

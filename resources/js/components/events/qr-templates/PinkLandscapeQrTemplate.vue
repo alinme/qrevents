@@ -11,7 +11,7 @@ const fontVariables = computed<Record<string, string>>(() => ({
 </script>
 
 <template>
-    <article :style="fontVariables" class="qr-template qr-template-pink-landscape relative mx-auto aspect-[1.4142/1] h-full max-h-full w-full max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(76,41,52,0.15)]">
+    <article :style="fontVariables" class="qr-template qr-template-pink-landscape relative mx-auto aspect-[1.4142/1] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(76,41,52,0.15)]">
         <div class="qr-template__art absolute inset-0" />
         <div class="qr-template__wash absolute inset-0" />
 
