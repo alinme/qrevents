@@ -139,11 +139,30 @@ class EventController extends Controller
         ]);
     }
 
+    public function printPackPreview(Request $request, Event $event): Response
+    {
+        $this->assertCanViewEvent($request, $event);
+
+        return Inertia::render('events/PrintPackPreview', [
+            ...$this->eventProps($request, $event),
+        ]);
+    }
+
     public function inviteStudio(Request $request, Event $event): Response
     {
         $this->assertCanManageEvent($request, $event);
 
         return Inertia::render('events/InviteStudio', [
+            ...$this->eventProps($request, $event),
+            ...$this->guestPartyProps($event),
+        ]);
+    }
+
+    public function inviteStudioPreview(Request $request, Event $event): Response
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        return Inertia::render('events/InviteStudioPreview', [
             ...$this->eventProps($request, $event),
             ...$this->guestPartyProps($event),
         ]);
@@ -2592,7 +2611,9 @@ class EventController extends Controller
                 'accountDashboard' => $eventOverviewUrl,
                 'dashboard' => route('events.show', $event),
                 'printPack' => route('events.print-pack', $event),
+                'printPackPreview' => route('events.print-pack.preview', $event),
                 'inviteStudio' => route('events.invite-studio', $event),
+                'inviteStudioPreview' => route('events.invite-studio.preview', $event),
                 'guests' => route('events.guests', $event),
                 'guestReport' => route('events.guests.report', $event),
                 'media' => route('events.media', $event),

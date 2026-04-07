@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Copy, ExternalLink, Printer, SlidersHorizontal } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { Copy, Eye, ExternalLink, Printer, SlidersHorizontal } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,13 +13,15 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
+import { removeGoogleFontStylesheet, syncGoogleFontStylesheet } from '@/lib/google-fonts';
+import { readQrPrintDraft, writeQrPrintDraft } from '@/lib/qr-print-draft';
 import { qrTemplateDefinitions, resolveQrTemplateDefinition } from '@/lib/qr-print-templates';
 
 const props = defineProps<{
+    eventId: number;
     eventName: string;
     albumUrl: string;
-    albumAccessCode: string;
-    albumQrDataUrl: string;
+    previewUrl: string;
 }>();
 
 const { t } = useTranslations();
@@ -33,86 +35,89 @@ const messageText = ref<string>('Scan the QR code and share your memories by upl
 const eventTitleText = ref<string>(props.eventName);
 
 const activeTemplate = computed(() => resolveQrTemplateDefinition(activeTemplateId.value));
-const fontStylesheetLinkId = 'qr-template-google-fonts';
-const preconnectGoogleFontsId = 'qr-template-google-fonts-preconnect';
-const preconnectGoogleStaticId = 'qr-template-google-static-preconnect';
 
-const templateContent = computed(() => ({
-    subtitle: subtitleText.value,
-    title: titleText.value,
-    slogan: sloganText.value,
-    message: messageText.value,
-    eventTitle: eventTitleText.value,
-}));
-
-const ensureHeadLink = (id: string, href: string, rel: string, crossOrigin?: 'anonymous'): HTMLLinkElement => {
-    const existing = document.head.querySelector<HTMLLinkElement>(`#${id}`);
-
-    if (existing) {
-        existing.href = href;
-        existing.rel = rel;
-
-        if (crossOrigin) {
-            existing.crossOrigin = crossOrigin;
-        } else {
-            existing.removeAttribute('crossorigin');
-        }
-
-        return existing;
+const previewUrlFor = (print = false): string => {
+    if (typeof window === 'undefined') {
+        return props.previewUrl;
     }
 
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = rel;
-    link.href = href;
+    const url = new URL(props.previewUrl, window.location.origin);
 
-    if (crossOrigin) {
-        link.crossOrigin = crossOrigin;
+    if (print) {
+        url.searchParams.set('print', '1');
     }
 
-    document.head.append(link);
-
-    return link;
+    return url.toString();
 };
+
+onMounted(() => {
+    const draft = readQrPrintDraft(props.eventId);
+
+    if (draft?.templateId) {
+        activeTemplateId.value = draft.templateId;
+    }
+
+    if (draft?.subtitle !== undefined) {
+        subtitleText.value = draft.subtitle;
+    }
+
+    if (draft?.title !== undefined) {
+        titleText.value = draft.title;
+    }
+
+    if (draft?.slogan !== undefined) {
+        sloganText.value = draft.slogan;
+    }
+
+    if (draft?.message !== undefined) {
+        messageText.value = draft.message;
+    }
+
+    if (draft?.eventTitle !== undefined) {
+        eventTitleText.value = draft.eventTitle;
+    }
+});
+
+watch(
+    () => [
+        activeTemplateId.value,
+        subtitleText.value,
+        titleText.value,
+        sloganText.value,
+        messageText.value,
+        eventTitleText.value,
+    ],
+    () => {
+        writeQrPrintDraft(props.eventId, {
+            templateId: activeTemplate.value.id,
+            subtitle: subtitleText.value,
+            title: titleText.value,
+            slogan: sloganText.value,
+            message: messageText.value,
+            eventTitle: eventTitleText.value,
+        });
+    },
+    { immediate: true },
+);
 
 watch(
     () => activeTemplate.value.fonts.stylesheetHref,
     (href) => {
-        ensureHeadLink(preconnectGoogleFontsId, 'https://fonts.googleapis.com', 'preconnect');
-        ensureHeadLink(preconnectGoogleStaticId, 'https://fonts.gstatic.com', 'preconnect', 'anonymous');
-        ensureHeadLink(fontStylesheetLinkId, href, 'stylesheet');
+        syncGoogleFontStylesheet(href, 'qr-template-google');
     },
     { immediate: true },
 );
 
 onBeforeUnmount(() => {
-    document.head.querySelector(`#${fontStylesheetLinkId}`)?.remove();
-    document.head.querySelector(`#${preconnectGoogleFontsId}`)?.remove();
-    document.head.querySelector(`#${preconnectGoogleStaticId}`)?.remove();
+    removeGoogleFontStylesheet('qr-template-google');
 });
 
+const openPreview = (): void => {
+    window.open(previewUrlFor(), '_blank', 'noopener,noreferrer');
+};
+
 const printPoster = (): void => {
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1240,height=920');
-    if (!printWindow) {
-        return;
-    }
-
-    printWindow.onload = () => {
-        printWindow.focus();
-        window.setTimeout(() => {
-            printWindow.print();
-        }, 180);
-    };
-
-    printWindow.document.open();
-    printWindow.document.write(
-        activeTemplate.value.renderPrintHtml(
-            templateContent.value,
-            props.albumQrDataUrl,
-            t('event_home.print_pack.preview_alt'),
-        ),
-    );
-    printWindow.document.close();
+    window.open(previewUrlFor(true), '_blank', 'noopener,noreferrer');
 };
 
 const openAlbum = (): void => {
@@ -130,8 +135,8 @@ const copyAlbumLink = async (): Promise<void> => {
 </script>
 
 <template>
-    <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-4">
-        <div class="flex flex-wrap items-center gap-2 print:hidden">
+    <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-6 py-2">
+        <div class="flex flex-wrap items-center gap-2">
             <div class="flex flex-wrap items-center gap-2">
                 <button
                     v-for="theme in qrTemplateDefinitions"
@@ -145,36 +150,47 @@ const copyAlbumLink = async (): Promise<void> => {
                 </button>
             </div>
 
-            <Button variant="outline" class="ml-auto rounded-full" @click="configureOpen = true">
-                <SlidersHorizontal class="size-4" />
-                {{ t('event_home.print_pack.configure') }}
-            </Button>
-
-            <div class="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
+            <div class="ml-auto inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
+                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('guests.actions.open_preview')" @click="openPreview">
+                    <Eye class="size-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.print_pdf')" @click="printPoster">
+                    <Printer class="size-4" />
+                </Button>
                 <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.copy_target')" @click="void copyAlbumLink()">
                     <Copy class="size-4" />
                 </Button>
                 <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.open_target')" @click="openAlbum">
                     <ExternalLink class="size-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.print_pdf')" @click="printPoster">
-                    <Printer class="size-4" />
+                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.configure')" @click="configureOpen = true">
+                    <SlidersHorizontal class="size-4" />
                 </Button>
             </div>
         </div>
 
-        <div class="flex-1">
-            <component
-                :is="activeTemplate.component"
-                :subtitle="subtitleText"
-                :title="titleText"
-                :slogan="sloganText"
-                :message="messageText"
-                :event-title="eventTitleText"
-                :fonts="activeTemplate.fonts"
-                :qr-data-url="albumQrDataUrl"
-                :preview-alt="t('event_home.print_pack.preview_alt')"
-            />
+        <div class="flex flex-1 items-center justify-center rounded-[2rem] border border-dashed border-neutral-300/80 bg-white/55 px-6 py-10 text-center">
+            <div class="max-w-2xl space-y-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-500">
+                    {{ activeTemplate.label }}
+                </p>
+                <h2 class="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
+                    {{ titleText }}
+                </h2>
+                <p class="text-sm leading-7 text-neutral-600 sm:text-base">
+                    {{ t('event_home.print_pack.page_description') }}
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                    <Button type="button" class="rounded-full" @click="openPreview">
+                        <Eye class="size-4" />
+                        {{ t('guests.actions.open_preview') }}
+                    </Button>
+                    <Button type="button" variant="outline" class="rounded-full" @click="configureOpen = true">
+                        <SlidersHorizontal class="size-4" />
+                        {{ t('event_home.print_pack.configure') }}
+                    </Button>
+                </div>
+            </div>
         </div>
 
         <Sheet v-model:open="configureOpen">

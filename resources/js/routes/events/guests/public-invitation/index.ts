@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 export const show = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 show.url = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -43,7 +43,7 @@ show.url = (args: { token: string | number } | [token: string | number ] | strin
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 show.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ show.get = (args: { token: string | number } | [token: string | number ] | strin
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 show.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ show.head = (args: { token: string | number } | [token: string | number ] | stri
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 const showForm = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ const showForm = (args: { token: string | number } | [token: string | number ] |
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 showForm.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -83,7 +83,7 @@ showForm.get = (args: { token: string | number } | [token: string | number ] | s
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:578
+* @see app/Http/Controllers/EventController.php:597
 * @route '/invite/public/{token}'
 */
 showForm.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -100,7 +100,7 @@ show.form = showForm
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:603
+* @see app/Http/Controllers/EventController.php:622
 * @route '/invite/public/{token}'
 */
 export const respond = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -115,7 +115,7 @@ respond.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:603
+* @see app/Http/Controllers/EventController.php:622
 * @route '/invite/public/{token}'
 */
 respond.url = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -142,7 +142,7 @@ respond.url = (args: { token: string | number } | [token: string | number ] | st
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:603
+* @see app/Http/Controllers/EventController.php:622
 * @route '/invite/public/{token}'
 */
 respond.post = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -152,7 +152,7 @@ respond.post = (args: { token: string | number } | [token: string | number ] | s
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:603
+* @see app/Http/Controllers/EventController.php:622
 * @route '/invite/public/{token}'
 */
 const respondForm = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -162,7 +162,7 @@ const respondForm = (args: { token: string | number } | [token: string | number 
 
 /**
 * @see \App\Http\Controllers\EventController::respond
-* @see app/Http/Controllers/EventController.php:603
+* @see app/Http/Controllers/EventController.php:622
 * @route '/invite/public/{token}'
 */
 respondForm.post = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

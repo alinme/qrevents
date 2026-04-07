@@ -7,15 +7,15 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {
+    id: number;
     name: string;
 };
 
 type EventLinks = {
     dashboard: string;
     printPack: string;
+    printPackPreview: string;
     album: string;
-    albumAccessCode: string;
-    albumQrDataUrl: string;
 };
 
 const props = defineProps<{
@@ -45,10 +45,10 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
         <div class="min-h-screen bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
             <div class="mx-auto max-w-[1560px] px-4 py-4 sm:px-6 lg:px-8">
                 <QrPrintPackBuilder
+                    :event-id="currentEvent.id"
                     :event-name="currentEvent.name"
                     :album-url="eventLinks.album"
-                    :album-access-code="eventLinks.albumAccessCode"
-                    :album-qr-data-url="eventLinks.albumQrDataUrl"
+                    :preview-url="eventLinks.printPackPreview"
                 />
             </div>
         </div>

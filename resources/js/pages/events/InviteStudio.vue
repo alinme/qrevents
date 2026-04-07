@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Copy, ExternalLink, Printer, Save, SlidersHorizontal } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Copy, ExternalLink, Eye, Printer, Save, SlidersHorizontal } from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import InputError from '@/components/InputError.vue';
-import InvitationSheet from '@/components/invitations/InvitationSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,19 +17,15 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {
-    composeInvitationPaperPresentation,
-    resolveInvitationFooterMeta,
-} from '@/lib/invitation-presentation';
 import type {
     InvitationStudioContent,
     InvitationStudioVisibility,
-    InvitationWeddingDetails,
 } from '@/lib/invitation-presentation';
 import {
     invitationSheetThemes,
     normalizeInvitationSheetTheme,
 } from '@/lib/invitation-sheet-themes';
+import { readInviteStudioDraft, writeInviteStudioDraft } from '@/lib/invite-studio-draft';
 import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {
@@ -41,6 +36,7 @@ type EventPayload = {
 
 type EventLinks = {
     inviteStudio: string;
+    inviteStudioPreview: string;
     invitationSettingsUpdate: string;
 };
 
@@ -55,23 +51,11 @@ type EventInvitationSettings = {
     visibility: InvitationStudioVisibility;
 };
 
-type InvitationPreviewPayload = {
-    eventDetails: {
-        dateLabel: string;
-        venueAddress: string | null;
-        weddingDetails: InvitationWeddingDetails;
-    };
-    branding: {
-        logoUrl: string | null;
-    };
-};
-
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
-    invitationPreview: InvitationPreviewPayload;
 }>();
 
 const { t } = useTranslations();
@@ -116,50 +100,94 @@ const invitationSettingsForm = useForm({
     },
 });
 
-const invitationStudioContent = computed<InvitationStudioContent>(() => ({
-    partnerOneName: invitationSettingsForm.content.partner_one_name,
-    partnerTwoName: invitationSettingsForm.content.partner_two_name,
-    familyName: invitationSettingsForm.content.family_name,
-    showFamilyName: invitationSettingsForm.content.show_family_name,
-    brideParents: invitationSettingsForm.content.bride_parents,
-    groomParents: invitationSettingsForm.content.groom_parents,
-    godparents: invitationSettingsForm.content.godparents,
-    dateText: invitationSettingsForm.content.date_text,
-    venueText: invitationSettingsForm.content.venue_text,
-}));
+const applyDraft = (draft: ReturnType<typeof readInviteStudioDraft>): void => {
+    if (draft === null) {
+        return;
+    }
 
-const invitationStudioVisibility = computed<InvitationStudioVisibility>(() => ({
-    couple: invitationSettingsForm.visibility.couple,
-    parents: invitationSettingsForm.visibility.parents,
-    godparents: invitationSettingsForm.visibility.godparents,
-    date: invitationSettingsForm.visibility.date,
-    venue: invitationSettingsForm.visibility.venue,
-    contactPhone: invitationSettingsForm.visibility.contact_phone,
-}));
+    if (draft.template !== undefined) {
+        invitationSettingsForm.template = normalizeInvitationSheetTheme(draft.template);
+    }
 
-const invitationPresentation = computed(() => composeInvitationPaperPresentation({
-    eventName: props.currentEvent.name,
-    eventType: props.currentEvent.type,
-    headline: invitationSettingsForm.headline || props.currentEvent.name,
-    content: invitationStudioContent.value,
-    visibility: invitationStudioVisibility.value,
-    weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-}));
+    if (draft.headline !== undefined) {
+        invitationSettingsForm.headline = draft.headline;
+    }
 
-const invitationFooterMeta = computed(() => resolveInvitationFooterMeta({
-    defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
-    defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
-    contactPhone: invitationSettingsForm.contact_phone || null,
-    content: invitationStudioContent.value,
-    visibility: invitationStudioVisibility.value,
-    weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-}));
+    if (draft.message !== undefined) {
+        invitationSettingsForm.message = draft.message;
+    }
 
-const liveInvitationPrintUrl = computed(() => {
-    const separator = props.publicInvitationUrl.includes('?') ? '&' : '?';
+    if (draft.closing !== undefined) {
+        invitationSettingsForm.closing = draft.closing;
+    }
 
-    return `${props.publicInvitationUrl}${separator}print=1`;
+    if (draft.contactPhone !== undefined) {
+        invitationSettingsForm.contact_phone = draft.contactPhone;
+    }
+
+    if (draft.publicRsvpEnabled !== undefined) {
+        invitationSettingsForm.public_rsvp_enabled = draft.publicRsvpEnabled;
+    }
+
+    if (draft.content !== undefined) {
+        invitationSettingsForm.content.partner_one_name = draft.content.partnerOneName;
+        invitationSettingsForm.content.partner_two_name = draft.content.partnerTwoName;
+        invitationSettingsForm.content.family_name = draft.content.familyName;
+        invitationSettingsForm.content.show_family_name = draft.content.showFamilyName;
+        invitationSettingsForm.content.bride_parents = draft.content.brideParents;
+        invitationSettingsForm.content.groom_parents = draft.content.groomParents;
+        invitationSettingsForm.content.godparents = draft.content.godparents;
+        invitationSettingsForm.content.date_text = draft.content.dateText;
+        invitationSettingsForm.content.venue_text = draft.content.venueText;
+    }
+
+    if (draft.visibility !== undefined) {
+        invitationSettingsForm.visibility.couple = draft.visibility.couple;
+        invitationSettingsForm.visibility.parents = draft.visibility.parents;
+        invitationSettingsForm.visibility.godparents = draft.visibility.godparents;
+        invitationSettingsForm.visibility.date = draft.visibility.date;
+        invitationSettingsForm.visibility.venue = draft.visibility.venue;
+        invitationSettingsForm.visibility.contact_phone = draft.visibility.contactPhone;
+    }
+};
+
+onMounted(() => {
+    applyDraft(readInviteStudioDraft(props.currentEvent.id));
 });
+
+watch(
+    () => ({
+        template: invitationSettingsForm.template,
+        headline: invitationSettingsForm.headline,
+        message: invitationSettingsForm.message,
+        closing: invitationSettingsForm.closing,
+        contactPhone: invitationSettingsForm.contact_phone,
+        publicRsvpEnabled: invitationSettingsForm.public_rsvp_enabled,
+        content: {
+            partnerOneName: invitationSettingsForm.content.partner_one_name,
+            partnerTwoName: invitationSettingsForm.content.partner_two_name,
+            familyName: invitationSettingsForm.content.family_name,
+            showFamilyName: invitationSettingsForm.content.show_family_name,
+            brideParents: invitationSettingsForm.content.bride_parents,
+            groomParents: invitationSettingsForm.content.groom_parents,
+            godparents: invitationSettingsForm.content.godparents,
+            dateText: invitationSettingsForm.content.date_text,
+            venueText: invitationSettingsForm.content.venue_text,
+        },
+        visibility: {
+            couple: invitationSettingsForm.visibility.couple,
+            parents: invitationSettingsForm.visibility.parents,
+            godparents: invitationSettingsForm.visibility.godparents,
+            date: invitationSettingsForm.visibility.date,
+            venue: invitationSettingsForm.visibility.venue,
+            contactPhone: invitationSettingsForm.visibility.contact_phone,
+        },
+    }),
+    (draft) => {
+        writeInviteStudioDraft(props.currentEvent.id, draft);
+    },
+    { deep: true, immediate: true },
+);
 
 const saveInvitationSettings = (): void => {
     invitationSettingsForm.patch(props.eventLinks.invitationSettingsUpdate, {
@@ -174,8 +202,19 @@ const openLiveInvitation = (): void => {
     window.open(props.publicInvitationUrl, '_blank', 'noopener,noreferrer');
 };
 
+const openInvitationPreview = (): void => {
+    window.open(props.eventLinks.inviteStudioPreview, '_blank', 'noopener,noreferrer');
+};
+
 const printLiveInvitation = (): void => {
-    window.open(liveInvitationPrintUrl.value, '_blank', 'noopener,noreferrer');
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const previewUrl = new URL(props.eventLinks.inviteStudioPreview, window.location.origin);
+    previewUrl.searchParams.set('print', '1');
+
+    window.open(previewUrl.toString(), '_blank', 'noopener,noreferrer');
 };
 
 const copyInvitationLink = async (): Promise<void> => {
@@ -217,6 +256,15 @@ const copyInvitationLink = async (): Promise<void> => {
                         variant="ghost"
                         size="icon-sm"
                         class="rounded-full"
+                        :aria-label="t('guests.actions.open_preview')"
+                        @click="openInvitationPreview"
+                    >
+                        <Eye class="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="rounded-full"
                         :aria-label="t('guests.invitation.open_live')"
                         @click="openLiveInvitation"
                     >
@@ -252,21 +300,28 @@ const copyInvitationLink = async (): Promise<void> => {
                 </div>
             </div>
 
-            <section class="flex-1">
-                <InvitationSheet
-                    class="mx-auto h-full max-h-[calc(100vh-15rem)] max-w-[760px]"
-                    :template="invitationSettingsForm.template"
-                    :guest-label="t('guests.invitation.preview_guest_label')"
-                    :logo-url="invitationPreview.branding.logoUrl"
-                    :lead-in="invitationPresentation.leadIn"
-                    :title="invitationPresentation.title"
-                    :message="invitationSettingsForm.message || t('guests.invitation.default_message')"
-                    :closing="invitationSettingsForm.closing || t('guests.invitation.default_closing')"
-                    :detail-lines="invitationPresentation.detailLines"
-                    :date-label="invitationFooterMeta.dateLabel"
-                    :venue-address="invitationFooterMeta.venueAddress"
-                    :contact-phone="invitationFooterMeta.contactPhone"
-                />
+            <section class="flex flex-1 items-center justify-center rounded-[2rem] border border-dashed border-neutral-300/80 bg-white/55 px-6 py-10 text-center">
+                <div class="max-w-2xl space-y-3">
+                    <p class="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-500">
+                        {{ invitationSheetThemes.find((theme) => theme.id === invitationSettingsForm.template)?.label ?? invitationSettingsForm.template }}
+                    </p>
+                    <h2 class="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
+                        {{ invitationSettingsForm.content.partner_one_name || currentEvent.name }}
+                    </h2>
+                    <p class="text-sm leading-7 text-neutral-600 sm:text-base">
+                        {{ t('guests.invitation.simple_description') }}
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                        <Button type="button" class="rounded-full" @click="openInvitationPreview">
+                            <Eye class="size-4" />
+                            {{ t('guests.actions.open_preview') }}
+                        </Button>
+                        <Button type="button" variant="outline" class="rounded-full" @click="configureOpen = true">
+                            <SlidersHorizontal class="size-4" />
+                            {{ t('guests.invitation.configure') }}
+                        </Button>
+                    </div>
+                </div>
             </section>
 
             <Sheet v-model:open="configureOpen">
