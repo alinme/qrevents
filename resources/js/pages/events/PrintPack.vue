@@ -16,6 +16,7 @@ type EventLinks = {
     printPack: string;
     printPackPreview: string;
     album: string;
+    albumQrDataUrl: string;
 };
 
 const props = defineProps<{
@@ -48,6 +49,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
                     :event-id="currentEvent.id"
                     :event-name="currentEvent.name"
                     :album-url="eventLinks.album"
+                    :album-qr-data-url="eventLinks.albumQrDataUrl"
                     :preview-url="eventLinks.printPackPreview"
                 />
             </div>

@@ -21,6 +21,7 @@ const props = defineProps<{
     eventId: number;
     eventName: string;
     albumUrl: string;
+    albumQrDataUrl: string;
     previewUrl: string;
 }>();
 
@@ -169,28 +170,19 @@ const copyAlbumLink = async (): Promise<void> => {
             </div>
         </div>
 
-        <div class="flex flex-1 items-center justify-center rounded-[2rem] border border-dashed border-neutral-300/80 bg-white/55 px-6 py-10 text-center">
-            <div class="max-w-2xl space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-500">
-                    {{ activeTemplate.label }}
-                </p>
-                <h2 class="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
-                    {{ titleText }}
-                </h2>
-                <p class="text-sm leading-7 text-neutral-600 sm:text-base">
-                    {{ t('event_home.print_pack.page_description') }}
-                </p>
-                <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
-                    <Button type="button" class="rounded-full" @click="openPreview">
-                        <Eye class="size-4" />
-                        {{ t('guests.actions.open_preview') }}
-                    </Button>
-                    <Button type="button" variant="outline" class="rounded-full" @click="configureOpen = true">
-                        <SlidersHorizontal class="size-4" />
-                        {{ t('event_home.print_pack.configure') }}
-                    </Button>
-                </div>
-            </div>
+        <div class="flex min-h-0 flex-1 items-center justify-center overflow-hidden py-2">
+            <component
+                :is="activeTemplate.component"
+                class="h-full max-h-[calc(100vh-15rem)] w-auto max-w-full"
+                :subtitle="subtitleText"
+                :title="titleText"
+                :slogan="sloganText"
+                :message="messageText"
+                :event-title="eventTitleText"
+                :fonts="activeTemplate.fonts"
+                :qr-data-url="albumQrDataUrl"
+                :preview-alt="t('event_home.print_pack.preview_alt')"
+            />
         </div>
 
         <Sheet v-model:open="configureOpen">

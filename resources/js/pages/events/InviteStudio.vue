@@ -4,6 +4,7 @@ import { Copy, ExternalLink, Eye, Printer, Save, SlidersHorizontal } from 'lucid
 import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import InputError from '@/components/InputError.vue';
+import InvitationSheet from '@/components/invitations/InvitationSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,9 +18,14 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
+import {
+    composeInvitationPaperPresentation,
+    resolveInvitationFooterMeta,
+} from '@/lib/invitation-presentation';
 import type {
     InvitationStudioContent,
     InvitationStudioVisibility,
+    InvitationWeddingDetails,
 } from '@/lib/invitation-presentation';
 import {
     invitationSheetThemes,
@@ -51,11 +57,23 @@ type EventInvitationSettings = {
     visibility: InvitationStudioVisibility;
 };
 
+type InvitationPreviewPayload = {
+    eventDetails: {
+        dateLabel: string;
+        venueAddress: string | null;
+        weddingDetails: InvitationWeddingDetails;
+    };
+    branding: {
+        logoUrl: string | null;
+    };
+};
+
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
     publicInvitationUrl: string;
+    invitationPreview: InvitationPreviewPayload;
 }>();
 
 const { t } = useTranslations();
@@ -189,6 +207,45 @@ watch(
     { deep: true, immediate: true },
 );
 
+const invitationStudioContent = computed<InvitationStudioContent>(() => ({
+    partnerOneName: invitationSettingsForm.content.partner_one_name,
+    partnerTwoName: invitationSettingsForm.content.partner_two_name,
+    familyName: invitationSettingsForm.content.family_name,
+    showFamilyName: invitationSettingsForm.content.show_family_name,
+    brideParents: invitationSettingsForm.content.bride_parents,
+    groomParents: invitationSettingsForm.content.groom_parents,
+    godparents: invitationSettingsForm.content.godparents,
+    dateText: invitationSettingsForm.content.date_text,
+    venueText: invitationSettingsForm.content.venue_text,
+}));
+
+const invitationStudioVisibility = computed<InvitationStudioVisibility>(() => ({
+    couple: invitationSettingsForm.visibility.couple,
+    parents: invitationSettingsForm.visibility.parents,
+    godparents: invitationSettingsForm.visibility.godparents,
+    date: invitationSettingsForm.visibility.date,
+    venue: invitationSettingsForm.visibility.venue,
+    contactPhone: invitationSettingsForm.visibility.contact_phone,
+}));
+
+const invitationPresentation = computed(() => composeInvitationPaperPresentation({
+    eventName: props.currentEvent.name,
+    eventType: props.currentEvent.type,
+    headline: invitationSettingsForm.headline || props.currentEvent.name,
+    content: invitationStudioContent.value,
+    visibility: invitationStudioVisibility.value,
+    weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+}));
+
+const invitationFooterMeta = computed(() => resolveInvitationFooterMeta({
+    defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
+    defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
+    contactPhone: invitationSettingsForm.contact_phone || null,
+    content: invitationStudioContent.value,
+    visibility: invitationStudioVisibility.value,
+    weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
+}));
+
 const saveInvitationSettings = (): void => {
     invitationSettingsForm.patch(props.eventLinks.invitationSettingsUpdate, {
         preserveScroll: true,
@@ -300,28 +357,21 @@ const copyInvitationLink = async (): Promise<void> => {
                 </div>
             </div>
 
-            <section class="flex flex-1 items-center justify-center rounded-[2rem] border border-dashed border-neutral-300/80 bg-white/55 px-6 py-10 text-center">
-                <div class="max-w-2xl space-y-3">
-                    <p class="text-xs font-semibold uppercase tracking-[0.26em] text-neutral-500">
-                        {{ invitationSheetThemes.find((theme) => theme.id === invitationSettingsForm.template)?.label ?? invitationSettingsForm.template }}
-                    </p>
-                    <h2 class="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
-                        {{ invitationSettingsForm.content.partner_one_name || currentEvent.name }}
-                    </h2>
-                    <p class="text-sm leading-7 text-neutral-600 sm:text-base">
-                        {{ t('guests.invitation.simple_description') }}
-                    </p>
-                    <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
-                        <Button type="button" class="rounded-full" @click="openInvitationPreview">
-                            <Eye class="size-4" />
-                            {{ t('guests.actions.open_preview') }}
-                        </Button>
-                        <Button type="button" variant="outline" class="rounded-full" @click="configureOpen = true">
-                            <SlidersHorizontal class="size-4" />
-                            {{ t('guests.invitation.configure') }}
-                        </Button>
-                    </div>
-                </div>
+            <section class="flex min-h-0 flex-1 items-center justify-center overflow-hidden py-2">
+                <InvitationSheet
+                    class="h-full max-h-[calc(100vh-15rem)] w-auto max-w-full"
+                    :template="invitationSettingsForm.template"
+                    :guest-label="t('guests.invitation.preview_guest_label')"
+                    :logo-url="invitationPreview.branding.logoUrl"
+                    :lead-in="invitationPresentation.leadIn"
+                    :title="invitationPresentation.title"
+                    :message="invitationSettingsForm.message || t('guests.invitation.default_message')"
+                    :closing="invitationSettingsForm.closing || t('guests.invitation.default_closing')"
+                    :detail-lines="invitationPresentation.detailLines"
+                    :date-label="invitationFooterMeta.dateLabel"
+                    :venue-address="invitationFooterMeta.venueAddress"
+                    :contact-phone="invitationFooterMeta.contactPhone"
+                />
             </section>
 
             <Sheet v-model:open="configureOpen">
