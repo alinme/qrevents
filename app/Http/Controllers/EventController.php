@@ -139,6 +139,16 @@ class EventController extends Controller
         ]);
     }
 
+    public function inviteStudio(Request $request, Event $event): Response
+    {
+        $this->assertCanManageEvent($request, $event);
+
+        return Inertia::render('events/InviteStudio', [
+            ...$this->eventProps($request, $event),
+            ...$this->guestPartyProps($event),
+        ]);
+    }
+
     public function guests(Request $request, Event $event): Response
     {
         $this->assertCanManageEvent($request, $event);
@@ -2582,6 +2592,7 @@ class EventController extends Controller
                 'accountDashboard' => $eventOverviewUrl,
                 'dashboard' => route('events.show', $event),
                 'printPack' => route('events.print-pack', $event),
+                'inviteStudio' => route('events.invite-studio', $event),
                 'guests' => route('events.guests', $event),
                 'guestReport' => route('events.guests.report', $event),
                 'media' => route('events.media', $event),
@@ -2616,6 +2627,7 @@ class EventController extends Controller
                 ['title' => __('app.nav.workspace'), 'href' => route('events.show', $event)],
                 ['title' => __('app.nav.media'), 'href' => route('events.media', $event)],
                 ['title' => __('app.nav.guests'), 'href' => route('events.guests', $event)],
+                ['title' => __('app.nav.invite_studio'), 'href' => route('events.invite-studio', $event)],
                 ['title' => __('app.nav.settings'), 'href' => route('events.settings', $event)],
                 ['title' => __('app.nav.print_pack'), 'href' => route('events.print-pack', $event)],
             ])),

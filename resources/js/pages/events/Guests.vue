@@ -7,7 +7,6 @@ import {
     Import,
     ListChecks,
     Pencil,
-    ScrollText,
     Table2,
     Trash2,
     UserPlus,
@@ -17,11 +16,9 @@ import {
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import GuestCheckInPanel from '@/components/events/guests/GuestCheckInPanel.vue';
-import GuestInvitationPanel from '@/components/events/guests/GuestInvitationPanel.vue';
 import GuestInviteesPanel from '@/components/events/guests/GuestInviteesPanel.vue';
 import GuestLedgerPanel from '@/components/events/guests/GuestLedgerPanel.vue';
 import GuestSectionSwitcher from '@/components/events/guests/GuestSectionSwitcher.vue';
-import InvitationPaper from '@/components/invitations/InvitationPaper.vue';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -49,16 +46,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {
-    composeInvitationPaperPresentation,
-    resolveInvitationFooterMeta,
-} from '@/lib/invitation-presentation';
-import type { InvitationStudioContent, InvitationStudioVisibility, InvitationWeddingDetails } from '@/lib/invitation-presentation';
-import {
-    findInvitationTemplateStudioZone,
-    invitationTemplateDefinitions
-} from '@/lib/invitation-templates';
-import type { InvitationTemplateId } from '@/lib/invitation-templates';
+import type { InvitationStudioContent, InvitationStudioVisibility } from '@/lib/invitation-presentation';
 import type { BreadcrumbItem } from '@/types';
 
 type EventPayload = {
@@ -156,52 +144,19 @@ type GuestPartyStats = {
     moneyGiftCurrency: string;
 };
 
-type InvitationPreviewPayload = {
-    eventDetails: {
-        dateLabel: string;
-        venueAddress: string | null;
-        weddingDetails: InvitationWeddingDetails;
-    };
-    branding: {
-        logoUrl: string | null;
-    };
-};
-
-type InvitationTemplatePreviewContent = {
-    eventName: string;
-    guestLabel: string | null;
-    headline: string;
-    message: string;
-    closing: string;
-    detailLines: string[];
-    dateLabel: string | null;
-    venueAddress: string | null;
-};
-
-type InvitationOverflowWarning = {
-    key: string;
-    tone: 'warning' | 'danger';
-    label: string;
-    message: string;
-};
-
-type GuestSection = 'invitees' | 'invitation' | 'ledger' | 'guest_list';
+type GuestSection = 'invitees' | 'ledger' | 'guest_list';
 
 const props = defineProps<{
     currentEvent: EventPayload;
     eventLinks: EventLinks;
     eventInvitationSettings: EventInvitationSettings;
-    publicInvitationUrl: string;
     publicGuestListUrl: string;
-    invitationPreview: InvitationPreviewPayload;
     guestLedgerExportUrl: string;
     guestPartyStats: GuestPartyStats;
     eventTables: EventTable[];
     guestParties: GuestParty[];
 }>();
 
-const currentEvent = props.currentEvent;
-const publicInvitationUrl = props.publicInvitationUrl;
 const publicGuestListUrl = props.publicGuestListUrl;
 const { locale, t } = useTranslations();
 
@@ -223,9 +178,7 @@ const deleteDialogOpen = ref(false);
 const guestListInfoDialogOpen = ref(false);
 const activeGuestParty = ref<GuestParty | null>(null);
 const guestListInfoParty = ref<GuestParty | null>(null);
-const savingInvitationSettings = ref(false);
 const showGuestAdvanced = ref(false);
-const previewingInvitationTemplateId = ref<InvitationTemplateId | null>(null);
 const editingTableId = ref<number | null>(null);
 const ledgerEntryDialogOpen = ref(false);
 const activeLedgerParty = ref<GuestParty | null>(null);
@@ -361,7 +314,6 @@ const filteredGuestParties = computed(() => {
 });
 const selectedGuestParties = computed(() => props.guestParties.filter((party) => selectedGuestIds.value.includes(party.id)));
 const selectedPendingGuestParties = computed(() => selectedGuestParties.value.filter((party) => party.attendanceStatus === 'pending'));
-const pendingInvitationParties = computed(() => props.guestParties.filter((party) => party.attendanceStatus === 'pending'));
 const allGuestsSelected = computed(() => filteredGuestParties.value.length > 0 && filteredGuestParties.value.every((party) => selectedGuestIds.value.includes(party.id)));
 const guestListSearch = ref('');
 const guestListParties = computed(() => {
@@ -412,8 +364,6 @@ const localeFormat = computed(() => {
 
     return 'en-GB';
 });
-
-const invitationTemplateCards = invitationTemplateDefinitions;
 
 const statCards = computed(() => [
     {
@@ -480,16 +430,6 @@ const guestSectionCards = computed(() => [
         }),
     },
     {
-        key: 'invitation' as GuestSection,
-        icon: ScrollText,
-        label: t('guests.sections.invitation.title'),
-        description: t('guests.sections.invitation.description'),
-        value: String(pendingInvitationParties.value.length),
-        detail: t('guests.sections.invitation.detail', {
-            count: props.guestParties.filter((party) => party.respondedAt !== null).length,
-        }),
-    },
-    {
         key: 'ledger' as GuestSection,
         icon: Wallet,
         label: t('guests.sections.ledger.title'),
@@ -538,297 +478,6 @@ const tableSeatSummary = computed(() => props.eventTables.reduce((summary, table
     totalSeats: 0,
     openSeats: 0,
 }));
-
-const previewingInvitationTemplateCard = computed(() => {
-    if (!previewingInvitationTemplateId.value) {
-        return null;
-    }
-
-    return invitationTemplateCards.find((template) => template.id === previewingInvitationTemplateId.value) ?? null;
-});
-
-const invitationStudioContent = computed<InvitationStudioContent>(() => ({
-    partnerOneName: invitationSettingsForm.content.partner_one_name,
-    partnerTwoName: invitationSettingsForm.content.partner_two_name,
-    familyName: invitationSettingsForm.content.family_name,
-    showFamilyName: invitationSettingsForm.content.show_family_name,
-    brideParents: invitationSettingsForm.content.bride_parents,
-    groomParents: invitationSettingsForm.content.groom_parents,
-    godparents: invitationSettingsForm.content.godparents,
-    dateText: invitationSettingsForm.content.date_text,
-    venueText: invitationSettingsForm.content.venue_text,
-}));
-
-const invitationStudioVisibility = computed<InvitationStudioVisibility>(() => ({
-    couple: invitationSettingsForm.visibility.couple,
-    parents: invitationSettingsForm.visibility.parents,
-    godparents: invitationSettingsForm.visibility.godparents,
-    date: invitationSettingsForm.visibility.date,
-    venue: invitationSettingsForm.visibility.venue,
-    contactPhone: invitationSettingsForm.visibility.contact_phone,
-}));
-
-const invitationTemplatePreviewContent = (templateId: InvitationTemplateId): InvitationTemplatePreviewContent => {
-    if (templateId === 'canva_cream') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Luca',
-                partnerTwoName: 'Danielle',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Maria and Daniel',
-                groomParents: 'Elena and Victor',
-                godparents: 'Bianca and Stefan',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'We are getting married!',
-            closing: 'See you there',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Saturday • 15 November 2023 • 6 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    if (templateId === 'canva_brown') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Elena',
-                partnerTwoName: 'Matei',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Adriana and Pavel',
-                groomParents: 'Monica and Sorin',
-                godparents: 'Bianca and Vlad',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'We are getting married!',
-            closing: 'With love',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Saturday • 20 September 2026 • 10 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    if (templateId === 'canva_watercolor') {
-        const samplePresentation = composeInvitationPaperPresentation({
-            eventName: 'You are invited to',
-            eventType: 'wedding',
-            headline: 'You are invited to',
-            weddingDetails: {
-                partnerOneName: 'Francois',
-                partnerTwoName: 'Juliana',
-                familyName: '',
-                showFamilyName: false,
-                brideParents: 'Sofia and Mircea',
-                groomParents: 'Camelia and Adrian',
-                godparents: 'Andreea and Stefan',
-            },
-        });
-
-        return {
-            eventName: samplePresentation.leadIn,
-            guestLabel: null,
-            headline: samplePresentation.title,
-            message: 'Join us for our wedding celebration.',
-            closing: 'Please respond when you can',
-            detailLines: samplePresentation.detailLines,
-            dateLabel: 'Sunday • 28 January 2027 • 10 PM',
-            venueAddress: '123 Anywhere St., Any City',
-        };
-    }
-
-    const presentation = composeInvitationPaperPresentation({
-        eventName: currentEvent.name,
-        eventType: currentEvent.type,
-        headline: invitationSettingsForm.headline || currentEvent.name,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    });
-    const footerMeta = resolveInvitationFooterMeta({
-        defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
-        defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
-        contactPhone: invitationSettingsForm.contact_phone || null,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    });
-
-    return {
-        eventName: presentation.leadIn,
-        guestLabel: t('guests.invitation.preview_guest_label'),
-        headline: presentation.title,
-        message: invitationSettingsForm.message || t('guests.invitation.default_message'),
-        closing: invitationSettingsForm.closing || t('guests.invitation.default_closing'),
-        detailLines: presentation.detailLines,
-        dateLabel: footerMeta.dateLabel,
-        venueAddress: footerMeta.venueAddress,
-    };
-};
-
-const activeInvitationPresentation = computed(() =>
-    composeInvitationPaperPresentation({
-        eventName: currentEvent.name,
-        eventType: currentEvent.type,
-        headline: invitationSettingsForm.headline || currentEvent.name,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    }),
-);
-
-const activeInvitationFooterMeta = computed(() =>
-    resolveInvitationFooterMeta({
-        defaultDateLabel: props.invitationPreview.eventDetails.dateLabel,
-        defaultVenueAddress: props.invitationPreview.eventDetails.venueAddress,
-        contactPhone: invitationSettingsForm.contact_phone || null,
-        content: invitationStudioContent.value,
-        visibility: invitationStudioVisibility.value,
-        weddingDetails: props.invitationPreview.eventDetails.weddingDetails,
-    }),
-);
-
-const invitationOverflowWarnings = computed<InvitationOverflowWarning[]>(() => {
-    const titleZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'couple');
-    const leadInZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'lead_in');
-    const messageZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'message');
-    const rsvpZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'rsvp_note');
-    const parentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'parents');
-    const godparentsZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'godparents');
-    const venueZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'venue');
-    const dateZone = findInvitationTemplateStudioZone(invitationSettingsForm.template, 'date');
-    const warnings: InvitationOverflowWarning[] = [];
-
-    const pushZoneWarning = (
-        key: string,
-        label: string,
-        value: string | null,
-        safeLength: number | undefined,
-        maxLength: number | undefined,
-    ): void => {
-        const length = value?.trim().length ?? 0;
-        if (length === 0 || safeLength === undefined || maxLength === undefined) {
-            return;
-        }
-
-        if (length > maxLength) {
-            warnings.push({
-                key,
-                tone: 'danger',
-                label,
-                message: t('guests.invitation.fit_error', { label, max: maxLength }),
-            });
-
-            return;
-        }
-
-        if (length > safeLength) {
-            warnings.push({
-                key,
-                tone: 'warning',
-                label,
-                message: t('guests.invitation.fit_warning', { label, max: maxLength }),
-            });
-        }
-    };
-
-    pushZoneWarning('lead_in', t('guests.invitation.lead_in_label'), invitationSettingsForm.headline, leadInZone?.safeLength, leadInZone?.maxLength);
-    pushZoneWarning('couple', t('guests.invitation.couple_title'), activeInvitationPresentation.value.title, titleZone?.safeLength, titleZone?.maxLength);
-    pushZoneWarning('message', t('guests.invitation.message_label'), invitationSettingsForm.message, messageZone?.safeLength, messageZone?.maxLength);
-    pushZoneWarning('rsvp_note', t('guests.invitation.rsvp_note_label'), invitationSettingsForm.closing, rsvpZone?.safeLength, rsvpZone?.maxLength);
-
-    if (invitationSettingsForm.visibility.parents) {
-        pushZoneWarning(
-            'parents',
-            t('guests.invitation.parents_title'),
-            [invitationSettingsForm.content.bride_parents, invitationSettingsForm.content.groom_parents].filter(Boolean).join(' '),
-            parentsZone?.safeLength,
-            parentsZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.godparents) {
-        pushZoneWarning(
-            'godparents',
-            t('guests.invitation.godparents_label'),
-            invitationSettingsForm.content.godparents,
-            godparentsZone?.safeLength,
-            godparentsZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.date) {
-        pushZoneWarning(
-            'date',
-            t('guests.invitation.date_text_label'),
-            activeInvitationFooterMeta.value.dateLabel,
-            dateZone?.safeLength,
-            dateZone?.maxLength,
-        );
-    }
-
-    if (invitationSettingsForm.visibility.venue) {
-        pushZoneWarning(
-            'venue',
-            t('guests.invitation.venue_text_label'),
-            activeInvitationFooterMeta.value.venueAddress,
-            venueZone?.safeLength,
-            venueZone?.maxLength,
-        );
-    }
-
-    return warnings;
-});
-
-const invitationSummaryCards = computed(() => [
-    {
-        label: t('guests.invitation.summary.pending'),
-        value: pendingInvitationParties.value.length,
-    },
-    {
-        label: t('guests.invitation.summary.opened'),
-        value: props.guestParties.filter((party) => party.invitationOpenCount > 0).length,
-    },
-    {
-        label: t('guests.invitation.summary.answered'),
-        value: props.guestParties.filter((party) => party.respondedAt !== null).length,
-    },
-    {
-        label: t('guests.invitation.summary.reminded'),
-        value: props.guestParties.filter((party) => party.reminderCount > 0).length,
-    },
-]);
-
-const invitationRecentActivity = computed(() => {
-    return props.guestParties
-        .flatMap((party) => party.invitationHistory.map((activity) => ({
-            ...activity,
-            guestName: party.name,
-        })))
-        .sort((left, right) => {
-            const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
-            const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
-
-            return rightTime - leftTime;
-        })
-        .slice(0, 6);
-});
 
 const openCreateDialog = (): void => {
     activeGuestParty.value = null;
@@ -1001,20 +650,6 @@ const importGuestParties = (): void => {
     });
 };
 
-const saveInvitationSettings = (): void => {
-    savingInvitationSettings.value = true;
-
-    invitationSettingsForm.patch(props.eventLinks.invitationSettingsUpdate, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.success(t('guests.messages.invitation_saved'));
-        },
-        onFinish: () => {
-            savingInvitationSettings.value = false;
-        },
-    });
-};
-
 const exportGuestLedger = (): void => {
     window.location.assign(props.guestLedgerExportUrl);
 };
@@ -1082,16 +717,6 @@ const patchGuestPartyQuickly = (
             quickSavingGuestId.value = null;
         },
     });
-};
-
-const closeInvitationTemplatePreview = (): void => {
-    previewingInvitationTemplateId.value = null;
-};
-
-const handleInvitationTemplatePreviewOpenChange = (open: boolean): void => {
-    if (!open) {
-        closeInvitationTemplatePreview();
-    }
 };
 
 const toggleGuestSelection = (guestPartyId: number, checked: boolean): void => {
@@ -1204,12 +829,6 @@ const openInvite = (url: string): void => {
     window.open(url, '_blank', 'noopener,noreferrer');
 };
 
-const saveInvitationPreview = (): void => {
-    const separator = props.publicInvitationUrl.includes('?') ? '&' : '?';
-
-    window.open(`${props.publicInvitationUrl}${separator}print=1`, '_blank', 'noopener,noreferrer');
-};
-
 const shareGuestPartyBundle = async (
     parties: GuestParty[],
     mode: 'invite' | 'reminder',
@@ -1276,20 +895,12 @@ const shareSelectedInvites = async (): Promise<void> => {
     await shareGuestPartyBundle(selectedGuestParties.value, 'invite');
 };
 
-const sharePendingInvites = async (): Promise<void> => {
-    await shareGuestPartyBundle(pendingInvitationParties.value, 'invite');
-};
-
 const remindSelectedInvites = async (): Promise<void> => {
     const parties = selectedGuestIds.value.length > 0
         ? selectedPendingGuestParties.value
         : filteredGuestParties.value.filter((party) => party.attendanceStatus === 'pending');
 
     await shareGuestPartyBundle(parties, 'reminder');
-};
-
-const remindPendingInvites = async (): Promise<void> => {
-    await shareGuestPartyBundle(pendingInvitationParties.value, 'reminder');
 };
 
 const markGuestPartyPresent = (party: GuestParty): void => {
@@ -1411,21 +1022,6 @@ const saveGuestListTableAssignment = (): void => {
             quickSavingGuestId.value = null;
         },
     });
-};
-
-const copyPendingInvites = async (): Promise<void> => {
-    if (pendingInvitationParties.value.length === 0) {
-        toast.error(t('guests.messages.no_pending_to_copy'));
-
-        return;
-    }
-
-    try {
-        await navigator.clipboard.writeText(invitationMessageForParties(pendingInvitationParties.value));
-        toast.success(t('guests.messages.pending_bundle_copied'));
-    } catch {
-        toast.error(t('guests.messages.pending_bundle_copy_failed'));
-    }
 };
 
 const copySelectedInvites = async (): Promise<void> => {
@@ -1675,65 +1271,6 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                 @mark-delivered="updateInvitationDelivery([$event.id], 'mark_delivered_in_person', 'in_person')"
                 @mark-sent="updateInvitationDelivery([$event.id], 'mark_sent_online', 'other')"
                 @confirm-delete="confirmDelete"
-            />
-
-            <GuestInvitationPanel
-                v-else-if="activeSection === 'invitation'"
-                :current-event-name="currentEvent.name"
-                :invitation-template-cards="invitationTemplateCards"
-                :selected-template="invitationSettingsForm.template"
-                :headline="invitationSettingsForm.headline"
-                :message="invitationSettingsForm.message"
-                :closing="invitationSettingsForm.closing"
-                :public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled"
-                :contact-phone="invitationSettingsForm.contact_phone"
-                :invitation-content="invitationStudioContent"
-                :invitation-visibility="invitationStudioVisibility"
-                :invitation-overflow-warnings="invitationOverflowWarnings"
-                :public-invitation-url="publicInvitationUrl"
-                :logo-url="props.invitationPreview.branding.logoUrl"
-                :active-invitation-presentation="activeInvitationPresentation"
-                :active-invitation-footer-meta="activeInvitationFooterMeta"
-                :invitation-summary-cards="invitationSummaryCards"
-                :invitation-recent-activity="invitationRecentActivity"
-                :saving-invitation-settings="savingInvitationSettings"
-                :invitation-settings-processing="invitationSettingsForm.processing"
-                :invitation-template-preview-content="invitationTemplatePreviewContent"
-                :invitation-history-label="invitationHistoryLabel"
-                :format-date-time="formatDateTime"
-                @update:selected-template="invitationSettingsForm.template = $event"
-                @update:headline="invitationSettingsForm.headline = $event"
-                @update:message="invitationSettingsForm.message = $event"
-                @update:closing="invitationSettingsForm.closing = $event"
-                @update:public-rsvp-enabled="invitationSettingsForm.public_rsvp_enabled = $event"
-                @update:contact-phone="invitationSettingsForm.contact_phone = $event"
-                @update:content="invitationSettingsForm.content = {
-                    partner_one_name: $event.partnerOneName,
-                    partner_two_name: $event.partnerTwoName,
-                    family_name: $event.familyName,
-                    show_family_name: $event.showFamilyName,
-                    bride_parents: $event.brideParents,
-                    groom_parents: $event.groomParents,
-                    godparents: $event.godparents,
-                    date_text: $event.dateText,
-                    venue_text: $event.venueText,
-                }"
-                @update:visibility="invitationSettingsForm.visibility = {
-                    couple: $event.couple,
-                    parents: $event.parents,
-                    godparents: $event.godparents,
-                    date: $event.date,
-                    venue: $event.venue,
-                    contact_phone: $event.contactPhone,
-                }"
-                @preview-template="previewingInvitationTemplateId = $event"
-                @open-invite="openInvite"
-                @save-preview="saveInvitationPreview"
-                @copy-link="(url, label) => copyLink(url, label)"
-                @share-pending="sharePendingInvites"
-                @copy-pending="copyPendingInvites"
-                @remind-pending="remindPendingInvites"
-                @save-settings="saveInvitationSettings"
             />
 
             <GuestLedgerPanel
@@ -2233,36 +1770,6 @@ const invitationHistoryLabel = (party: GuestParty['invitationHistory'][number]):
                             {{ t('guests.dialogs.tables.empty') }}
                         </div>
                     </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-
-        <Dialog :open="previewingInvitationTemplateCard !== null" @update:open="handleInvitationTemplatePreviewOpenChange">
-            <DialogContent class="max-w-[min(96vw,46rem)] p-4 sm:p-5">
-                <DialogHeader>
-                    <DialogTitle>
-                        {{ previewingInvitationTemplateCard?.label ?? t('guests.invitation.preview_guest_label') }}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {{ t('guests.dialogs.preview.description') }}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
-                    <InvitationPaper
-                        v-if="previewingInvitationTemplateCard"
-                        :template="previewingInvitationTemplateCard.id"
-                        :event-name="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).eventName"
-                        :logo-url="props.invitationPreview.branding.logoUrl"
-                        :guest-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).guestLabel"
-                        :headline="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).headline"
-                        :message="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).message"
-                        :closing="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).closing"
-                        :detail-lines="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).detailLines"
-                        :date-label="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).dateLabel"
-                        :venue-address="invitationTemplatePreviewContent(previewingInvitationTemplateCard.id).venueAddress"
-                        mode="preview"
-                    />
                 </div>
             </DialogContent>
         </Dialog>

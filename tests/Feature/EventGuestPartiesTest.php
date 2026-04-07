@@ -63,6 +63,22 @@ it('shows the guest parties page for an event owner', function () {
         );
 });
 
+it('shows the invite studio page for an event owner', function () {
+    $owner = User::factory()->create();
+    $event = Event::factory()->for($owner)->create();
+
+    $this->actingAs($owner)
+        ->get(route('events.invite-studio', $event))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('events/InviteStudio')
+            ->where('currentEvent.id', $event->id)
+            ->where('eventLinks.inviteStudio', route('events.invite-studio', $event))
+            ->where('eventLinks.invitationSettingsUpdate', route('events.guests.invitation-settings.update', $event))
+            ->where('publicInvitationUrl', route('events.guests.public-invitation.show', $event->fresh()->public_invitation_token))
+        );
+});
+
 it('shares localized guest workspace strings for authenticated pages', function () {
     $owner = User::factory()->create();
     $event = Event::factory()->for($owner)->create();

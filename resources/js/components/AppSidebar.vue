@@ -10,6 +10,7 @@ import {
     LayoutGrid,
     Package,
     QrCode,
+    ScrollText,
     Settings,
     Shield,
     Users,
@@ -68,6 +69,7 @@ const translatedNavTitle = (title: string): string => {
         Events: t('app.nav.events'),
         Workspace: t('app.nav.workspace'),
         'QR Studio': t('app.nav.print_pack'),
+        'Invite Studio': t('app.nav.invite_studio'),
         Media: t('app.nav.media'),
         Guests: t('app.nav.guests'),
         Settings: t('app.nav.settings'),
@@ -129,6 +131,8 @@ const mainNavItems = computed<NavItem[]>(() => {
                           ? Camera
                           : matchesTranslatedTitle(item.title, 'Settings', t('app.nav.settings'))
                             ? Settings
+                            : matchesTranslatedTitle(item.title, 'Invite Studio', t('app.nav.invite_studio'))
+                              ? ScrollText
                             : matchesTranslatedTitle(item.title, 'QR Studio', t('app.nav.print_pack'))
                               ? QrCode
                             : LayoutGrid,

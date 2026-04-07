@@ -873,6 +873,7 @@
     "app.nav.admin": "Admin",
     "app.nav.account": "Cont",
     "app.nav.print_pack": "Studio QR",
+    "app.nav.invite_studio": "Studio invitatii",
     "app.language.label": "Limba",
     "app.language.locales.english.native": "English",
     "app.language.locales.english.label": "Engleza",

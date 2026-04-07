@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('events/{event}/print-pack', [EventController::class, 'printPack'])->name('events.print-pack');
+    Route::get('events/{event}/invite-studio', [EventController::class, 'inviteStudio'])->name('events.invite-studio');
     Route::get('events/{event}/guests', [EventController::class, 'guests'])->name('events.guests');
     Route::get('events/{event}/guests/report', [EventController::class, 'guestReport'])->name('events.guests.report');
     Route::post('events/{event}/guests', [EventController::class, 'storeGuestParty'])->name('events.guests.store');
