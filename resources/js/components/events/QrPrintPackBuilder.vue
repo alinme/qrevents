@@ -1,712 +1,688 @@
 <script setup lang="ts">
-import {
-    ChevronLeft,
-    ChevronRight,
-    Copy,
-    Download,
-    ExternalLink,
-    Printer,
-    ScanLine,
-} from 'lucide-vue-next';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
+import { Copy, ExternalLink, Printer } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
-import { analyzeQrPrintThemeSvg } from '@/lib/qr-print-svg-layout';
-import {
-    qrPrintThemeMap,
-    qrPrintThemes,
-} from '@/lib/qr-print-themes';
-import type { QrPrintLayoutConfig, QrPrintOrientation, QrPrintThemeConfig, QrPrintThemeId } from '@/lib/qr-print-themes';
+
+type QrPosterTheme = {
+    id: string;
+    label: string;
+    backgroundPath: string;
+    paperColor: string;
+    overlay: string;
+};
 
 const props = defineProps<{
     eventName: string;
-    albumAccessCode: string;
     albumUrl: string;
+    albumAccessCode: string;
     albumQrDataUrl: string;
 }>();
 
 const { t } = useTranslations();
+const cinzelFontFamily = '"Cinzel", var(--font-serif)';
+const cormorantFontFamily = '"Cormorant Garamond", var(--font-serif)';
 
-const themeCarousel = ref<HTMLElement | null>(null);
-const previewViewport = ref<HTMLElement | null>(null);
-const previewDataUrl = ref<string | null>(null);
-const previewViewportWidth = ref(0);
-const isRenderingPreview = ref(false);
-const previewRenderFailed = ref(false);
-const derivedSvgLayout = ref<Record<QrPrintOrientation, Partial<QrPrintLayoutConfig>>>({
-    portrait: {},
-    landscape: {},
-});
+const qrPosterThemes: QrPosterTheme[] = [
+    {
+        id: 'beige-simple',
+        label: 'Beige Simple',
+        backgroundPath: '/qr-bg-themes/beige-simple.svg',
+        paperColor: '#f6efe6',
+        overlay: 'linear-gradient(180deg, rgba(255,248,243,0.60), rgba(255,252,249,0.78))',
+    },
+    {
+        id: 'blue-modern',
+        label: 'Blue Modern',
+        backgroundPath: '/qr-bg-themes/blue-modern.svg',
+        paperColor: '#e9f1fb',
+        overlay: 'linear-gradient(180deg, rgba(250,252,255,0.48), rgba(250,252,255,0.72))',
+    },
+    {
+        id: 'cream-love',
+        label: 'Cream Love',
+        backgroundPath: '/qr-bg-themes/cream-love.svg',
+        paperColor: '#f7efe5',
+        overlay: 'linear-gradient(180deg, rgba(255,248,241,0.56), rgba(255,251,246,0.76))',
+    },
+    {
+        id: 'pink-minimal',
+        label: 'Pink Minimal',
+        backgroundPath: '/qr-bg-themes/pink-minimal.svg',
+        paperColor: '#f6e3e9',
+        overlay: 'linear-gradient(180deg, rgba(255,246,248,0.56), rgba(255,250,251,0.76))',
+    },
+    {
+        id: 'pink-transparent',
+        label: 'Pink Transparent',
+        backgroundPath: '/qr-bg-themes/pink-transparent.svg',
+        paperColor: '#f4e6ea',
+        overlay: 'linear-gradient(180deg, rgba(255,249,250,0.64), rgba(255,252,252,0.82))',
+    },
+    {
+        id: 'simple-transparent',
+        label: 'Simple Transparent',
+        backgroundPath: '/qr-bg-themes/simple-transparent.svg',
+        paperColor: '#f4efe8',
+        overlay: 'linear-gradient(180deg, rgba(255,251,247,0.66), rgba(255,253,251,0.84))',
+    },
+];
 
-const selectedTheme = ref<QrPrintThemeId>('beige_simple');
-const selectedOrientation = ref<QrPrintOrientation>('portrait');
-const layoutMode = ref<'preview' | 'controls'>('preview');
+type QrPosterOrientation = 'portrait' | 'landscape';
 
-const eyebrowText = ref(t('event_home.print_pack.default_eyebrow'));
-const titleText = ref(props.eventName);
-const bodyText = ref(t('event_home.print_pack.instructions.album'));
-const scanHintText = ref(t('event_home.print_pack.footer.scan_hint'));
-const footerText = ref(t('event_home.album.code_label', { code: props.albumAccessCode }));
-const urlText = ref(props.albumUrl);
-const canvasBackground = ref(qrPrintThemeMap.beige_simple.defaultCanvasColor);
+const activeThemeId = ref<string>(qrPosterThemes[0].id);
+const orientation = ref<QrPosterOrientation>('portrait');
 
-let previewResizeObserver: ResizeObserver | null = null;
-let previewRenderToken = 0;
-
-const activeTheme = computed(() => qrPrintThemeMap[selectedTheme.value]);
-const mergeTextBlock = (
-    base: QrPrintLayoutConfig['title'],
-    derived?: Partial<QrPrintLayoutConfig['title']>,
-): QrPrintLayoutConfig['title'] => {
-    if (!derived) {
-        return base;
-    }
-
-    return {
-        ...base,
-        ...derived,
-    };
-};
-const activeLayout = computed<QrPrintLayoutConfig>(() => {
-    const base = activeTheme.value.layout[selectedOrientation.value];
-    const derived = derivedSvgLayout.value[selectedOrientation.value] ?? {};
-
-    return {
-        ...base,
-        ...derived,
-        eyebrow: mergeTextBlock(base.eyebrow, derived.eyebrow),
-        title: mergeTextBlock(base.title, derived.title),
-        body: mergeTextBlock(base.body, derived.body),
-        scanHint: mergeTextBlock(base.scanHint, derived.scanHint),
-        footer: mergeTextBlock(base.footer, derived.footer),
-        url: mergeTextBlock(base.url, derived.url),
-    };
-});
-const orientations: QrPrintOrientation[] = ['portrait', 'landscape'];
-const controlsExpanded = computed(() => layoutMode.value === 'controls');
-const layoutClass = computed(() =>
-    controlsExpanded.value
-        ? 'xl:grid-cols-[minmax(0,1.5fr)_minmax(20rem,0.5fr)]'
-        : 'xl:grid-cols-[minmax(19rem,0.46fr)_minmax(0,0.54fr)]',
+const eyebrowText = ref<string>(t('event_home.print_pack.default_eyebrow'));
+const titleText = ref<string>(props.eventName);
+const bodyText = ref<string>(t('event_home.print_pack.instructions.album'));
+const scanHintText = ref<string>(t('event_home.print_pack.footer.scan_hint'));
+const footerText = ref<string>(
+    props.albumAccessCode.trim().length > 0
+        ? props.albumAccessCode
+        : t('event_home.print_pack.footer.invitation_ready'),
 );
-const previewAspectRatio = computed(() => {
-    if (selectedOrientation.value === 'landscape') {
-        return '1754 / 1240';
-    }
+const urlText = ref<string>(props.albumUrl);
 
-    return '1240 / 1754';
-});
-const previewDisplayWidth = computed(() => {
-    if (previewViewportWidth.value === 0) {
-        return null;
-    }
+const previewSurface = ref<HTMLElement | null>(null);
+const previewScale = ref<number>(1);
+let resizeObserver: ResizeObserver | null = null;
 
-    const layoutMaxWidth = controlsExpanded.value ? 560 : 860;
-
-    return Math.min(previewViewportWidth.value, layoutMaxWidth);
+const activeTheme = computed<QrPosterTheme>(() => {
+    return qrPosterThemes.find((theme) => theme.id === activeThemeId.value) ?? qrPosterThemes[0];
 });
 
-const posterFilenameBase = computed(() => {
-    const slug = props.eventName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-
-    return `${slug || 'eventsmart'}-album-${selectedTheme.value}-${selectedOrientation.value}`;
+const orientationLabel = computed(() => {
+    return orientation.value === 'portrait'
+        ? t('event_home.print_pack.orientation.portrait')
+        : t('event_home.print_pack.orientation.landscape');
 });
 
-const themeCardStyle = (theme: QrPrintThemeConfig): Record<string, string> => {
+const posterAspectRatio = computed(() => {
+    return orientation.value === 'portrait' ? '1 / 1.4142' : '1.4142 / 1';
+});
+
+const posterBaseWidth = computed(() => {
+    return orientation.value === 'portrait' ? 900 : 1280;
+});
+
+const previewPosterStyle = computed<Record<string, string>>(() => {
     return {
-        backgroundColor: theme.pickerCanvasColor,
-        backgroundImage: `url(${theme.artworkUrl})`,
+        '--poster-scale': previewScale.value.toFixed(4),
+        aspectRatio: posterAspectRatio.value,
+        backgroundColor: activeTheme.value.paperColor,
+        backgroundImage: `url(${activeTheme.value.backgroundPath})`,
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
     };
-};
+});
 
-const selectTheme = (themeId: QrPrintThemeId): void => {
-    const theme = qrPrintThemeMap[themeId];
-    selectedTheme.value = themeId;
-    canvasBackground.value = theme.defaultCanvasColor;
-};
+const previewOverlayStyle = computed<Record<string, string>>(() => {
+    return {
+        background: activeTheme.value.overlay,
+    };
+});
 
-const scrollThemes = (direction: 'prev' | 'next'): void => {
-    themeCarousel.value?.scrollBy({
-        left: direction === 'next' ? 248 : -248,
-        behavior: 'smooth',
-    });
-};
+const previewShellClass = computed(() => {
+    return orientation.value === 'portrait'
+        ? 'grid grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] justify-items-center'
+        : 'grid h-full grid-cols-[minmax(0,1fr)_minmax(240px,32%)] grid-rows-[auto_minmax(0,1fr)_auto] items-center';
+});
 
-const wrapCanvasText = (
-    context: CanvasRenderingContext2D,
-    text: string,
-    maxWidth: number,
-): string[] => {
-    const words = text.split(/\s+/).filter(Boolean);
-    const lines: string[] = [];
-    let current = '';
+const qrBlockClass = computed(() => {
+    return orientation.value === 'portrait'
+        ? 'row-start-3 flex min-h-0 w-full items-center justify-center'
+        : 'col-start-2 row-span-3 flex h-full items-center justify-center';
+});
 
-    for (const word of words) {
-        const next = current === '' ? word : `${current} ${word}`;
+const textColumnClass = computed(() => {
+    return orientation.value === 'portrait'
+        ? 'w-full text-center'
+        : 'col-start-1 row-span-3 flex h-full w-full flex-col justify-between text-left';
+});
 
-        if (context.measureText(next).width <= maxWidth || current === '') {
-            current = next;
-            continue;
-        }
-
-        lines.push(current);
-        current = word;
+const portraitTextColumnStyle = computed<Record<string, string> | undefined>(() => {
+    if (orientation.value !== 'portrait') {
+        return undefined;
     }
-
-    if (current !== '') {
-        lines.push(current);
-    }
-
-    return lines;
-};
-
-const fitTextBlock = (
-    context: CanvasRenderingContext2D,
-    themeBlock: QrPrintThemeConfig['layout'][QrPrintOrientation]['title'],
-    text: string,
-    canvasWidth: number,
-): { lines: string[]; fontSize: number } => {
-    const baseFontSize = canvasWidth * themeBlock.fontSize;
-    const minFontSize = baseFontSize * themeBlock.minScale;
-    const maxWidth = canvasWidth * themeBlock.width;
-    let fontSize = baseFontSize;
-
-    while (fontSize >= minFontSize) {
-        context.font = `${themeBlock.fontWeight ?? '400'} ${fontSize}px ${themeBlock.fontFamily}`;
-        const lines = wrapCanvasText(context, text, maxWidth);
-
-        if (lines.length <= themeBlock.maxLines) {
-            return { lines, fontSize };
-        }
-
-        fontSize -= Math.max(1.6, baseFontSize * 0.05);
-    }
-
-    context.font = `${themeBlock.fontWeight ?? '400'} ${minFontSize}px ${themeBlock.fontFamily}`;
 
     return {
-        lines: wrapCanvasText(context, text, maxWidth).slice(0, themeBlock.maxLines),
-        fontSize: minFontSize,
+        maxWidth: 'calc(100% - calc(92px * var(--poster-scale)))',
     };
+});
+
+const qrFrameStyle = computed<Record<string, string>>(() => {
+    const size = orientation.value === 'portrait'
+        ? 'min(100%, calc(290px * var(--poster-scale)))'
+        : 'min(100%, calc(320px * var(--poster-scale)))';
+
+    return {
+        width: size,
+        padding: 'calc(12px * var(--poster-scale))',
+        borderRadius: 'calc(22px * var(--poster-scale))',
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        boxShadow: '0 calc(18px * var(--poster-scale)) calc(48px * var(--poster-scale)) rgba(74, 50, 34, 0.10)',
+    };
+});
+
+const updatePreviewScale = (): void => {
+    if (!previewSurface.value) {
+        previewScale.value = 1;
+        return;
+    }
+
+    const currentWidth = previewSurface.value.clientWidth;
+    if (currentWidth === 0) {
+        return;
+    }
+
+    previewScale.value = Math.max(0.42, Math.min(1, currentWidth / posterBaseWidth.value));
 };
 
-const loadImage = (src: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error(`Unable to load image: ${src}`));
-        image.src = src;
+const observePreviewScale = async (): Promise<void> => {
+    await nextTick();
+
+    resizeObserver?.disconnect();
+
+    if (!previewSurface.value) {
+        return;
+    }
+
+    resizeObserver = new ResizeObserver(() => {
+        updatePreviewScale();
     });
+
+    resizeObserver.observe(previewSurface.value);
+    updatePreviewScale();
 };
 
-const drawContainedImage = (
-    context: CanvasRenderingContext2D,
-    image: HTMLImageElement,
-    width: number,
-    height: number,
-): void => {
-    const scale = Math.min(width / image.width, height / image.height);
-    const drawWidth = image.width * scale;
-    const drawHeight = image.height * scale;
-    const x = (width - drawWidth) / 2;
-    const y = (height - drawHeight) / 2;
-
-    context.drawImage(image, x, y, drawWidth, drawHeight);
+const escapeHtml = (value: string): string => {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 };
 
-const drawTextBlock = (
-    context: CanvasRenderingContext2D,
-    text: string,
-    themeBlock: QrPrintThemeConfig['layout'][QrPrintOrientation]['title'],
-    width: number,
-    height: number,
-    color: string,
-): void => {
-    if (text.trim() === '') {
-        return;
-    }
-
-    const fitted = fitTextBlock(context, themeBlock, text, width);
-    const startY = height * themeBlock.y;
-    const lineGap = fitted.fontSize * themeBlock.lineHeight;
-
-    context.fillStyle = color;
-    context.textAlign = 'center';
-    context.font = `${themeBlock.fontWeight ?? '400'} ${fitted.fontSize}px ${themeBlock.fontFamily}`;
-
-    fitted.lines.forEach((line, index) => {
-        context.fillText(line, width * (themeBlock.centerX ?? 0.5), startY + index * lineGap);
-    });
+const htmlWithLineBreaks = (value: string): string => {
+    return escapeHtml(value).replace(/\n/g, '<br />');
 };
 
-const renderPosterCanvas = async (): Promise<HTMLCanvasElement | null> => {
-    if (typeof document !== 'undefined' && 'fonts' in document) {
-        await document.fonts.ready;
-    }
-
-    const theme = activeTheme.value;
-    const layout = activeLayout.value;
-    const canvas = document.createElement('canvas');
-
-    canvas.width = selectedOrientation.value === 'landscape' ? 1754 : 1240;
-    canvas.height = selectedOrientation.value === 'landscape' ? 1240 : 1754;
-
-    const context = canvas.getContext('2d');
-    if (context === null) {
-        return null;
-    }
-
-    const backgroundImage = await loadImage(theme.artworkUrl);
-    const qrImage = await loadImage(props.albumQrDataUrl);
-
-    context.fillStyle = theme.supportsCanvasColor ? canvasBackground.value : theme.defaultCanvasColor;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    drawContainedImage(context, backgroundImage, canvas.width, canvas.height);
-
-    drawTextBlock(context, eyebrowText.value, layout.eyebrow, canvas.width, canvas.height, theme.mutedColor);
-    drawTextBlock(context, titleText.value, layout.title, canvas.width, canvas.height, theme.textColor);
-    drawTextBlock(context, bodyText.value, layout.body, canvas.width, canvas.height, theme.mutedColor);
-
-    const qrSize = Math.min(canvas.width, canvas.height) * layout.qrSize;
-    const qrX = canvas.width * (layout.qrCenterX ?? 0.5) - qrSize / 2;
-    const qrY = canvas.height * layout.qrY;
-    const framePadding = Math.min(canvas.width, canvas.height) * layout.qrFramePadding;
-
-    context.fillStyle = theme.qrFrameColor;
-    context.beginPath();
-    context.roundRect(
-        qrX - framePadding,
-        qrY - framePadding,
-        qrSize + framePadding * 2,
-        qrSize + framePadding * 2,
-        layout.qrCornerRadius,
-    );
-    context.fill();
-    context.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-
-    drawTextBlock(context, scanHintText.value, layout.scanHint, canvas.width, canvas.height, theme.mutedColor);
-    drawTextBlock(context, footerText.value, layout.footer, canvas.width, canvas.height, theme.textColor);
-    drawTextBlock(context, urlText.value, layout.url, canvas.width, canvas.height, theme.mutedColor);
-
-    return canvas;
-};
-
-const syncPreviewViewportWidth = (): void => {
-    previewViewportWidth.value = previewViewport.value?.clientWidth ?? 0;
-};
-
-const refreshPreviewImage = async (): Promise<void> => {
-    const renderToken = ++previewRenderToken;
-    isRenderingPreview.value = true;
-    previewRenderFailed.value = false;
-
-    try {
-        const canvas = await renderPosterCanvas();
-        if (renderToken !== previewRenderToken) {
-            return;
-        }
-
-        previewDataUrl.value = canvas?.toDataURL('image/png') ?? null;
-        previewRenderFailed.value = canvas === null;
-    } catch {
-        if (renderToken !== previewRenderToken) {
-            return;
-        }
-
-        previewDataUrl.value = null;
-        previewRenderFailed.value = true;
-    } finally {
-        if (renderToken === previewRenderToken) {
-            isRenderingPreview.value = false;
-        }
-    }
-};
-
-const downloadRaster = async (): Promise<void> => {
-    const canvas = await renderPosterCanvas();
-    if (canvas === null) {
-        return;
-    }
-
-    const outputUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = outputUrl;
-    link.download = `${posterFilenameBase.value}.png`;
-    link.click();
-};
-
-const downloadSvg = (): void => {
-    const link = document.createElement('a');
-    link.href = props.albumQrDataUrl;
-    link.download = `${posterFilenameBase.value}-qr.svg`;
-    link.click();
-};
-
-const printPack = async (): Promise<void> => {
-    const canvas = await renderPosterCanvas();
-    if (canvas === null) {
-        return;
-    }
-
-    const printWindow = window.open('', '_blank', 'width=1200,height=900');
+const printPoster = (): void => {
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1240,height=920');
     if (!printWindow) {
         return;
     }
 
-    const posterDataUrl = canvas.toDataURL('image/png');
-    const html = `
-        <html>
-            <head>
-                <title>${props.eventName} QR Studio</title>
-                <style>
-                    @page { margin: 0; size: auto; }
-                    html, body { margin: 0; min-height: 100%; }
-                    body {
-                        display: grid;
-                        place-items: center;
-                        padding: 24px;
-                        background: #efe8de;
-                    }
-                    img {
-                        width: min(920px, 100%);
-                        height: auto;
-                        display: block;
-                    }
-                </style>
-            </head>
-            <body>
-                <img id="print-pack" src="${posterDataUrl}" alt="QR print pack preview" />
-                <script>
-                    const image = document.getElementById('print-pack');
-                    const runPrint = () => {
-                        window.focus();
-                        window.print();
-                    };
-                    if (image && image.complete) {
-                        setTimeout(runPrint, 180);
-                    } else if (image) {
-                        image.addEventListener('load', () => setTimeout(runPrint, 180), { once: true });
-                        image.addEventListener('error', () => setTimeout(runPrint, 180), { once: true });
-                    } else {
-                        setTimeout(runPrint, 180);
-                    }
-                <\/script>
-            </body>
-        </html>
-    `;
+    const printOrientation = orientation.value === 'portrait' ? 'portrait' : 'landscape';
+    const titleAlignment = orientation.value === 'portrait' ? 'center' : 'left';
+    const subtitleAlignment = titleAlignment;
+    const qrLayout = orientation.value === 'portrait'
+        ? 'display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;justify-items:center;'
+        : 'display:grid;grid-template-columns:minmax(0,1fr) 31%;grid-template-rows:auto minmax(0,1fr) auto;column-gap:44px;align-items:center;';
+    const textColumnLayout = orientation.value === 'portrait'
+        ? 'width:100%;max-width:calc(100% - 92px);text-align:center;'
+        : 'grid-column:1;grid-row:1 / span 3;display:flex;height:100%;flex-direction:column;justify-content:space-between;text-align:left;';
+    const qrPlacement = orientation.value === 'portrait'
+        ? 'grid-row:3;display:flex;width:100%;align-items:center;justify-content:center;'
+        : 'grid-column:2;grid-row:1 / span 3;display:flex;height:100%;align-items:center;justify-content:center;';
+
+    const markup = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(titleText.value)}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 ${printOrientation};
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #efe7dc;
+            font-family: "Montserrat", sans-serif;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            padding: 0;
+        }
+
+        .poster {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            color: #1f1711;
+            background-color: ${activeTheme.value.paperColor};
+            background-image: url('${activeTheme.value.backgroundPath}');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .poster::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: ${activeTheme.value.overlay};
+        }
+
+        .poster-inner {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            padding: ${orientation.value === 'portrait' ? '42px 46px 38px' : '44px 48px'};
+            ${qrLayout}
+        }
+
+        .text-column {
+            ${textColumnLayout}
+        }
+
+        .eyebrow {
+            font-family: "Cinzel", serif;
+            font-size: ${orientation.value === 'portrait' ? '13px' : '12px'};
+            font-weight: 600;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            text-align: ${subtitleAlignment};
+            color: rgba(58, 39, 25, 0.72);
+        }
+
+        .title {
+            margin: ${orientation.value === 'portrait' ? '16px 0 0' : '14px 0 0'};
+            font-family: "Cormorant Garamond", serif;
+            font-size: ${orientation.value === 'portrait' ? '64px' : '58px'};
+            line-height: 0.94;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            text-align: ${titleAlignment};
+        }
+
+        .body {
+            margin: ${orientation.value === 'portrait' ? '18px 0 0' : '18px 0 0'};
+            max-width: ${orientation.value === 'portrait' ? 'none' : '610px'};
+            font-size: ${orientation.value === 'portrait' ? '18px' : '17px'};
+            line-height: 1.75;
+            text-align: ${titleAlignment};
+            color: rgba(46, 31, 21, 0.82);
+        }
+
+        .qr-slot {
+            ${qrPlacement}
+        }
+
+        .qr-frame {
+            width: ${orientation.value === 'portrait' ? '290px' : '320px'};
+            padding: 12px;
+            border-radius: 22px;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 18px 48px rgba(74, 50, 34, 0.10);
+        }
+
+        .qr-frame img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .scan-hint {
+            margin: ${orientation.value === 'portrait' ? '18px 0 0' : '0'};
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-align: ${titleAlignment};
+            color: rgba(36, 24, 16, 0.78);
+        }
+
+        .footer-wrap {
+            margin-top: ${orientation.value === 'portrait' ? '18px' : '22px'};
+            display: grid;
+            gap: 10px;
+        }
+
+        .footer {
+            font-family: "Cinzel", serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            text-align: ${titleAlignment};
+            color: rgba(58, 39, 25, 0.70);
+        }
+
+        .url {
+            font-size: 13px;
+            line-height: 1.6;
+            text-align: ${titleAlignment};
+            color: rgba(46, 31, 21, 0.78);
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <article class="poster">
+        <div class="poster-inner">
+            <div class="text-column">
+                <div>
+                    <div class="eyebrow">${htmlWithLineBreaks(eyebrowText.value)}</div>
+                    <div class="title">${htmlWithLineBreaks(titleText.value)}</div>
+                    <div class="body">${htmlWithLineBreaks(bodyText.value)}</div>
+                </div>
+                <div class="footer-wrap">
+                    <div class="scan-hint">${htmlWithLineBreaks(scanHintText.value)}</div>
+                    <div class="footer">${htmlWithLineBreaks(footerText.value)}</div>
+                    <div class="url">${htmlWithLineBreaks(urlText.value)}</div>
+                </div>
+            </div>
+            <div class="qr-slot">
+                <div class="qr-frame">
+                    <img src="${props.albumQrDataUrl}" alt="${escapeHtml(t('event_home.print_pack.preview_alt'))}" />
+                </div>
+            </div>
+        </div>
+    </article>
+</body>
+</html>`;
+
+    printWindow.onload = () => {
+        printWindow.focus();
+        window.setTimeout(() => {
+            printWindow.print();
+        }, 180);
+    };
 
     printWindow.document.open();
-    printWindow.document.write(html);
+    printWindow.document.write(markup);
     printWindow.document.close();
-};
-
-const copyAlbumLink = async (): Promise<void> => {
-    if (
-        typeof navigator === 'undefined'
-        || !navigator.clipboard
-        || typeof navigator.clipboard.writeText !== 'function'
-    ) {
-        toast.error(t('event_home.clipboard.unavailable'));
-        return;
-    }
-
-    await navigator.clipboard.writeText(props.albumUrl);
-    toast.success(t('event_home.print_pack.copy_success'));
 };
 
 const openAlbum = (): void => {
     window.open(props.albumUrl, '_blank', 'noopener,noreferrer');
 };
 
-watch(
-    activeTheme,
-    async (theme) => {
-        derivedSvgLayout.value = await analyzeQrPrintThemeSvg(theme.artworkUrl, theme.layout);
-    },
-    { immediate: true },
-);
-
-watch(
-    [
-        selectedTheme,
-        selectedOrientation,
-        layoutMode,
-        derivedSvgLayout,
-        eyebrowText,
-        titleText,
-        bodyText,
-        scanHintText,
-        footerText,
-        urlText,
-        canvasBackground,
-    ],
-    () => {
-        void refreshPreviewImage();
-    },
-    { immediate: true },
-);
+const copyAlbumLink = async (): Promise<void> => {
+    await navigator.clipboard.writeText(urlText.value);
+};
 
 onMounted(() => {
-    syncPreviewViewportWidth();
-
-    if (typeof ResizeObserver === 'undefined') {
-        return;
-    }
-
-    previewResizeObserver = new ResizeObserver(() => {
-        syncPreviewViewportWidth();
-    });
-
-    if (previewViewport.value) {
-        previewResizeObserver.observe(previewViewport.value);
-    }
+    void observePreviewScale();
 });
 
 onBeforeUnmount(() => {
-    previewResizeObserver?.disconnect();
+    resizeObserver?.disconnect();
+});
+
+watch(orientation, () => {
+    void observePreviewScale();
 });
 </script>
 
 <template>
-    <div class="grid gap-8" :class="layoutClass">
-        <aside class="space-y-6 border-b border-black/6 pb-6 xl:max-h-[calc(100vh-11rem)] xl:overflow-y-auto xl:border-r xl:border-b-0 xl:pb-0 xl:pr-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="inline-flex rounded-full bg-white p-1 ring-1 ring-black/8">
-                    <button
-                        type="button"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition"
-                        :class="layoutMode === 'preview' ? 'bg-[#171411] text-white' : 'text-zinc-600 hover:text-zinc-900'"
-                        @click="layoutMode = 'preview'"
-                    >
-                        {{ t('event_home.print_pack.layout.preview_focus') }}
-                    </button>
-                    <button
-                        type="button"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition"
-                        :class="layoutMode === 'controls' ? 'bg-[#171411] text-white' : 'text-zinc-600 hover:text-zinc-900'"
-                        @click="layoutMode = 'controls'"
-                    >
-                        {{ t('event_home.print_pack.layout.controls_focus') }}
-                    </button>
+    <div class="grid gap-8 xl:grid-cols-[330px_minmax(0,1fr)] xl:items-start">
+        <aside class="xl:max-h-[calc(100vh-7.5rem)] xl:overflow-y-auto xl:pr-3">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">
+                        {{ t('event_home.print_pack.background_title') }}
+                    </p>
+                    <p class="mt-1 text-sm text-neutral-600">
+                        {{ orientationLabel }}
+                    </p>
                 </div>
 
-                <div class="inline-flex items-center rounded-full bg-white p-1 ring-1 ring-black/8">
+                <div class="inline-flex items-center rounded-full border border-neutral-200 bg-white/80 p-1 shadow-sm">
                     <Button
+                        type="button"
+                        size="sm"
+                        :variant="orientation === 'portrait' ? 'default' : 'ghost'"
+                        class="rounded-full px-3"
+                        @click="orientation = 'portrait'"
+                    >
+                        {{ t('event_home.print_pack.orientation.portrait') }}
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        :variant="orientation === 'landscape' ? 'default' : 'ghost'"
+                        class="rounded-full px-3"
+                        @click="orientation = 'landscape'"
+                    >
+                        {{ t('event_home.print_pack.orientation.landscape') }}
+                    </Button>
+                </div>
+            </div>
+
+            <div class="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:flex-col xl:overflow-visible xl:pb-0">
+                <button
+                    v-for="theme in qrPosterThemes"
+                    :key="theme.id"
+                    type="button"
+                    class="group min-w-[132px] shrink-0 snap-start text-left xl:min-w-0"
+                    @click="activeThemeId = theme.id"
+                >
+                    <div
+                        class="overflow-hidden rounded-[1.4rem] border transition duration-200"
+                        :class="activeThemeId === theme.id ? 'border-neutral-950 shadow-[0_16px_36px_rgba(33,26,20,0.14)]' : 'border-neutral-200/80 opacity-80 group-hover:opacity-100'"
+                    >
+                        <div
+                            class="aspect-[0.76] w-full"
+                            :style="{
+                                backgroundColor: theme.paperColor,
+                                backgroundImage: `linear-gradient(180deg, rgba(255,250,246,0.32), rgba(255,252,249,0.60)), url(${theme.backgroundPath})`,
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: 'cover',
+                            }"
+                        />
+                    </div>
+                    <p class="mt-2 px-1 text-sm font-medium text-neutral-700">
+                        {{ theme.label }}
+                    </p>
+                </button>
+            </div>
+
+            <div class="mt-6 space-y-5 border-t border-neutral-200 pt-5">
+                <div class="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white/85 p-1 shadow-sm">
+                    <Button
+                        type="button"
                         variant="ghost"
-                        size="icon"
-                        class="rounded-full text-zinc-600 hover:text-zinc-900"
-                        :aria-label="t('event_home.print_pack.actions.print_pdf')"
+                        size="icon-sm"
+                        class="rounded-full"
                         :title="t('event_home.print_pack.actions.print_pdf')"
-                        @click="printPack"
+                        @click="printPoster"
                     >
                         <Printer class="size-4" />
                     </Button>
                     <Button
+                        type="button"
                         variant="ghost"
-                        size="icon"
-                        class="rounded-full text-zinc-600 hover:text-zinc-900"
-                        :aria-label="t('event_home.print_pack.actions.download_png')"
-                        :title="t('event_home.print_pack.actions.download_png')"
-                        @click="downloadRaster"
-                    >
-                        <Download class="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="rounded-full text-zinc-600 hover:text-zinc-900"
-                        :aria-label="t('event_home.print_pack.actions.download_svg')"
-                        :title="t('event_home.print_pack.actions.download_svg')"
-                        @click="downloadSvg"
-                    >
-                        <ScanLine class="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="rounded-full text-zinc-600 hover:text-zinc-900"
-                        :aria-label="t('event_home.print_pack.actions.copy_target')"
+                        size="icon-sm"
+                        class="rounded-full"
                         :title="t('event_home.print_pack.actions.copy_target')"
-                        @click="copyAlbumLink"
+                        @click="void copyAlbumLink()"
                     >
                         <Copy class="size-4" />
                     </Button>
                     <Button
+                        type="button"
                         variant="ghost"
-                        size="icon"
-                        class="rounded-full text-zinc-600 hover:text-zinc-900"
-                        :aria-label="t('event_home.print_pack.actions.open_target')"
+                        size="icon-sm"
+                        class="rounded-full"
                         :title="t('event_home.print_pack.actions.open_target')"
                         @click="openAlbum"
                     >
                         <ExternalLink class="size-4" />
                     </Button>
                 </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        {{ t('event_home.print_pack.copy_fields.eyebrow') }}
+                    </label>
+                    <Input
+                        v-model="eyebrowText"
+                        class="h-11 rounded-2xl border-neutral-200/90 bg-white/75"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        {{ t('event_home.print_pack.copy_fields.title') }}
+                    </label>
+                    <Textarea
+                        v-model="titleText"
+                        class="min-h-[108px] rounded-[1.4rem] border-neutral-200/90 bg-white/75 px-4 py-3"
+                    />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        {{ t('event_home.print_pack.copy_fields.body') }}
+                    </label>
+                    <Textarea
+                        v-model="bodyText"
+                        class="min-h-[168px] rounded-[1.4rem] border-neutral-200/90 bg-white/75 px-4 py-3"
+                    />
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                            {{ t('event_home.print_pack.copy_fields.scan_hint') }}
+                        </label>
+                        <Textarea
+                            v-model="scanHintText"
+                            class="min-h-[100px] rounded-[1.4rem] border-neutral-200/90 bg-white/75 px-4 py-3"
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                            {{ t('event_home.print_pack.copy_fields.footer') }}
+                        </label>
+                        <Textarea
+                            v-model="footerText"
+                            class="min-h-[100px] rounded-[1.4rem] border-neutral-200/90 bg-white/75 px-4 py-3"
+                        />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        {{ t('event_home.print_pack.copy_fields.url') }}
+                    </label>
+                    <Textarea
+                        v-model="urlText"
+                        class="min-h-[96px] rounded-[1.4rem] border-neutral-200/90 bg-white/75 px-4 py-3"
+                    />
+                </div>
             </div>
-
-            <section class="space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm font-semibold text-[#171411]">
-                        {{ t('event_home.print_pack.theme_title') }}
-                    </p>
-                    <div class="flex items-center gap-2">
-                        <Button variant="outline" size="icon" class="rounded-full" @click="scrollThemes('prev')">
-                            <ChevronLeft class="size-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" class="rounded-full" @click="scrollThemes('next')">
-                            <ChevronRight class="size-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                <div
-                    ref="themeCarousel"
-                    class="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                    <button
-                        v-for="theme in qrPrintThemes"
-                        :key="theme.id"
-                        type="button"
-                        class="w-[220px] shrink-0 snap-start text-left"
-                        @click="selectTheme(theme.id)"
-                    >
-                        <div
-                            :class="[
-                                'overflow-hidden rounded-[1.7rem] border p-2.5 transition',
-                                selectedTheme === theme.id
-                                    ? 'border-neutral-950 ring-2 ring-neutral-950 shadow-sm'
-                                    : 'border-black/10 hover:-translate-y-0.5 hover:shadow-sm',
-                            ]"
-                        >
-                            <div class="overflow-hidden rounded-[1.2rem] border border-black/8">
-                                <div
-                                    class="relative aspect-[210/297] bg-cover bg-center"
-                                    :style="themeCardStyle(theme)"
-                                >
-                                    <div class="absolute inset-x-[22%] top-[17%] text-center text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-black/45">
-                                        QR Album
-                                    </div>
-                                    <div
-                                        class="absolute inset-x-[18%] top-[29%] text-center text-[1.55rem] leading-none text-black/75"
-                                        :style="{ fontFamily: theme.layout.portrait.title.fontFamily }"
-                                    >
-                                        {{ eventName }}
-                                    </div>
-                                    <div class="absolute left-1/2 top-[58%] h-[31%] w-[33%] -translate-x-1/2 -translate-y-1/2 rounded-[1.6rem] bg-white/82 shadow-[0_12px_28px_rgba(23,20,17,0.12)]" />
-                                </div>
-                            </div>
-                            <div class="mt-2 flex items-center justify-between gap-3">
-                                <p class="text-sm font-semibold text-[#171411]">
-                                    {{ theme.label }}
-                                </p>
-                                <span
-                                    class="rounded-full px-2.5 py-1 text-[0.68rem] font-medium"
-                                    :class="selectedTheme === theme.id ? 'bg-neutral-950 text-white' : 'bg-black/5 text-neutral-700'"
-                                >
-                                    {{ selectedTheme === theme.id ? t('guests.shared.selected') : t('guests.actions.choose') }}
-                                </span>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            </section>
-
-            <section class="grid gap-4 lg:grid-cols-2">
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.eyebrow') }}</label>
-                    <Input v-model="eyebrowText" class="h-11 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.title') }}</label>
-                    <Input v-model="titleText" class="h-11 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2 lg:col-span-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.body') }}</label>
-                    <Textarea v-model="bodyText" class="min-h-24 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.scan_hint') }}</label>
-                    <Input v-model="scanHintText" class="h-11 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.footer') }}</label>
-                    <Input v-model="footerText" class="h-11 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2 lg:col-span-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.url') }}</label>
-                    <Input v-model="urlText" class="h-11 rounded-xl bg-white" />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.orientation_title') }}</label>
-                    <div class="flex flex-wrap gap-2">
-                        <button
-                            v-for="orientation in orientations"
-                            :key="orientation"
-                            type="button"
-                            :class="[
-                                'rounded-full px-4 py-2 text-sm font-medium transition',
-                                selectedOrientation === orientation
-                                    ? 'bg-[#171411] text-white'
-                                    : 'bg-white text-[#171411] ring-1 ring-black/8 hover:ring-black/16',
-                            ]"
-                            @click="selectedOrientation = orientation"
-                        >
-                            {{ t(`event_home.print_pack.orientation.${orientation}`) }}
-                        </button>
-                    </div>
-                </div>
-
-                <div v-if="activeTheme.supportsCanvasColor" class="space-y-2">
-                    <label class="text-sm font-medium text-[#171411]">{{ t('event_home.print_pack.copy_fields.background_fill') }}</label>
-                    <div class="flex h-11 items-center gap-3 rounded-xl border border-black/10 bg-white px-3">
-                        <input v-model="canvasBackground" type="color" class="h-7 w-7 rounded-md border-0 bg-transparent p-0" />
-                        <span class="text-sm text-zinc-600">{{ canvasBackground }}</span>
-                    </div>
-                </div>
-            </section>
         </aside>
 
-        <section>
-            <div class="xl:sticky xl:top-6">
-                <div ref="previewViewport">
-                    <div class="mx-auto" :style="previewDisplayWidth ? { width: `${previewDisplayWidth}px` } : undefined">
-                        <div class="relative" :style="{ aspectRatio: previewAspectRatio }">
-                            <img
-                                v-if="previewDataUrl"
-                                :src="previewDataUrl"
-                                :alt="t('event_home.print_pack.preview_alt')"
-                                class="block h-full w-full rounded-[2rem] object-cover shadow-[0_28px_80px_rgba(23,20,17,0.18)]"
-                            />
-                            <div
-                                v-else
-                                class="absolute inset-0 flex items-center justify-center rounded-[2rem] bg-[linear-gradient(135deg,#f4ece1,#e8dccd)]"
-                            >
-                                <div v-if="isRenderingPreview" class="h-14 w-14 animate-pulse rounded-full bg-white/80 shadow-[0_14px_40px_rgba(23,20,17,0.12)]" />
-                                <div
-                                    v-else-if="previewRenderFailed"
-                                    class="rounded-full bg-white/88 px-5 py-2 text-sm font-medium text-zinc-600 shadow-[0_14px_40px_rgba(23,20,17,0.12)]"
+        <section class="xl:sticky xl:top-6">
+            <div
+                ref="previewSurface"
+                class="mx-auto w-full max-w-[1120px]"
+            >
+                <article
+                    class="relative w-full overflow-hidden shadow-[0_32px_80px_rgba(53,36,24,0.18)]"
+                    :class="orientation === 'portrait' ? 'rounded-[2rem]' : 'rounded-[2.2rem]'"
+                    :style="previewPosterStyle"
+                >
+                    <div class="absolute inset-0" :style="previewOverlayStyle" />
+
+                    <div
+                        class="relative z-10 h-full px-[calc(46px*var(--poster-scale))] py-[calc(42px*var(--poster-scale))]"
+                        :class="previewShellClass"
+                    >
+                        <div :class="textColumnClass" :style="portraitTextColumnStyle">
+                            <div>
+                                <p
+                                    class="text-[calc(0.78rem*var(--poster-scale))] font-semibold uppercase tracking-[0.24em] text-[#463021]/72"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'text-left'"
+                                    :style="{ fontFamily: cinzelFontFamily }"
                                 >
-                                    {{ t('event_home.print_pack.preview_title') }}
-                                </div>
+                                    {{ eyebrowText }}
+                                </p>
+                                <h2
+                                    class="mt-[calc(16px*var(--poster-scale))] font-semibold leading-[0.94] tracking-[-0.03em] text-[#21160f]"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'text-left'"
+                                    :style="{
+                                        fontFamily: cormorantFontFamily,
+                                        fontSize: `calc(${orientation === 'portrait' ? 4.05 : 3.6}rem * var(--poster-scale))`,
+                                    }"
+                                >
+                                    {{ titleText }}
+                                </h2>
+                                <p
+                                    class="mt-[calc(18px*var(--poster-scale))] whitespace-pre-line text-[#2e1f15]/82"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'max-w-[60ch] text-left'"
+                                    :style="{ fontSize: `calc(${orientation === 'portrait' ? 1.15 : 1.05}rem * var(--poster-scale))`, lineHeight: '1.75' }"
+                                >
+                                    {{ bodyText }}
+                                </p>
+                            </div>
+
+                            <div class="mt-[calc(18px*var(--poster-scale))] grid gap-[calc(10px*var(--poster-scale))]">
+                                <p
+                                    class="text-[#241810]/78"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'text-left'"
+                                    :style="{ fontSize: 'calc(1rem * var(--poster-scale))', fontWeight: '600', letterSpacing: '0.02em' }"
+                                >
+                                    {{ scanHintText }}
+                                </p>
+                                <p
+                                    class="uppercase text-[#463021]/70"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'text-left'"
+                                    :style="{
+                                        fontFamily: cinzelFontFamily,
+                                        fontSize: 'calc(0.72rem * var(--poster-scale))',
+                                        fontWeight: '600',
+                                        letterSpacing: '0.18em',
+                                    }"
+                                >
+                                    {{ footerText }}
+                                </p>
+                                <p
+                                    class="break-words text-[#2e1f15]/78"
+                                    :class="orientation === 'portrait' ? 'text-center' : 'text-left'"
+                                    :style="{ fontSize: 'calc(0.78rem * var(--poster-scale))', lineHeight: '1.6' }"
+                                >
+                                    {{ urlText }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div :class="qrBlockClass">
+                            <div :style="qrFrameStyle">
+                                <img
+                                    :src="albumQrDataUrl"
+                                    :alt="t('event_home.print_pack.preview_alt')"
+                                    class="block h-auto w-full"
+                                />
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
             </div>
         </section>
     </div>

@@ -43,24 +43,24 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
         <Head :title="`${currentEvent.name} · ${t('event_home.print_pack.title')}`" />
 
         <div class="min-h-screen bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
-            <div class="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
-                <div class="max-w-3xl py-2">
-                    <h1 class="text-3xl font-semibold tracking-tight text-[#171411]">
-                        {{ t('event_home.print_pack.title') }}
-                    </h1>
-                    <p class="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
-                        {{ t('event_home.print_pack.page_description') }}
-                    </p>
+            <div class="mx-auto max-w-[1560px] px-4 py-4 sm:px-6 lg:px-8">
+                <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">
+                            {{ currentEvent.name }}
+                        </p>
+                        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-[#171411] sm:text-[2rem]">
+                            {{ t('event_home.print_pack.title') }}
+                        </h1>
+                    </div>
                 </div>
 
-                <div class="mt-6">
-                    <QrPrintPackBuilder
-                        :event-name="currentEvent.name"
-                        :album-url="eventLinks.album"
-                        :album-access-code="eventLinks.albumAccessCode"
-                        :album-qr-data-url="eventLinks.albumQrDataUrl"
-                    />
-                </div>
+                <QrPrintPackBuilder
+                    :event-name="currentEvent.name"
+                    :album-url="eventLinks.album"
+                    :album-access-code="eventLinks.albumAccessCode"
+                    :album-qr-data-url="eventLinks.albumQrDataUrl"
+                />
             </div>
         </div>
     </AppLayout>
