@@ -289,8 +289,9 @@ const copyInvitationLink = async (): Promise<void> => {
         <Head :title="`${currentEvent.name} · ${t('app.nav.invite_studio')}`" />
 
         <div class="flex h-[calc(100svh-4rem)] flex-col gap-3 overflow-hidden p-3 md:p-4">
-            <div class="flex shrink-0 flex-wrap items-center gap-2">
-                <div class="flex flex-wrap items-center gap-2">
+            <div class="flex shrink-0 items-start gap-3">
+                <div class="min-w-0 flex-1 overflow-x-auto pb-1">
+                    <div class="flex min-w-max items-center gap-2 pr-2">
                     <button
                         v-for="theme in invitationSheetThemes"
                         :key="theme.id"
@@ -301,14 +302,15 @@ const copyInvitationLink = async (): Promise<void> => {
                     >
                         {{ theme.label }}
                     </button>
+                    </div>
                 </div>
 
-                <Button variant="outline" class="ml-auto rounded-full" @click="configureOpen = true">
+                <Button variant="outline" class="shrink-0 rounded-full" @click="configureOpen = true">
                     <SlidersHorizontal class="size-4" />
                     {{ t('guests.invitation.configure') }}
                 </Button>
 
-                <div class="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
+                <div class="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
                     <Button
                         variant="ghost"
                         size="icon-sm"
@@ -317,24 +319,6 @@ const copyInvitationLink = async (): Promise<void> => {
                         @click="openInvitationPreview"
                     >
                         <Eye class="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        class="rounded-full"
-                        :aria-label="t('guests.invitation.open_live')"
-                        @click="openLiveInvitation"
-                    >
-                        <ExternalLink class="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        class="rounded-full"
-                        :aria-label="t('guests.invitation.copy_live')"
-                        @click="copyInvitationLink"
-                    >
-                        <Copy class="size-4" />
                     </Button>
                     <Button
                         variant="ghost"
@@ -473,6 +457,23 @@ const copyInvitationLink = async (): Promise<void> => {
                             </label>
                             <Input v-model="invitationSettingsForm.contact_phone" class="rounded-2xl" />
                             <InputError :message="invitationSettingsForm.errors.contact_phone" />
+                        </div>
+
+                        <div class="space-y-3 border-t border-neutral-200 pt-5">
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.preview_link_label') }}
+                            </p>
+
+                            <div class="flex flex-wrap gap-2">
+                                <Button type="button" variant="outline" class="rounded-full" @click="openLiveInvitation">
+                                    <ExternalLink class="size-4" />
+                                    {{ t('guests.invitation.open_live') }}
+                                </Button>
+                                <Button type="button" variant="outline" class="rounded-full" @click="copyInvitationLink">
+                                    <Copy class="size-4" />
+                                    {{ t('guests.invitation.copy_live') }}
+                                </Button>
+                            </div>
                         </div>
 
                         <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">

@@ -122,8 +122,9 @@ const printPoster = (): void => {
 
 <template>
     <div class="flex h-full min-h-0 flex-col gap-3 overflow-hidden py-1">
-        <div class="flex shrink-0 flex-wrap items-center gap-2">
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="flex shrink-0 items-start gap-3">
+            <div class="min-w-0 flex-1 overflow-x-auto pb-1">
+                <div class="flex min-w-max items-center gap-2 pr-2">
                 <button
                     v-for="theme in qrTemplateDefinitions"
                     :key="theme.id"
@@ -134,9 +135,10 @@ const printPoster = (): void => {
                 >
                     {{ theme.label }}
                 </button>
+                </div>
             </div>
 
-            <div class="ml-auto inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
+            <div class="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
                 <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.print_pdf')" @click="printPoster">
                     <Printer class="size-4" />
                 </Button>
