@@ -148,7 +148,8 @@ const sheetStyle = computed<Record<string, string>>(() => ({
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
 .invitation-sheet {
-    container-type: inline-size;
+    container-type: size;
+    --invitation-unit: min(1cqw, 1cqh);
 }
 
 .invitation-sheet__art {
@@ -169,7 +170,7 @@ const sheetStyle = computed<Record<string, string>>(() => ({
     background: var(--invitation-chip-bg);
     color: var(--invitation-chip-ink);
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(0.72rem, 1.55cqw, 1rem);
+    font-size: clamp(0.5rem, calc(var(--invitation-unit) * 1.3), 0.88rem);
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -177,15 +178,15 @@ const sheetStyle = computed<Record<string, string>>(() => ({
 
 .invitation-sheet__lead {
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(0.95rem, 2.05cqw, 1.35rem);
+    font-size: clamp(0.62rem, calc(var(--invitation-unit) * 1.7), 1.04rem);
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: clamp(0.08em, calc(var(--invitation-unit) * 0.08), 0.18em);
     text-transform: uppercase;
 }
 
 .invitation-sheet__title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.6rem, 8.4cqw, 6.2rem);
+    font-size: clamp(1.55rem, calc(var(--invitation-unit) * 6.7), 4.8rem);
     font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 0.9;
@@ -194,8 +195,8 @@ const sheetStyle = computed<Record<string, string>>(() => ({
 
 .invitation-sheet__detail {
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(0.92rem, 1.72cqw, 1.2rem);
-    line-height: 1.5;
+    font-size: clamp(0.58rem, calc(var(--invitation-unit) * 1.5), 0.96rem);
+    line-height: 1.45;
     opacity: 0.82;
 }
 
@@ -203,14 +204,14 @@ const sheetStyle = computed<Record<string, string>>(() => ({
     margin: 0 auto;
     max-width: 62cqw;
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(1rem, 2.05cqw, 1.38rem);
-    line-height: 1.72;
+    font-size: clamp(0.64rem, calc(var(--invitation-unit) * 1.74), 1.08rem);
+    line-height: 1.58;
     text-wrap: pretty;
 }
 
 .invitation-sheet__closing {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.18rem, 2.6cqw, 1.9rem);
+    font-size: clamp(0.8rem, calc(var(--invitation-unit) * 2.08), 1.42rem);
     font-style: italic;
     line-height: 1.35;
     color: color-mix(in srgb, var(--invitation-accent) 88%, var(--invitation-ink) 12%);
@@ -218,16 +219,16 @@ const sheetStyle = computed<Record<string, string>>(() => ({
 
 .invitation-sheet__footer-label {
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(0.72rem, 1.45cqw, 0.98rem);
+    font-size: clamp(0.48rem, calc(var(--invitation-unit) * 1.16), 0.78rem);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: clamp(0.08em, calc(var(--invitation-unit) * 0.08), 0.14em);
     text-transform: uppercase;
     color: color-mix(in srgb, var(--invitation-accent) 88%, var(--invitation-ink) 12%);
 }
 
 .invitation-sheet__footer-value {
     font-family: 'Manrope', sans-serif;
-    font-size: clamp(0.98rem, 1.92cqw, 1.28rem);
-    line-height: 1.55;
+    font-size: clamp(0.62rem, calc(var(--invitation-unit) * 1.58), 0.94rem);
+    line-height: 1.45;
 }
 </style>

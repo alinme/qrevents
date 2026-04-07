@@ -15,7 +15,7 @@ const fontVariables = computed<Record<string, string>>(() => ({
         <div class="qr-template__art absolute inset-0" />
         <div class="qr-template__wash absolute inset-0" />
 
-        <div class="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] px-8 py-9 text-center text-[#38232d] sm:px-12 sm:py-11">
+        <div class="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] px-[8%] py-[7.2%] text-center text-[#38232d]">
             <header class="self-start">
                 <p class="qr-template__subtitle">
                     {{ subtitle }}
@@ -28,18 +28,18 @@ const fontVariables = computed<Record<string, string>>(() => ({
                 </p>
             </header>
 
-            <div class="flex flex-col items-center justify-center gap-5 sm:gap-6">
+            <div class="flex flex-col items-center justify-center gap-[3.2cqh]">
                 <p class="qr-template__message order-2">
                     {{ message }}
                 </p>
 
-                <div class="qr-template__qr-frame order-1 w-full max-w-[17rem] sm:max-w-[18.5rem]">
+                <div class="qr-template__qr-frame order-1 w-full max-w-[42cqw]">
                     <img :src="qrDataUrl" :alt="previewAlt" class="block h-auto w-full">
                 </div>
             </div>
 
-            <footer class="qr-template__footer mx-auto w-full max-w-[34rem] self-end border-t border-[#7a5260]/16 pt-4">
-                <p class="text-xl font-semibold tracking-[0.03em] sm:text-[1.7rem]">
+            <footer class="qr-template__footer mx-auto w-full max-w-[70cqw] self-end border-t border-[#7a5260]/16 pt-[2cqh]">
+                <p class="qr-template__event-title">
                     {{ eventTitle }}
                 </p>
             </footer>
@@ -48,6 +48,11 @@ const fontVariables = computed<Record<string, string>>(() => ({
 </template>
 
 <style scoped>
+.qr-template {
+    container-type: size;
+    --qr-unit: min(1cqw, 1cqh);
+}
+
 .qr-template__art {
     background:
         center / cover no-repeat url('/qr-bg-themes/pink-base.png'),
@@ -62,26 +67,26 @@ const fontVariables = computed<Record<string, string>>(() => ({
 
 .qr-template__subtitle {
     font-family: var(--qr-body-font);
-    font-size: 0.92rem;
+    font-size: clamp(0.5rem, calc(var(--qr-unit) * 1.45), 0.88rem);
     font-weight: 800;
-    letter-spacing: 0.28em;
+    letter-spacing: clamp(0.12em, calc(var(--qr-unit) * 0.1), 0.26em);
     text-transform: uppercase;
     color: rgb(111 70 83 / 0.78);
 }
 
 .qr-template__title {
-    margin-top: 0.45rem;
+    margin-top: 0.6cqh;
     font-family: var(--qr-heading-font);
-    font-size: clamp(4.3rem, 14vw, 7rem);
+    font-size: clamp(1.8rem, calc(var(--qr-unit) * 7.9), 4.9rem);
     font-weight: 600;
     line-height: 0.86;
     letter-spacing: -0.05em;
 }
 
 .qr-template__slogan {
-    margin-top: 0.4rem;
+    margin-top: 0.8cqh;
     font-family: var(--qr-body-font);
-    font-size: clamp(1.05rem, 2.7vw, 1.45rem);
+    font-size: clamp(0.76rem, calc(var(--qr-unit) * 2.28), 1.18rem);
     line-height: 1.4;
     color: rgb(98 63 75 / 0.82);
 }
@@ -89,17 +94,23 @@ const fontVariables = computed<Record<string, string>>(() => ({
 .qr-template__qr-frame {
     border-radius: 1.7rem;
     background: rgb(255 255 255 / 0.95);
-    padding: 0.65rem;
+    padding: clamp(0.34rem, calc(var(--qr-unit) * 0.68), 0.64rem);
     box-shadow: 0 24px 52px rgba(84, 46, 58, 0.12);
 }
 
 .qr-template__message {
-    max-width: 34rem;
+    max-width: 62cqw;
     white-space: pre-line;
     font-family: var(--qr-body-font);
-    font-size: clamp(1rem, 2.5vw, 1.15rem);
-    line-height: 1.75;
+    font-size: clamp(0.72rem, calc(var(--qr-unit) * 1.95), 0.98rem);
+    line-height: 1.62;
     color: rgb(59 37 46 / 0.84);
     text-wrap: pretty;
+}
+
+.qr-template__event-title {
+    font-size: clamp(0.86rem, calc(var(--qr-unit) * 2.25), 1.38rem);
+    font-weight: 600;
+    letter-spacing: 0.03em;
 }
 </style>
