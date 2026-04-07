@@ -2,7 +2,7 @@ import type { Component } from 'vue';
 import BeigeQrTemplate from '@/components/events/qr-templates/BeigeQrTemplate.vue';
 import PinkLandscapeQrTemplate from '@/components/events/qr-templates/PinkLandscapeQrTemplate.vue';
 import PinkQrTemplate from '@/components/events/qr-templates/PinkQrTemplate.vue';
-import type { QrTemplateContent } from '@/components/events/qr-templates/types';
+import type { QrTemplateContent, QrTemplateFonts } from '@/components/events/qr-templates/types';
 
 export type QrTemplateId = 'beige' | 'pink' | 'pink_landscape';
 
@@ -10,8 +10,15 @@ export type QrTemplateDefinition = {
     id: QrTemplateId;
     label: string;
     component: Component;
+    fonts: QrTemplateFonts;
     printOrientation: 'portrait' | 'landscape';
     renderPrintHtml: (content: QrTemplateContent, qrDataUrl: string, previewAlt: string) => string;
+};
+
+const cormorantAndManropeFonts: QrTemplateFonts = {
+    stylesheetHref: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
+    headingFamily: '"Cormorant Garamond", serif',
+    bodyFamily: '"Manrope", sans-serif',
 };
 
 const escapeHtml = (value: string): string => {
@@ -27,7 +34,7 @@ const lineBreaks = (value: string): string => {
     return escapeHtml(value).replace(/\n/g, '<br />');
 };
 
-const baseDocument = (title: string, body: string, orientation: 'portrait' | 'landscape'): string => `<!DOCTYPE html>
+const baseDocument = (title: string, body: string, orientation: 'portrait' | 'landscape', fonts: QrTemplateFonts): string => `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -35,7 +42,7 @@ const baseDocument = (title: string, body: string, orientation: 'portrait' | 'la
     <title>${escapeHtml(title)}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="${fonts.stylesheetHref}" rel="stylesheet">
     <style>
         @page {
             size: A4 ${orientation};
@@ -51,7 +58,7 @@ const baseDocument = (title: string, body: string, orientation: 'portrait' | 'la
         html, body {
             margin: 0;
             height: 100%;
-            font-family: "Manrope", sans-serif;
+            font-family: ${fonts.bodyFamily};
         }
     </style>
 </head>
@@ -67,7 +74,7 @@ const beigePrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: s
         <div style="position:relative;z-index:1;display:flex;height:100%;flex-direction:column;align-items:center;justify-content:space-between;padding:58px 54px 52px;text-align:center;">
             <header>
                 <p style="margin:0;font-size:19px;font-weight:800;letter-spacing:0.32em;text-transform:uppercase;color:rgba(81,57,45,0.75);">${lineBreaks(content.subtitle)}</p>
-                <h1 style="margin:8px 0 0;font-family:'Cormorant Garamond',serif;font-size:122px;font-weight:600;line-height:0.88;letter-spacing:-0.04em;">${lineBreaks(content.title)}</h1>
+                <h1 style="margin:8px 0 0;font-family:${cormorantAndManropeFonts.headingFamily};font-size:122px;font-weight:600;line-height:0.88;letter-spacing:-0.04em;">${lineBreaks(content.title)}</h1>
                 <p style="margin:8px 0 0;font-size:24px;line-height:1.45;color:rgba(75,52,41,0.8);">${lineBreaks(content.slogan)}</p>
             </header>
             <div style="display:flex;width:100%;flex-direction:column;align-items:center;gap:30px;">
@@ -80,7 +87,7 @@ const beigePrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: s
                 ${lineBreaks(content.eventTitle)}
             </footer>
         </div>
-    </article>`, 'portrait');
+    </article>`, 'portrait', cormorantAndManropeFonts);
 };
 
 const pinkPrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: string): string => {
@@ -90,7 +97,7 @@ const pinkPrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: st
         <div style="position:relative;z-index:1;display:grid;height:100%;grid-template-rows:auto minmax(0,1fr) auto;padding:44px 54px;text-align:center;">
             <header>
                 <p style="margin:0;font-size:18px;font-weight:800;letter-spacing:0.28em;text-transform:uppercase;color:rgba(111,70,83,0.78);">${lineBreaks(content.subtitle)}</p>
-                <h1 style="margin:8px 0 0;font-family:'Cormorant Garamond',serif;font-size:114px;font-weight:600;line-height:0.86;letter-spacing:-0.05em;">${lineBreaks(content.title)}</h1>
+                <h1 style="margin:8px 0 0;font-family:${cormorantAndManropeFonts.headingFamily};font-size:114px;font-weight:600;line-height:0.86;letter-spacing:-0.05em;">${lineBreaks(content.title)}</h1>
                 <p style="margin:8px 0 0;font-size:22px;line-height:1.4;color:rgba(98,63,75,0.82);">${lineBreaks(content.slogan)}</p>
             </header>
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
@@ -103,7 +110,7 @@ const pinkPrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: st
                 ${lineBreaks(content.eventTitle)}
             </footer>
         </div>
-    </article>`, 'portrait');
+    </article>`, 'portrait', cormorantAndManropeFonts);
 };
 
 const pinkLandscapePrint = (content: QrTemplateContent, qrDataUrl: string, previewAlt: string): string => {
@@ -114,7 +121,7 @@ const pinkLandscapePrint = (content: QrTemplateContent, qrDataUrl: string, previ
             <div style="display:flex;height:100%;flex-direction:column;justify-content:space-between;">
                 <header>
                     <p style="margin:0;font-size:18px;font-weight:800;letter-spacing:0.28em;text-transform:uppercase;color:rgba(111,70,83,0.78);">${lineBreaks(content.subtitle)}</p>
-                    <h1 style="margin:8px 0 0;font-family:'Cormorant Garamond',serif;font-size:110px;font-weight:600;line-height:0.84;letter-spacing:-0.05em;">${lineBreaks(content.title)}</h1>
+                    <h1 style="margin:8px 0 0;font-family:${cormorantAndManropeFonts.headingFamily};font-size:110px;font-weight:600;line-height:0.84;letter-spacing:-0.05em;">${lineBreaks(content.title)}</h1>
                     <p style="margin:10px 0 0;font-size:24px;line-height:1.45;color:rgba(98,63,75,0.82);">${lineBreaks(content.slogan)}</p>
                 </header>
                 <div style="display:grid;gap:24px;">
@@ -130,7 +137,7 @@ const pinkLandscapePrint = (content: QrTemplateContent, qrDataUrl: string, previ
                 </div>
             </div>
         </div>
-    </article>`, 'landscape');
+    </article>`, 'landscape', cormorantAndManropeFonts);
 };
 
 export const qrTemplateDefinitions: QrTemplateDefinition[] = [
@@ -138,6 +145,7 @@ export const qrTemplateDefinitions: QrTemplateDefinition[] = [
         id: 'beige',
         label: 'Beige',
         component: BeigeQrTemplate,
+        fonts: cormorantAndManropeFonts,
         printOrientation: 'portrait',
         renderPrintHtml: beigePrint,
     },
@@ -145,6 +153,7 @@ export const qrTemplateDefinitions: QrTemplateDefinition[] = [
         id: 'pink',
         label: 'Pink',
         component: PinkQrTemplate,
+        fonts: cormorantAndManropeFonts,
         printOrientation: 'portrait',
         renderPrintHtml: pinkPrint,
     },
@@ -152,6 +161,7 @@ export const qrTemplateDefinitions: QrTemplateDefinition[] = [
         id: 'pink_landscape',
         label: 'Pink Landscape',
         component: PinkLandscapeQrTemplate,
+        fonts: cormorantAndManropeFonts,
         printOrientation: 'landscape',
         renderPrintHtml: pinkLandscapePrint,
     },

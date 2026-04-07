@@ -1,11 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { QrTemplateProps } from './types';
 
-defineProps<QrTemplateProps>();
+const props = defineProps<QrTemplateProps>();
+
+const fontVariables = computed<Record<string, string>>(() => ({
+    '--qr-heading-font': props.fonts.headingFamily,
+    '--qr-body-font': props.fonts.bodyFamily,
+}));
 </script>
 
 <template>
-    <article class="qr-template qr-template-beige relative mx-auto aspect-[1/1.4142] h-full max-h-[calc(100vh-15rem)] w-full max-w-[760px] overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(53,36,24,0.16)]">
+    <article :style="fontVariables" class="qr-template qr-template-beige relative mx-auto aspect-[1/1.4142] h-full max-h-[calc(100vh-15rem)] w-full max-w-[760px] overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(53,36,24,0.16)]">
         <div class="qr-template__art absolute inset-0" />
         <div class="qr-template__wash absolute inset-0" />
 
@@ -42,8 +48,6 @@ defineProps<QrTemplateProps>();
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-
 .qr-template__art {
     background:
         center / cover no-repeat url('/qr-bg-themes/beige-base.png'),
@@ -57,7 +61,7 @@ defineProps<QrTemplateProps>();
 }
 
 .qr-template__subtitle {
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--qr-body-font);
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.32em;
@@ -67,7 +71,7 @@ defineProps<QrTemplateProps>();
 
 .qr-template__title {
     margin-top: 0.5rem;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--qr-heading-font);
     font-size: clamp(4.6rem, 15vw, 7.5rem);
     font-weight: 600;
     line-height: 0.88;
@@ -76,7 +80,7 @@ defineProps<QrTemplateProps>();
 
 .qr-template__slogan {
     margin-top: 0.5rem;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--qr-body-font);
     font-size: clamp(1.1rem, 3vw, 1.6rem);
     line-height: 1.45;
     color: rgb(75 52 41 / 0.8);
@@ -92,7 +96,7 @@ defineProps<QrTemplateProps>();
 .qr-template__message {
     max-width: 38rem;
     white-space: pre-line;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--qr-body-font);
     font-size: clamp(1rem, 2.7vw, 1.2rem);
     line-height: 1.75;
     color: rgb(56 38 29 / 0.84);

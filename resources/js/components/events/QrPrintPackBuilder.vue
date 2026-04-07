@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Copy, ExternalLink, Printer, SlidersHorizontal } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,9 @@ const messageText = ref<string>('Scan the QR code and share your memories by upl
 const eventTitleText = ref<string>(props.eventName);
 
 const activeTemplate = computed(() => resolveQrTemplateDefinition(activeTemplateId.value));
+const fontStylesheetLinkId = 'qr-template-google-fonts';
+const preconnectGoogleFontsId = 'qr-template-google-fonts-preconnect';
+const preconnectGoogleStaticId = 'qr-template-google-static-preconnect';
 
 const templateContent = computed(() => ({
     subtitle: subtitleText.value,
@@ -41,6 +44,52 @@ const templateContent = computed(() => ({
     message: messageText.value,
     eventTitle: eventTitleText.value,
 }));
+
+const ensureHeadLink = (id: string, href: string, rel: string, crossOrigin?: 'anonymous'): HTMLLinkElement => {
+    const existing = document.head.querySelector<HTMLLinkElement>(`#${id}`);
+
+    if (existing) {
+        existing.href = href;
+        existing.rel = rel;
+
+        if (crossOrigin) {
+            existing.crossOrigin = crossOrigin;
+        } else {
+            existing.removeAttribute('crossorigin');
+        }
+
+        return existing;
+    }
+
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = rel;
+    link.href = href;
+
+    if (crossOrigin) {
+        link.crossOrigin = crossOrigin;
+    }
+
+    document.head.append(link);
+
+    return link;
+};
+
+watch(
+    () => activeTemplate.value.fonts.stylesheetHref,
+    (href) => {
+        ensureHeadLink(preconnectGoogleFontsId, 'https://fonts.googleapis.com', 'preconnect');
+        ensureHeadLink(preconnectGoogleStaticId, 'https://fonts.gstatic.com', 'preconnect', 'anonymous');
+        ensureHeadLink(fontStylesheetLinkId, href, 'stylesheet');
+    },
+    { immediate: true },
+);
+
+onBeforeUnmount(() => {
+    document.head.querySelector(`#${fontStylesheetLinkId}`)?.remove();
+    document.head.querySelector(`#${preconnectGoogleFontsId}`)?.remove();
+    document.head.querySelector(`#${preconnectGoogleStaticId}`)?.remove();
+});
 
 const printPoster = (): void => {
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1240,height=920');
@@ -122,6 +171,7 @@ const copyAlbumLink = async (): Promise<void> => {
                 :slogan="sloganText"
                 :message="messageText"
                 :event-title="eventTitleText"
+                :fonts="activeTemplate.fonts"
                 :qr-data-url="albumQrDataUrl"
                 :preview-alt="t('event_home.print_pack.preview_alt')"
             />

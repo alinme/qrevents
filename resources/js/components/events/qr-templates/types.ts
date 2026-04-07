@@ -6,7 +6,14 @@ export type QrTemplateContent = {
     eventTitle: string;
 };
 
+export type QrTemplateFonts = {
+    stylesheetHref: string;
+    headingFamily: string;
+    bodyFamily: string;
+};
+
 export type QrTemplateProps = QrTemplateContent & {
     qrDataUrl: string;
     previewAlt: string;
+    fonts: QrTemplateFonts;
 };
