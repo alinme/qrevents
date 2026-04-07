@@ -34,6 +34,12 @@ const eventTitleText = ref(props.currentEvent.name);
 
 const activeTemplate = computed(() => resolveQrTemplateDefinition(activeTemplateId.value));
 
+const previewFrameClass = computed(() => {
+    return activeTemplate.value.printOrientation === 'landscape'
+        ? 'w-full max-w-[min(96rem,calc((100svh-2rem)*1.4142))] max-h-[calc(100svh-2rem)] aspect-[1.4142/1]'
+        : 'h-[calc(100svh-2rem)] max-h-[1120px] max-w-full aspect-[1/1.4142]';
+});
+
 watch(
     () => activeTemplate.value.fonts.stylesheetHref,
     (href) => {
@@ -99,18 +105,20 @@ const printPreview = (): void => {
         </div>
 
         <div class="flex min-h-screen items-center justify-center p-4 sm:p-8 print:p-0">
-            <component
-                :is="activeTemplate.component"
-                class="h-[calc(100vh-2rem)] max-h-[1120px] w-auto max-w-full print:h-screen print:max-h-none print:w-full print:rounded-none print:shadow-none"
-                :subtitle="subtitleText"
-                :title="titleText"
-                :slogan="sloganText"
-                :message="messageText"
-                :event-title="eventTitleText"
-                :fonts="activeTemplate.fonts"
-                :qr-data-url="eventLinks.albumQrDataUrl"
-                :preview-alt="t('event_home.print_pack.preview_alt')"
-            />
+            <div :class="previewFrameClass" class="relative shrink-0 print:h-screen print:max-h-none print:w-full print:max-w-none">
+                <component
+                    :is="activeTemplate.component"
+                    class="!h-full !w-full max-h-full max-w-full print:!h-screen print:!w-full print:rounded-none print:shadow-none"
+                    :subtitle="subtitleText"
+                    :title="titleText"
+                    :slogan="sloganText"
+                    :message="messageText"
+                    :event-title="eventTitleText"
+                    :fonts="activeTemplate.fonts"
+                    :qr-data-url="eventLinks.albumQrDataUrl"
+                    :preview-alt="t('event_home.print_pack.preview_alt')"
+                />
+            </div>
         </div>
     </div>
 </template>

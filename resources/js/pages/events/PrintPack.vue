@@ -49,7 +49,6 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
                     class="min-h-0 flex-1"
                     :event-id="currentEvent.id"
                     :event-name="currentEvent.name"
-                    :album-url="eventLinks.album"
                     :album-qr-data-url="eventLinks.albumQrDataUrl"
                     :preview-url="eventLinks.printPackPreview"
                 />

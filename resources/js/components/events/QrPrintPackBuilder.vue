@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Copy, Eye, ExternalLink, Printer, SlidersHorizontal } from 'lucide-vue-next';
+import { ExternalLink, Printer, SlidersHorizontal } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,7 +19,6 @@ import { qrTemplateDefinitions, resolveQrTemplateDefinition } from '@/lib/qr-pri
 const props = defineProps<{
     eventId: number;
     eventName: string;
-    albumUrl: string;
     albumQrDataUrl: string;
     previewUrl: string;
 }>();
@@ -120,19 +118,6 @@ const openPreview = (): void => {
 const printPoster = (): void => {
     window.open(previewUrlFor(true), '_blank', 'noopener,noreferrer');
 };
-
-const openAlbum = (): void => {
-    window.open(props.albumUrl, '_blank', 'noopener,noreferrer');
-};
-
-const copyAlbumLink = async (): Promise<void> => {
-    try {
-        await navigator.clipboard.writeText(props.albumUrl);
-        toast.success(t('event_home.print_pack.copy_success'));
-    } catch {
-        toast.error(t('guests.messages.copy_label_failed', { label: 'link' }));
-    }
-};
 </script>
 
 <template>
@@ -152,16 +137,10 @@ const copyAlbumLink = async (): Promise<void> => {
             </div>
 
             <div class="ml-auto inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('guests.actions.open_preview')" @click="openPreview">
-                    <Eye class="size-4" />
-                </Button>
                 <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.print_pdf')" @click="printPoster">
                     <Printer class="size-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.copy_target')" @click="void copyAlbumLink()">
-                    <Copy class="size-4" />
-                </Button>
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.open_target')" @click="openAlbum">
+                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.open_preview')" @click="openPreview">
                     <ExternalLink class="size-4" />
                 </Button>
                 <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.configure')" @click="configureOpen = true">
