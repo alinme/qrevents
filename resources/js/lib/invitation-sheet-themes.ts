@@ -4,7 +4,6 @@ export type InvitationSheetTheme = {
     id: InvitationSheetThemeId;
     label: string;
     backgroundUrl: string;
-    previewUrl: string;
     overlay: string;
     paperTint: string;
     inkColor: string;
@@ -18,7 +17,6 @@ export const invitationSheetThemes: InvitationSheetTheme[] = [
         id: 'canva_cream',
         label: 'Cream',
         backgroundUrl: '/invitation-templates/canva/cream/base.png',
-        previewUrl: '/invitation-templates/canva/cream/preview.png',
         overlay: 'linear-gradient(180deg, rgba(255, 248, 241, 0.78), rgba(255, 252, 248, 0.88))',
         paperTint: '#fff8f1',
         inkColor: '#4a3526',
@@ -30,7 +28,6 @@ export const invitationSheetThemes: InvitationSheetTheme[] = [
         id: 'canva_brown',
         label: 'Brown',
         backgroundUrl: '/invitation-templates/canva/brown/base.png',
-        previewUrl: '/invitation-templates/canva/brown/preview.png',
         overlay: 'linear-gradient(180deg, rgba(244, 236, 228, 0.74), rgba(250, 245, 240, 0.86))',
         paperTint: '#f7efe8',
         inkColor: '#3f2b20',
@@ -42,7 +39,6 @@ export const invitationSheetThemes: InvitationSheetTheme[] = [
         id: 'canva_watercolor',
         label: 'Watercolor',
         backgroundUrl: '/invitation-templates/canva/watercolor/base.png',
-        previewUrl: '/invitation-templates/canva/watercolor/preview.png',
         overlay: 'linear-gradient(180deg, rgba(255, 250, 248, 0.68), rgba(255, 253, 252, 0.84))',
         paperTint: '#fff9f7',
         inkColor: '#4a3942',

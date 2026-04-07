@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Copy, ExternalLink, Printer, Save } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { Copy, ExternalLink, Printer, Save, SlidersHorizontal } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import InputError from '@/components/InputError.vue';
 import InvitationSheet from '@/components/invitations/InvitationSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
@@ -68,6 +75,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useTranslations();
+const configureOpen = ref(false);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
@@ -184,123 +192,109 @@ const copyInvitationLink = async (): Promise<void> => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="`${currentEvent.name} · ${t('app.nav.invite_studio')}`" />
 
-        <div class="grid gap-6 p-4 lg:grid-cols-[24rem_minmax(0,1fr)] lg:items-start md:p-6">
-            <section class="rounded-[2rem] border border-neutral-200/80 bg-white/90 shadow-sm backdrop-blur">
-                <div class="space-y-4 p-5">
-                    <div class="space-y-2">
-                        <h1 class="text-xl font-semibold tracking-tight text-neutral-950">
-                            {{ t('guests.invitation.studio_title') }}
-                        </h1>
-                        <p class="text-sm leading-6 text-neutral-600">
-                            {{ t('guests.invitation.simple_description') }}
-                        </p>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            class="rounded-full"
-                            :aria-label="t('guests.invitation.open_live')"
-                            @click="openLiveInvitation"
-                        >
-                            <ExternalLink class="size-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            class="rounded-full"
-                            :aria-label="t('guests.invitation.copy_live')"
-                            @click="copyInvitationLink"
-                        >
-                            <Copy class="size-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            class="rounded-full"
-                            :aria-label="t('guests.invitation.print_live')"
-                            @click="printLiveInvitation"
-                        >
-                            <Printer class="size-4" />
-                        </Button>
-                        <Button
-                            class="ml-auto rounded-full px-4"
-                            :disabled="invitationSettingsForm.processing"
-                            @click="saveInvitationSettings"
-                        >
-                            <Save class="size-4" />
-                            {{ t('guests.invitation.save_changes') }}
-                        </Button>
-                    </div>
+        <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-4 p-4 md:p-6">
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button
+                        v-for="theme in invitationSheetThemes"
+                        :key="theme.id"
+                        type="button"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition"
+                        :class="invitationSettingsForm.template === theme.id ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-300 bg-white/78 text-neutral-700 hover:border-neutral-500'"
+                        @click="invitationSettingsForm.template = theme.id"
+                    >
+                        {{ theme.label }}
+                    </button>
                 </div>
 
-                <div class="border-t border-neutral-200/80 p-5">
-                    <div class="space-y-3">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-900">
-                                {{ t('guests.invitation.template') }}
-                            </p>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                {{ t('guests.invitation.style_picker_description') }}
-                            </p>
-                        </div>
+                <Button variant="outline" class="ml-auto rounded-full" @click="configureOpen = true">
+                    <SlidersHorizontal class="size-4" />
+                    {{ t('guests.invitation.configure') }}
+                </Button>
 
-                        <div class="overflow-x-auto pb-1">
-                            <div class="flex min-w-max gap-3">
-                                <button
-                                    v-for="theme in invitationSheetThemes"
-                                    :key="theme.id"
-                                    type="button"
-                                    class="group w-28 shrink-0 text-left"
-                                    @click="invitationSettingsForm.template = theme.id"
-                                >
-                                    <span
-                                        class="block overflow-hidden rounded-[1.4rem] border transition"
-                                        :class="invitationSettingsForm.template === theme.id ? 'border-neutral-950 shadow-sm' : 'border-neutral-200 group-hover:border-neutral-400'"
-                                    >
-                                        <img
-                                            :src="theme.previewUrl"
-                                            :alt="theme.label"
-                                            class="aspect-[1240/1748] w-full object-cover"
-                                        >
-                                    </span>
-                                    <span class="mt-2 block text-sm font-medium text-neutral-900">
-                                        {{ theme.label }}
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="rounded-full"
+                        :aria-label="t('guests.invitation.open_live')"
+                        @click="openLiveInvitation"
+                    >
+                        <ExternalLink class="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="rounded-full"
+                        :aria-label="t('guests.invitation.copy_live')"
+                        @click="copyInvitationLink"
+                    >
+                        <Copy class="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="rounded-full"
+                        :aria-label="t('guests.invitation.print_live')"
+                        @click="printLiveInvitation"
+                    >
+                        <Printer class="size-4" />
+                    </Button>
+                    <Button
+                        size="icon-sm"
+                        class="rounded-full"
+                        :aria-label="t('guests.invitation.save_changes')"
+                        :disabled="invitationSettingsForm.processing"
+                        @click="saveInvitationSettings"
+                    >
+                        <Save class="size-4" />
+                    </Button>
                 </div>
+            </div>
 
-                <div class="divide-y divide-neutral-200/80">
-                    <div class="space-y-4 p-5">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-900">
-                                {{ t('guests.invitation.couple_title') }}
-                            </p>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                {{ t('guests.invitation.couple_description') }}
-                            </p>
+            <section class="flex-1">
+                <InvitationSheet
+                    class="mx-auto h-full max-h-[calc(100vh-15rem)] max-w-[760px]"
+                    :template="invitationSettingsForm.template"
+                    :guest-label="t('guests.invitation.preview_guest_label')"
+                    :logo-url="invitationPreview.branding.logoUrl"
+                    :lead-in="invitationPresentation.leadIn"
+                    :title="invitationPresentation.title"
+                    :message="invitationSettingsForm.message || t('guests.invitation.default_message')"
+                    :closing="invitationSettingsForm.closing || t('guests.invitation.default_closing')"
+                    :detail-lines="invitationPresentation.detailLines"
+                    :date-label="invitationFooterMeta.dateLabel"
+                    :venue-address="invitationFooterMeta.venueAddress"
+                    :contact-phone="invitationFooterMeta.contactPhone"
+                />
+            </section>
+
+            <Sheet v-model:open="configureOpen">
+                <SheetContent side="right" class="w-full overflow-y-auto border-l border-neutral-200 bg-[#fcfaf7] sm:max-w-md">
+                    <SheetHeader class="space-y-2 border-b border-neutral-200 px-6 py-5">
+                        <SheetTitle class="text-left text-xl font-semibold text-neutral-950">
+                            {{ t('guests.invitation.configure') }}
+                        </SheetTitle>
+                        <SheetDescription class="text-left text-sm leading-6 text-neutral-600">
+                            {{ t('guests.invitation.configure_description') }}
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div class="space-y-5 px-6 py-5">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.partner_one_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.partner_one_name" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.partner_one_name']" />
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-neutral-900">
-                                    {{ t('guests.invitation.partner_one_label') }}
-                                </label>
-                                <Input v-model="invitationSettingsForm.content.partner_one_name" class="rounded-2xl" />
-                                <InputError :message="invitationSettingsForm.errors['content.partner_one_name']" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-neutral-900">
-                                    {{ t('guests.invitation.partner_two_label') }}
-                                </label>
-                                <Input v-model="invitationSettingsForm.content.partner_two_name" class="rounded-2xl" />
-                                <InputError :message="invitationSettingsForm.errors['content.partner_two_name']" />
-                            </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.partner_two_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.partner_two_name" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.partner_two_name']" />
                         </div>
 
                         <div class="space-y-2">
@@ -317,17 +311,6 @@ const copyInvitationLink = async (): Promise<void> => {
                             </span>
                             <Switch v-model="invitationSettingsForm.content.show_family_name" />
                         </label>
-                    </div>
-
-                    <div class="space-y-4 p-5">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-900">
-                                {{ t('guests.invitation.copy_title') }}
-                            </p>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                {{ t('guests.invitation.edit_description') }}
-                            </p>
-                        </div>
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-900">
@@ -362,17 +345,6 @@ const copyInvitationLink = async (): Promise<void> => {
                             />
                             <InputError :message="invitationSettingsForm.errors.closing" />
                         </div>
-                    </div>
-
-                    <div class="space-y-4 p-5">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-900">
-                                {{ t('guests.invitation.schedule_title') }}
-                            </p>
-                            <p class="mt-1 text-sm text-neutral-600">
-                                {{ t('guests.invitation.schedule_description_simple') }}
-                            </p>
-                        </div>
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-900">
@@ -405,7 +377,7 @@ const copyInvitationLink = async (): Promise<void> => {
                             <Switch v-model="invitationSettingsForm.public_rsvp_enabled" />
                         </label>
 
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                        <div class="grid gap-3">
                             <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
                                 <span class="pr-4 text-sm text-neutral-700">
                                     {{ t('guests.invitation.show_date') }}
@@ -420,90 +392,65 @@ const copyInvitationLink = async (): Promise<void> => {
                                 <Switch v-model="invitationSettingsForm.visibility.venue" />
                             </label>
 
-                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
                                 <span class="pr-4 text-sm text-neutral-700">
                                     {{ t('guests.invitation.show_contact_phone') }}
                                 </span>
                                 <Switch v-model="invitationSettingsForm.visibility.contact_phone" />
                             </label>
                         </div>
-                    </div>
 
-                    <details class="group p-5">
-                        <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-medium text-neutral-900">
-                                    {{ t('guests.invitation.extras_title') }}
-                                </p>
-                                <p class="mt-1 text-sm text-neutral-600">
-                                    {{ t('guests.invitation.extras_description') }}
-                                </p>
-                            </div>
-                            <span class="text-sm text-neutral-500 transition group-open:rotate-45">+</span>
-                        </summary>
-
-                        <div class="mt-4 space-y-4">
-                            <div class="grid gap-3">
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-neutral-900">
-                                        {{ t('guests.invitation.bride_parents_label') }}
-                                    </label>
-                                    <Input v-model="invitationSettingsForm.content.bride_parents" class="rounded-2xl" />
-                                    <InputError :message="invitationSettingsForm.errors['content.bride_parents']" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-neutral-900">
-                                        {{ t('guests.invitation.groom_parents_label') }}
-                                    </label>
-                                    <Input v-model="invitationSettingsForm.content.groom_parents" class="rounded-2xl" />
-                                    <InputError :message="invitationSettingsForm.errors['content.groom_parents']" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-neutral-900">
-                                        {{ t('guests.invitation.godparents_label') }}
-                                    </label>
-                                    <Input v-model="invitationSettingsForm.content.godparents" class="rounded-2xl" />
-                                    <InputError :message="invitationSettingsForm.errors['content.godparents']" />
-                                </div>
-                            </div>
-
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                                <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
-                                    <span class="pr-4 text-sm text-neutral-700">
-                                        {{ t('guests.invitation.show_family_lines') }}
-                                    </span>
-                                    <Switch v-model="invitationSettingsForm.visibility.parents" />
-                                </label>
-
-                                <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
-                                    <span class="pr-4 text-sm text-neutral-700">
-                                        {{ t('guests.invitation.show_godparents') }}
-                                    </span>
-                                    <Switch v-model="invitationSettingsForm.visibility.godparents" />
-                                </label>
-                            </div>
+                        <div class="border-t border-neutral-200 pt-5">
+                            <p class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.extras_title') }}
+                            </p>
+                            <p class="mt-1 text-sm text-neutral-600">
+                                {{ t('guests.invitation.extras_description') }}
+                            </p>
                         </div>
-                    </details>
-                </div>
-            </section>
 
-            <section class="lg:sticky lg:top-6">
-                <InvitationSheet
-                    :template="invitationSettingsForm.template"
-                    :guest-label="t('guests.invitation.preview_guest_label')"
-                    :logo-url="invitationPreview.branding.logoUrl"
-                    :lead-in="invitationPresentation.leadIn"
-                    :title="invitationPresentation.title"
-                    :message="invitationSettingsForm.message || t('guests.invitation.default_message')"
-                    :closing="invitationSettingsForm.closing || t('guests.invitation.default_closing')"
-                    :detail-lines="invitationPresentation.detailLines"
-                    :date-label="invitationFooterMeta.dateLabel"
-                    :venue-address="invitationFooterMeta.venueAddress"
-                    :contact-phone="invitationFooterMeta.contactPhone"
-                />
-            </section>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.bride_parents_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.bride_parents" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.bride_parents']" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.groom_parents_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.groom_parents" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.groom_parents']" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-900">
+                                {{ t('guests.invitation.godparents_label') }}
+                            </label>
+                            <Input v-model="invitationSettingsForm.content.godparents" class="rounded-2xl" />
+                            <InputError :message="invitationSettingsForm.errors['content.godparents']" />
+                        </div>
+
+                        <div class="grid gap-3">
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                <span class="pr-4 text-sm text-neutral-700">
+                                    {{ t('guests.invitation.show_family_lines') }}
+                                </span>
+                                <Switch v-model="invitationSettingsForm.visibility.parents" />
+                            </label>
+
+                            <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-neutral-200 px-4 py-3">
+                                <span class="pr-4 text-sm text-neutral-700">
+                                    {{ t('guests.invitation.show_godparents') }}
+                                </span>
+                                <Switch v-model="invitationSettingsForm.visibility.godparents" />
+                            </label>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     </AppLayout>
 </template>

@@ -44,17 +44,6 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 
         <div class="min-h-screen bg-[linear-gradient(180deg,#f7f1e7_0%,#f4ede2_22%,#f2eee8_100%)]">
             <div class="mx-auto max-w-[1560px] px-4 py-4 sm:px-6 lg:px-8">
-                <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">
-                            {{ currentEvent.name }}
-                        </p>
-                        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-[#171411] sm:text-[2rem]">
-                            {{ t('event_home.print_pack.title') }}
-                        </h1>
-                    </div>
-                </div>
-
                 <QrPrintPackBuilder
                     :event-name="currentEvent.name"
                     :album-url="eventLinks.album"
