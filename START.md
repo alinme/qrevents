@@ -62,16 +62,21 @@ Project context:
 Git and deploy expectations:
 - Commit scoped changes clearly.
 - Push `main`.
-- Deploy is part of done, but only run the needed deploy steps:
+- Deploy is part of done.
+- Default deploy path is GitHub Actions via [.github/workflows/deploy.yml](/Users/dev/Documents/codex/qrevents/.github/workflows/deploy.yml).
+- After pushing `main`, verify the GitHub `deploy` workflow ran successfully and verify the live site before saying the change is deployed.
+- The deploy workflow is optimized to run only the needed server steps:
   - Frontend-only changes: rebuild frontend on the server.
-  - PHP-only changes: do not rebuild frontend unless needed; use cache clear, migrate, and queue restart as appropriate.
-  - Dependency/plugin changes: install deps and rebuild as needed.
+  - PHP-only changes: clear/cache Laravel and migrate only when needed.
+  - Dependency changes: install Composer and/or npm dependencies only when lockfiles changed.
   - Queue/job changes: run `php artisan queue:restart` and `pm2 restart qrevents-queue`.
+- Manual SSH deploy is fallback only if GitHub Actions fails or the user explicitly asks for a manual deploy.
 - Server alias is `eventsmart`.
 - Server app path is `/home/eventsmart/htdocs/eventsmart.app`.
 - Preserve unrelated generated-file drift on the server if needed instead of overwriting it.
 - Verify the live commit after deploy.
 - Check PM2 queue status when queue-related deploy steps are run.
+- GitHub `tests` and `linter` workflows are intentionally not part of the default deploy path and should not be re-enabled unless the user asks.
 
 Behavior expectations:
 - Audit first, then code.

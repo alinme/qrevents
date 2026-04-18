@@ -302,14 +302,24 @@ Vue components must have a single root element.
 
 === qrevents deployment ===
 
-# Production deploy (wvdev.org)
+# Production deploy (eventsmart.app)
 
-After code changes on `main`, the agent should deploy end-to-end unless the user opts out. SSH: `qrevents-vps` (see `~/.ssh/config`). App directory on server: `/home/wvdev/htdocs/wvdev.org`.
+After code changes on `main`, the agent should deploy end-to-end unless the user opts out. Default deploy path is GitHub Actions via `.github/workflows/deploy.yml`. SSH alias: `eventsmart` (see `~/.ssh/config`). App directory on server: `/home/eventsmart/htdocs/eventsmart.app`.
 
-1. **Local:** `git push origin main` (after tests and Pint pass).
-2. **VPS:** `ssh qrevents-vps`, `cd /home/wvdev/htdocs/wvdev.org`, `git pull origin main`, then install deps and build (`composer install`, `npm install` or `npm ci`, `npm run build`), `php artisan migrate --force`, optional `optimize:clear` + config/route/view cache per `DEPLOY_CHECKLIST.md`.
-3. **Queues:** `php artisan queue:restart` then `pm2 restart qrevents-queue`.
+1. **Local:** `git push origin main` (after the minimum relevant local tests and Pint pass, when applicable).
+2. **GitHub Actions default:** verify the `deploy` workflow completed successfully, then verify the live site and deployed commit before claiming success.
+3. **Manual fallback only if needed:** `ssh eventsmart`, `cd /home/eventsmart/htdocs/eventsmart.app`, preserve unrelated generated drift, `git pull origin main`, then run only the needed steps:
+   - Composer install only when Composer dependencies changed.
+   - npm install/ci only when Node dependencies changed.
+   - frontend build only when frontend files changed.
+   - migrations only when migration files changed.
+   - `optimize:clear` + config/route/view cache for backend changes.
+4. **Queues:** `php artisan queue:restart` then `pm2 restart qrevents-queue` only for queue-related changes.
 
-Full command list and health checks: `DEPLOY_CHECKLIST.md`. Scheduler is already in `/etc/cron.d/wvdev` with `schedule:run` for user `wvdev`.
+GitHub Actions notes:
+- Deploy secrets and SSH deploy key are already configured in the GitHub repo.
+- `tests` and `linter` are manual-only and should not be part of normal production deploys unless the user explicitly asks.
+
+Full command list and health checks: `DEPLOY_CHECKLIST.md`. Scheduler should already be configured on the server; verify with `php artisan schedule:list` when needed.
 
 </laravel-boost-guidelines>

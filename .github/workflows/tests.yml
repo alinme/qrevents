@@ -1,17 +1,7 @@
 name: tests
 
 on:
-  push:
-    branches:
-      - develop
-      - master
-      - workos
-  pull_request:
-    branches:
-      - develop
-      - main
-      - master
-      - workos
+  workflow_dispatch:
 
 jobs:
   ci:
