@@ -211,7 +211,6 @@ type EventLinks = {
     settingsUpdate: string;
     billingUpdate: string;
     billingCheckout: string;
-    businessActivate: string;
     collaboratorsStore: string;
 };
 
@@ -263,9 +262,6 @@ const props = defineProps<{
 
 const page = usePage<PageProps>();
 const { locale, t } = useTranslations();
-const currentAccountType = computed(
-    () => page.props.auth?.user?.accountType ?? 'user',
-);
 const checkoutState = computed(() => {
     const query = page.url.split('?')[1] ?? '';
 
@@ -422,13 +418,39 @@ const normalizeWelcomeScreenFields = (value: unknown): WelcomeScreenField[] => {
 };
 
 const activeTab = ref<TabId>('general');
-const allTabItems = computed<Array<{ id: TabId; label: string; icon: unknown }>>(() => [
-    { id: 'general', label: t('event_settings.tabs.general'), icon: SlidersHorizontal },
-    { id: 'billing', label: t('event_settings.tabs.billing'), icon: CreditCard },
-    { id: 'appearance', label: t('event_settings.tabs.appearance'), icon: Palette },
-    { id: 'photo_wall', label: t('event_settings.tabs.photo_wall'), icon: Camera },
-    { id: 'moderation', label: t('event_settings.tabs.moderation'), icon: ShieldCheck },
-    { id: 'collaborators', label: t('event_settings.tabs.collaborators'), icon: Users },
+const allTabItems = computed<
+    Array<{ id: TabId; label: string; icon: unknown }>
+>(() => [
+    {
+        id: 'general',
+        label: t('event_settings.tabs.general'),
+        icon: SlidersHorizontal,
+    },
+    {
+        id: 'billing',
+        label: t('event_settings.tabs.billing'),
+        icon: CreditCard,
+    },
+    {
+        id: 'appearance',
+        label: t('event_settings.tabs.appearance'),
+        icon: Palette,
+    },
+    {
+        id: 'photo_wall',
+        label: t('event_settings.tabs.photo_wall'),
+        icon: Camera,
+    },
+    {
+        id: 'moderation',
+        label: t('event_settings.tabs.moderation'),
+        icon: ShieldCheck,
+    },
+    {
+        id: 'collaborators',
+        label: t('event_settings.tabs.collaborators'),
+        icon: Users,
+    },
 ]);
 
 const planFeatures = computed(() => props.currentEvent.planFeatures);
@@ -591,7 +613,11 @@ const albumPermissionCardOptions = computed(() => [
 const mediaTypeOptions = computed(() => [
     { value: 'photo', label: t('media.stats.photos'), icon: IconPhoto },
     { value: 'video', label: t('media.stats.videos'), icon: IconVideo },
-    { value: 'text', label: t('event_settings.uploads.text_wishes'), icon: IconFileText },
+    {
+        value: 'text',
+        label: t('event_settings.uploads.text_wishes'),
+        icon: IconFileText,
+    },
 ]);
 
 const albumPermissionSelection = computed(() => ({
@@ -632,9 +658,18 @@ const collaboratorRoleOptions = ['manager', 'viewer'] as const;
 
 const moderationFilterOptions = computed(() => [
     { value: 'adult', label: t('event_settings.moderation.categories.adult') },
-    { value: 'nudity', label: t('event_settings.moderation.categories.nudity') },
-    { value: 'violence', label: t('event_settings.moderation.categories.violence') },
-    { value: 'suggestive', label: t('event_settings.moderation.categories.suggestive') },
+    {
+        value: 'nudity',
+        label: t('event_settings.moderation.categories.nudity'),
+    },
+    {
+        value: 'violence',
+        label: t('event_settings.moderation.categories.violence'),
+    },
+    {
+        value: 'suggestive',
+        label: t('event_settings.moderation.categories.suggestive'),
+    },
     { value: 'hate', label: t('event_settings.moderation.categories.hate') },
 ]);
 
@@ -654,8 +689,14 @@ const welcomeFieldTypeOptions = computed(() => [
 
 const attachToOptions = computed(() => [
     { value: '', label: t('event_settings.welcome.attach.none') },
-    { value: 'caption_title', label: t('event_settings.welcome.attach.caption_title') },
-    { value: 'caption_subtitle', label: t('event_settings.welcome.attach.caption_subtitle') },
+    {
+        value: 'caption_title',
+        label: t('event_settings.welcome.attach.caption_title'),
+    },
+    {
+        value: 'caption_subtitle',
+        label: t('event_settings.welcome.attach.caption_subtitle'),
+    },
     { value: 'file_name', label: t('event_settings.welcome.attach.file_name') },
 ]);
 
@@ -964,7 +1005,10 @@ const ownerCheckoutPlans = computed(() =>
     ),
 );
 
-const formatCurrencyFromCents = (amountCents: number, currency: string): string =>
+const formatCurrencyFromCents = (
+    amountCents: number,
+    currency: string,
+): string =>
     new Intl.NumberFormat(intlLocale.value, {
         style: 'currency',
         currency,
@@ -1037,7 +1081,9 @@ const welcomeScreenPreviewSubtitle = computed(() => {
 
 const welcomeScreenPreviewButtonText = computed(() => {
     const value = form.welcome_screen_button_text?.trim();
-    return value && value.length > 0 ? value : t('event_settings.welcome.defaults.button');
+    return value && value.length > 0
+        ? value
+        : t('event_settings.welcome.defaults.button');
 });
 
 const welcomeScreenPreviewFontClass = computed(() => {
@@ -1079,7 +1125,9 @@ const welcomeFieldDefaultLabel = (type: WelcomeScreenField['type']): string => {
     }
 };
 
-const welcomeFieldDefaultHelpText = (type: WelcomeScreenField['type']): string => {
+const welcomeFieldDefaultHelpText = (
+    type: WelcomeScreenField['type'],
+): string => {
     switch (type) {
         case 'email':
             return t('event_settings.welcome.defaults.email_help');
@@ -1719,10 +1767,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.general.name_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.name_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.general.name_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.name_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1730,7 +1786,11 @@ function resolveSupportedTimezones(): string[] {
                                         id="name"
                                         v-model="form.name"
                                         class="h-11"
-                                        :placeholder="t('event_settings.general.name_placeholder')"
+                                        :placeholder="
+                                            t(
+                                                'event_settings.general.name_placeholder',
+                                            )
+                                        "
                                     />
                                     <InputError :message="form.errors.name" />
                                 </div>
@@ -1741,10 +1801,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.general.date_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.date_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.general.date_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.date_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1782,7 +1850,11 @@ function resolveSupportedTimezones(): string[] {
                                         class="h-auto px-3 text-sm"
                                         @click="clearEventDate"
                                     >
-                                        {{ t('event_settings.general.clear_date') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.clear_date',
+                                            )
+                                        }}
                                     </Button>
                                     <InputError
                                         :message="form.errors.event_date"
@@ -1795,10 +1867,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.general.timezone_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.timezone_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.general.timezone_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.timezone_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1813,7 +1893,9 @@ function resolveSupportedTimezones(): string[] {
                                             >
                                                 {{
                                                     form.timezone ||
-                                                    t('event_settings.general.timezone_select')
+                                                    t(
+                                                        'event_settings.general.timezone_select',
+                                                    )
                                                 }}
                                             </Button>
                                         </PopoverTrigger>
@@ -1824,7 +1906,11 @@ function resolveSupportedTimezones(): string[] {
                                             <InputGroup class="mb-2 h-11">
                                                 <InputGroupInput
                                                     v-model="timezoneQuery"
-                                                    :placeholder="t('event_settings.general.timezone_search')"
+                                                    :placeholder="
+                                                        t(
+                                                            'event_settings.general.timezone_search',
+                                                        )
+                                                    "
                                                 />
                                                 <InputGroupAddon
                                                     align="inline-end"
@@ -1878,7 +1964,11 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="px-3 py-4 text-sm text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.general.timezone_empty') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.general.timezone_empty',
+                                                        )
+                                                    }}
                                                 </p>
                                             </div>
                                         </PopoverContent>
@@ -1894,10 +1984,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.general.type_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.type_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.general.type_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.type_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -1925,23 +2023,39 @@ function resolveSupportedTimezones(): string[] {
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.general.wedding_details_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.wedding_details_title',
+                                                )
+                                            }}
                                         </h3>
                                         <Badge
                                             variant="secondary"
                                             class="border-rose-200 bg-white text-rose-700"
                                         >
-                                            {{ t('event_settings.general.optional') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.optional',
+                                                )
+                                            }}
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.general.wedding_details_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.wedding_details_description',
+                                            )
+                                        }}
                                     </p>
                                     <p
                                         v-if="!hasWeddingDetails"
                                         class="text-sm text-rose-700/80"
                                     >
-                                        {{ t('event_settings.general.wedding_details_hint') }}
+                                        {{
+                                            t(
+                                                'event_settings.general.wedding_details_hint',
+                                            )
+                                        }}
                                     </p>
                                 </div>
 
@@ -1952,7 +2066,11 @@ function resolveSupportedTimezones(): string[] {
                                                 class="text-sm font-medium text-slate-700"
                                                 for="partner-one-name"
                                             >
-                                                {{ t('event_settings.general.partner_one') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.general.partner_one',
+                                                    )
+                                                }}
                                             </label>
                                             <Input
                                                 id="partner-one-name"
@@ -1961,7 +2079,11 @@ function resolveSupportedTimezones(): string[] {
                                                         .partner_one_name
                                                 "
                                                 class="h-11 bg-white"
-                                                :placeholder="t('event_settings.general.partner_one_placeholder')"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.partner_one_placeholder',
+                                                    )
+                                                "
                                             />
                                             <InputError
                                                 :message="
@@ -1976,7 +2098,11 @@ function resolveSupportedTimezones(): string[] {
                                                 class="text-sm font-medium text-slate-700"
                                                 for="partner-two-name"
                                             >
-                                                {{ t('event_settings.general.partner_two') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.general.partner_two',
+                                                    )
+                                                }}
                                             </label>
                                             <Input
                                                 id="partner-two-name"
@@ -1985,7 +2111,11 @@ function resolveSupportedTimezones(): string[] {
                                                         .partner_two_name
                                                 "
                                                 class="h-11 bg-white"
-                                                :placeholder="t('event_settings.general.partner_two_placeholder')"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.partner_two_placeholder',
+                                                    )
+                                                "
                                             />
                                             <InputError
                                                 :message="
@@ -2002,7 +2132,11 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="family-name"
                                         >
-                                            {{ t('event_settings.general.family_name') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.family_name',
+                                                )
+                                            }}
                                         </label>
                                         <Input
                                             id="family-name"
@@ -2010,12 +2144,20 @@ function resolveSupportedTimezones(): string[] {
                                                 form.wedding_details.family_name
                                             "
                                             class="h-11 bg-white"
-                                            :placeholder="t('event_settings.general.family_name_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.general.family_name_placeholder',
+                                                )
+                                            "
                                         />
                                         <p
                                             class="text-xs text-muted-foreground"
                                         >
-                                            {{ t('event_settings.general.family_name_hint') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.family_name_hint',
+                                                )
+                                            }}
                                         </p>
                                         <label
                                             class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
@@ -2032,12 +2174,20 @@ function resolveSupportedTimezones(): string[] {
                                                 <span
                                                     class="block text-sm font-medium text-slate-700"
                                                 >
-                                                    {{ t('event_settings.general.show_family_name') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.general.show_family_name',
+                                                        )
+                                                    }}
                                                 </span>
                                                 <span
                                                     class="block text-xs text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.general.show_family_name_example') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.general.show_family_name_example',
+                                                        )
+                                                    }}
                                                 </span>
                                             </span>
                                         </label>
@@ -2062,7 +2212,11 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="bride-parents"
                                         >
-                                            {{ t('event_settings.general.bride_parents') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.bride_parents',
+                                                )
+                                            }}
                                         </label>
                                         <Input
                                             id="bride-parents"
@@ -2071,7 +2225,11 @@ function resolveSupportedTimezones(): string[] {
                                                     .bride_parents
                                             "
                                             class="h-11 bg-white"
-                                            :placeholder="t('event_settings.general.bride_parents_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.general.bride_parents_placeholder',
+                                                )
+                                            "
                                         />
                                         <InputError
                                             :message="
@@ -2087,7 +2245,11 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="groom-parents"
                                         >
-                                            {{ t('event_settings.general.groom_parents') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.groom_parents',
+                                                )
+                                            }}
                                         </label>
                                         <Input
                                             id="groom-parents"
@@ -2096,7 +2258,11 @@ function resolveSupportedTimezones(): string[] {
                                                     .groom_parents
                                             "
                                             class="h-11 bg-white"
-                                            :placeholder="t('event_settings.general.groom_parents_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.general.groom_parents_placeholder',
+                                                )
+                                            "
                                         />
                                         <InputError
                                             :message="
@@ -2112,7 +2278,11 @@ function resolveSupportedTimezones(): string[] {
                                             class="text-sm font-medium text-slate-700"
                                             for="godparents"
                                         >
-                                            {{ t('event_settings.general.godparents') }}
+                                            {{
+                                                t(
+                                                    'event_settings.general.godparents',
+                                                )
+                                            }}
                                         </label>
                                         <Input
                                             id="godparents"
@@ -2120,7 +2290,11 @@ function resolveSupportedTimezones(): string[] {
                                                 form.wedding_details.godparents
                                             "
                                             class="h-11 bg-white"
-                                            :placeholder="t('event_settings.general.godparents_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.general.godparents_placeholder',
+                                                )
+                                            "
                                         />
                                         <InputError
                                             :message="
@@ -2137,7 +2311,11 @@ function resolveSupportedTimezones(): string[] {
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.album_permissions.title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.album_permissions.title',
+                                                )
+                                            }}
                                         </h3>
                                         <Badge variant="secondary">
                                             <Sparkles />
@@ -2145,7 +2323,11 @@ function resolveSupportedTimezones(): string[] {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.album_permissions.description') }}
+                                        {{
+                                            t(
+                                                'event_settings.album_permissions.description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="grid gap-3 md:grid-cols-3">
@@ -2200,7 +2382,11 @@ function resolveSupportedTimezones(): string[] {
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.uploads.title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.uploads.title',
+                                                )
+                                            }}
                                         </h3>
                                         <Badge variant="secondary">
                                             <Sparkles />
@@ -2208,7 +2394,11 @@ function resolveSupportedTimezones(): string[] {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.uploads.description') }}
+                                        {{
+                                            t(
+                                                'event_settings.uploads.description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -2260,7 +2450,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.overview') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.overview',
+                                                )
+                                            }}
                                         </p>
                                         <h3
                                             class="text-lg font-semibold text-slate-900"
@@ -2283,7 +2477,11 @@ function resolveSupportedTimezones(): string[] {
                                                         .planFeatures
                                                         .customizationTier
                                                 }}
-                                                {{ t('event_settings.billing.customization_suffix') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.billing.customization_suffix',
+                                                    )
+                                                }}
                                             </Badge>
                                             <Badge
                                                 :variant="
@@ -2298,8 +2496,12 @@ function resolveSupportedTimezones(): string[] {
                                                     props.currentEvent.billing
                                                         .planFeatures
                                                         .allowsDownloadAll
-                                                        ? t('event_settings.billing.download_enabled')
-                                                        : t('event_settings.billing.download_locked')
+                                                        ? t(
+                                                              'event_settings.billing.download_enabled',
+                                                          )
+                                                        : t(
+                                                              'event_settings.billing.download_locked',
+                                                          )
                                                 }}
                                             </Badge>
                                             <Badge
@@ -2315,8 +2517,12 @@ function resolveSupportedTimezones(): string[] {
                                                     props.currentEvent.billing
                                                         .planFeatures
                                                         .allowsModerationTools
-                                                        ? t('event_settings.billing.moderation_enabled')
-                                                        : t('event_settings.billing.moderation_locked')
+                                                        ? t(
+                                                              'event_settings.billing.moderation_enabled',
+                                                          )
+                                                        : t(
+                                                              'event_settings.billing.moderation_locked',
+                                                          )
                                                 }}
                                             </Badge>
                                         </div>
@@ -2341,7 +2547,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.payment_due') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.payment_due',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2360,7 +2570,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.paid_at') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.paid_at',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2379,7 +2593,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.grace_ends') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.grace_ends',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2398,7 +2616,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.retention_ends') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.retention_ends',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2417,7 +2639,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.storage_used') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.storage_used',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2436,7 +2662,11 @@ function resolveSupportedTimezones(): string[] {
                                         <p
                                             class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                         >
-                                            {{ t('event_settings.billing.storage_free') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.storage_free',
+                                                )
+                                            }}
                                         </p>
                                         <p
                                             class="mt-2 text-sm font-medium text-slate-900"
@@ -2461,7 +2691,11 @@ function resolveSupportedTimezones(): string[] {
                                             <p
                                                 class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase"
                                             >
-                                                {{ t('event_settings.billing.storage_quota') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.billing.storage_quota',
+                                                    )
+                                                }}
                                             </p>
                                             <p
                                                 class="mt-1 text-sm text-slate-700"
@@ -2473,7 +2707,11 @@ function resolveSupportedTimezones(): string[] {
                                                             .usedBytes,
                                                     )
                                                 }}
-                                                {{ t('event_settings.billing.used_of') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.billing.used_of',
+                                                    )
+                                                }}
                                                 {{
                                                     formatBytes(
                                                         props.currentEvent
@@ -2532,12 +2770,20 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.billing.admin_plan_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_plan_title',
+                                                )
+                                            }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.billing.admin_plan_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_plan_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2589,12 +2835,20 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.billing.admin_paid_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_paid_title',
+                                                )
+                                            }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.billing.admin_paid_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_paid_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="flex justify-end">
@@ -2607,12 +2861,20 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.billing.admin_due_date_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_due_date_title',
+                                                )
+                                            }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.billing.admin_due_date_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_due_date_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2635,12 +2897,20 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.billing.admin_paid_at_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_paid_at_title',
+                                                )
+                                            }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.billing.admin_paid_at_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_paid_at_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
@@ -2663,19 +2933,31 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div>
                                         <h3 class="text-sm font-semibold">
-                                            {{ t('event_settings.billing.admin_note_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_note_title',
+                                                )
+                                            }}
                                         </h3>
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.billing.admin_note_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.billing.admin_note_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="space-y-2">
                                         <Textarea
                                             v-model="billingForm.billing_note"
                                             rows="4"
-                                            :placeholder="t('event_settings.billing.admin_note_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.billing.admin_note_placeholder',
+                                                )
+                                            "
                                         />
                                         <InputError
                                             :message="
@@ -2692,7 +2974,11 @@ function resolveSupportedTimezones(): string[] {
                                         :disabled="billingForm.processing"
                                         @click="submitBilling"
                                     >
-                                        {{ t('event_settings.billing.admin_save') }}
+                                        {{
+                                            t(
+                                                'event_settings.billing.admin_save',
+                                            )
+                                        }}
                                     </Button>
                                 </div>
                             </div>
@@ -2706,7 +2992,11 @@ function resolveSupportedTimezones(): string[] {
                                         v-if="checkoutState === 'success'"
                                         class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900"
                                     >
-                                        {{ t('event_settings.billing.checkout_success') }}
+                                        {{
+                                            t(
+                                                'event_settings.billing.checkout_success',
+                                            )
+                                        }}
                                     </div>
                                     <div
                                         v-else-if="
@@ -2714,98 +3004,107 @@ function resolveSupportedTimezones(): string[] {
                                         "
                                         class="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-700"
                                     >
-                                        {{ t('event_settings.billing.checkout_cancelled') }}
+                                        {{
+                                            t(
+                                                'event_settings.billing.checkout_cancelled',
+                                            )
+                                        }}
                                     </div>
 
-                                    <template v-if="ownerCheckoutPlans.length > 0">
+                                    <template
+                                        v-if="ownerCheckoutPlans.length > 0"
+                                    >
                                         <div class="space-y-2">
                                             <h3 class="text-sm font-semibold">
                                                 {{
-                                                    props.currentEvent.billing.isPaid
-                                                        ? t('event_settings.billing.owner_upgrade_title')
-                                                        : t('event_settings.billing.owner_choose_title')
+                                                    props.currentEvent.billing
+                                                        .isPaid
+                                                        ? t(
+                                                              'event_settings.billing.owner_upgrade_title',
+                                                          )
+                                                        : t(
+                                                              'event_settings.billing.owner_choose_title',
+                                                          )
                                                 }}
                                             </h3>
                                             <p class="text-sm leading-6">
                                                 {{
-                                                    props.currentEvent.billing.isPaid
-                                                        ? t('event_settings.billing.owner_upgrade_description')
-                                                        : t('event_settings.billing.owner_choose_description')
+                                                    props.currentEvent.billing
+                                                        .isPaid
+                                                        ? t(
+                                                              'event_settings.billing.owner_upgrade_description',
+                                                          )
+                                                        : t(
+                                                              'event_settings.billing.owner_choose_description',
+                                                          )
                                                 }}
                                             </p>
                                         </div>
 
-                                        <div class="divide-y divide-amber-200/80 border-y border-amber-200/80">
+                                        <div
+                                            class="divide-y divide-amber-200/80 border-y border-amber-200/80"
+                                        >
                                             <div
                                                 v-for="plan in ownerCheckoutPlans"
                                                 :key="plan.id"
                                                 class="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between"
                                             >
                                                 <div class="space-y-1">
-                                                    <p class="text-sm font-semibold text-slate-900">
+                                                    <p
+                                                        class="text-sm font-semibold text-slate-900"
+                                                    >
                                                         {{ plan.name }}
                                                     </p>
-                                                    <p class="text-sm text-slate-700">
+                                                    <p
+                                                        class="text-sm text-slate-700"
+                                                    >
                                                         {{ plan.priceLabel }}
                                                     </p>
-                                                    <p class="text-sm leading-6 text-slate-600">
-                                                        {{ checkoutHelperLabel(plan) }}
+                                                    <p
+                                                        class="text-sm leading-6 text-slate-600"
+                                                    >
+                                                        {{
+                                                            checkoutHelperLabel(
+                                                                plan,
+                                                            )
+                                                        }}
                                                     </p>
                                                 </div>
 
-                                                <Button as-child class="h-11 shrink-0">
+                                                <Button
+                                                    as-child
+                                                    class="h-11 shrink-0"
+                                                >
                                                     <Link
-                                                        :href="props.eventLinks.billingCheckout"
+                                                        :href="
+                                                            props.eventLinks
+                                                                .billingCheckout
+                                                        "
                                                         method="post"
                                                         as="button"
-                                                        :data="{ plan_id: plan.id }"
+                                                        :data="{
+                                                            plan_id: plan.id,
+                                                        }"
                                                     >
-                                                        <CreditCard class="size-4" />
-                                                        {{ checkoutActionLabel(plan) }}
+                                                        <CreditCard
+                                                            class="size-4"
+                                                        />
+                                                        {{
+                                                            checkoutActionLabel(
+                                                                plan,
+                                                            )
+                                                        }}
                                                     </Link>
                                                 </Button>
                                             </div>
                                         </div>
                                     </template>
-                                    <div
-                                        v-if="
-                                            currentAccountType !== 'business' &&
-                                            currentAccountType !== 'super_admin'
-                                        "
-                                        class="border-t border-amber-200/80 pt-4"
-                                    >
-                                        <h3
-                                            class="text-sm font-semibold text-promo-ink"
-                                        >
-                                            {{ t('event_settings.billing.business_title') }}
-                                        </h3>
-                                        <p
-                                            class="mt-2 text-sm leading-6 text-promo-muted"
-                                        >
-                                            {{ t('event_settings.billing.business_description') }}
-                                        </p>
-                                        <Button
-                                            as-child
-                                            class="mt-4 h-11 bg-[#171411] text-white hover:bg-[#2b2621]"
-                                        >
-                                            <Link
-                                                :href="
-                                                    props.eventLinks
-                                                        .businessActivate
-                                                "
-                                                method="post"
-                                                as="button"
-                                            >
-                                                {{ t('event_settings.billing.business_cta') }}
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                    <p
-                                        v-if="
-                                            ownerCheckoutPlans.length === 0
-                                        "
-                                    >
-                                        {{ t('event_settings.billing.no_self_serve') }}
+                                    <p v-if="ownerCheckoutPlans.length === 0">
+                                        {{
+                                            t(
+                                                'event_settings.billing.no_self_serve',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -2819,7 +3118,11 @@ function resolveSupportedTimezones(): string[] {
                                 <p
                                     class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                                 >
-                                    {{ t('event_settings.billing.admin_note_public_title') }}
+                                    {{
+                                        t(
+                                            'event_settings.billing.admin_note_public_title',
+                                        )
+                                    }}
                                 </p>
                                 <p class="mt-2 whitespace-pre-line">
                                     {{ props.currentEvent.billing.note }}
@@ -2836,18 +3139,28 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <p class="font-semibold text-slate-900">
                                     {{
-                                        t('event_settings.appearance.current_plan', {
-                                            plan: props.currentEvent.billing.planName,
-                                        })
+                                        t(
+                                            'event_settings.appearance.current_plan',
+                                            {
+                                                plan: props.currentEvent.billing
+                                                    .planName,
+                                            },
+                                        )
                                     }}
                                 </p>
                                 <p class="mt-2">
                                     {{
                                         canEditAdvancedAppearance
-                                            ? t('event_settings.appearance.plan_advanced')
+                                            ? t(
+                                                  'event_settings.appearance.plan_advanced',
+                                              )
                                             : canEditLogo
-                                              ? t('event_settings.appearance.plan_logo')
-                                              : t('event_settings.appearance.plan_simple')
+                                              ? t(
+                                                    'event_settings.appearance.plan_logo',
+                                                )
+                                              : t(
+                                                    'event_settings.appearance.plan_simple',
+                                                )
                                     }}
                                 </p>
                             </div>
@@ -2857,10 +3170,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.appearance.logo_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.logo_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.appearance.logo_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.logo_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="space-y-2">
@@ -2877,7 +3198,11 @@ function resolveSupportedTimezones(): string[] {
                                     >
                                         <img
                                             :src="currentLogoUrl"
-                                            :alt="t('public.shared.alt.event_logo')"
+                                            :alt="
+                                                t(
+                                                    'public.shared.alt.event_logo',
+                                                )
+                                            "
                                             class="h-24 w-24 rounded-xl border object-cover"
                                         />
                                         <button
@@ -2903,7 +3228,11 @@ function resolveSupportedTimezones(): string[] {
                                                 :disabled="!canEditLogo"
                                                 @click="openLogoPicker"
                                             >
-                                                {{ t('event_settings.shared.browse') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.shared.browse',
+                                                    )
+                                                }}
                                             </InputGroupButton>
                                         </InputGroupAddon>
                                     </InputGroup>
@@ -2914,7 +3243,11 @@ function resolveSupportedTimezones(): string[] {
                                         v-if="!canEditLogo"
                                         class="text-xs text-muted-foreground"
                                     >
-                                        {{ t('event_settings.appearance.logo_locked') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.logo_locked',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -2924,10 +3257,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.appearance.display_language_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.display_language_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.appearance.display_language_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.display_language_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <NativeSelect
@@ -2935,16 +3276,32 @@ function resolveSupportedTimezones(): string[] {
                                     class="h-11"
                                 >
                                     <NativeSelectOption value="automatic">
-                                        {{ t('event_settings.appearance.language_automatic') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.language_automatic',
+                                            )
+                                        }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="ro">
-                                        {{ t('event_settings.appearance.language_romanian') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.language_romanian',
+                                            )
+                                        }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="en">
-                                        {{ t('event_settings.appearance.language_english') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.language_english',
+                                            )
+                                        }}
                                     </NativeSelectOption>
                                     <NativeSelectOption value="el">
-                                        {{ t('event_settings.appearance.language_greek') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.language_greek',
+                                            )
+                                        }}
                                     </NativeSelectOption>
                                 </NativeSelect>
                             </div>
@@ -2954,10 +3311,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.appearance.theme_color_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.theme_color_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.appearance.theme_color_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.theme_color_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <InputGroup class="h-11">
@@ -2986,7 +3351,9 @@ function resolveSupportedTimezones(): string[] {
                                                 form.branding.primary_color = ''
                                             "
                                         >
-                                            {{ t('event_settings.shared.reset') }}
+                                            {{
+                                                t('event_settings.shared.reset')
+                                            }}
                                         </InputGroupButton>
                                     </InputGroupAddon>
                                 </InputGroup>
@@ -2997,10 +3364,18 @@ function resolveSupportedTimezones(): string[] {
                             >
                                 <div>
                                     <h3 class="text-sm font-semibold">
-                                        {{ t('event_settings.appearance.welcome_title') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.welcome_title',
+                                            )
+                                        }}
                                     </h3>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ t('event_settings.appearance.welcome_description') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.welcome_description',
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div
@@ -3014,7 +3389,11 @@ function resolveSupportedTimezones(): string[] {
                                             isWelcomeScreenDialogOpen = true
                                         "
                                     >
-                                        {{ t('event_settings.appearance.configure') }}
+                                        {{
+                                            t(
+                                                'event_settings.appearance.configure',
+                                            )
+                                        }}
                                     </Button>
 
                                     <Switch
@@ -3232,7 +3611,11 @@ function resolveSupportedTimezones(): string[] {
                                 class="flex items-center justify-between gap-4"
                             >
                                 <p class="text-sm text-muted-foreground">
-                                    {{ t('event_settings.collaborators.description') }}
+                                    {{
+                                        t(
+                                            'event_settings.collaborators.description',
+                                        )
+                                    }}
                                 </p>
                                 <Button
                                     type="button"
@@ -3241,7 +3624,11 @@ function resolveSupportedTimezones(): string[] {
                                         isCollaboratorInviteSheetOpen = true
                                     "
                                 >
-                                    {{ t('event_settings.collaborators.invite_cta') }}
+                                    {{
+                                        t(
+                                            'event_settings.collaborators.invite_cta',
+                                        )
+                                    }}
                                 </Button>
                             </div>
 
@@ -3249,9 +3636,27 @@ function resolveSupportedTimezones(): string[] {
                                 <div
                                     class="grid grid-cols-[2fr_1fr_1fr] border-b bg-muted/20 px-4 py-3 text-sm font-semibold"
                                 >
-                                    <p>{{ t('event_settings.collaborators.table.collaborator') }}</p>
-                                    <p>{{ t('event_settings.collaborators.table.role') }}</p>
-                                    <p>{{ t('event_settings.collaborators.table.status') }}</p>
+                                    <p>
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.table.collaborator',
+                                            )
+                                        }}
+                                    </p>
+                                    <p>
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.table.role',
+                                            )
+                                        }}
+                                    </p>
+                                    <p>
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.table.status',
+                                            )
+                                        }}
+                                    </p>
                                 </div>
                                 <div
                                     v-for="collaborator in collaboratorRows"
@@ -3277,8 +3682,12 @@ function resolveSupportedTimezones(): string[] {
                                                 ['accepted', 'active'].includes(
                                                     collaborator.status,
                                                 )
-                                                    ? t('event_settings.collaborators.active')
-                                                    : t('event_settings.collaborators.invited')
+                                                    ? t(
+                                                          'event_settings.collaborators.active',
+                                                      )
+                                                    : t(
+                                                          'event_settings.collaborators.invited',
+                                                      )
                                             }}
                                         </Badge>
                                     </div>
@@ -3302,12 +3711,20 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     <div class="border-b pb-4">
                                         <h2 class="text-2xl font-semibold">
-                                            {{ t('event_settings.welcome.dialog_title') }}
+                                            {{
+                                                t(
+                                                    'event_settings.welcome.dialog_title',
+                                                )
+                                            }}
                                         </h2>
                                         <p
                                             class="mt-1 text-sm text-muted-foreground"
                                         >
-                                            {{ t('event_settings.welcome.dialog_description') }}
+                                            {{
+                                                t(
+                                                    'event_settings.welcome.dialog_description',
+                                                )
+                                            }}
                                         </p>
                                     </div>
                                     <div class="pt-3 pb-1">
@@ -3326,7 +3743,11 @@ function resolveSupportedTimezones(): string[] {
                                                         'appearance'
                                                 "
                                             >
-                                                {{ t('event_settings.welcome.tab_appearance') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.welcome.tab_appearance',
+                                                    )
+                                                }}
                                             </button>
                                             <button
                                                 type="button"
@@ -3342,7 +3763,11 @@ function resolveSupportedTimezones(): string[] {
                                                         'guest_form'
                                                 "
                                             >
-                                                {{ t('event_settings.welcome.tab_guest_form') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.welcome.tab_guest_form',
+                                                    )
+                                                }}
                                             </button>
                                         </div>
                                     </div>
@@ -3370,12 +3795,20 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    {{ t('event_settings.welcome.title_label') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.title_label',
+                                                        )
+                                                    }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.welcome.title_description') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.title_description',
+                                                        )
+                                                    }}
                                                 </p>
                                                 <div
                                                     class="grid gap-2 lg:grid-cols-[minmax(0,1fr)_210px]"
@@ -3386,7 +3819,11 @@ function resolveSupportedTimezones(): string[] {
                                                                 .welcome_message
                                                         "
                                                         class="h-11"
-                                                        :placeholder="t('event_settings.general.name_placeholder')"
+                                                        :placeholder="
+                                                            t(
+                                                                'event_settings.general.name_placeholder',
+                                                            )
+                                                        "
                                                     />
                                                     <NativeSelect
                                                         v-model="
@@ -3428,12 +3865,20 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    {{ t('event_settings.welcome.subtitle_label') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.subtitle_label',
+                                                        )
+                                                    }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.welcome.subtitle_description') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.subtitle_description',
+                                                        )
+                                                    }}
                                                 </p>
                                                 <Textarea
                                                     v-model="
@@ -3441,7 +3886,11 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="min-h-24"
                                                     maxlength="220"
-                                                    :placeholder="t('event_settings.welcome.defaults.subtitle')"
+                                                    :placeholder="
+                                                        t(
+                                                            'event_settings.welcome.defaults.subtitle',
+                                                        )
+                                                    "
                                                 />
                                                 <InputError
                                                     :message="
@@ -3455,12 +3904,20 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    {{ t('event_settings.welcome.button_label') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.button_label',
+                                                        )
+                                                    }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.welcome.button_description') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.button_description',
+                                                        )
+                                                    }}
                                                 </p>
                                                 <Input
                                                     v-model="
@@ -3468,7 +3925,11 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="h-11 max-w-[280px]"
                                                     maxlength="40"
-                                                    :placeholder="t('event_settings.welcome.defaults.button')"
+                                                    :placeholder="
+                                                        t(
+                                                            'event_settings.welcome.defaults.button',
+                                                        )
+                                                    "
                                                 />
                                                 <InputError
                                                     :message="
@@ -3482,12 +3943,20 @@ function resolveSupportedTimezones(): string[] {
                                                 <h4
                                                     class="text-sm font-semibold"
                                                 >
-                                                    {{ t('event_settings.welcome.background_label') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.background_label',
+                                                        )
+                                                    }}
                                                 </h4>
                                                 <p
                                                     class="text-sm text-muted-foreground"
                                                 >
-                                                    {{ t('event_settings.welcome.background_description') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.background_description',
+                                                        )
+                                                    }}
                                                 </p>
                                                 <p
                                                     v-if="
@@ -3495,7 +3964,11 @@ function resolveSupportedTimezones(): string[] {
                                                     "
                                                     class="text-xs font-medium text-amber-700"
                                                 >
-                                                    {{ t('event_settings.welcome.background_locked') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.background_locked',
+                                                        )
+                                                    }}
                                                 </p>
                                                 <div
                                                     class="grid gap-3 sm:grid-cols-[1fr_auto]"
@@ -3522,7 +3995,11 @@ function resolveSupportedTimezones(): string[] {
                                                                     openWelcomeScreenBackgroundPicker
                                                                 "
                                                             >
-                                                                {{ t('public.shared.change') }}
+                                                                {{
+                                                                    t(
+                                                                        'public.shared.change',
+                                                                    )
+                                                                }}
                                                             </InputGroupButton>
                                                         </InputGroupAddon>
                                                     </InputGroup>
@@ -3540,7 +4017,11 @@ function resolveSupportedTimezones(): string[] {
                                                             removeWelcomeScreenBackgroundImage
                                                         "
                                                     >
-                                                        {{ t('public.shared.remove') }}
+                                                        {{
+                                                            t(
+                                                                'public.shared.remove',
+                                                            )
+                                                        }}
                                                     </Button>
                                                 </div>
                                                 <div
@@ -3553,7 +4034,11 @@ function resolveSupportedTimezones(): string[] {
                                                             class="size-4"
                                                         />
                                                         <p class="text-sm">
-                                                            {{ t('event_settings.welcome.animated') }}
+                                                            {{
+                                                                t(
+                                                                    'event_settings.welcome.animated',
+                                                                )
+                                                            }}
                                                         </p>
                                                     </div>
                                                     <Switch
@@ -3575,7 +4060,11 @@ function resolveSupportedTimezones(): string[] {
                                             <p
                                                 class="text-sm text-muted-foreground"
                                             >
-                                                {{ t('event_settings.welcome.form_description') }}
+                                                {{
+                                                    t(
+                                                        'event_settings.welcome.form_description',
+                                                    )
+                                                }}
                                             </p>
 
                                             <div
@@ -3633,8 +4122,12 @@ function resolveSupportedTimezones(): string[] {
                                                         >
                                                             {{
                                                                 field.enabled
-                                                                    ? t('event_settings.welcome.status_enabled')
-                                                                    : t('event_settings.welcome.status_hidden')
+                                                                    ? t(
+                                                                          'event_settings.welcome.status_enabled',
+                                                                      )
+                                                                    : t(
+                                                                          'event_settings.welcome.status_hidden',
+                                                                      )
                                                             }}
                                                         </Badge>
                                                     </div>
@@ -3667,7 +4160,11 @@ function resolveSupportedTimezones(): string[] {
                                                     @click="addWelcomeField"
                                                 >
                                                     <Plus class="mr-2 size-4" />
-                                                    {{ t('event_settings.welcome.add_field') }}
+                                                    {{
+                                                        t(
+                                                            'event_settings.welcome.add_field',
+                                                        )
+                                                    }}
                                                 </Button>
                                             </div>
 
@@ -4583,16 +5080,28 @@ function resolveSupportedTimezones(): string[] {
                         <div class="flex h-full flex-col">
                             <SheetHeader class="border-b px-6 py-5 text-left">
                                 <SheetTitle class="text-base font-semibold">
-                                    {{ t('event_settings.collaborators.sheet_title') }}
+                                    {{
+                                        t(
+                                            'event_settings.collaborators.sheet_title',
+                                        )
+                                    }}
                                 </SheetTitle>
                                 <SheetDescription>
-                                    {{ t('event_settings.collaborators.sheet_description') }}
+                                    {{
+                                        t(
+                                            'event_settings.collaborators.sheet_description',
+                                        )
+                                    }}
                                 </SheetDescription>
                             </SheetHeader>
                             <div class="flex-1 space-y-5 overflow-y-auto p-6">
                                 <div class="space-y-2">
                                     <h4 class="text-sm font-semibold">
-                                        {{ t('event_settings.collaborators.email_address') }}
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.email_address',
+                                            )
+                                        }}
                                     </h4>
                                     <InputGroup class="h-11">
                                         <InputGroupAddon
@@ -4604,7 +5113,11 @@ function resolveSupportedTimezones(): string[] {
                                         <InputGroupInput
                                             v-model="collaboratorForm.email"
                                             type="email"
-                                            :placeholder="t('event_settings.collaborators.email_placeholder')"
+                                            :placeholder="
+                                                t(
+                                                    'event_settings.collaborators.email_placeholder',
+                                                )
+                                            "
                                         />
                                     </InputGroup>
                                     <InputError
@@ -4613,7 +5126,13 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <div class="space-y-2">
-                                    <h4 class="text-sm font-semibold">{{ t('event_settings.collaborators.role') }}</h4>
+                                    <h4 class="text-sm font-semibold">
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.role',
+                                            )
+                                        }}
+                                    </h4>
                                     <ToggleGroup
                                         type="single"
                                         variant="outline"
@@ -4627,13 +5146,21 @@ function resolveSupportedTimezones(): string[] {
                                             value="manager"
                                             class="h-11 flex-1"
                                         >
-                                            {{ t('event_settings.collaborators.manager') }}
+                                            {{
+                                                t(
+                                                    'event_settings.collaborators.manager',
+                                                )
+                                            }}
                                         </ToggleGroupItem>
                                         <ToggleGroupItem
                                             value="viewer"
                                             class="h-11 flex-1"
                                         >
-                                            {{ t('event_settings.collaborators.viewer') }}
+                                            {{
+                                                t(
+                                                    'event_settings.collaborators.viewer',
+                                                )
+                                            }}
                                         </ToggleGroupItem>
                                     </ToggleGroup>
                                     <InputError
@@ -4642,7 +5169,11 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
 
                                 <p class="text-sm text-muted-foreground">
-                                    {{ t('event_settings.collaborators.pending_note') }}
+                                    {{
+                                        t(
+                                            'event_settings.collaborators.pending_note',
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <SheetFooter class="border-t px-6 py-4">
@@ -4654,8 +5185,12 @@ function resolveSupportedTimezones(): string[] {
                                 >
                                     {{
                                         collaboratorForm.processing
-                                            ? t('event_settings.collaborators.inviting')
-                                            : t('event_settings.collaborators.send_invite')
+                                            ? t(
+                                                  'event_settings.collaborators.inviting',
+                                              )
+                                            : t(
+                                                  'event_settings.collaborators.send_invite',
+                                              )
                                     }}
                                 </Button>
                                 <Button

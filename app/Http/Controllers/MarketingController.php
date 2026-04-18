@@ -40,7 +40,10 @@ class MarketingController extends Controller
             'businessPacks' => $this->businessTopUpPacks($businessWalletManager, $exchangeRateManager),
             'businessPlans' => $this->businessPlans(),
             'supportedCheckoutCurrencies' => $exchangeRateManager->supportedCheckoutCurrencies(),
-            'activateUrl' => $user !== null && ! $user->isBusinessAccount() ? route('dashboard.business.activate') : null,
+            'businessRegisterUrl' => $user === null && Features::enabled(Features::registration())
+                ? route('register.business')
+                : null,
+            'loginUrl' => $user === null ? route('login') : null,
             'onboardingUrl' => $user !== null && $user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()
                 ? route('dashboard.business.onboarding')
                 : null,
@@ -49,6 +52,9 @@ class MarketingController extends Controller
                 : null,
             'dashboardUrl' => $user !== null && $user->canAccessBusinessDashboard()
                 ? route('dashboard.business')
+                : null,
+            'separateAccountNotice' => $user !== null && ! $user->isBusinessAccount()
+                ? __('marketing.businesses.simple.actions.separate_account_notice')
                 : null,
         ]);
     }

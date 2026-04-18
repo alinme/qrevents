@@ -2629,7 +2629,6 @@ class EventController extends Controller
                 'publicGuestList' => route('events.guests.public-list.show', $event->share_token),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
-                'businessActivate' => route('dashboard.business.activate'),
                 'collaboratorsStore' => route('events.collaborators.store', $event),
                 'album' => $albumUrl,
                 'albumShortUrl' => $publicShortLinks['albumShortUrl'],

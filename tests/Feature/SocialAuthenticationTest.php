@@ -19,15 +19,30 @@ test('login and register screens expose google auth when configured', function (
         ->assertInertia(fn (Assert $page) => $page
             ->component('auth/Login')
             ->where('googleAuthEnabled', true)
-            ->where('googleAuthUrl', route('auth.google.redirect'))
+            ->where('googleAuthUrl', route('auth.google.redirect', ['screen' => 'login']))
+            ->where('businessRegisterUrl', route('register.business'))
         );
 
     $this->get(route('register'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('auth/Register')
+            ->where('registrationMode', 'consumer')
             ->where('googleAuthEnabled', true)
-            ->where('googleAuthUrl', route('auth.google.redirect'))
+            ->where('googleAuthUrl', route('auth.google.redirect', ['screen' => 'register']))
+            ->where('businessRegisterUrl', route('register.business'))
+        );
+
+    $this->get(route('register.business'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('auth/Register')
+            ->where('registrationMode', 'business')
+            ->where('googleAuthEnabled', true)
+            ->where('googleAuthUrl', route('auth.google.redirect', [
+                'screen' => 'register-business',
+                'account_type' => 'business',
+            ]))
         );
 });
 
@@ -128,6 +143,45 @@ test('google callback creates a new verified user and logs them in', function ()
         ->and($user->google_avatar)->toBe('https://example.com/google-avatar.jpg')
         ->and($user->email_verified_at)->not->toBeNull()
         ->and($user->account_type)->toBe(User::ACCOUNT_TYPE_USER);
+});
+
+test('google callback creates a business account when the business registration flow started it', function () {
+    config([
+        'services.google.client_id' => 'google-client-id',
+        'services.google.client_secret' => 'google-client-secret',
+        'services.google.redirect' => 'https://qrevents.test/auth/google/callback',
+    ]);
+
+    $socialUser = Mockery::mock(SocialiteUser::class);
+    $socialUser->shouldReceive('getId')->once()->andReturn('google-business-123');
+    $socialUser->shouldReceive('getEmail')->once()->andReturn('business-google-user@example.com');
+    $socialUser->shouldReceive('getName')->once()->andReturn('Business Google User');
+    $socialUser->shouldReceive('getNickname')->zeroOrMoreTimes()->andReturn(null);
+    $socialUser->shouldReceive('getAvatar')->once()->andReturn('https://example.com/business-google-avatar.jpg');
+
+    $provider = Mockery::mock(Provider::class);
+    $provider->shouldReceive('user')->once()->andReturn($socialUser);
+
+    $factory = Mockery::mock(SocialiteFactory::class);
+    $factory->shouldReceive('driver')
+        ->once()
+        ->with('google')
+        ->andReturn($provider);
+
+    $this->app->instance(SocialiteFactory::class, $factory);
+
+    $this->withSession([
+        'social_auth_screen' => 'register-business',
+        'social_auth_account_type' => User::ACCOUNT_TYPE_BUSINESS,
+    ])->get(route('auth.google.callback'))
+        ->assertRedirect(route('dashboard.business.onboarding', absolute: false));
+
+    $user = User::query()->where('email', 'business-google-user@example.com')->firstOrFail();
+
+    $this->assertAuthenticatedAs($user);
+
+    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_BUSINESS)
+        ->and($user->email_verified_at)->not->toBeNull();
 });
 
 test('google callback links an existing account by email', function () {

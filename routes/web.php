@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventOnboardingController;
 use App\Http\Controllers\MarketingController;
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -32,6 +33,7 @@ Route::get('/businesses', [MarketingController::class, 'businesses'])->name('bus
 
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+Route::middleware('guest')->get('register/business', [RegistrationController::class, 'business'])->name('register.business');
 
 Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('onboarding.create');
 

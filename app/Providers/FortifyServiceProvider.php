@@ -50,8 +50,11 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'canRegister' => Features::enabled(Features::registration()),
+            'businessRegisterUrl' => Features::enabled(Features::registration())
+                ? route('register.business')
+                : null,
             'status' => $request->session()->get('status'),
-            ...$this->socialAuthViewProps($request),
+            ...$this->socialAuthViewProps($request, 'login'),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [
@@ -68,7 +71,9 @@ class FortifyServiceProvider extends ServiceProvider
         ]));
 
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/Register', [
-            ...$this->socialAuthViewProps($request),
+            'registrationMode' => 'consumer',
+            'businessRegisterUrl' => route('register.business'),
+            ...$this->socialAuthViewProps($request, 'register'),
         ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
@@ -95,7 +100,7 @@ class FortifyServiceProvider extends ServiceProvider
     /**
      * @return array{googleAuthEnabled: bool, googleAuthUrl: string|null, socialAuthError: string|null}
      */
-    private function socialAuthViewProps(Request $request): array
+    private function socialAuthViewProps(Request $request, string $screen, ?string $accountType = null): array
     {
         $googleAuthEnabled = trim((string) config('services.google.client_id')) !== ''
             && trim((string) config('services.google.client_secret')) !== ''
@@ -103,7 +108,12 @@ class FortifyServiceProvider extends ServiceProvider
 
         return [
             'googleAuthEnabled' => $googleAuthEnabled,
-            'googleAuthUrl' => $googleAuthEnabled ? route('auth.google.redirect') : null,
+            'googleAuthUrl' => $googleAuthEnabled
+                ? route('auth.google.redirect', array_filter([
+                    'screen' => $screen,
+                    'account_type' => $accountType,
+                ]))
+                : null,
             'socialAuthError' => $request->session()->get('social_auth_error'),
         ];
     }

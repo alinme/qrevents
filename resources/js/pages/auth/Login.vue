@@ -18,6 +18,7 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    businessRegisterUrl: string | null;
     googleAuthEnabled: boolean;
     googleAuthUrl: string | null;
     socialAuthError?: string | null;
@@ -53,7 +54,9 @@ const { t } = useTranslations();
                 variant="outline"
                 class="h-11 w-full rounded-full border-zinc-300 bg-white text-promo-ink hover:bg-zinc-50"
             >
-                <a :href="googleAuthUrl!"> {{ t('auth.shared.continue_with_google') }} </a>
+                <a :href="googleAuthUrl!">
+                    {{ t('auth.shared.continue_with_google') }}
+                </a>
             </Button>
 
             <div
@@ -73,9 +76,9 @@ const { t } = useTranslations();
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email" class="text-promo-ink"
-                        >{{ t('auth.shared.email_address') }}</Label
-                    >
+                    <Label for="email" class="text-promo-ink">{{
+                        t('auth.shared.email_address')
+                    }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -90,9 +93,9 @@ const { t } = useTranslations();
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password" class="text-promo-ink"
-                            >{{ t('auth.shared.password') }}</Label
-                        >
+                        <Label for="password" class="text-promo-ink">{{
+                            t('auth.shared.password')
+                        }}</Label>
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
@@ -134,7 +137,19 @@ const { t } = useTranslations();
                 v-if="canRegister"
             >
                 {{ t('auth.login.no_account') }}
-                <TextLink :href="register()">{{ t('auth.login.register') }}</TextLink>
+                <TextLink :href="register()">{{
+                    t('auth.login.register')
+                }}</TextLink>
+            </div>
+
+            <div
+                v-if="canRegister && businessRegisterUrl"
+                class="text-center text-sm text-promo-muted"
+            >
+                {{ t('auth.login.business_prompt') }}
+                <TextLink :href="businessRegisterUrl">
+                    {{ t('auth.login.business_register') }}
+                </TextLink>
             </div>
         </Form>
     </AuthBase>

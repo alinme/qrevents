@@ -11,13 +11,18 @@ const fontVariables = computed<Record<string, string>>(() => ({
 </script>
 
 <template>
-    <article :style="fontVariables" class="qr-template qr-template-pink relative mx-auto aspect-[1/1.4142] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(76,41,52,0.15)]">
+    <article
+        :style="fontVariables"
+        class="qr-template qr-template-pink relative mx-auto aspect-[1/1.4142] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(76,41,52,0.15)]"
+    >
         <div class="qr-template__art absolute inset-0" />
         <div class="qr-template__wash absolute inset-0" />
 
-        <div class="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] px-[8%] py-[7.2%] text-center text-[#38232d]">
+        <div
+            class="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] px-[8%] py-[7.2%] text-center text-[#38232d]"
+        >
             <header class="self-start">
-                <p class="qr-template__subtitle">
+                <p class="qr-template__subtitle mt-5">
                     {{ subtitle }}
                 </p>
                 <h2 class="qr-template__title">
@@ -34,11 +39,17 @@ const fontVariables = computed<Record<string, string>>(() => ({
                 </p>
 
                 <div class="qr-template__qr-frame order-1 w-full max-w-[42cqw]">
-                    <img :src="qrDataUrl" :alt="previewAlt" class="block h-auto w-full">
+                    <img
+                        :src="qrDataUrl"
+                        :alt="previewAlt"
+                        class="block h-auto w-full"
+                    />
                 </div>
             </div>
 
-            <footer class="qr-template__footer mx-auto w-full max-w-[70cqw] self-end border-t border-[#7a5260]/16 pt-[2cqh]">
+            <footer
+                class="qr-template__footer mx-auto w-full max-w-[70cqw] self-end border-t border-[#7a5260]/16 pt-[2cqh]"
+            >
                 <p class="qr-template__event-title">
                     {{ eventTitle }}
                 </p>
@@ -61,8 +72,16 @@ const fontVariables = computed<Record<string, string>>(() => ({
 
 .qr-template__wash {
     background:
-        radial-gradient(circle at top, rgba(255, 255, 255, 0.32), transparent 45%),
-        linear-gradient(180deg, rgba(255, 247, 250, 0.48), rgba(255, 251, 252, 0.70));
+        radial-gradient(
+            circle at top,
+            rgba(255, 255, 255, 0.32),
+            transparent 45%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(255, 247, 250, 0.48),
+            rgba(255, 251, 252, 0.7)
+        );
 }
 
 .qr-template__subtitle {

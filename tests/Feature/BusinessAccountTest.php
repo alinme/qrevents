@@ -8,24 +8,19 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('users can switch to business, finish onboarding, and reach the business dashboard', function () {
+test('business users can finish onboarding and reach the business dashboard', function () {
     Storage::fake('public');
 
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->post(route('dashboard.business.activate'))
-        ->assertRedirect(route('dashboard.business.onboarding'));
-
-    expect($user->fresh()->account_type)->toBe(User::ACCOUNT_TYPE_BUSINESS)
-        ->and($user->fresh()->business_onboarded_at)->toBeNull();
+    $user = User::factory()->business()->create([
+        'business_onboarded_at' => null,
+    ]);
 
     $this->actingAs($user)
         ->get(route('dashboard.business.onboarding'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('business/Onboarding')
-            ->where('profile.billingEmail', $user->email)
+            ->where('profile.billingEmail', $user->business_profile['billing_email'])
             ->where('cancelUrl', route('dashboard.business.onboarding.cancel'))
         );
 
@@ -59,7 +54,7 @@ test('users can switch to business, finish onboarding, and reach the business da
     Storage::disk('public')->assertExists((string) ($user->business_profile['logo_path'] ?? ''));
 });
 
-test('users can cancel business onboarding before saving their business profile', function () {
+test('business users can leave onboarding and keep their business account', function () {
     $user = User::factory()->create([
         'account_type' => User::ACCOUNT_TYPE_BUSINESS,
         'business_onboarded_at' => null,
@@ -67,34 +62,26 @@ test('users can cancel business onboarding before saving their business profile'
 
     $this->actingAs($user)
         ->post(route('dashboard.business.onboarding.cancel'))
-        ->assertRedirect(route('dashboard'))
-        ->assertSessionHas('success', 'Business upgrade cancelled.');
+        ->assertRedirect(route('businesses'))
+        ->assertSessionHas('info', 'You can finish your business profile whenever you are ready.');
 
     $user->refresh();
 
-    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_USER)
+    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_BUSINESS)
         ->and($user->business_onboarded_at)->toBeNull();
 });
 
-test('cancelling business onboarding returns users to the billing page they upgraded from', function () {
+test('normal users can no longer self-upgrade into business accounts', function () {
     $user = User::factory()->create();
-    $event = \App\Models\Event::factory()->for($user)->create();
-    $billingUrl = route('events.settings', ['event' => $event, 'tab' => 'billing']);
 
     $this->actingAs($user)
-        ->from($billingUrl)
         ->post(route('dashboard.business.activate'))
-        ->assertRedirect(route('dashboard.business.onboarding'));
-
-    $this->actingAs($user)
-        ->post(route('dashboard.business.onboarding.cancel'))
-        ->assertRedirect($billingUrl)
-        ->assertSessionHas('success', 'Business upgrade cancelled.');
+        ->assertRedirect(route('businesses'))
+        ->assertSessionHas('info', 'Business accounts now use a separate registration flow.');
 
     $user->refresh();
 
-    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_USER)
-        ->and($user->business_onboarded_at)->toBeNull();
+    expect($user->account_type)->toBe(User::ACCOUNT_TYPE_USER);
 });
 
 test('business wallet checkout locks the latest fx rate at session creation', function () {
@@ -186,5 +173,30 @@ test('business page exposes localized top-up prices and the right entry points',
             ->where('businessPacks.2.priceLabels.GBP', 'GBP 86.00')
             ->where('topUpUrl', route('dashboard.business.wallet.checkout'))
             ->where('dashboardUrl', route('dashboard.business'))
+        );
+});
+
+test('business page sends guests to the dedicated business registration flow', function () {
+    $this->get(route('businesses'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Businesses')
+            ->where('businessRegisterUrl', route('register.business'))
+            ->where('loginUrl', route('login'))
+            ->where('separateAccountNotice', null)
+        );
+});
+
+test('business page tells normal users that business registration is separate', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('businesses'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Businesses')
+            ->where('businessRegisterUrl', null)
+            ->where('loginUrl', null)
+            ->where('separateAccountNotice', 'Business access now starts with a dedicated business registration instead of upgrading a normal account.')
         );
 });

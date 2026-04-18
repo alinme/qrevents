@@ -20,19 +20,11 @@ class BusinessController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $returnTo = $this->sanitizeBusinessOnboardingReturnTo(
-            $request,
-            $request->headers->get('referer'),
-        );
-
-        if ($returnTo !== null) {
-            $request->session()->put('business_onboarding_return_to', $returnTo);
-        }
-
         if (! $user->isBusinessAccount()) {
-            $user->forceFill([
-                'account_type' => $user::ACCOUNT_TYPE_BUSINESS,
-            ])->save();
+            return to_route('businesses')->with(
+                'info',
+                'Business accounts now use a separate registration flow.',
+            );
         }
 
         return $user->hasCompletedBusinessOnboarding()
@@ -76,17 +68,7 @@ class BusinessController extends Controller
             return to_route('dashboard.business');
         }
 
-        $user->forceFill([
-            'account_type' => $user::ACCOUNT_TYPE_USER,
-        ])->save();
-
-        $returnTo = $this->pullBusinessOnboardingReturnTo($request);
-
-        if ($returnTo !== null) {
-            return redirect()->to($returnTo)->with('success', 'Business upgrade cancelled.');
-        }
-
-        return to_route('dashboard')->with('success', 'Business upgrade cancelled.');
+        return to_route('businesses')->with('info', 'You can finish your business profile whenever you are ready.');
     }
 
     public function storeOnboarding(StoreBusinessOnboardingRequest $request): RedirectResponse
@@ -121,32 +103,6 @@ class BusinessController extends Controller
         $request->session()->forget('business_onboarding_return_to');
 
         return to_route('dashboard.business')->with('success', 'Business profile saved.');
-    }
-
-    private function pullBusinessOnboardingReturnTo(Request $request): ?string
-    {
-        $returnTo = $request->session()->pull('business_onboarding_return_to');
-
-        return $this->sanitizeBusinessOnboardingReturnTo($request, $returnTo);
-    }
-
-    private function sanitizeBusinessOnboardingReturnTo(Request $request, mixed $returnTo): ?string
-    {
-        if (! is_string($returnTo) || $returnTo === '') {
-            return null;
-        }
-
-        if (! str_starts_with($returnTo, $request->root())) {
-            return null;
-        }
-
-        $path = parse_url($returnTo, PHP_URL_PATH);
-
-        if (! is_string($path) || str_starts_with($path, '/dashboard/business/onboarding')) {
-            return null;
-        }
-
-        return $returnTo;
     }
 
     public function createWalletCheckout(
