@@ -217,8 +217,13 @@ jobs:
 
           if [ "$QUEUE_CHANGED" = "true" ]; then
             php artisan queue:restart
-            pm2 restart qrevents-queue
-            pm2 status qrevents-queue
+            if command -v pm2 >/dev/null 2>&1; then
+              if pm2 restart qrevents-queue; then
+                pm2 status qrevents-queue
+              else
+                echo "PM2 process qrevents-queue not found; skipping PM2 restart"
+              fi
+            fi
           fi
 
           printf 'REMOTE_HEAD=%s\n' "$(git rev-parse HEAD)"
