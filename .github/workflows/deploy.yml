@@ -26,7 +26,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 25
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
@@ -38,7 +38,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Detect deploy scope
         id: scope
@@ -63,16 +63,32 @@ jobs:
             printf '%s\n' "$CHANGED_FILES" | grep -Eq "$1"
           }
 
-          frontend_changed=false
+          frontend_build_changed=false
+          frontend_dependencies_changed=false
           backend_changed=false
+          backend_dependencies_changed=false
+          migrations_changed=false
           queue_changed=false
 
-          if has_match '^(resources/|routes/|app/Http/Controllers/|package(-lock)?\.json$|vite\.config\.[^/]+$|tailwind\.config\.[^/]+$|postcss\.config\.[^/]+$)'; then
-            frontend_changed=true
+          if has_match '^(resources/|routes/|app/Http/Controllers/|vite\.config\.[^/]+$|tailwind\.config\.[^/]+$|postcss\.config\.[^/]+$)'; then
+            frontend_build_changed=true
+          fi
+
+          if has_match '^(package(-lock)?\.json$)'; then
+            frontend_dependencies_changed=true
+            frontend_build_changed=true
           fi
 
           if has_match '^(app/|bootstrap/|config/|database/|lang/|routes/|composer\.(json|lock)$)'; then
             backend_changed=true
+          fi
+
+          if has_match '^(composer\.(json|lock)$)'; then
+            backend_dependencies_changed=true
+          fi
+
+          if has_match '^(database/migrations/)'; then
+            migrations_changed=true
           fi
 
           if has_match '^(app/(Jobs|Listeners|Notifications|Console)/|routes/console\.php$|bootstrap/app\.php$)'; then
@@ -80,10 +96,26 @@ jobs:
           fi
 
           {
-            echo "frontend=$frontend_changed"
+            echo "frontend_build=$frontend_build_changed"
+            echo "frontend_dependencies=$frontend_dependencies_changed"
             echo "backend=$backend_changed"
+            echo "backend_dependencies=$backend_dependencies_changed"
+            echo "migrations=$migrations_changed"
             echo "queue=$queue_changed"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Summarize deploy scope
+        shell: bash
+        run: |
+          {
+            echo "### Deploy Scope"
+            echo "- Frontend build: ${{ steps.scope.outputs.frontend_build }}"
+            echo "- Frontend dependencies: ${{ steps.scope.outputs.frontend_dependencies }}"
+            echo "- Backend cache refresh: ${{ steps.scope.outputs.backend }}"
+            echo "- Composer install: ${{ steps.scope.outputs.backend_dependencies }}"
+            echo "- Migrations: ${{ steps.scope.outputs.migrations }}"
+            echo "- Queue restart: ${{ steps.scope.outputs.queue }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Configure SSH
         shell: bash
@@ -107,7 +139,8 @@ jobs:
       - name: Deploy to production
         shell: bash
         run: |
-          set -euo pipefail
+          set -eEuo pipefail
+          trap 'echo "::error::Deployment failed while executing remote deploy commands."' ERR
 
           PORT="${DEPLOY_PORT:-22}"
 
@@ -115,9 +148,11 @@ jobs:
             -i ~/.ssh/deploy_key \
             -p "$PORT" \
             -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "GITHUB_SHA='${{ github.sha }}' DEPLOY_PATH='$DEPLOY_PATH' FRONTEND_CHANGED='${{ steps.scope.outputs.frontend }}' BACKEND_CHANGED='${{ steps.scope.outputs.backend }}' QUEUE_CHANGED='${{ steps.scope.outputs.queue }}' bash -se" <<'REMOTE'
-          set -euo pipefail
+            "GITHUB_SHA='${{ github.sha }}' DEPLOY_PATH='$DEPLOY_PATH' FRONTEND_BUILD_CHANGED='${{ steps.scope.outputs.frontend_build }}' FRONTEND_DEPENDENCIES_CHANGED='${{ steps.scope.outputs.frontend_dependencies }}' BACKEND_CHANGED='${{ steps.scope.outputs.backend }}' BACKEND_DEPENDENCIES_CHANGED='${{ steps.scope.outputs.backend_dependencies }}' MIGRATIONS_CHANGED='${{ steps.scope.outputs.migrations }}' QUEUE_CHANGED='${{ steps.scope.outputs.queue }}' bash -se" <<'REMOTE'
+          set -eEuo pipefail
+          trap 'echo "Remote deploy failed on line $LINENO" >&2' ERR
 
           cd "$DEPLOY_PATH"
 
@@ -133,22 +168,29 @@ jobs:
             git stash pop
           fi
 
-          if [ "$BACKEND_CHANGED" = "true" ]; then
-            composer install --no-dev --optimize-autoloader --no-interaction
+          if [ "$BACKEND_DEPENDENCIES_CHANGED" = "true" ] || [ ! -f vendor/autoload.php ]; then
+            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
           fi
 
-          if [ "$FRONTEND_CHANGED" = "true" ]; then
-            if [ -f package-lock.json ]; then
-              npm ci
+          if [ "$FRONTEND_BUILD_CHANGED" = "true" ]; then
+            if [ "$FRONTEND_DEPENDENCIES_CHANGED" = "true" ] || [ ! -d node_modules ]; then
+              if [ -f package-lock.json ]; then
+                npm ci --no-audit --no-fund
+              else
+                npm install --no-audit --no-fund
+              fi
             else
-              npm install
+              echo "Reusing existing node_modules on the server"
             fi
 
             npm run build
           fi
 
-          if [ "$BACKEND_CHANGED" = "true" ]; then
+          if [ "$MIGRATIONS_CHANGED" = "true" ]; then
             php artisan migrate --force
+          fi
+
+          if [ "$BACKEND_CHANGED" = "true" ]; then
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
@@ -167,7 +209,8 @@ jobs:
       - name: Verify deployed commit
         shell: bash
         run: |
-          set -euo pipefail
+          set -eEuo pipefail
+          trap 'echo "::error::Remote commit verification failed."' ERR
 
           PORT="${DEPLOY_PORT:-22}"
 
@@ -176,6 +219,7 @@ jobs:
               -i ~/.ssh/deploy_key \
               -p "$PORT" \
               -o IdentitiesOnly=yes \
+              -o ConnectTimeout=15 \
               "$DEPLOY_USER@$DEPLOY_HOST" \
               "cd '$DEPLOY_PATH' && git rev-parse HEAD"
           )"
@@ -186,6 +230,19 @@ jobs:
       - name: Verify public site
         shell: bash
         run: |
-          set -euo pipefail
+          set -eEuo pipefail
+          trap 'echo "::error::Public site health check failed."' ERR
 
           curl -fsSIL "$LIVE_URL" | sed -n '1,12p'
+
+      - name: Publish deploy summary
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo
+            echo "### Deploy Complete"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Live URL: $LIVE_URL"
+            echo "- Server: \`${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
