@@ -1,5 +1,6 @@
 import MarketingController from './MarketingController'
 import SocialAuthController from './SocialAuthController'
+import RegistrationController from './RegistrationController'
 import EventOnboardingController from './EventOnboardingController'
 import DashboardController from './DashboardController'
 import BusinessController from './BusinessController'
@@ -11,6 +12,7 @@ import Settings from './Settings'
 const Controllers = {
     MarketingController: Object.assign(MarketingController, MarketingController),
     SocialAuthController: Object.assign(SocialAuthController, SocialAuthController),
+    RegistrationController: Object.assign(RegistrationController, RegistrationController),
     EventOnboardingController: Object.assign(EventOnboardingController, EventOnboardingController),
     DashboardController: Object.assign(DashboardController, DashboardController),
     BusinessController: Object.assign(BusinessController, BusinessController),

@@ -2,8 +2,8 @@
 import { Link } from '@inertiajs/vue3';
 import { ArrowRight, Sparkles } from 'lucide-vue-next';
 import { computed } from 'vue';
+import MarketingProductPreview from '@/components/marketing/MarketingProductPreview.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
-import MarketingVisualPlaceholder from '@/components/marketing/MarketingVisualPlaceholder.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
 import { businesses } from '@/routes';
@@ -108,10 +108,9 @@ const comparisonRows = computed(() => [
                 </div>
             </div>
 
-            <MarketingVisualPlaceholder
-                label="Comparison video placeholder"
-                title="Add 15s plan overview video"
-                description="Show the difference between Free, Plus, Pro, then end on the Business billing view for teams handling repeat events."
+            <MarketingProductPreview
+                variant="hero"
+                caption="Simple plans. Clear guest experience."
                 aspect-class="aspect-[5/4]"
             />
         </section>
@@ -128,7 +127,7 @@ const comparisonRows = computed(() => [
                 <article
                     v-for="plan in plans"
                     :key="plan.id"
-                    class="border border-promo-line bg-white px-6 py-6"
+                    class="rounded-[1.5rem] border border-promo-line bg-white px-6 py-6 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
                 >
                     <p class="marketing-kicker">
                         {{ plan.name }}
@@ -184,10 +183,21 @@ const comparisonRows = computed(() => [
                         <p class="marketing-copy">
                             {{ item.description }}
                         </p>
-                        <MarketingVisualPlaceholder
-                            label="Screenshot placeholder"
-                            :title="`Add screenshot: ${item.title}`"
-                            description="Show the dashboard, album, or wall that best matches this plan example."
+                        <MarketingProductPreview
+                            :variant="
+                                item.title === t('marketing.pricing.simple.examples.1.title')
+                                    ? 'guest-flow'
+                                    : item.title === t('marketing.pricing.simple.examples.2.title')
+                                      ? 'live-wall'
+                                      : 'business-dashboard'
+                            "
+                            :caption="
+                                item.title === t('marketing.pricing.simple.examples.1.title')
+                                    ? 'Birthday guests upload in seconds.'
+                                    : item.title === t('marketing.pricing.simple.examples.2.title')
+                                      ? 'Wedding weekend memories on the wall.'
+                                      : 'Client work with billing credits.'
+                            "
                             aspect-class="aspect-[4/3]"
                         />
                     </article>
@@ -253,10 +263,9 @@ const comparisonRows = computed(() => [
                     </Link>
                 </div>
 
-                <MarketingVisualPlaceholder
-                    label="Billing screenshot placeholder"
-                    title="Add screenshot: business credits and billing history"
-                    description="Use a real capture of the business billing page with balance, top-up history, and events so teams understand the model immediately."
+                <MarketingProductPreview
+                    variant="business-billing"
+                    caption="Credits, history, and event-by-event spend."
                     aspect-class="aspect-[16/10]"
                 />
             </div>

@@ -10,8 +10,8 @@ import {
     Users,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import MarketingProductPreview from '@/components/marketing/MarketingProductPreview.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
-import MarketingVisualPlaceholder from '@/components/marketing/MarketingVisualPlaceholder.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import MarketingLayout from '@/layouts/MarketingLayout.vue';
@@ -119,28 +119,22 @@ const businessFlow = [
         icon: BriefcaseBusiness,
         title: t('marketing.businesses.simple.flow.1.title'),
         description: t('marketing.businesses.simple.flow.1.description'),
-        label: 'Dashboard placeholder',
-        visualTitle: 'Add screenshot: business dashboard home',
-        visualDescription:
-            'Show the business dashboard with events, billing, and credits visible at a glance.',
+        variant: 'business-dashboard' as const,
+        caption: 'Events, credits, and usage together.',
     },
     {
         icon: Repeat2,
         title: t('marketing.businesses.simple.flow.2.title'),
         description: t('marketing.businesses.simple.flow.2.description'),
-        label: 'Billing screenshot placeholder',
-        visualTitle: 'Add screenshot: billing page with history',
-        visualDescription:
-            'Show credit balance, top-up history, and one event debit so the model is obvious instantly.',
+        variant: 'business-billing' as const,
+        caption: 'Top up once. Spend per event.',
     },
     {
         icon: ShieldCheck,
         title: t('marketing.businesses.simple.flow.3.title'),
         description: t('marketing.businesses.simple.flow.3.description'),
-        label: 'Create-event placeholder',
-        visualTitle: 'Add screenshot: business event creation',
-        visualDescription:
-            'Show the business create-event step where the plan cost and remaining credits are visible.',
+        variant: 'event-create' as const,
+        caption: 'Plan cost and remaining credits stay visible.',
     },
 ];
 
@@ -288,10 +282,9 @@ const creditExamples = computed(() => [
                 </div>
             </div>
 
-            <MarketingVisualPlaceholder
-                label="Hero video placeholder"
-                title="Add 12s business overview video"
-                description="Show one team topping up credits, creating a client event, then opening the album and wall so the business model feels concrete."
+            <MarketingProductPreview
+                variant="business-dashboard"
+                caption="Built for repeat client events."
                 aspect-class="aspect-[5/4]"
             />
         </section>
@@ -330,11 +323,7 @@ const creditExamples = computed(() => [
                         </p>
                     </div>
 
-                    <MarketingVisualPlaceholder
-                        :label="item.label"
-                        :title="item.visualTitle"
-                        :description="item.visualDescription"
-                    />
+                    <MarketingProductPreview :variant="item.variant" :caption="item.caption" />
                 </article>
             </div>
         </section>
@@ -362,7 +351,7 @@ const creditExamples = computed(() => [
                     <article
                         v-for="item in creditExamples"
                         :key="item.title"
-                        class="border border-promo-line bg-white px-6 py-6"
+                        class="rounded-[1.5rem] border border-promo-line bg-white px-6 py-6 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
                     >
                         <h3 class="text-lg font-semibold text-promo-ink">
                             {{ item.title }}
@@ -409,10 +398,9 @@ const creditExamples = computed(() => [
                             )
                         }}
                     </p>
-                    <MarketingVisualPlaceholder
-                        label="Mobile screenshot placeholder"
-                        title="Add screenshot: album code + upload"
-                        description="Use one or two real mobile screens showing the album code entry and the guest upload interface."
+                    <MarketingProductPreview
+                        variant="album-access"
+                        caption="Guests join and upload without an app."
                         aspect-class="aspect-[4/3]"
                     />
                 </article>
@@ -435,10 +423,9 @@ const creditExamples = computed(() => [
                             )
                         }}
                     </p>
-                    <MarketingVisualPlaceholder
-                        label="TV screenshot placeholder"
-                        title="Add screenshot: short wall link + live wall"
-                        description="Use a real wall screen example with the shorter wall URL visible somewhere in the composition."
+                    <MarketingProductPreview
+                        variant="live-wall"
+                        caption="Short wall link for TV and venue screens."
                         aspect-class="aspect-[4/3]"
                     />
                 </article>

@@ -61,7 +61,7 @@ activate.form = activateForm
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 export const onboarding = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -76,7 +76,7 @@ onboarding.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 onboarding.url = (options?: RouteQueryOptions) => {
@@ -85,7 +85,7 @@ onboarding.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 onboarding.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -95,7 +95,7 @@ onboarding.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 onboarding.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -105,7 +105,7 @@ onboarding.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 const onboardingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -115,7 +115,7 @@ const onboardingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'>
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 onboardingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -125,7 +125,7 @@ onboardingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =
 
 /**
 * @see \App\Http\Controllers\BusinessController::onboarding
-* @see app/Http/Controllers/BusinessController.php:43
+* @see app/Http/Controllers/BusinessController.php:35
 * @route '/dashboard/business/onboarding'
 */
 onboardingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

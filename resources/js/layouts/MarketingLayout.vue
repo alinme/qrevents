@@ -100,9 +100,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
         <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
             <div class="mx-auto max-w-[1400px]">
                 <div class="relative h-[34rem]">
-                    <div class="absolute left-[-8rem] top-[-9rem] h-[21rem] w-[21rem] rounded-full bg-promo-purple/40 blur-3xl" />
-                    <div class="absolute right-[-5rem] top-[2rem] h-[24rem] w-[24rem] rounded-full bg-promo-surface-strong/45 blur-3xl" />
-                    <div class="absolute left-[34%] top-[6rem] h-[13rem] w-[13rem] rounded-full bg-promo-warm/45 blur-3xl" />
+                    <div class="absolute left-[-8rem] top-[-9rem] h-[21rem] w-[21rem] rounded-full bg-promo-warm/70 blur-3xl" />
+                    <div class="absolute right-[-5rem] top-[2rem] h-[24rem] w-[24rem] rounded-full bg-promo-surface-strong/70 blur-3xl" />
+                    <div class="absolute left-[34%] top-[6rem] h-[13rem] w-[13rem] rounded-full bg-promo-purple/60 blur-3xl" />
                 </div>
             </div>
         </div>
@@ -147,7 +147,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
                         <DropdownMenuContent
                             align="end"
-                            class="w-64 rounded-[22px] border-promo-line/80 bg-white p-2 shadow-[0_14px_32px_rgba(120,86,255,0.08)]"
+                            class="w-64 rounded-[22px] border-promo-line/80 bg-white p-2 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_8px_18px]"
                         >
                             <div class="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
                                 {{ t('marketing.language.label') }}
@@ -192,7 +192,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 ? dashboard()
                                 : onboardingCreate({ query: { plan: 'free' } })
                         "
-                        class="inline-flex items-center gap-2 rounded-full bg-promo-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(232,79,154,0.26)] transition hover:bg-promo-primary-strong"
+                        class="inline-flex items-center gap-2 rounded-full bg-promo-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[rgba(255,56,92,0.22)_0px_10px_22px] transition hover:bg-promo-primary-strong"
                     >
                         {{ authedUser ? t('marketing.actions.open_dashboard') : t('marketing.actions.get_started') }}
                         <ArrowRight class="size-4" />

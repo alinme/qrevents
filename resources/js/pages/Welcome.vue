@@ -2,8 +2,8 @@
 import { Link } from '@inertiajs/vue3';
 import { ArrowRight, BadgeCheck, BriefcaseBusiness, CirclePlay, MonitorPlay, QrCode } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
+import MarketingProductPreview from '@/components/marketing/MarketingProductPreview.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
-import MarketingVisualPlaceholder from '@/components/marketing/MarketingVisualPlaceholder.vue';
 import {
     Dialog,
     DialogContent,
@@ -51,25 +51,22 @@ const walkthrough = [
         step: t('marketing.shared.step', { number: '1' }),
         title: t('marketing.home.simple.steps.1.title'),
         body: t('marketing.home.simple.steps.1.body'),
-        label: 'Screenshot placeholder',
-        visualTitle: 'Add screenshot: create event screen',
-        visualDescription: 'Show the simplified event setup with title, date, plan, and short code information visible.',
+        variant: 'event-setup' as const,
+        caption: 'Plan, date, album code, wall link.',
     },
     {
         step: t('marketing.shared.step', { number: '2' }),
         title: t('marketing.home.simple.steps.2.title'),
         body: t('marketing.home.simple.steps.2.body'),
-        label: 'Short video placeholder',
-        visualTitle: 'Add 10s video: guest scans QR and opens album',
-        visualDescription: 'Show phone camera scan, the code fallback, and the upload page opening in one quick sequence.',
+        variant: 'guest-flow' as const,
+        caption: 'QR or short code. No app download.',
     },
     {
         step: t('marketing.shared.step', { number: '3' }),
         title: t('marketing.home.simple.steps.3.title'),
         body: t('marketing.home.simple.steps.3.body'),
-        label: 'Short video placeholder',
-        visualTitle: 'Add 10s video: upload appears on wall',
-        visualDescription: 'Show one guest upload and the same photo appearing on the live wall a moment later.',
+        variant: 'live-wall' as const,
+        caption: 'Uploads show up on the wall in seconds.',
     },
 ];
 
@@ -78,59 +75,22 @@ const visualExamples = [
         icon: QrCode,
         title: t('marketing.home.simple.examples.1.title'),
         body: t('marketing.home.simple.examples.1.body'),
-        label: 'Mobile screenshot placeholder',
-        visualTitle: 'Add screenshot: /album code entry',
-        visualDescription: 'Use a real phone screenshot of the PIN-style album access page with the album/wall switch.',
+        variant: 'album-access' as const,
+        caption: 'Short code entry on mobile.',
     },
     {
         icon: MonitorPlay,
         title: t('marketing.home.simple.examples.2.title'),
         body: t('marketing.home.simple.examples.2.body'),
-        label: 'TV browser placeholder',
-        visualTitle: 'Add screenshot: wall opened with short link',
-        visualDescription: 'Use a TV or laptop browser example showing the wall opened from the short wall URL.',
+        variant: 'live-wall' as const,
+        caption: 'TV-friendly live wall.',
     },
     {
         icon: BriefcaseBusiness,
         title: t('marketing.home.simple.examples.3.title'),
         body: t('marketing.home.simple.examples.3.body'),
-        label: 'Dashboard screenshot placeholder',
-        visualTitle: 'Add screenshot: business billing and event list',
-        visualDescription: 'Show balance, billing history, and event creation in one clean dashboard capture.',
-    },
-];
-
-const serviceUpdates = [
-    {
-        title: t('marketing.home.simple.updates.1.title'),
-        description: t('marketing.home.simple.updates.1.description'),
-    },
-    {
-        title: t('marketing.home.simple.updates.2.title'),
-        description: t('marketing.home.simple.updates.2.description'),
-    },
-    {
-        title: t('marketing.home.simple.updates.3.title'),
-        description: t('marketing.home.simple.updates.3.description'),
-    },
-];
-
-const faqItems = [
-    {
-        question: t('marketing.home.simple.faq.1.question'),
-        answer: t('marketing.home.simple.faq.1.answer'),
-    },
-    {
-        question: t('marketing.home.simple.faq.2.question'),
-        answer: t('marketing.home.simple.faq.2.answer'),
-    },
-    {
-        question: t('marketing.home.simple.faq.3.question'),
-        answer: t('marketing.home.simple.faq.3.answer'),
-    },
-    {
-        question: t('marketing.home.simple.faq.4.question'),
-        answer: t('marketing.home.simple.faq.4.answer'),
+        variant: 'business-dashboard' as const,
+        caption: 'Billing and events in one dashboard.',
     },
 ];
 
@@ -304,7 +264,7 @@ onMounted(() => {
             </DialogContent>
         </Dialog>
 
-        <section class="mx-auto grid max-w-7xl gap-12 px-4 pb-18 pt-10 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8 lg:pb-24 lg:pt-16">
+        <section class="mx-auto grid max-w-7xl gap-10 px-4 pb-18 pt-10 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:pb-24 lg:pt-16">
             <div class="max-w-2xl">
                 <p class="marketing-kicker inline-flex items-center gap-2">
                     <BadgeCheck class="size-4" />
@@ -334,21 +294,20 @@ onMounted(() => {
                     </a>
                 </div>
 
-                <div class="mt-8 divide-y divide-promo-line border-y border-promo-line">
+                <div class="mt-8 grid gap-3 sm:grid-cols-3">
                     <div
                         v-for="item in quickProof"
                         :key="item"
-                        class="py-3 text-sm font-medium text-promo-ink"
+                        class="rounded-[1.35rem] border border-promo-line bg-white px-4 py-4 text-sm font-medium text-promo-ink shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
                     >
                         {{ item }}
                     </div>
                 </div>
             </div>
 
-            <MarketingVisualPlaceholder
-                label="Hero video placeholder"
-                title="Add 12s overview video"
-                description="Show the full guest path: create event, scan QR or enter code, upload on mobile, then watch the photo appear on the live wall."
+            <MarketingProductPreview
+                variant="hero"
+                caption="Scan. Upload. Relive together."
                 aspect-class="aspect-[5/4] lg:aspect-[4/3]"
             />
         </section>
@@ -370,7 +329,7 @@ onMounted(() => {
                         <p class="marketing-kicker">
                             {{ item.step }}
                         </p>
-                        <h3 class="marketing-display mt-3 text-[2.2rem] sm:text-[2.6rem]">
+                        <h3 class="marketing-display mt-3 text-[2rem] sm:text-[2.4rem]">
                             {{ item.title }}
                         </h3>
                         <p class="marketing-copy mt-4">
@@ -378,11 +337,7 @@ onMounted(() => {
                         </p>
                     </div>
 
-                    <MarketingVisualPlaceholder
-                        :label="item.label"
-                        :title="item.visualTitle"
-                        :description="item.visualDescription"
-                    />
+                    <MarketingProductPreview :variant="item.variant" :caption="item.caption" />
                 </article>
             </div>
         </section>
@@ -409,10 +364,9 @@ onMounted(() => {
                         <p class="marketing-copy">
                             {{ item.body }}
                         </p>
-                        <MarketingVisualPlaceholder
-                            :label="item.label"
-                            :title="item.visualTitle"
-                            :description="item.visualDescription"
+                        <MarketingProductPreview
+                            :variant="item.variant"
+                            :caption="item.caption"
                             aspect-class="aspect-[4/3]"
                         />
                     </article>
@@ -427,53 +381,39 @@ onMounted(() => {
                 :description="t('marketing.home.simple.sections.updates.description')"
             />
 
-            <div class="mt-14 grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
-                <div class="divide-y divide-promo-line border-y border-promo-line">
-                    <article
-                        v-for="item in serviceUpdates"
-                        :key="item.title"
-                        class="py-5"
-                    >
+            <div class="mt-14 grid gap-8 lg:grid-cols-[0.84fr_1.16fr] lg:items-center">
+                <div class="space-y-4">
+                    <div class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]">
                         <h3 class="text-lg font-semibold text-promo-ink">
-                            {{ item.title }}
+                            {{ t('marketing.home.simple.updates.1.title') }}
                         </h3>
                         <p class="marketing-copy mt-2">
-                            {{ item.description }}
+                            {{ t('marketing.home.simple.updates.1.description') }}
                         </p>
-                    </article>
+                    </div>
+                    <div class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]">
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ t('marketing.home.simple.updates.2.title') }}
+                        </h3>
+                        <p class="marketing-copy mt-2">
+                            {{ t('marketing.home.simple.updates.2.description') }}
+                        </p>
+                    </div>
+                    <div class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]">
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ t('marketing.home.simple.updates.3.title') }}
+                        </h3>
+                        <p class="marketing-copy mt-2">
+                            {{ t('marketing.home.simple.updates.3.description') }}
+                        </p>
+                    </div>
                 </div>
 
-                <MarketingVisualPlaceholder
-                    label="Collage placeholder"
-                    title="Add 3 real screenshots in one frame"
-                    description="Use one clean collage here: album code entry, short wall link on TV, and business billing credits."
+                <MarketingProductPreview
+                    variant="story-collage"
+                    caption="Album code, guest post, live wall."
                     aspect-class="aspect-[5/4]"
                 />
-            </div>
-        </section>
-
-        <section id="faq" class="bg-white">
-            <div class="mx-auto max-w-5xl px-4 py-18 sm:px-6 lg:px-8">
-                <MarketingSectionHeading
-                    :eyebrow="t('marketing.home.simple.sections.faq.eyebrow')"
-                    :title="t('marketing.home.simple.sections.faq.title')"
-                    centered
-                />
-
-                <div class="mt-12 divide-y divide-promo-line border-y border-promo-line">
-                    <article
-                        v-for="item in faqItems"
-                        :key="item.question"
-                        class="grid gap-3 py-5 md:grid-cols-[0.9fr_1.1fr]"
-                    >
-                        <h3 class="text-base font-semibold text-promo-ink">
-                            {{ item.question }}
-                        </h3>
-                        <p class="text-sm leading-6 text-promo-muted">
-                            {{ item.answer }}
-                        </p>
-                    </article>
-                </div>
             </div>
         </section>
 
@@ -507,10 +447,9 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <MarketingVisualPlaceholder
-                    label="Final proof placeholder"
-                    title="Add one last comparison image"
-                    description="Show the homepage stack you want: product screenshot, guest mobile upload, and live wall on a TV."
+                <MarketingProductPreview
+                    variant="story-collage"
+                    caption="Everything guests need, at a glance."
                     aspect-class="aspect-[16/10]"
                 />
             </div>

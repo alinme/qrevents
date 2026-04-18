@@ -108,7 +108,8 @@
     body,
     html {
         --font-sans:
-            'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+            'Instrument Sans', 'Circular', -apple-system, BlinkMacSystemFont,
+            'Segoe UI', sans-serif,
             'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
             'Noto Color Emoji';
     }
@@ -116,43 +117,243 @@
 
 @layer components {
     .marketing-shell {
-        font-family: 'Montserrat', sans-serif;
+        font-family: var(--font-sans);
     }
 
     .marketing-kicker {
-        font-family: 'Cinzel', serif;
-        @apply text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-promo-primary;
+        @apply text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary;
     }
 
     .marketing-display {
-        font-family: 'Cormorant Garamond', serif;
-        @apply font-semibold leading-[0.94] tracking-[-0.04em] text-promo-ink;
+        @apply font-bold leading-[0.98] tracking-[-0.04em] text-promo-ink;
     }
 
     .marketing-copy {
         @apply text-[0.98rem] leading-7 text-promo-muted;
     }
 
-    .marketing-placeholder {
-        @apply flex h-full w-full items-center justify-center overflow-hidden rounded-[2rem] border border-promo-line bg-white px-6 py-6 text-center shadow-sm;
+    .marketing-preview {
+        @apply relative flex h-full w-full overflow-hidden rounded-[2rem] border border-promo-line bg-white p-4 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px,rgba(0,0,0,0.10)_0px_4px_8px];
+    }
+
+    .marketing-preview-caption {
+        @apply absolute bottom-4 left-4 right-4 rounded-full border border-promo-line bg-white/92 px-3 py-2 text-center text-[0.72rem] font-medium text-promo-muted backdrop-blur;
+    }
+
+    .marketing-preview-orb {
+        @apply absolute rounded-full blur-3xl;
+    }
+
+    .marketing-preview-orb-left {
+        @apply left-[-4rem] top-[-5rem] h-40 w-40 bg-promo-surface;
+    }
+
+    .marketing-preview-orb-right {
+        @apply bottom-[-6rem] right-[-3rem] h-48 w-48 bg-promo-warm;
+    }
+
+    .marketing-preview-grid {
+        @apply relative z-10 grid h-full w-full gap-4 lg:grid-cols-[1.1fr_0.72fr];
+    }
+
+    .marketing-preview-dual {
+        @apply grid h-full w-full items-center gap-4 sm:grid-cols-2;
+    }
+
+    .marketing-preview-card {
+        @apply rounded-[1.5rem] border border-promo-line bg-white p-4 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px];
+    }
+
+    .marketing-preview-card-header {
+        @apply flex items-center justify-between gap-3;
+    }
+
+    .marketing-preview-chip {
+        @apply inline-flex rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary;
+    }
+
+    .marketing-preview-muted {
+        @apply text-[0.7rem] font-medium uppercase tracking-[0.12em] text-promo-muted;
+    }
+
+    .marketing-preview-title {
+        @apply text-base font-semibold text-promo-ink sm:text-lg;
+    }
+
+    .marketing-preview-subtitle {
+        @apply text-sm leading-6 text-promo-muted;
+    }
+
+    .marketing-preview-wall-card {
+        @apply flex min-h-[21rem] flex-col justify-between bg-[linear-gradient(180deg,#fff_0%,#fff8f8_100%)];
+    }
+
+    .marketing-preview-wall-media {
+        @apply grid flex-1 grid-cols-[1.25fr_0.9fr] gap-3 py-4;
+    }
+
+    .marketing-preview-wall-photo {
+        @apply rounded-[1.25rem] bg-[linear-gradient(135deg,#f7d7da_0%,#f2f2f2_100%)];
+    }
+
+    .marketing-preview-wall-photo-main {
+        @apply min-h-[11rem];
         background-image:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 246, 251, 0.96)),
-            radial-gradient(circle at top left, rgba(232, 79, 154, 0.08), transparent 55%),
-            radial-gradient(circle at bottom right, rgba(196, 150, 88, 0.08), transparent 50%);
+            linear-gradient(180deg, rgba(34, 34, 34, 0.03), rgba(34, 34, 34, 0.16)),
+            radial-gradient(circle at 20% 20%, rgba(255, 56, 92, 0.28), transparent 35%),
+            linear-gradient(135deg, #f6d8d1 0%, #f7f3ef 48%, #efe6dd 100%);
     }
 
-    .marketing-placeholder-label {
-        font-family: 'Cinzel', serif;
-        @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary;
+    .marketing-preview-wall-photo-side {
+        @apply min-h-[11rem];
+        background-image:
+            linear-gradient(180deg, rgba(34, 34, 34, 0.03), rgba(34, 34, 34, 0.12)),
+            radial-gradient(circle at 75% 30%, rgba(255, 56, 92, 0.22), transparent 30%),
+            linear-gradient(135deg, #ece7e1 0%, #fff 100%);
     }
 
-    .marketing-placeholder-title {
-        font-family: 'Cormorant Garamond', serif;
-        @apply mt-3 text-[1.7rem] font-semibold leading-[0.95] tracking-[-0.03em] text-promo-ink;
+    .marketing-preview-wall-footer {
+        @apply flex items-end justify-between gap-4 border-t border-promo-line pt-4;
     }
 
-    .marketing-placeholder-copy {
-        @apply mt-3 max-w-sm text-sm leading-6 text-promo-muted;
+    .marketing-preview-phone {
+        @apply relative mx-auto flex h-full w-full max-w-[18rem] items-center justify-center rounded-[2rem] border border-[#d8d8d8] bg-[#1a1a1a] p-2.5 shadow-[rgba(0,0,0,0.16)_0px_18px_36px];
+    }
+
+    .marketing-preview-phone-compact {
+        @apply max-w-[15rem];
+    }
+
+    .marketing-preview-phone-notch {
+        @apply absolute left-1/2 top-2.5 h-4 w-24 -translate-x-1/2 rounded-full bg-black/80;
+    }
+
+    .marketing-preview-phone-screen {
+        @apply flex h-full min-h-[20rem] w-full flex-col rounded-[1.55rem] bg-[linear-gradient(180deg,#fff_0%,#fff6f5_100%)] p-4 pt-8;
+    }
+
+    .marketing-preview-upload-sheet {
+        @apply mt-4 flex flex-1 flex-col rounded-[1.4rem] border border-promo-line bg-white p-4;
+    }
+
+    .marketing-preview-code-row {
+        @apply mt-4 grid grid-cols-4 gap-2;
+    }
+
+    .marketing-preview-code-row span {
+        @apply flex h-12 items-center justify-center rounded-[1rem] border border-promo-line bg-promo-surface text-lg font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-code-row-compact span {
+        @apply h-10 text-base;
+    }
+
+    .marketing-preview-photo-stack {
+        @apply relative mt-4 flex flex-1 items-end;
+    }
+
+    .marketing-preview-photo-thumb {
+        @apply rounded-[1.2rem] border border-white/90 shadow-[rgba(0,0,0,0.08)_0px_12px_24px];
+        background-image:
+            linear-gradient(180deg, rgba(34, 34, 34, 0.02), rgba(34, 34, 34, 0.14)),
+            radial-gradient(circle at 30% 20%, rgba(255, 56, 92, 0.24), transparent 28%),
+            linear-gradient(135deg, #f2d4cf 0%, #fff 100%);
+    }
+
+    .marketing-preview-photo-thumb-lg {
+        @apply h-32 w-full;
+    }
+
+    .marketing-preview-photo-thumb-sm {
+        @apply absolute -bottom-3 right-3 h-16 w-16 rotate-[8deg];
+    }
+
+    .marketing-preview-upload-actions {
+        @apply mt-4 flex flex-wrap gap-2;
+    }
+
+    .marketing-preview-action-pill {
+        @apply inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-3 py-2 text-xs font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-mini-card {
+        @apply mt-4 inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-3 py-2 text-xs font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-mini-copy {
+        @apply mt-4 text-sm leading-6 text-promo-muted;
+    }
+
+    .marketing-preview-list {
+        @apply mt-5 space-y-3;
+    }
+
+    .marketing-preview-row {
+        @apply flex items-center justify-between gap-4 rounded-[1.15rem] border border-promo-line bg-promo-surface/65 px-4 py-3;
+    }
+
+    .marketing-preview-label {
+        @apply text-xs font-semibold uppercase tracking-[0.14em] text-promo-muted;
+    }
+
+    .marketing-preview-value {
+        @apply text-sm font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-cta-row {
+        @apply mt-5 flex flex-wrap gap-3;
+    }
+
+    .marketing-preview-button-solid {
+        @apply inline-flex rounded-full bg-promo-primary px-4 py-2.5 text-sm font-semibold text-white;
+    }
+
+    .marketing-preview-button-ghost {
+        @apply inline-flex rounded-full border border-promo-line bg-white px-4 py-2.5 text-sm font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-tv-frame {
+        @apply mt-4 rounded-[1.5rem] border border-[#2d2d2d] bg-[#151515] p-3 shadow-[rgba(0,0,0,0.18)_0px_12px_24px];
+    }
+
+    .marketing-preview-tv-bar {
+        @apply mt-3 flex items-center justify-between rounded-[1rem] bg-white px-3 py-2 text-xs font-semibold text-promo-ink;
+    }
+
+    .marketing-preview-dashboard-grid {
+        @apply mt-4 grid gap-3;
+    }
+
+    .marketing-preview-stat {
+        @apply rounded-[1.2rem] border border-promo-line bg-promo-surface px-4 py-4;
+    }
+
+    .marketing-preview-dashboard-list {
+        @apply mt-1 overflow-hidden rounded-[1.2rem] border border-promo-line bg-white;
+    }
+
+    .marketing-preview-dashboard-item {
+        @apply flex items-center justify-between gap-3 border-b border-promo-line px-4 py-3 text-sm text-promo-ink last:border-b-0;
+    }
+
+    .marketing-preview-billing-balance {
+        @apply mt-4 rounded-[1.3rem] border border-promo-line bg-[linear-gradient(135deg,#fff_0%,#fff4f4_100%)] px-4 py-5;
+    }
+
+    .marketing-preview-billing-balance strong {
+        @apply mt-2 block text-2xl font-bold tracking-[-0.03em] text-promo-ink;
+    }
+
+    .marketing-preview-billing-list {
+        @apply mt-4 overflow-hidden rounded-[1.2rem] border border-promo-line bg-white;
+    }
+
+    .marketing-preview-collage {
+        @apply grid h-full w-full gap-3 sm:grid-cols-2;
+    }
+
+    .marketing-preview-collage-card:last-child {
+        @apply sm:col-span-2;
     }
 
     .dashboard-page {
@@ -215,16 +416,16 @@
     --brand-accent-soft: oklch(0.9 0.03 67);
     --brand-highlight: oklch(0.83 0.055 73);
     --brand-inverse: oklch(0.985 0.006 78);
-    --promo-bg: oklch(0.985 0.014 338);
-    --promo-surface: oklch(0.973 0.028 340);
-    --promo-surface-strong: oklch(0.944 0.05 320);
-    --promo-ink: oklch(0.24 0.03 312);
-    --promo-muted: oklch(0.48 0.019 308);
-    --promo-line: oklch(0.91 0.022 332);
-    --promo-primary: oklch(0.67 0.225 353);
-    --promo-primary-strong: oklch(0.6 0.24 349);
-    --promo-purple: oklch(0.86 0.07 308);
-    --promo-warm: oklch(0.965 0.03 26);
+    --promo-bg: #ffffff;
+    --promo-surface: #f7f7f7;
+    --promo-surface-strong: #f2f2f2;
+    --promo-ink: #222222;
+    --promo-muted: #6a6a6a;
+    --promo-line: #ebebeb;
+    --promo-primary: #ff385c;
+    --promo-primary-strong: #e00b41;
+    --promo-purple: #f3eefb;
+    --promo-warm: #fff2ec;
     --background: hsl(0 0% 100%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
