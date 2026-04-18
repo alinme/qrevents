@@ -1,0 +1,191 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - 'tests/**'
+      - 'AGENTS.md'
+      - 'DEPLOY_CHECKLIST.md'
+      - 'START.md'
+      - 'DESIGN.md'
+      - '.agents/**'
+      - '.augment/**'
+      - 'skills-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PATH: /home/eventsmart/htdocs/eventsmart.app
+      LIVE_URL: https://eventsmart.app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect deploy scope
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+          ZERO_SHA="0000000000000000000000000000000000000000"
+
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "$ZERO_SHA" ]; then
+            CHANGED_FILES="$(git show --pretty='' --name-only "$AFTER")"
+          else
+            CHANGED_FILES="$(git diff --name-only "$BEFORE" "$AFTER")"
+          fi
+
+          echo "Changed files:"
+          printf '%s\n' "$CHANGED_FILES"
+
+          has_match() {
+            printf '%s\n' "$CHANGED_FILES" | grep -Eq "$1"
+          }
+
+          frontend_changed=false
+          backend_changed=false
+          queue_changed=false
+
+          if has_match '^(resources/|routes/|app/Http/Controllers/|package(-lock)?\.json$|vite\.config\.[^/]+$|tailwind\.config\.[^/]+$|postcss\.config\.[^/]+$)'; then
+            frontend_changed=true
+          fi
+
+          if has_match '^(app/|bootstrap/|config/|database/|lang/|routes/|composer\.(json|lock)$)'; then
+            backend_changed=true
+          fi
+
+          if has_match '^(app/(Jobs|Listeners|Notifications|Console)/|routes/console\.php$|bootstrap/app\.php$)'; then
+            queue_changed=true
+          fi
+
+          {
+            echo "frontend=$frontend_changed"
+            echo "backend=$backend_changed"
+            echo "queue=$queue_changed"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          if [ -n "${{ secrets.DEPLOY_KNOWN_HOSTS }}" ]; then
+            printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "$DEPLOY_HOST" > ~/.ssh/known_hosts
+          fi
+
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to production
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PORT="${DEPLOY_PORT:-22}"
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p "$PORT" \
+            -o IdentitiesOnly=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "GITHUB_SHA='${{ github.sha }}' DEPLOY_PATH='$DEPLOY_PATH' FRONTEND_CHANGED='${{ steps.scope.outputs.frontend }}' BACKEND_CHANGED='${{ steps.scope.outputs.backend }}' QUEUE_CHANGED='${{ steps.scope.outputs.queue }}' bash -se" <<'REMOTE'
+          set -euo pipefail
+
+          cd "$DEPLOY_PATH"
+
+          STASH_CREATED=0
+          if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+            git stash push --include-untracked -m "github-actions-pre-deploy-${GITHUB_SHA:0:7}"
+            STASH_CREATED=1
+          fi
+
+          git pull origin main
+
+          if [ "$STASH_CREATED" -eq 1 ]; then
+            git stash pop
+          fi
+
+          if [ "$BACKEND_CHANGED" = "true" ]; then
+            composer install --no-dev --optimize-autoloader --no-interaction
+          fi
+
+          if [ "$FRONTEND_CHANGED" = "true" ]; then
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            npm run build
+          fi
+
+          if [ "$BACKEND_CHANGED" = "true" ]; then
+            php artisan migrate --force
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+          fi
+
+          if [ "$QUEUE_CHANGED" = "true" ]; then
+            php artisan queue:restart
+            pm2 restart qrevents-queue
+            pm2 status qrevents-queue
+          fi
+
+          printf 'REMOTE_HEAD=%s\n' "$(git rev-parse HEAD)"
+          REMOTE
+
+      - name: Verify deployed commit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PORT="${DEPLOY_PORT:-22}"
+
+          REMOTE_HEAD="$(
+            ssh \
+              -i ~/.ssh/deploy_key \
+              -p "$PORT" \
+              -o IdentitiesOnly=yes \
+              "$DEPLOY_USER@$DEPLOY_HOST" \
+              "cd '$DEPLOY_PATH' && git rev-parse HEAD"
+          )"
+
+          echo "Remote HEAD: $REMOTE_HEAD"
+          test "$REMOTE_HEAD" = "${{ github.sha }}"
+
+      - name: Verify public site
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl -fsSIL "$LIVE_URL" | sed -n '1,12p'
