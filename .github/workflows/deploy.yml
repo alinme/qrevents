@@ -70,6 +70,15 @@ jobs:
           migrations_changed=false
           queue_changed=false
 
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            frontend_build_changed=true
+            frontend_dependencies_changed=true
+            backend_changed=true
+            backend_dependencies_changed=true
+            migrations_changed=true
+            queue_changed=true
+          fi
+
           if has_match '^(resources/|routes/|app/Http/Controllers/|vite\.config\.[^/]+$|tailwind\.config\.[^/]+$|postcss\.config\.[^/]+$)'; then
             frontend_build_changed=true
           fi
