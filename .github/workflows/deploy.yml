@@ -157,15 +157,24 @@ jobs:
           cd "$DEPLOY_PATH"
 
           STASH_CREATED=0
+          STASH_REF=""
           if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
             git stash push --include-untracked -m "github-actions-pre-deploy-${GITHUB_SHA:0:7}"
             STASH_CREATED=1
+            STASH_REF="$(git stash list --format='%gd' -n 1)"
           fi
 
           git pull origin main
 
           if [ "$STASH_CREATED" -eq 1 ]; then
-            git stash pop
+            if git stash pop "$STASH_REF"; then
+              echo "Restored server-local generated drift"
+            else
+              echo "Skipping conflicting server-local generated drift in resources/js/actions and resources/js/routes"
+              git restore --source=HEAD --staged --worktree resources/js/actions resources/js/routes || true
+              git clean -fd -- resources/js/actions resources/js/routes || true
+              git stash drop "$STASH_REF" || true
+            fi
           fi
 
           if [ "$BACKEND_DEPENDENCIES_CHANGED" = "true" ] || [ ! -f vendor/autoload.php ]; then
