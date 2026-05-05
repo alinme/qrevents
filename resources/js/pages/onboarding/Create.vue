@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { businesses, home } from '@/routes';
+import { home } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
 type EventSubEventOption = {
@@ -224,7 +224,7 @@ const missingBusinessCredits = computed(() =>
 const remainingBusinessCredits = computed(() =>
     Math.max(businessWalletCredits.value - selectedBusinessPlanCost.value, 0),
 );
-const businessTopUpHref = computed(() => props.businessTopUpUrl ?? businesses().url);
+const businessTopUpHref = computed(() => props.businessTopUpUrl ?? home().url);
 
 const selectedSubEventKeys = computed(() => new Set(form.sub_events.map((subEvent) => subEvent.key)));
 

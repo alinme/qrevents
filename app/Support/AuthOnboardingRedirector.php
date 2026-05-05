@@ -14,14 +14,8 @@ class AuthOnboardingRedirector
             ->latest('id')
             ->first();
 
-        if ($user->isBusinessAccount() && ! $user->hasCompletedBusinessOnboarding()) {
-            return to_route('dashboard.business.onboarding');
-        }
-
         if ($latestOwnedEvent === null && ! $this->hasActiveCollaboratorEvent($user)) {
-            return $user->isBusinessAccount()
-                ? to_route('dashboard.business')
-                : to_route('onboarding.create');
+            return to_route('onboarding.create');
         }
 
         return null;
@@ -29,17 +23,11 @@ class AuthOnboardingRedirector
 
     public function fallbackPathFor(User $user): string
     {
-        if ($user->canAccessAdmin()) {
-            return route('admin.overview', absolute: false);
-        }
-
         $dashboardRedirect = $this->dashboardRedirect($user);
 
         return $dashboardRedirect !== null
             ? $dashboardRedirect->getTargetUrl()
-            : ($user->isBusinessAccount()
-                ? route('dashboard.business', absolute: false)
-                : route('dashboard', absolute: false));
+            : route('dashboard', absolute: false);
     }
 
     private function hasActiveCollaboratorEvent(User $user): bool

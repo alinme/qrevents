@@ -81,388 +81,8 @@ indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 index.form = indexForm
 
 /**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-export const business = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: business.url(options),
-    method: 'get',
-})
-
-business.definition = {
-    methods: ["get","head"],
-    url: '/dashboard/business',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-business.url = (options?: RouteQueryOptions) => {
-    return business.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: business.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: business.url(options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-const businessForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: business.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-businessForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: business.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::business
-* @see app/Http/Controllers/DashboardController.php:86
-* @route '/dashboard/business'
-*/
-businessForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: business.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-business.form = businessForm
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-export const businessEvents = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: businessEvents.url(options),
-    method: 'get',
-})
-
-businessEvents.definition = {
-    methods: ["get","head"],
-    url: '/dashboard/business/events',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-businessEvents.url = (options?: RouteQueryOptions) => {
-    return businessEvents.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-businessEvents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: businessEvents.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-businessEvents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: businessEvents.url(options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-const businessEventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: businessEvents.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-businessEventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: businessEvents.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::businessEvents
-* @see app/Http/Controllers/DashboardController.php:134
-* @route '/dashboard/business/events'
-*/
-businessEventsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: businessEvents.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-businessEvents.form = businessEventsForm
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-export const walletHistory = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: walletHistory.url(options),
-    method: 'get',
-})
-
-walletHistory.definition = {
-    methods: ["get","head"],
-    url: '/dashboard/business/wallet',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-walletHistory.url = (options?: RouteQueryOptions) => {
-    return walletHistory.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-walletHistory.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: walletHistory.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-walletHistory.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: walletHistory.url(options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-const walletHistoryForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: walletHistory.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-walletHistoryForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: walletHistory.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::walletHistory
-* @see app/Http/Controllers/DashboardController.php:172
-* @route '/dashboard/business/wallet'
-*/
-walletHistoryForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: walletHistory.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-walletHistory.form = walletHistoryForm
-
-/**
-* @see \App\Http\Controllers\DashboardController::startFilteredExports
-* @see app/Http/Controllers/DashboardController.php:233
-* @route '/dashboard/business/actions/start-exports'
-*/
-export const startFilteredExports = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
-    url: startFilteredExports.url(options),
-    method: 'post',
-})
-
-startFilteredExports.definition = {
-    methods: ["post"],
-    url: '/dashboard/business/actions/start-exports',
-} satisfies RouteDefinition<["post"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::startFilteredExports
-* @see app/Http/Controllers/DashboardController.php:233
-* @route '/dashboard/business/actions/start-exports'
-*/
-startFilteredExports.url = (options?: RouteQueryOptions) => {
-    return startFilteredExports.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::startFilteredExports
-* @see app/Http/Controllers/DashboardController.php:233
-* @route '/dashboard/business/actions/start-exports'
-*/
-startFilteredExports.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
-    url: startFilteredExports.url(options),
-    method: 'post',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::startFilteredExports
-* @see app/Http/Controllers/DashboardController.php:233
-* @route '/dashboard/business/actions/start-exports'
-*/
-const startFilteredExportsForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: startFilteredExports.url(options),
-    method: 'post',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::startFilteredExports
-* @see app/Http/Controllers/DashboardController.php:233
-* @route '/dashboard/business/actions/start-exports'
-*/
-startFilteredExportsForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: startFilteredExports.url(options),
-    method: 'post',
-})
-
-startFilteredExports.form = startFilteredExportsForm
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-export const downloadBillingQueue = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: downloadBillingQueue.url(options),
-    method: 'get',
-})
-
-downloadBillingQueue.definition = {
-    methods: ["get","head"],
-    url: '/dashboard/business/actions/billing-queue',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-downloadBillingQueue.url = (options?: RouteQueryOptions) => {
-    return downloadBillingQueue.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-downloadBillingQueue.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: downloadBillingQueue.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-downloadBillingQueue.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: downloadBillingQueue.url(options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-const downloadBillingQueueForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: downloadBillingQueue.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-downloadBillingQueueForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: downloadBillingQueue.url(options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\DashboardController::downloadBillingQueue
-* @see app/Http/Controllers/DashboardController.php:309
-* @route '/dashboard/business/actions/billing-queue'
-*/
-downloadBillingQueueForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: downloadBillingQueue.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-downloadBillingQueue.form = downloadBillingQueueForm
-
-/**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 export const ownedEvents = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -477,7 +97,7 @@ ownedEvents.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 ownedEvents.url = (options?: RouteQueryOptions) => {
@@ -486,7 +106,7 @@ ownedEvents.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 ownedEvents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -496,7 +116,7 @@ ownedEvents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 ownedEvents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -506,7 +126,7 @@ ownedEvents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 const ownedEventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -516,7 +136,7 @@ const ownedEventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 ownedEventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -526,7 +146,7 @@ ownedEventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> 
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:367
+* @see app/Http/Controllers/DashboardController.php:359
 * @route '/dashboard/events'
 */
 ownedEventsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -543,7 +163,7 @@ ownedEvents.form = ownedEventsForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 export const recentActivity = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -558,7 +178,7 @@ recentActivity.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 recentActivity.url = (options?: RouteQueryOptions) => {
@@ -567,7 +187,7 @@ recentActivity.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 recentActivity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -577,7 +197,7 @@ recentActivity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 recentActivity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -587,7 +207,7 @@ recentActivity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 const recentActivityForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -597,7 +217,7 @@ const recentActivityForm = (options?: RouteQueryOptions): RouteFormDefinition<'g
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 recentActivityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -607,7 +227,7 @@ recentActivityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:376
+* @see app/Http/Controllers/DashboardController.php:364
 * @route '/dashboard/activity'
 */
 recentActivityForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -622,6 +242,6 @@ recentActivityForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'ge
 
 recentActivity.form = recentActivityForm
 
-const DashboardController = { index, business, businessEvents, walletHistory, startFilteredExports, downloadBillingQueue, ownedEvents, recentActivity }
+const DashboardController = { index, ownedEvents, recentActivity }
 
 export default DashboardController

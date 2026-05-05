@@ -50,9 +50,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'canRegister' => Features::enabled(Features::registration()),
-            'businessRegisterUrl' => Features::enabled(Features::registration())
-                ? route('register.business')
-                : null,
+            'businessRegisterUrl' => null,
             'status' => $request->session()->get('status'),
             ...$this->socialAuthViewProps($request, 'login'),
         ]));
@@ -72,7 +70,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/Register', [
             'registrationMode' => 'consumer',
-            'businessRegisterUrl' => route('register.business'),
+            'businessRegisterUrl' => null,
             ...$this->socialAuthViewProps($request, 'register'),
         ]));
 

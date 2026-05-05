@@ -1,12 +1,8 @@
 <?php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventOnboardingController;
-use App\Http\Controllers\MarketingController;
-use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -15,32 +11,19 @@ use Laravel\Fortify\Features;
 
 Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
-    'pwaLaunch' => false,
 ])->name('home');
 
 Route::inertia('/launch', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
-    'pwaLaunch' => true,
 ])->name('launch');
-
-Route::get('/pricing', [MarketingController::class, 'pricing'])->name('pricing');
-
-Route::inertia('/weddings', 'Weddings', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('weddings');
-
-Route::get('/businesses', [MarketingController::class, 'businesses'])->name('businesses');
 
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
-Route::middleware('guest')->get('register/business', [RegistrationController::class, 'business'])->name('register.business');
 
 Route::get('onboarding', [EventOnboardingController::class, 'create'])->name('onboarding.create');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('onboarding', [EventOnboardingController::class, 'store'])->name('onboarding.store');
-    Route::get('dashboard/business/events/create', [EventOnboardingController::class, 'createBusiness'])->name('dashboard.business.events.create');
-    Route::post('dashboard/business/events', [EventOnboardingController::class, 'storeBusiness'])->name('dashboard.business.events.store');
     Route::get('onboarding/{event}/creating', [EventOnboardingController::class, 'creating'])->name('onboarding.creating');
     Route::get('onboarding/{event}/photos', [EventOnboardingController::class, 'photos'])->name('onboarding.photos');
     Route::get('onboarding/{event}/ready', [EventOnboardingController::class, 'ready'])->name('onboarding.ready');
@@ -48,46 +31,12 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('dashboard/business', [DashboardController::class, 'business'])->name('dashboard.business');
-    Route::get('dashboard/business/events', [DashboardController::class, 'businessEvents'])->name('dashboard.business.events.index');
-    Route::post('dashboard/business/activate', [BusinessController::class, 'activate'])->name('dashboard.business.activate');
-    Route::get('dashboard/business/onboarding', [BusinessController::class, 'onboarding'])->name('dashboard.business.onboarding');
-    Route::post('dashboard/business/onboarding/cancel', [BusinessController::class, 'cancelOnboarding'])->name('dashboard.business.onboarding.cancel');
-    Route::post('dashboard/business/onboarding', [BusinessController::class, 'storeOnboarding'])->name('dashboard.business.onboarding.store');
-    Route::get('dashboard/business/wallet', [DashboardController::class, 'walletHistory'])->name('dashboard.business.wallet.history');
-    Route::post('dashboard/business/wallet/checkout', [BusinessController::class, 'createWalletCheckout'])->name('dashboard.business.wallet.checkout');
-    Route::post('dashboard/business/actions/start-exports', [DashboardController::class, 'startFilteredExports'])->name('dashboard.business.exports.start');
-    Route::get('dashboard/business/actions/billing-queue', [DashboardController::class, 'downloadBillingQueue'])->name('dashboard.business.billing-queue');
     Route::get('dashboard/events', [DashboardController::class, 'ownedEvents'])->name('dashboard.events');
     Route::get('dashboard/activity', [DashboardController::class, 'recentActivity'])->name('dashboard.activity');
-    Route::get('admin', [AdminController::class, 'index'])->name('admin.overview');
-    Route::get('admin/users', [AdminController::class, 'users'])->name('admin.users');
-    Route::get('admin/events', [AdminController::class, 'events'])->name('admin.events');
-    Route::get('admin/plans', [AdminController::class, 'plans'])->name('admin.plans');
-    Route::get('admin/billing', [AdminController::class, 'billing'])->name('admin.billing');
-    Route::get('admin/cleanup', [AdminController::class, 'cleanup'])->name('admin.cleanup');
-    Route::post('admin/plans', [AdminController::class, 'storePlan'])->name('admin.plans.store');
-    Route::patch('admin/plans/{plan}', [AdminController::class, 'updatePlan'])->name('admin.plans.update');
-    Route::post('admin/events/{event}/cleanup-review', [AdminController::class, 'updateCleanupReview'])->name('admin.events.cleanup-review');
-    Route::post('admin/events/{event}/cleanup', [AdminController::class, 'cleanupEvent'])->name('admin.events.cleanup');
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('events/{event}/print-pack', [EventController::class, 'printPack'])->name('events.print-pack');
     Route::get('events/{event}/print-pack/preview', [EventController::class, 'printPackPreview'])->name('events.print-pack.preview');
-    Route::get('events/{event}/invite-studio', [EventController::class, 'inviteStudio'])->name('events.invite-studio');
-    Route::get('events/{event}/invite-studio/preview', [EventController::class, 'inviteStudioPreview'])->name('events.invite-studio.preview');
-    Route::get('events/{event}/guests', [EventController::class, 'guests'])->name('events.guests');
-    Route::get('events/{event}/guests/report', [EventController::class, 'guestReport'])->name('events.guests.report');
-    Route::post('events/{event}/guests', [EventController::class, 'storeGuestParty'])->name('events.guests.store');
-    Route::post('events/{event}/guests/import', [EventController::class, 'importGuestParties'])->name('events.guests.import');
-    Route::get('events/{event}/guests/export', [EventController::class, 'exportGuestLedger'])->name('events.guests.export');
-    Route::post('events/{event}/guests/invitations/bulk-update', [EventController::class, 'bulkUpdateGuestInvitations'])->name('events.guests.invitations.bulk-update');
-    Route::patch('events/{event}/guests/invitation-settings', [EventController::class, 'updateInvitationSettings'])->name('events.guests.invitation-settings.update');
-    Route::patch('events/{event}/guests/{guestParty}', [EventController::class, 'updateGuestParty'])->name('events.guests.update');
-    Route::delete('events/{event}/guests/{guestParty}', [EventController::class, 'destroyGuestParty'])->name('events.guests.destroy');
-    Route::post('events/{event}/tables', [EventController::class, 'storeEventTable'])->name('events.tables.store');
-    Route::patch('events/{event}/tables/{eventTable}', [EventController::class, 'updateEventTable'])->name('events.tables.update');
-    Route::delete('events/{event}/tables/{eventTable}', [EventController::class, 'destroyEventTable'])->name('events.tables.destroy');
     Route::get('events/{event}/media', [EventController::class, 'media'])->name('events.media');
     Route::post('events/{event}/exports/media', [EventController::class, 'startMediaExport'])->name('events.exports.media.start');
     Route::get('events/{event}/exports/media/download', [EventController::class, 'downloadMediaExport'])->name('events.exports.media.download');
@@ -100,38 +49,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('events/{event}/settings', [EventController::class, 'updateSettings'])->name('events.settings.update');
     Route::patch('events/{event}/billing', [EventController::class, 'updateBilling'])->name('events.billing.update');
     Route::post('events/{event}/billing/checkout', [EventController::class, 'createBillingCheckout'])->name('events.billing.checkout');
-    Route::post('events/{event}/collaborators', [EventController::class, 'storeCollaborator'])->name('events.collaborators.store');
 });
 Route::post('stripe/webhook', StripeWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('stripe.webhook');
-Route::get('collaborator-invites/{collaborator}/accept', [EventController::class, 'acceptCollaboratorInvite'])
-    ->middleware(['signed'])
-    ->name('events.collaborators.accept');
-Route::post('collaborator-invites/{collaborator}/complete-register', [EventController::class, 'completeCollaboratorInviteRegistration'])
-    ->middleware(['signed'])
-    ->name('events.collaborators.complete-register');
-Route::post('collaborator-invites/{collaborator}/complete-login', [EventController::class, 'completeCollaboratorInviteLogin'])
-    ->middleware(['signed'])
-    ->name('events.collaborators.complete-login');
-Route::get('invite/{token}', [EventController::class, 'guestInvitation'])
-    ->middleware('throttle:public-album-read')
-    ->name('events.guests.invitation.show');
-Route::post('invite/{token}', [EventController::class, 'respondToGuestInvitation'])
-    ->middleware('throttle:public-album-write')
-    ->name('events.guests.invitation.respond');
-Route::get('invite/public/{token}', [EventController::class, 'publicInvitation'])
-    ->middleware('throttle:public-album-read')
-    ->name('events.guests.public-invitation.show');
-Route::post('invite/public/{token}', [EventController::class, 'respondToPublicInvitation'])
-    ->middleware('throttle:public-album-write')
-    ->name('events.guests.public-invitation.respond');
-Route::get('guest-list/{shareToken}', [EventController::class, 'publicGuestList'])
-    ->middleware('throttle:public-album-read')
-    ->name('events.guests.public-list.show');
-Route::patch('guest-list/{shareToken}/{guestParty}', [EventController::class, 'updatePublicGuestListAttendance'])
-    ->middleware('throttle:public-album-write')
-    ->name('events.guests.public-list.update');
 Route::get('album', [EventController::class, 'albumAccess'])
     ->middleware('throttle:public-album-read')
     ->name('events.album.access.show');

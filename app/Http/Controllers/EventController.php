@@ -2434,9 +2434,8 @@ class EventController extends Controller
      */
     private function eventProps(Request $request, Event $event): array
     {
-        $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
+        $event->loadMissing(['user:id,email', 'plan']);
         $albumUrl = $this->publicAlbumUrl($event);
-        $publicInvitationUrl = route('events.guests.public-invitation.show', $this->ensurePublicInvitationToken($event));
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
@@ -2483,25 +2482,6 @@ class EventController extends Controller
         if (! is_string($albumPermission) || ! in_array($albumPermission, ['view_upload', 'view_only', 'upload_only'], true)) {
             $albumPermission = $event->album_public ? 'view_upload' : 'upload_only';
         }
-
-        $ownerEmail = (string) ($event->user?->email ?? '');
-        $collaborators = [
-            [
-                'id' => "owner-{$event->id}",
-                'email' => $ownerEmail,
-                'role' => 'owner',
-                'status' => 'active',
-            ],
-            ...$event->collaborators
-                ->sortByDesc('id')
-                ->map(fn (EventCollaborator $collaborator): array => [
-                    'id' => $collaborator->id,
-                    'email' => $collaborator->email,
-                    'role' => $collaborator->role,
-                    'status' => $this->normalizeCollaboratorStatus($collaborator->status),
-                ])
-                ->all(),
-        ];
 
         return [
             'currentEvent' => [
@@ -2575,7 +2555,7 @@ class EventController extends Controller
                     'failedAt' => $event->media_export_failed_at?->toIso8601String(),
                     'error' => $event->media_export_error,
                 ],
-                'collaborators' => $collaborators,
+                'collaborators' => [],
                 'settings' => [
                     'displayLanguage' => $branding['display_language'] ?? 'automatic',
                     'hideSideImages' => (bool) ($branding['hide_side_images'] ?? false),
@@ -2612,24 +2592,13 @@ class EventController extends Controller
                 'dashboard' => route('events.show', $event),
                 'printPack' => route('events.print-pack', $event),
                 'printPackPreview' => route('events.print-pack.preview', $event),
-                'inviteStudio' => route('events.invite-studio', $event),
-                'inviteStudioPreview' => route('events.invite-studio.preview', $event),
-                'guests' => route('events.guests', $event),
-                'guestReport' => route('events.guests.report', $event),
                 'media' => route('events.media', $event),
                 'mediaExportStart' => route('events.exports.media.start', $event),
                 'mediaExportDownload' => route('events.exports.media.download', $event),
                 'settings' => route('events.settings', $event),
                 'settingsUpdate' => route('events.settings.update', $event),
-                'guestPartiesStore' => route('events.guests.store', $event),
-                'guestPartiesImport' => route('events.guests.import', $event),
-                'guestInvitationsBulkUpdate' => route('events.guests.invitations.bulk-update', $event),
-                'invitationSettingsUpdate' => route('events.guests.invitation-settings.update', $event),
-                'tablesStore' => route('events.tables.store', $event),
-                'publicGuestList' => route('events.guests.public-list.show', $event->share_token),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
-                'collaboratorsStore' => route('events.collaborators.store', $event),
                 'album' => $albumUrl,
                 'albumShortUrl' => $publicShortLinks['albumShortUrl'],
                 'albumAccessCode' => $event->publicAlbumCode(),
@@ -2637,17 +2606,13 @@ class EventController extends Controller
                 'albumEntryShortcut' => 'https://is.gd/evsmrt',
                 'wall' => route('events.wall', $event->publicAlbumCode()),
                 'wallShortUrl' => $publicShortLinks['wallShortUrl'],
-                'invitation' => $publicInvitationUrl,
                 'albumQrDataUrl' => $this->createQrCodeDataUrl($albumUrl),
                 'wallQrDataUrl' => $this->createQrCodeDataUrl(route('events.wall', $event->publicAlbumCode())),
-                'invitationQrDataUrl' => $this->createQrCodeDataUrl($publicInvitationUrl),
             ],
             'availableBillingPlans' => $this->billingPlanOptions(),
             'eventNavigation' => array_values(array_filter([
                 ['title' => __('app.nav.workspace'), 'href' => route('events.show', $event)],
                 ['title' => __('app.nav.media'), 'href' => route('events.media', $event)],
-                ['title' => __('app.nav.guests'), 'href' => route('events.guests', $event)],
-                ['title' => __('app.nav.invite_studio'), 'href' => route('events.invite-studio', $event)],
                 ['title' => __('app.nav.settings'), 'href' => route('events.settings', $event)],
                 ['title' => __('app.nav.print_pack'), 'href' => route('events.print-pack', $event)],
             ])),
@@ -3821,10 +3786,6 @@ class EventController extends Controller
     {
         if (! $this->shouldShowEventOverviewLink($request)) {
             return null;
-        }
-
-        if ($request->user()->canAccessBusinessDashboard()) {
-            return route('dashboard.business.events.index');
         }
 
         return route('dashboard');

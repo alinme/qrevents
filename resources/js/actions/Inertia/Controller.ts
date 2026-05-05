@@ -159,91 +159,10 @@ Controller22d43dc0ae7caca8beda42018be7d577Form.head = (options?: RouteQueryOptio
 })
 
 Controller22d43dc0ae7caca8beda42018be7d577.form = Controller22d43dc0ae7caca8beda42018be7d577Form
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-const Controller25be3eace7e6c519633939c937264249 = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: Controller25be3eace7e6c519633939c937264249.url(options),
-    method: 'get',
-})
-
-Controller25be3eace7e6c519633939c937264249.definition = {
-    methods: ["get","head"],
-    url: '/weddings',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-Controller25be3eace7e6c519633939c937264249.url = (options?: RouteQueryOptions) => {
-    return Controller25be3eace7e6c519633939c937264249.definition.url + queryParams(options)
-}
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-Controller25be3eace7e6c519633939c937264249.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: Controller25be3eace7e6c519633939c937264249.url(options),
-    method: 'get',
-})
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-Controller25be3eace7e6c519633939c937264249.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: Controller25be3eace7e6c519633939c937264249.url(options),
-    method: 'head',
-})
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-const Controller25be3eace7e6c519633939c937264249Form = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: Controller25be3eace7e6c519633939c937264249.url(options),
-    method: 'get',
-})
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-Controller25be3eace7e6c519633939c937264249Form.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: Controller25be3eace7e6c519633939c937264249.url(options),
-    method: 'get',
-})
-
-/**
-* @see \Inertia\Controller::__invoke
-* @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
-* @route '/weddings'
-*/
-Controller25be3eace7e6c519633939c937264249Form.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: Controller25be3eace7e6c519633939c937264249.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-Controller25be3eace7e6c519633939c937264249.form = Controller25be3eace7e6c519633939c937264249Form
 
 const Controller = {
     '/': Controller980bb49ee7ae63891f1d891d2fbcf1c9,
     '/launch': Controller22d43dc0ae7caca8beda42018be7d577,
-    '/weddings': Controller25be3eace7e6c519633939c937264249,
 }
 
 export default Controller

@@ -1,13 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 import printPack01bcc6 from './print-pack'
-import inviteStudio25eb90 from './invite-studio'
-import guestsD791f3 from './guests'
-import tables from './tables'
 import exports from './exports'
 import assets from './assets'
 import settings69f00b from './settings'
 import billing from './billing'
-import collaborators from './collaborators'
 import album3d2484 from './album'
 import wall86584a from './wall'
 /**
@@ -219,216 +215,6 @@ printPackForm.head = (args: { event: number | { id: number } } | [event: number 
 })
 
 printPack.form = printPackForm
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-export const inviteStudio = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: inviteStudio.url(args, options),
-    method: 'get',
-})
-
-inviteStudio.definition = {
-    methods: ["get","head"],
-    url: '/events/{event}/invite-studio',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-inviteStudio.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
-    if (typeof args === 'string' || typeof args === 'number') {
-        args = { event: args }
-    }
-
-    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-        args = { event: args.id }
-    }
-
-    if (Array.isArray(args)) {
-        args = {
-            event: args[0],
-        }
-    }
-
-    args = applyUrlDefaults(args)
-
-    const parsedArgs = {
-        event: typeof args.event === 'object'
-        ? args.event.id
-        : args.event,
-    }
-
-    return inviteStudio.definition.url
-            .replace('{event}', parsedArgs.event.toString())
-            .replace(/\/+$/, '') + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-inviteStudio.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: inviteStudio.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-inviteStudio.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: inviteStudio.url(args, options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-const inviteStudioForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: inviteStudio.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-inviteStudioForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: inviteStudio.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::inviteStudio
-* @see app/Http/Controllers/EventController.php:151
-* @route '/events/{event}/invite-studio'
-*/
-inviteStudioForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: inviteStudio.url(args, {
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-inviteStudio.form = inviteStudioForm
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-export const guests = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: guests.url(args, options),
-    method: 'get',
-})
-
-guests.definition = {
-    methods: ["get","head"],
-    url: '/events/{event}/guests',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-guests.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
-    if (typeof args === 'string' || typeof args === 'number') {
-        args = { event: args }
-    }
-
-    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-        args = { event: args.id }
-    }
-
-    if (Array.isArray(args)) {
-        args = {
-            event: args[0],
-        }
-    }
-
-    args = applyUrlDefaults(args)
-
-    const parsedArgs = {
-        event: typeof args.event === 'object'
-        ? args.event.id
-        : args.event,
-    }
-
-    return guests.definition.url
-            .replace('{event}', parsedArgs.event.toString())
-            .replace(/\/+$/, '') + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-guests.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: guests.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-guests.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: guests.url(args, options),
-    method: 'head',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-const guestsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: guests.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-guestsForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: guests.url(args, options),
-    method: 'get',
-})
-
-/**
-* @see \App\Http\Controllers\EventController::guests
-* @see app/Http/Controllers/EventController.php:171
-* @route '/events/{event}/guests'
-*/
-guestsForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: guests.url(args, {
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-guests.form = guestsForm
 
 /**
 * @see \App\Http\Controllers\EventController::media
@@ -841,15 +627,11 @@ wall.form = wallForm
 const events = {
     show: Object.assign(show, show),
     printPack: Object.assign(printPack, printPack01bcc6),
-    inviteStudio: Object.assign(inviteStudio, inviteStudio25eb90),
-    guests: Object.assign(guests, guestsD791f3),
-    tables: Object.assign(tables, tables),
     media: Object.assign(media, media),
     exports: Object.assign(exports, exports),
     assets: Object.assign(assets, assets),
     settings: Object.assign(settings, settings69f00b),
     billing: Object.assign(billing, billing),
-    collaborators: Object.assign(collaborators, collaborators),
     album: Object.assign(album, album3d2484),
     wall: Object.assign(wall, wall86584a),
 }

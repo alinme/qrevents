@@ -79,28 +79,6 @@ class HandleInertiaRequests extends Middleware
             return [];
         }
 
-        if ($user->canAccessAdmin()) {
-            return [
-                [
-                    'title' => __('app.nav.admin'),
-                    'href' => route('admin.overview'),
-                ],
-            ];
-        }
-
-        if ($user->canAccessBusinessDashboard()) {
-            return [
-                [
-                    'title' => __('app.nav.events'),
-                    'href' => route('dashboard.business.events.index'),
-                ],
-                [
-                    'title' => __('app.nav.business'),
-                    'href' => route('dashboard.business'),
-                ],
-            ];
-        }
-
         return [
             [
                 'title' => __('app.nav.events'),
@@ -116,24 +94,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        if ($user === null || ! $user->canAccessBusinessDashboard()) {
-            return [];
-        }
-
-        return [
-            [
-                'title' => __('app.nav.business'),
-                'href' => route('dashboard.business'),
-            ],
-            [
-                'title' => __('app.nav.billing'),
-                'href' => route('dashboard.business.wallet.history'),
-            ],
-            [
-                'title' => __('app.nav.events'),
-                'href' => route('dashboard.business.events.index'),
-            ],
-        ];
+        return [];
     }
 
     private function sharedSidebarLabel(Request $request): ?string
@@ -142,10 +103,6 @@ class HandleInertiaRequests extends Middleware
 
         if ($user === null) {
             return null;
-        }
-
-        if ($user->canAccessAdmin()) {
-            return __('app.nav.admin');
         }
 
         return __('app.nav.account');

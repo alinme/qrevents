@@ -25,7 +25,6 @@ import {
     Sparkles,
     User,
     UserPlus,
-    Users,
     WandSparkles,
     X,
 } from 'lucide-vue-next';
@@ -211,7 +210,6 @@ type EventLinks = {
     settingsUpdate: string;
     billingUpdate: string;
     billingCheckout: string;
-    collaboratorsStore: string;
 };
 
 type TabId =
@@ -219,8 +217,7 @@ type TabId =
     | 'billing'
     | 'appearance'
     | 'photo_wall'
-    | 'moderation'
-    | 'collaborators';
+    | 'moderation';
 
 type BillingPlanOption = {
     id: number;
@@ -446,11 +443,6 @@ const allTabItems = computed<
         label: t('event_settings.tabs.moderation'),
         icon: ShieldCheck,
     },
-    {
-        id: 'collaborators',
-        label: t('event_settings.tabs.collaborators'),
-        icon: Users,
-    },
 ]);
 
 const planFeatures = computed(() => props.currentEvent.planFeatures);
@@ -491,7 +483,6 @@ const requestedTab = computed<TabId | null>(() => {
         case 'appearance':
         case 'photo_wall':
         case 'moderation':
-        case 'collaborators':
         case 'general':
             return tab;
         default:

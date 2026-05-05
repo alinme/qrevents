@@ -34,12 +34,6 @@ class EventOnboardingController extends Controller
             return redirect()->guest(route('register', absolute: false));
         }
 
-        if ($request->user()->isBusinessAccount()) {
-            return $request->user()->hasCompletedBusinessOnboarding()
-                ? to_route('dashboard.business')
-                : to_route('dashboard.business.onboarding');
-        }
-
         if ($request->boolean('restart')) {
             return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
         }
@@ -57,14 +51,7 @@ class EventOnboardingController extends Controller
 
     public function createBusiness(Request $request): Response|RedirectResponse
     {
-        $user = $request->user();
-        abort_unless($user !== null && $user->isBusinessAccount(), 403);
-
-        if (! $user->hasCompletedBusinessOnboarding()) {
-            return to_route('dashboard.business.onboarding');
-        }
-
-        return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request, true));
+        return $this->create($request);
     }
 
     public function store(StoreEventOnboardingRequest $request): RedirectResponse
@@ -72,7 +59,6 @@ class EventOnboardingController extends Controller
         $validated = $request->validated();
         $user = $request->user();
         abort_unless($user !== null, 403);
-        abort_if($user->isBusinessAccount(), 403);
 
         $event = $this->createEventFromValidatedData($user, $validated);
         $event->update([
@@ -132,7 +118,7 @@ class EventOnboardingController extends Controller
     {
         $this->assertOwnership($request, $event);
 
-        $businessMode = $request->user()?->isBusinessAccount() === true;
+        $businessMode = false;
 
         $event->update([
             'onboarding_step' => 'completed',
@@ -156,7 +142,7 @@ class EventOnboardingController extends Controller
             'wallShortUrl' => $publicShortLinks['wallShortUrl'],
             'qrCodeDataUrl' => $this->createQrCodeDataUrl($albumUrl),
             'businessMode' => $businessMode,
-            'dashboardUrl' => $businessMode ? route('dashboard.business') : route('dashboard'),
+            'dashboardUrl' => route('dashboard'),
         ]);
     }
 
@@ -496,33 +482,12 @@ class EventOnboardingController extends Controller
             'businessWalletCredits' => $businessMode && $request->user() !== null
                 ? (int) $request->user()->business_wallet_credits
                 : null,
-            'businessTopUpUrl' => $businessMode
-                ? route('dashboard.business.wallet.history')
-                : null,
+            'businessTopUpUrl' => null,
             'accountNavigation' => [],
-            'businessNavigation' => $businessMode ? [
-                [
-                    'title' => 'Business',
-                    'href' => route('dashboard.business'),
-                ],
-                [
-                    'title' => 'Billing',
-                    'href' => route('dashboard.business.wallet.history'),
-                ],
-                [
-                    'title' => 'Events',
-                    'href' => route('dashboard.business.events.index'),
-                ],
-            ] : [],
-            'dashboardLinks' => $businessMode ? [
-                'overview' => route('dashboard'),
-                'business' => route('dashboard.business'),
-                'createBusiness' => route('dashboard.business.events.create'),
-            ] : null,
+            'businessNavigation' => [],
+            'dashboardLinks' => null,
             'sidebarLabel' => $businessMode ? 'Business' : null,
-            'submitUrl' => $businessMode
-                ? route('dashboard.business.events.store')
-                : route('onboarding.store'),
+            'submitUrl' => route('onboarding.store'),
             'pricingPlans' => $this->pricingPlansPayload($businessMode),
             'eventTypes' => [
                 [

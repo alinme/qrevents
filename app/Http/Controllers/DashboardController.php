@@ -42,17 +42,9 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
-        if ($request->user()->canAccessAdmin()) {
-            return to_route('admin.overview');
-        }
-
         $onboardingRedirect = app(AuthOnboardingRedirector::class)->dashboardRedirect($request->user());
         if ($onboardingRedirect !== null) {
             return $onboardingRedirect;
-        }
-
-        if ($request->user()->canAccessBusinessDashboard()) {
-            return to_route('dashboard.business');
         }
 
         return $this->account($request);
@@ -366,10 +358,6 @@ class DashboardController extends Controller
 
     public function ownedEvents(Request $request): RedirectResponse
     {
-        if ($request->user()->canAccessBusinessDashboard()) {
-            return to_route('dashboard.business.events.index');
-        }
-
         return redirect()->to($this->accountOverviewUrl($request).'#events');
     }
 
@@ -383,8 +371,6 @@ class DashboardController extends Controller
      */
     private function accountData(Request $request): array
     {
-        $isSuperAdmin = $request->user()->canAccessAdmin();
-        $canAccessBusinessDashboard = $request->user()->canAccessBusinessDashboard();
         $accountOverviewUrl = $this->accountOverviewUrl($request);
 
         $ownedEvents = $request->user()
@@ -471,12 +457,6 @@ class DashboardController extends Controller
                     'url' => $this->onboardingStepUrl($continueSetupEvent),
                     'tone' => 'amber',
                 ] : null,
-                $isSuperAdmin ? [
-                    'label' => __('dashboard.business.quick_actions.open_admin.label'),
-                    'description' => __('dashboard.business.quick_actions.open_admin.description'),
-                    'url' => route('admin.overview'),
-                    'tone' => 'violet',
-                ] : null,
             ])),
             'continueSetupEvent' => $continueSetupEvent !== null
                 ? $this->dashboardEventCard(
@@ -491,32 +471,11 @@ class DashboardController extends Controller
                     'title' => 'Events',
                     'href' => $accountOverviewUrl,
                 ],
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Business',
-                    'href' => route('dashboard.business'),
-                ] : null,
-                $isSuperAdmin ? [
-                    'title' => 'Admin',
-                    'href' => route('admin.overview'),
-                ] : null,
             ])),
-            'businessNavigation' => array_values(array_filter([
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Business',
-                    'href' => route('dashboard.business'),
-                ] : null,
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Billing',
-                    'href' => route('dashboard.business.wallet.history'),
-                ] : null,
-                $canAccessBusinessDashboard ? [
-                    'title' => 'Events',
-                    'href' => route('dashboard.business.events.index'),
-                ] : null,
-            ])),
+            'businessNavigation' => [],
             'dashboardLinks' => [
                 'overview' => $accountOverviewUrl,
-                'business' => $canAccessBusinessDashboard ? route('dashboard.business') : null,
+                'business' => null,
                 'ownedEvents' => $accountOverviewUrl.'#events',
                 'recentActivity' => $accountOverviewUrl.'#activity',
             ],
@@ -528,9 +487,7 @@ class DashboardController extends Controller
 
     private function accountOverviewUrl(Request $request): string
     {
-        return $request->user()->canAccessBusinessDashboard()
-            ? route('dashboard.business')
-            : route('dashboard');
+        return route('dashboard');
     }
 
     /**
