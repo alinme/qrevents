@@ -10,6 +10,54 @@ it('redirects guests to registration before onboarding begins', function () {
         ->assertRedirect(route('register'));
 });
 
+it('creates a working album for every occasion type', function (string $type) {
+    Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->post(route('onboarding.store'), [
+        'type' => $type,
+        'name' => ucfirst($type).' Celebration Album',
+        'event_date' => now()->addMonth()->toDateString(),
+        'timezone' => 'Europe/Bucharest',
+    ]);
+
+    $event = $user->events()->latest('id')->firstOrFail();
+
+    $response->assertRedirect(route('onboarding.photos', $event));
+
+    expect($event->type)->toBe($type)
+        ->and($event->is_paid)->toBeTrue()
+        ->and($event->share_token)->not->toBeNull()
+        ->and($event->upload_window_starts_at)->not->toBeNull();
+
+    // The QR / first-photos screen renders and completes onboarding.
+    $this->get(route('onboarding.photos', $event))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/FirstPhotos')
+            ->where('eventName', $event->name)
+            ->has('qrCodeDataUrl')
+            ->has('albumAccessCode')
+        );
+
+    // The guest album and live wall open for this event.
+    $event->refresh();
+    $this->get(route('events.album', $event->share_token))->assertOk();
+    $this->get(route('events.wall', $event->share_token))->assertOk();
+})->with(['wedding', 'party', 'birthday', 'engagement', 'baptism', 'other']);
+
 it('shows single-event owners the dashboard when onboarding is in progress', function () {
     $user = User::factory()->create();
     $event = Event::factory()->for($user)->create([
