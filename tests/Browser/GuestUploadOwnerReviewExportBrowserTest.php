@@ -249,7 +249,7 @@ it('lets owners review uploaded media and prepare an export in the browser', fun
     $loginPage->fill('email', $owner->email)
         ->fill('password', 'password')
         ->click('@login-button')
-        ->assertRoute('events.show', ['event' => $event->getRouteKey()])
+        ->assertRoute('dashboard')
         ->assertNoJavaScriptErrors();
 
     $mediaPage = visit(route('events.media', $event, false));
