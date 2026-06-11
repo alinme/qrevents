@@ -10,6 +10,10 @@ class AuthOnboardingRedirector
 {
     public function dashboardRedirect(User $user): ?RedirectResponse
     {
+        if ($user->canAccessAdmin()) {
+            return null;
+        }
+
         $latestOwnedEvent = $user->events()
             ->latest('id')
             ->first();
@@ -23,6 +27,10 @@ class AuthOnboardingRedirector
 
     public function fallbackPathFor(User $user): string
     {
+        if ($user->canAccessAdmin()) {
+            return route('admin.overview', absolute: false);
+        }
+
         $dashboardRedirect = $this->dashboardRedirect($user);
 
         return $dashboardRedirect !== null
