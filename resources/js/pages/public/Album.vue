@@ -3892,12 +3892,15 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="!onboardingDone && !customWelcomeEnabled"
-                class="pointer-events-none absolute -top-20 -left-24 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
-            />
-            <div
-                v-if="!onboardingDone && !customWelcomeEnabled"
-                class="pointer-events-none absolute top-52 -right-24 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
-            />
+                class="pointer-events-none absolute inset-0 overflow-hidden"
+            >
+                <div
+                    class="absolute -top-20 -left-24 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
+                />
+                <div
+                    class="absolute top-52 -right-24 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
+                />
+            </div>
 
             <section
                 v-if="!onboardingDone"
