@@ -67,7 +67,7 @@ class FrontendLocalization
         $configuredLocale = $branding['display_language'] ?? 'automatic';
 
         if (! is_string($configuredLocale) || $configuredLocale === '' || $configuredLocale === 'automatic') {
-            return self::resolveAutomaticLocale($request);
+            return self::resolveSiteLocale($request);
         }
 
         return self::normalize($configuredLocale);

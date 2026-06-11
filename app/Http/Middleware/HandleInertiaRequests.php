@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Event;
 use App\Support\FrontendLocalization;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -118,7 +119,8 @@ class HandleInertiaRequests extends Middleware
             if (is_string($shareToken) && $shareToken !== '') {
                 $event = Event::query()
                     ->select(['id', 'branding'])
-                    ->where('share_token', $shareToken)
+                    ->where('album_access_code', Str::upper(trim($shareToken)))
+                    ->orWhere('share_token', $shareToken)
                     ->first();
 
                 $branding = is_array($event?->branding) ? $event->branding : [];
