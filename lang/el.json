@@ -1366,5 +1366,7 @@
     "onboarding.datepicker.heading": "Επιλέξτε ημερομηνία",
     "onboarding.datepicker.description": "Επιλέξτε την ημέρα της εκδήλωσής σας.",
     "onboarding.datepicker.clear": "Καθαρισμός",
-    "onboarding.datepicker.today": "Σήμερα"
+    "onboarding.datepicker.today": "Σήμερα",
+    "onboarding.photos.dashboard_hint": "Προσαρμόστε τη σελίδα του άλμπουμ, την επωνυμία και τον έλεγχο από τον πίνακά σας.",
+    "onboarding.photos.share_title": "Μοιραστείτε με τους καλεσμένους"
 }

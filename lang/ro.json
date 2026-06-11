@@ -2114,5 +2114,7 @@
     "onboarding.datepicker.heading": "Alege o dată",
     "onboarding.datepicker.description": "Alege ziua din calendar pentru evenimentul tău.",
     "onboarding.datepicker.clear": "Șterge",
-    "onboarding.datepicker.today": "Azi"
+    "onboarding.datepicker.today": "Azi",
+    "onboarding.photos.dashboard_hint": "Personalizează pagina albumului, brandingul și moderarea din panoul tău.",
+    "onboarding.photos.share_title": "Distribuie invitaților"
 }
