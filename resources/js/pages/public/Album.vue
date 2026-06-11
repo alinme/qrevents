@@ -3881,30 +3881,12 @@ const onAlbumTouchCancel = (): void => {
         </div>
         <div
             class="relative w-full"
-            :class="
-                onboardingDone
-                    ? 'pb-32'
-                    : !onboardingDone && customWelcomeEnabled
-                      ? ''
-                      : 'mx-auto max-w-md px-4 pt-5 pb-24 sm:max-w-lg'
-            "
+            :class="onboardingDone ? 'pb-32' : ''"
             :style="albumContentStyle"
         >
-            <div
-                v-if="!onboardingDone && !customWelcomeEnabled"
-                class="pointer-events-none absolute inset-0 overflow-hidden"
-            >
-                <div
-                    class="absolute -top-20 -left-24 h-52 w-52 rounded-full bg-rose-200/70 blur-3xl"
-                />
-                <div
-                    class="absolute top-52 -right-24 h-56 w-56 rounded-full bg-amber-200/70 blur-3xl"
-                />
-            </div>
-
             <section
                 v-if="!onboardingDone"
-                class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 text-white"
+                class="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-8 text-white"
             >
                 <img
                     v-if="customWelcomeEnabled && welcomeScreen.backgroundUrl"
