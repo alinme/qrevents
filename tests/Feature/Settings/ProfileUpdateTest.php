@@ -12,7 +12,7 @@ test('profile page is displayed', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/Profile')
-            ->where('sidebarLabel', 'Account')
+            ->where('sidebarLabel', null)
             ->where('accountNavigation.0.title', 'Events')
         );
 });

@@ -2477,7 +2477,7 @@ class EventController extends Controller
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
         $branding = $this->resolvedEventBranding($event);
-        $eventOverviewUrl = $this->eventOverviewUrl($request);
+        $eventOverviewUrl = route('dashboard');
         $planFeatures = $this->planFeaturePayload($event);
         $canManageBilling = $request->user()->canAccessAdmin();
         $canCheckoutBilling = ! $canManageBilling
@@ -3843,15 +3843,6 @@ class EventController extends Controller
             ->pluck('event_id');
 
         return $ownedEventIds->count() + $collaboratorEventIds->count() > 1;
-    }
-
-    private function eventOverviewUrl(Request $request): ?string
-    {
-        if (! $this->shouldShowEventOverviewLink($request)) {
-            return null;
-        }
-
-        return route('dashboard');
     }
 
     private function guestPartyDuplicateKey(string $name, ?string $phone): string

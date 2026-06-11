@@ -102,13 +102,10 @@ class HandleInertiaRequests extends Middleware
 
     private function sharedSidebarLabel(Request $request): ?string
     {
-        $user = $request->user();
-
-        if ($user === null) {
-            return null;
-        }
-
-        return __('app.nav.account');
+        // Event pages label the sidebar with the event name (currentEvent);
+        // account-level pages fall back to the translated "Account" label
+        // inside AppSidebar.
+        return null;
     }
 
     private function resolveLocale(Request $request): string
