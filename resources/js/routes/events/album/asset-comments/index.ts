@@ -1,10 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-export const index = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -16,10 +16,10 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-index.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+index.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -44,50 +44,50 @@ index.url = (args: { shareToken: string | number, asset: number | { id: number }
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-index.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-index.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-const indexForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-indexForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::index
-* @see app/Http/Controllers/EventController.php:2128
+* @see app/Http/Controllers/EventController.php:2166
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-indexForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -101,10 +101,10 @@ index.form = indexForm
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:2162
+* @see app/Http/Controllers/EventController.php:2200
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-export const store = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -116,10 +116,10 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:2162
+* @see app/Http/Controllers/EventController.php:2200
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-store.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
+store.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -144,30 +144,30 @@ store.url = (args: { shareToken: string | number, asset: number | { id: number }
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:2162
+* @see app/Http/Controllers/EventController.php:2200
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-store.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:2162
+* @see app/Http/Controllers/EventController.php:2200
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-const storeForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\EventController::store
-* @see app/Http/Controllers/EventController.php:2162
+* @see app/Http/Controllers/EventController.php:2200
 * @route '/a/{shareToken}/assets/{asset}/comments'
 */
-storeForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
