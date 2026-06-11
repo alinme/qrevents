@@ -1,299 +1,544 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
-    Camera,
-    Images,
+    BadgeCheck,
+    CirclePlay,
+    LayoutDashboard,
     MonitorPlay,
     QrCode,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
-import { dashboard, login, register } from '@/routes';
+import { computed, onMounted, ref } from 'vue';
+import MarketingProductPreview from '@/components/marketing/MarketingProductPreview.vue';
+import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
+import MarketingLayout from '@/layouts/MarketingLayout.vue';
+import { create as onboardingCreate } from '@/routes/onboarding';
 
 const props = defineProps<{
     canRegister: boolean;
+    pwaLaunch?: boolean;
 }>();
 
-const page = usePage<{
-    auth?: {
-        user?: {
-            name?: string;
-        } | null;
-    };
-}>();
+const { t } = useTranslations();
 
-const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
-const primaryLink = computed(() =>
-    isAuthenticated.value
-        ? dashboard()
-        : props.canRegister
-          ? register()
-          : login(),
-);
-const primaryLabel = computed(() =>
-    isAuthenticated.value
-        ? 'Open dashboard'
-        : props.canRegister
-          ? 'Create album'
-          : 'Login',
-);
+type StoredGuestAlbumHint = {
+    shareToken: string;
+    albumUrl: string;
+    eventName: string;
+    guestName: string | null;
+    guestToken: string | null;
+    logoUrl: string | null;
+    savedAt: string;
+};
 
-const previewTiles = [
-    'bg-[#f8dfe6]',
-    'bg-[#dceeff]',
-    'bg-[#f5f0dd]',
-    'bg-[#dff7ef]',
-    'bg-[#ebe5ff]',
-    'bg-[#ffe3d7]',
+const pageTitle = computed(() => t('marketing.home.meta.title'));
+const pageDescription = computed(() => t('marketing.home.meta.description'));
+const guestAlbumHintStorageKey = 'qrevents-last-guest-album';
+const resumeGuestAlbum = ref<StoredGuestAlbumHint | null>(null);
+const resumeGuestAlbumOpen = ref(false);
+
+const quickProof = [
+    t('marketing.home.simple.proof.1'),
+    t('marketing.home.simple.proof.2'),
+    t('marketing.home.simple.proof.3'),
 ];
+
+const walkthrough = [
+    {
+        step: t('marketing.shared.step', { number: '1' }),
+        title: t('marketing.home.simple.steps.1.title'),
+        body: t('marketing.home.simple.steps.1.body'),
+        variant: 'event-setup' as const,
+        caption: 'Plan, date, album code, wall link.',
+    },
+    {
+        step: t('marketing.shared.step', { number: '2' }),
+        title: t('marketing.home.simple.steps.2.title'),
+        body: t('marketing.home.simple.steps.2.body'),
+        variant: 'guest-flow' as const,
+        caption: 'QR or short code. No app download.',
+    },
+    {
+        step: t('marketing.shared.step', { number: '3' }),
+        title: t('marketing.home.simple.steps.3.title'),
+        body: t('marketing.home.simple.steps.3.body'),
+        variant: 'live-wall' as const,
+        caption: 'Uploads show up on the wall in seconds.',
+    },
+];
+
+const visualExamples = [
+    {
+        icon: QrCode,
+        title: t('marketing.home.simple.examples.1.title'),
+        body: t('marketing.home.simple.examples.1.body'),
+        variant: 'album-access' as const,
+        caption: 'Short code entry on mobile.',
+    },
+    {
+        icon: MonitorPlay,
+        title: t('marketing.home.simple.examples.2.title'),
+        body: t('marketing.home.simple.examples.2.body'),
+        variant: 'live-wall' as const,
+        caption: 'TV-friendly live wall.',
+    },
+    {
+        icon: LayoutDashboard,
+        title: t('marketing.home.simple.examples.3.title'),
+        body: t('marketing.home.simple.examples.3.body'),
+        variant: 'business-dashboard' as const,
+        caption: 'Moderation and export in one dashboard.',
+    },
+];
+
+const isStandalonePwa = (): boolean => {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as Navigator & { standalone?: boolean })
+            .standalone === true
+    );
+};
+
+const clearStoredGuestAlbum = (): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.localStorage.removeItem(guestAlbumHintStorageKey);
+    resumeGuestAlbum.value = null;
+    resumeGuestAlbumOpen.value = false;
+};
+
+const loadStoredGuestAlbum = (): StoredGuestAlbumHint | null => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const raw = window.localStorage.getItem(guestAlbumHintStorageKey);
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as Partial<StoredGuestAlbumHint>;
+        if (
+            typeof parsed.albumUrl !== 'string' ||
+            parsed.albumUrl.length === 0 ||
+            typeof parsed.eventName !== 'string' ||
+            parsed.eventName.length === 0 ||
+            typeof parsed.shareToken !== 'string' ||
+            parsed.shareToken.length === 0
+        ) {
+            clearStoredGuestAlbum();
+            return null;
+        }
+
+        if (typeof parsed.savedAt === 'string') {
+            const savedAtMs = new Date(parsed.savedAt).getTime();
+            const maxAgeMs = 1000 * 60 * 60 * 24 * 30;
+
+            if (
+                !Number.isFinite(savedAtMs) ||
+                Date.now() - savedAtMs > maxAgeMs
+            ) {
+                clearStoredGuestAlbum();
+                return null;
+            }
+        }
+
+        return {
+            shareToken: parsed.shareToken,
+            albumUrl: parsed.albumUrl,
+            eventName: parsed.eventName,
+            guestName:
+                typeof parsed.guestName === 'string' ? parsed.guestName : null,
+            guestToken:
+                typeof parsed.guestToken === 'string'
+                    ? parsed.guestToken
+                    : null,
+            logoUrl: typeof parsed.logoUrl === 'string' ? parsed.logoUrl : null,
+            savedAt:
+                typeof parsed.savedAt === 'string'
+                    ? parsed.savedAt
+                    : new Date().toISOString(),
+        };
+    } catch {
+        clearStoredGuestAlbum();
+        return null;
+    }
+};
+
+const openStoredGuestAlbum = (): void => {
+    if (typeof window === 'undefined' || resumeGuestAlbum.value === null) {
+        return;
+    }
+
+    window.location.assign(resumeGuestAlbum.value.albumUrl);
+};
+
+onMounted(() => {
+    const storedAlbum = loadStoredGuestAlbum();
+    if (storedAlbum === null) {
+        return;
+    }
+
+    if (isStandalonePwa()) {
+        window.location.replace(storedAlbum.albumUrl);
+
+        return;
+    }
+
+    if (!props.pwaLaunch) {
+        return;
+    }
+
+    resumeGuestAlbum.value = storedAlbum;
+    resumeGuestAlbumOpen.value = true;
+});
 </script>
 
 <template>
-    <Head title="EventSmart" />
-
-    <main
-        class="relative min-h-screen overflow-hidden bg-[#080b12] px-5 py-5 text-white sm:px-7 lg:px-10"
+    <MarketingLayout
+        :title="pageTitle"
+        :description="pageDescription"
+        :can-register="canRegister"
     >
-        <img
-            src="/theme/ai-saas-software/gradient/opai-2.png"
-            alt=""
-            class="pointer-events-none absolute inset-x-0 bottom-0 h-[58vh] w-full object-cover opacity-75"
-        />
-        <img
-            src="/theme/ai-saas-software/gradient/opai-15.png"
-            alt=""
-            class="pointer-events-none absolute top-28 -right-28 h-72 w-72 opacity-55 blur-[1px] sm:h-96 sm:w-96"
-        />
-        <div
-            class="absolute inset-0 bg-[radial-gradient(circle_at_top,#1b2540_0%,transparent_42%),linear-gradient(180deg,rgba(8,11,18,0.24)_0%,#080b12_82%)]"
-        />
-
-        <div
-            class="relative z-10 mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-7xl flex-col"
+        <Dialog
+            :open="resumeGuestAlbumOpen"
+            @update:open="resumeGuestAlbumOpen = $event"
         >
-            <header
-                class="flex items-center justify-between rounded-full border border-white/12 bg-white/[0.06] px-4 py-3 shadow-[0_16px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:px-5"
-            >
-                <Link href="/" class="flex items-center gap-3">
-                    <span
-                        class="grid size-10 place-items-center rounded-full bg-white text-[#080b12]"
-                        aria-hidden="true"
-                    >
-                        <QrCode class="size-5" />
-                    </span>
-                    <span
-                        class="text-sm font-semibold tracking-wide sm:text-base"
-                    >
-                        EventSmart
-                    </span>
-                </Link>
-
-                <nav class="flex items-center gap-2 text-sm font-medium">
-                    <Link
-                        :href="login()"
-                        class="rounded-full px-4 py-2 text-white/76 transition hover:bg-white/10 hover:text-white"
-                    >
-                        Login
-                    </Link>
-                    <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="rounded-full bg-white px-4 py-2 text-[#080b12] transition hover:bg-white/88"
-                    >
-                        Register
-                    </Link>
-                </nav>
-            </header>
-
-            <section
-                class="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[0.92fr_1.08fr] lg:py-16"
-            >
-                <div class="max-w-3xl">
-                    <p
-                        class="mb-5 inline-flex rounded-full border border-white/12 bg-white/[0.07] px-4 py-2 text-xs font-semibold tracking-[0.2em] text-white/72 uppercase"
-                    >
-                        QR albums for live events
-                    </p>
-                    <h1
-                        class="max-w-4xl text-5xl leading-[0.95] font-semibold text-white sm:text-7xl lg:text-8xl"
-                    >
-                        Collect the photos. Project the moment.
-                    </h1>
-                    <p
-                        class="mt-7 max-w-2xl text-base leading-8 text-white/68 sm:text-lg"
-                    >
-                        Guests scan one QR code to upload photos, messages, and
-                        memories. You moderate the album and show approved media
-                        on a live projector wall.
-                    </p>
-
-                    <div class="mt-9 flex flex-col gap-3 sm:flex-row">
-                        <Link
-                            :href="primaryLink"
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-[#d0ff00] px-6 py-3 text-sm font-semibold text-[#080b12] transition hover:bg-white"
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader class="text-left">
+                    <div class="flex items-center gap-4">
+                        <div
+                            v-if="resumeGuestAlbum?.logoUrl"
+                            class="size-14 overflow-hidden rounded-[18px] border border-promo-line bg-promo-surface"
                         >
-                            {{ primaryLabel }}
+                            <img
+                                :src="resumeGuestAlbum.logoUrl"
+                                :alt="resumeGuestAlbum.eventName"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
+                        <div
+                            v-else
+                            class="flex size-14 items-center justify-center rounded-[18px] bg-promo-primary/12 text-promo-primary"
+                        >
+                            <QrCode class="size-6" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="marketing-kicker">
+                                {{ t('marketing.pwa.resume.badge') }}
+                            </p>
+                            <DialogTitle class="mt-1 text-left text-xl">
+                                {{ t('marketing.pwa.resume.title') }}
+                            </DialogTitle>
+                        </div>
+                    </div>
+
+                    <DialogDescription class="space-y-3 pt-3 text-left">
+                        <p>
+                            {{
+                                t('marketing.pwa.resume.description', {
+                                    eventName:
+                                        resumeGuestAlbum?.eventName ?? '',
+                                })
+                            }}
+                        </p>
+                        <p
+                            v-if="resumeGuestAlbum?.guestName"
+                            class="text-sm font-medium text-promo-ink"
+                        >
+                            {{
+                                t('marketing.pwa.resume.guest_name', {
+                                    name: resumeGuestAlbum.guestName,
+                                })
+                            }}
+                        </p>
+                    </DialogDescription>
+                </DialogHeader>
+
+                <DialogFooter class="gap-2 sm:justify-start">
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full bg-promo-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                        @click="openStoredGuestAlbum"
+                    >
+                        {{ t('marketing.pwa.resume.open') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full border border-promo-line bg-white px-5 py-3 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                        @click="resumeGuestAlbumOpen = false"
+                    >
+                        {{ t('marketing.pwa.resume.dismiss') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex min-h-11 items-center justify-center rounded-full px-3 py-2 text-sm font-medium text-promo-muted transition hover:text-promo-ink"
+                        @click="clearStoredGuestAlbum"
+                    >
+                        {{ t('marketing.pwa.resume.forget') }}
+                    </button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <section
+            class="mx-auto grid max-w-7xl gap-10 px-4 pt-10 pb-18 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:pt-16 lg:pb-24"
+        >
+            <div class="max-w-2xl">
+                <p class="marketing-kicker inline-flex items-center gap-2">
+                    <BadgeCheck class="size-4" />
+                    {{ t('marketing.home.simple.hero.kicker') }}
+                </p>
+                <h1
+                    class="marketing-display mt-6 text-[3.2rem] sm:text-[4rem] lg:text-[4.8rem]"
+                >
+                    {{ t('marketing.home.simple.hero.title') }}
+                </h1>
+                <p class="marketing-copy mt-6 max-w-xl">
+                    {{ t('marketing.home.simple.hero.description') }}
+                </p>
+
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <Link
+                        :href="onboardingCreate({ query: { plan: 'free' } })"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                    >
+                        {{ t('marketing.actions.create_event') }}
+                        <ArrowRight class="size-4" />
+                    </Link>
+                    <a
+                        href="#how-it-works"
+                        class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                    >
+                        {{ t('marketing.home.simple.hero.secondary_cta') }}
+                        <CirclePlay class="size-4" />
+                    </a>
+                </div>
+
+                <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                    <div
+                        v-for="item in quickProof"
+                        :key="item"
+                        class="rounded-[1.35rem] border border-promo-line bg-white px-4 py-4 text-sm font-medium text-promo-ink shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+                    >
+                        {{ item }}
+                    </div>
+                </div>
+            </div>
+
+            <MarketingProductPreview
+                variant="hero"
+                caption="Scan. Upload. Relive together."
+                aspect-class="aspect-[5/4] lg:aspect-[4/3]"
+            />
+        </section>
+
+        <section
+            id="how-it-works"
+            class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8"
+        >
+            <MarketingSectionHeading
+                :eyebrow="t('marketing.home.simple.sections.flow.eyebrow')"
+                :title="t('marketing.home.simple.sections.flow.title')"
+                :description="
+                    t('marketing.home.simple.sections.flow.description')
+                "
+            />
+
+            <div
+                class="mt-14 divide-y divide-promo-line border-y border-promo-line"
+            >
+                <article
+                    v-for="item in walkthrough"
+                    :key="item.step"
+                    class="grid gap-8 py-8 lg:grid-cols-[0.76fr_1.24fr] lg:items-center"
+                >
+                    <div class="max-w-md">
+                        <p class="marketing-kicker">
+                            {{ item.step }}
+                        </p>
+                        <h3
+                            class="marketing-display mt-3 text-[2rem] sm:text-[2.4rem]"
+                        >
+                            {{ item.title }}
+                        </h3>
+                        <p class="marketing-copy mt-4">
+                            {{ item.body }}
+                        </p>
+                    </div>
+
+                    <MarketingProductPreview
+                        :variant="item.variant"
+                        :caption="item.caption"
+                    />
+                </article>
+            </div>
+        </section>
+
+        <section id="proof" class="bg-white">
+            <div class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
+                <MarketingSectionHeading
+                    :eyebrow="
+                        t('marketing.home.simple.sections.examples.eyebrow')
+                    "
+                    :title="t('marketing.home.simple.sections.examples.title')"
+                    :description="
+                        t('marketing.home.simple.sections.examples.description')
+                    "
+                    centered
+                />
+
+                <div class="mt-14 grid gap-8 lg:grid-cols-3">
+                    <article
+                        v-for="item in visualExamples"
+                        :key="item.title"
+                        class="space-y-5"
+                    >
+                        <div class="flex items-center gap-3 text-promo-ink">
+                            <component
+                                :is="item.icon"
+                                class="size-5 text-promo-primary"
+                            />
+                            <h3 class="text-lg font-semibold">
+                                {{ item.title }}
+                            </h3>
+                        </div>
+                        <p class="marketing-copy">
+                            {{ item.body }}
+                        </p>
+                        <MarketingProductPreview
+                            :variant="item.variant"
+                            :caption="item.caption"
+                            aspect-class="aspect-[4/3]"
+                        />
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section
+            id="services"
+            class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8"
+        >
+            <MarketingSectionHeading
+                :eyebrow="t('marketing.home.simple.sections.updates.eyebrow')"
+                :title="t('marketing.home.simple.sections.updates.title')"
+                :description="
+                    t('marketing.home.simple.sections.updates.description')
+                "
+            />
+
+            <div
+                class="mt-14 grid gap-8 lg:grid-cols-[0.84fr_1.16fr] lg:items-center"
+            >
+                <div class="space-y-4">
+                    <div
+                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+                    >
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ t('marketing.home.simple.updates.1.title') }}
+                        </h3>
+                        <p class="marketing-copy mt-2">
+                            {{
+                                t('marketing.home.simple.updates.1.description')
+                            }}
+                        </p>
+                    </div>
+                    <div
+                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+                    >
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ t('marketing.home.simple.updates.2.title') }}
+                        </h3>
+                        <p class="marketing-copy mt-2">
+                            {{
+                                t('marketing.home.simple.updates.2.description')
+                            }}
+                        </p>
+                    </div>
+                    <div
+                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+                    >
+                        <h3 class="text-lg font-semibold text-promo-ink">
+                            {{ t('marketing.home.simple.updates.3.title') }}
+                        </h3>
+                        <p class="marketing-copy mt-2">
+                            {{
+                                t('marketing.home.simple.updates.3.description')
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <MarketingProductPreview
+                    variant="story-collage"
+                    caption="Album code, guest post, live wall."
+                    aspect-class="aspect-[5/4]"
+                />
+            </div>
+        </section>
+
+        <section id="cta" class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
+            <div
+                class="grid gap-8 border-y border-promo-line py-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center"
+            >
+                <div class="max-w-xl">
+                    <p class="marketing-kicker">
+                        {{ t('marketing.home.simple.sections.cta.eyebrow') }}
+                    </p>
+                    <h2
+                        class="marketing-display mt-3 text-[2.5rem] sm:text-[3rem]"
+                    >
+                        {{ t('marketing.home.simple.sections.cta.title') }}
+                    </h2>
+                    <p class="marketing-copy mt-4">
+                        {{
+                            t('marketing.home.simple.sections.cta.description')
+                        }}
+                    </p>
+
+                    <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+                        <Link
+                            :href="
+                                onboardingCreate({ query: { plan: 'free' } })
+                            "
+                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                        >
+                            {{ t('marketing.actions.create_event') }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             href="/album"
-                            class="inline-flex items-center justify-center gap-2 rounded-full border border-white/14 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/12"
+                            class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
                         >
-                            Guest album
+                            {{ t('marketing.footer.album_access') }}
                         </Link>
                     </div>
-
-                    <dl
-                        class="mt-10 grid max-w-2xl grid-cols-3 gap-3 border-t border-white/12 pt-6"
-                    >
-                        <div>
-                            <dt class="text-2xl font-semibold">QR</dt>
-                            <dd class="mt-1 text-xs leading-5 text-white/56">
-                                Scan to upload
-                            </dd>
-                        </div>
-                        <div>
-                            <dt class="text-2xl font-semibold">Live</dt>
-                            <dd class="mt-1 text-xs leading-5 text-white/56">
-                                Projector wall
-                            </dd>
-                        </div>
-                        <div>
-                            <dt class="text-2xl font-semibold">Paid</dt>
-                            <dd class="mt-1 text-xs leading-5 text-white/56">
-                                Stripe checkout
-                            </dd>
-                        </div>
-                    </dl>
                 </div>
 
-                <div
-                    class="relative mx-auto w-full max-w-2xl rounded-[2rem] border border-white/12 bg-white/[0.07] p-3 shadow-[0_40px_140px_rgba(0,0,0,0.44)] backdrop-blur-xl"
-                >
-                    <div
-                        class="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#101521]"
-                    >
-                        <div
-                            class="flex items-center justify-between border-b border-white/10 px-4 py-3"
-                        >
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="size-2.5 rounded-full bg-[#ff6b51]"
-                                />
-                                <span
-                                    class="size-2.5 rounded-full bg-[#d0ff00]"
-                                />
-                                <span
-                                    class="size-2.5 rounded-full bg-[#227eff]"
-                                />
-                            </div>
-                            <span class="text-xs font-medium text-white/46">
-                                wall/event-09
-                            </span>
-                        </div>
-
-                        <div class="grid gap-4 p-4 sm:grid-cols-[0.8fr_1.2fr]">
-                            <aside
-                                class="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/22 p-4"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <span
-                                        class="grid size-11 place-items-center rounded-full bg-white text-[#080b12]"
-                                    >
-                                        <QrCode class="size-5" />
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold">
-                                            Scan to add
-                                        </p>
-                                        <p class="text-xs text-white/48">
-                                            Photos, notes, clips
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="grid aspect-square place-items-center rounded-2xl bg-white p-5 text-[#080b12]"
-                                >
-                                    <div
-                                        class="grid size-full grid-cols-5 grid-rows-5 gap-1"
-                                        aria-hidden="true"
-                                    >
-                                        <span
-                                            v-for="index in 25"
-                                            :key="index"
-                                            class="rounded-[0.18rem]"
-                                            :class="
-                                                [
-                                                    1, 2, 3, 5, 6, 9, 11, 13,
-                                                    14, 17, 19, 20, 22, 23, 25,
-                                                ].includes(index)
-                                                    ? 'bg-[#080b12]'
-                                                    : 'bg-[#080b12]/10'
-                                            "
-                                        />
-                                    </div>
-                                </div>
-
-                                <div class="grid gap-2 text-xs text-white/58">
-                                    <div class="flex items-center gap-2">
-                                        <Camera class="size-4 text-[#d0ff00]" />
-                                        Guest uploads
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <Images class="size-4 text-[#8d59ff]" />
-                                        Album gallery
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <MonitorPlay
-                                            class="size-4 text-[#227eff]"
-                                        />
-                                        Projector mode
-                                    </div>
-                                </div>
-                            </aside>
-
-                            <div
-                                class="rounded-2xl border border-white/10 bg-white p-3"
-                            >
-                                <div class="grid grid-cols-3 gap-2">
-                                    <span
-                                        v-for="(tile, index) in previewTiles"
-                                        :key="tile"
-                                        class="aspect-[4/5] rounded-xl"
-                                        :class="tile"
-                                    >
-                                        <span
-                                            class="block h-full rounded-xl bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,0.9),transparent_24%),linear-gradient(160deg,rgba(8,11,18,0.06),rgba(8,11,18,0.22))]"
-                                            :class="{
-                                                'translate-y-4':
-                                                    index === 1 || index === 4,
-                                            }"
-                                        />
-                                    </span>
-                                </div>
-                                <div
-                                    class="mt-3 flex items-center justify-between rounded-xl bg-[#080b12] px-4 py-3 text-white"
-                                >
-                                    <div>
-                                        <p class="text-sm font-semibold">
-                                            Live wall ready
-                                        </p>
-                                        <p class="text-xs text-white/48">
-                                            128 approved memories
-                                        </p>
-                                    </div>
-                                    <span
-                                        class="rounded-full bg-[#d0ff00] px-3 py-1 text-xs font-semibold text-[#080b12]"
-                                    >
-                                        On air
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
+                <MarketingProductPreview
+                    variant="story-collage"
+                    caption="Everything guests need, at a glance."
+                    aspect-class="aspect-[16/10]"
+                />
+            </div>
+        </section>
+    </MarketingLayout>
 </template>

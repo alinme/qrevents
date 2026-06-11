@@ -47,16 +47,27 @@ withDefaults(
                 <div class="marketing-preview-card marketing-preview-wall-card">
                     <div class="marketing-preview-card-header">
                         <span class="marketing-preview-chip">Live wall</span>
-                        <span class="marketing-preview-muted">eventsmart.app/wall/A7M2</span>
+                        <span class="marketing-preview-muted"
+                            >eventsmart.app/wall/A7M2</span
+                        >
                     </div>
                     <div class="marketing-preview-wall-media">
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-main" />
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-side" />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-main"
+                        />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-side"
+                        />
                     </div>
                     <div class="marketing-preview-wall-footer">
                         <div>
-                            <p class="marketing-preview-title">Wedding memories, already live</p>
-                            <p class="marketing-preview-subtitle">Guests upload on phone. The wall updates in seconds.</p>
+                            <p class="marketing-preview-title">
+                                Wedding memories, already live
+                            </p>
+                            <p class="marketing-preview-subtitle">
+                                Guests upload on phone. The wall updates in
+                                seconds.
+                            </p>
                         </div>
                         <Tv class="size-5 text-promo-primary" />
                     </div>
@@ -66,7 +77,9 @@ withDefaults(
                     <div class="marketing-preview-phone-notch" />
                     <div class="marketing-preview-phone-screen">
                         <div class="marketing-preview-card-header">
-                            <span class="marketing-preview-chip">Guest upload</span>
+                            <span class="marketing-preview-chip"
+                                >Guest upload</span
+                            >
                             <QrCode class="size-4 text-promo-primary" />
                         </div>
                         <div class="marketing-preview-upload-sheet">
@@ -77,8 +90,12 @@ withDefaults(
                                 <span>2</span>
                             </div>
                             <div class="marketing-preview-photo-stack">
-                                <div class="marketing-preview-photo-thumb marketing-preview-photo-thumb-lg" />
-                                <div class="marketing-preview-photo-thumb marketing-preview-photo-thumb-sm" />
+                                <div
+                                    class="marketing-preview-photo-thumb marketing-preview-photo-thumb-lg"
+                                />
+                                <div
+                                    class="marketing-preview-photo-thumb marketing-preview-photo-thumb-sm"
+                                />
                             </div>
                             <div class="marketing-preview-upload-actions">
                                 <div class="marketing-preview-action-pill">
@@ -121,7 +138,9 @@ withDefaults(
                     </div>
                 </div>
                 <div class="marketing-preview-cta-row">
-                    <div class="marketing-preview-button-solid">Create event</div>
+                    <div class="marketing-preview-button-solid">
+                        Create event
+                    </div>
                     <div class="marketing-preview-button-ghost">Preview</div>
                 </div>
             </div>
@@ -129,14 +148,20 @@ withDefaults(
 
         <template v-else-if="variant === 'guest-flow'">
             <div class="marketing-preview-dual">
-                <div class="marketing-preview-phone marketing-preview-phone-compact">
+                <div
+                    class="marketing-preview-phone marketing-preview-phone-compact"
+                >
                     <div class="marketing-preview-phone-notch" />
                     <div class="marketing-preview-phone-screen">
                         <div class="marketing-preview-card-header">
-                            <span class="marketing-preview-chip">Join fast</span>
+                            <span class="marketing-preview-chip"
+                                >Join fast</span
+                            >
                             <ScanLine class="size-4 text-promo-primary" />
                         </div>
-                        <div class="marketing-preview-code-row marketing-preview-code-row-compact">
+                        <div
+                            class="marketing-preview-code-row marketing-preview-code-row-compact"
+                        >
                             <span>A</span>
                             <span>7</span>
                             <span>M</span>
@@ -149,15 +174,21 @@ withDefaults(
                     </div>
                 </div>
 
-                <div class="marketing-preview-phone marketing-preview-phone-compact">
+                <div
+                    class="marketing-preview-phone marketing-preview-phone-compact"
+                >
                     <div class="marketing-preview-phone-notch" />
                     <div class="marketing-preview-phone-screen">
                         <div class="marketing-preview-card-header">
-                            <span class="marketing-preview-chip">Post a memory</span>
+                            <span class="marketing-preview-chip"
+                                >Post a memory</span
+                            >
                             <ImagePlus class="size-4 text-promo-primary" />
                         </div>
                         <div class="marketing-preview-photo-stack">
-                            <div class="marketing-preview-photo-thumb marketing-preview-photo-thumb-lg" />
+                            <div
+                                class="marketing-preview-photo-thumb marketing-preview-photo-thumb-lg"
+                            />
                         </div>
                         <div class="marketing-preview-mini-copy">
                             One photo, one message, done.
@@ -175,8 +206,12 @@ withDefaults(
                 </div>
                 <div class="marketing-preview-tv-frame">
                     <div class="marketing-preview-wall-media">
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-main" />
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-side" />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-main"
+                        />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-side"
+                        />
                     </div>
                     <div class="marketing-preview-tv-bar">
                         <span>eventsmart.app/wall/A7M2</span>
@@ -187,7 +222,9 @@ withDefaults(
         </template>
 
         <template v-else-if="variant === 'album-access'">
-            <div class="marketing-preview-phone h-full max-h-none w-full max-w-[20rem]">
+            <div
+                class="marketing-preview-phone h-full max-h-none w-full max-w-[20rem]"
+            >
                 <div class="marketing-preview-phone-notch" />
                 <div class="marketing-preview-phone-screen">
                     <div class="marketing-preview-card-header">
@@ -211,30 +248,32 @@ withDefaults(
         <template v-else-if="variant === 'business-dashboard'">
             <div class="marketing-preview-card h-full">
                 <div class="marketing-preview-card-header">
-                    <span class="marketing-preview-chip">Business</span>
+                    <span class="marketing-preview-chip">Host dashboard</span>
                     <LayoutDashboard class="size-4 text-promo-primary" />
                 </div>
                 <div class="marketing-preview-dashboard-grid">
                     <div class="marketing-preview-stat">
-                        <span class="marketing-preview-label">Credits</span>
-                        <span class="marketing-preview-value">184</span>
+                        <span class="marketing-preview-label">Approved</span>
+                        <span class="marketing-preview-value">128</span>
                     </div>
                     <div class="marketing-preview-stat">
-                        <span class="marketing-preview-label">Live events</span>
-                        <span class="marketing-preview-value">6</span>
+                        <span class="marketing-preview-label"
+                            >Pending review</span
+                        >
+                        <span class="marketing-preview-value">12</span>
                     </div>
                     <div class="marketing-preview-dashboard-list">
                         <div class="marketing-preview-dashboard-item">
                             <span>Ana & Luca</span>
-                            <span>Plus</span>
+                            <span>On the wall</span>
                         </div>
                         <div class="marketing-preview-dashboard-item">
                             <span>Launch party</span>
-                            <span>Pro</span>
+                            <span>Exported</span>
                         </div>
                         <div class="marketing-preview-dashboard-item">
                             <span>Rooftop dinner</span>
-                            <span>Plus</span>
+                            <span>Live</span>
                         </div>
                     </div>
                 </div>
@@ -281,7 +320,9 @@ withDefaults(
                 <div class="marketing-preview-list">
                     <div class="marketing-preview-row">
                         <span class="marketing-preview-label">Client</span>
-                        <span class="marketing-preview-value">Studio Events</span>
+                        <span class="marketing-preview-value"
+                            >Studio Events</span
+                        >
                     </div>
                     <div class="marketing-preview-row">
                         <span class="marketing-preview-label">Plan cost</span>
@@ -293,7 +334,9 @@ withDefaults(
                     </div>
                 </div>
                 <div class="marketing-preview-cta-row">
-                    <div class="marketing-preview-button-solid">Launch event</div>
+                    <div class="marketing-preview-button-solid">
+                        Launch event
+                    </div>
                     <div class="marketing-preview-button-ghost">Save draft</div>
                 </div>
             </div>
@@ -301,12 +344,16 @@ withDefaults(
 
         <template v-else-if="variant === 'story-collage'">
             <div class="marketing-preview-collage">
-                <div class="marketing-preview-card marketing-preview-collage-card">
+                <div
+                    class="marketing-preview-card marketing-preview-collage-card"
+                >
                     <div class="marketing-preview-card-header">
                         <span class="marketing-preview-chip">Album</span>
                         <QrCode class="size-4 text-promo-primary" />
                     </div>
-                    <div class="marketing-preview-code-row marketing-preview-code-row-compact">
+                    <div
+                        class="marketing-preview-code-row marketing-preview-code-row-compact"
+                    >
                         <span>A</span>
                         <span>7</span>
                         <span>M</span>
@@ -314,22 +361,32 @@ withDefaults(
                     </div>
                 </div>
 
-                <div class="marketing-preview-card marketing-preview-collage-card">
+                <div
+                    class="marketing-preview-card marketing-preview-collage-card"
+                >
                     <div class="marketing-preview-card-header">
                         <span class="marketing-preview-chip">Guest note</span>
                         <MessageSquare class="size-4 text-promo-primary" />
                     </div>
-                    <p class="marketing-preview-subtitle">“Best dance floor ever.”</p>
+                    <p class="marketing-preview-subtitle">
+                        “Best dance floor ever.”
+                    </p>
                 </div>
 
-                <div class="marketing-preview-card marketing-preview-collage-card">
+                <div
+                    class="marketing-preview-card marketing-preview-collage-card"
+                >
                     <div class="marketing-preview-card-header">
                         <span class="marketing-preview-chip">Wall</span>
                         <MonitorPlay class="size-4 text-promo-primary" />
                     </div>
                     <div class="marketing-preview-wall-media">
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-main" />
-                        <div class="marketing-preview-wall-photo marketing-preview-wall-photo-side" />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-main"
+                        />
+                        <div
+                            class="marketing-preview-wall-photo marketing-preview-wall-photo-side"
+                        />
                     </div>
                 </div>
             </div>

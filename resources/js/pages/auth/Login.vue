@@ -52,7 +52,7 @@ const { t } = useTranslations();
             <Button
                 as-child
                 variant="outline"
-                class="h-11 w-full rounded-full border-zinc-300 bg-white text-promo-ink hover:bg-zinc-50"
+                class="h-11 w-full rounded-full border-promo-line bg-white text-promo-ink hover:bg-promo-surface"
             >
                 <a :href="googleAuthUrl!">
                     {{ t('auth.shared.continue_with_google') }}
@@ -62,9 +62,9 @@ const { t } = useTranslations();
             <div
                 class="flex items-center gap-3 text-xs tracking-[0.18em] text-promo-muted uppercase"
             >
-                <span class="h-px flex-1 bg-zinc-200" />
+                <span class="h-px flex-1 bg-promo-line" />
                 <span>{{ t('auth.login.divider') }}</span>
-                <span class="h-px flex-1 bg-zinc-200" />
+                <span class="h-px flex-1 bg-promo-line" />
             </div>
         </div>
 

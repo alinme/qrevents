@@ -15,8 +15,7 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
     --font-serif:
-        'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', Georgia,
-        serif;
+        'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', Georgia, serif;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -84,6 +83,11 @@
     --color-promo-primary-strong: var(--promo-primary-strong);
     --color-promo-purple: var(--promo-purple);
     --color-promo-warm: var(--promo-warm);
+
+    --shadow-card:
+        rgba(0, 0, 0, 0.02) 0px 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 2px 6px,
+        rgba(0, 0, 0, 0.1) 0px 4px 8px;
+    --shadow-card-hover: rgba(0, 0, 0, 0.08) 0px 4px 12px;
 }
 
 /*
@@ -109,9 +113,8 @@
     html {
         --font-sans:
             'Instrument Sans', 'Circular', -apple-system, BlinkMacSystemFont,
-            'Segoe UI', sans-serif,
-            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-            'Noto Color Emoji';
+            'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+            'Segoe UI Symbol', 'Noto Color Emoji';
     }
 }
 
@@ -121,11 +124,11 @@
     }
 
     .marketing-kicker {
-        @apply text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-promo-primary;
+        @apply text-[0.68rem] font-semibold tracking-[0.18em] text-promo-primary uppercase;
     }
 
     .marketing-display {
-        @apply font-bold leading-[0.98] tracking-[-0.04em] text-promo-ink;
+        @apply leading-[0.98] font-bold tracking-[-0.04em] text-promo-ink;
     }
 
     .marketing-copy {
@@ -137,7 +140,7 @@
     }
 
     .marketing-preview-caption {
-        @apply absolute bottom-4 left-4 right-4 rounded-full border border-promo-line bg-white/92 px-3 py-2 text-center text-[0.72rem] font-medium text-promo-muted backdrop-blur;
+        @apply absolute right-4 bottom-4 left-4 rounded-full border border-promo-line bg-white/92 px-3 py-2 text-center text-[0.72rem] font-medium text-promo-muted backdrop-blur;
     }
 
     .marketing-preview-orb {
@@ -145,11 +148,11 @@
     }
 
     .marketing-preview-orb-left {
-        @apply left-[-4rem] top-[-5rem] h-40 w-40 bg-promo-surface;
+        @apply top-[-5rem] left-[-4rem] h-40 w-40 bg-promo-surface;
     }
 
     .marketing-preview-orb-right {
-        @apply bottom-[-6rem] right-[-3rem] h-48 w-48 bg-promo-warm;
+        @apply right-[-3rem] bottom-[-6rem] h-48 w-48 bg-promo-warm;
     }
 
     .marketing-preview-grid {
@@ -169,11 +172,11 @@
     }
 
     .marketing-preview-chip {
-        @apply inline-flex rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-promo-primary;
+        @apply inline-flex rounded-full bg-promo-surface px-3 py-1 text-[0.68rem] font-semibold tracking-[0.16em] text-promo-primary uppercase;
     }
 
     .marketing-preview-muted {
-        @apply text-[0.7rem] font-medium uppercase tracking-[0.12em] text-promo-muted;
+        @apply text-[0.7rem] font-medium tracking-[0.12em] text-promo-muted uppercase;
     }
 
     .marketing-preview-title {
@@ -199,16 +202,32 @@
     .marketing-preview-wall-photo-main {
         @apply min-h-[11rem];
         background-image:
-            linear-gradient(180deg, rgba(34, 34, 34, 0.03), rgba(34, 34, 34, 0.16)),
-            radial-gradient(circle at 20% 20%, rgba(255, 56, 92, 0.28), transparent 35%),
+            linear-gradient(
+                180deg,
+                rgba(34, 34, 34, 0.03),
+                rgba(34, 34, 34, 0.16)
+            ),
+            radial-gradient(
+                circle at 20% 20%,
+                rgba(255, 56, 92, 0.28),
+                transparent 35%
+            ),
             linear-gradient(135deg, #f6d8d1 0%, #f7f3ef 48%, #efe6dd 100%);
     }
 
     .marketing-preview-wall-photo-side {
         @apply min-h-[11rem];
         background-image:
-            linear-gradient(180deg, rgba(34, 34, 34, 0.03), rgba(34, 34, 34, 0.12)),
-            radial-gradient(circle at 75% 30%, rgba(255, 56, 92, 0.22), transparent 30%),
+            linear-gradient(
+                180deg,
+                rgba(34, 34, 34, 0.03),
+                rgba(34, 34, 34, 0.12)
+            ),
+            radial-gradient(
+                circle at 75% 30%,
+                rgba(255, 56, 92, 0.22),
+                transparent 30%
+            ),
             linear-gradient(135deg, #ece7e1 0%, #fff 100%);
     }
 
@@ -225,7 +244,7 @@
     }
 
     .marketing-preview-phone-notch {
-        @apply absolute left-1/2 top-2.5 h-4 w-24 -translate-x-1/2 rounded-full bg-black/80;
+        @apply absolute top-2.5 left-1/2 h-4 w-24 -translate-x-1/2 rounded-full bg-black/80;
     }
 
     .marketing-preview-phone-screen {
@@ -255,8 +274,16 @@
     .marketing-preview-photo-thumb {
         @apply rounded-[1.2rem] border border-white/90 shadow-[rgba(0,0,0,0.08)_0px_12px_24px];
         background-image:
-            linear-gradient(180deg, rgba(34, 34, 34, 0.02), rgba(34, 34, 34, 0.14)),
-            radial-gradient(circle at 30% 20%, rgba(255, 56, 92, 0.24), transparent 28%),
+            linear-gradient(
+                180deg,
+                rgba(34, 34, 34, 0.02),
+                rgba(34, 34, 34, 0.14)
+            ),
+            radial-gradient(
+                circle at 30% 20%,
+                rgba(255, 56, 92, 0.24),
+                transparent 28%
+            ),
             linear-gradient(135deg, #f2d4cf 0%, #fff 100%);
     }
 
@@ -265,7 +292,7 @@
     }
 
     .marketing-preview-photo-thumb-sm {
-        @apply absolute -bottom-3 right-3 h-16 w-16 rotate-[8deg];
+        @apply absolute right-3 -bottom-3 h-16 w-16 rotate-[8deg];
     }
 
     .marketing-preview-upload-actions {
@@ -293,7 +320,7 @@
     }
 
     .marketing-preview-label {
-        @apply text-xs font-semibold uppercase tracking-[0.14em] text-promo-muted;
+        @apply text-xs font-semibold tracking-[0.14em] text-promo-muted uppercase;
     }
 
     .marketing-preview-value {
@@ -365,7 +392,7 @@
     }
 
     .dashboard-panel {
-        @apply rounded-[1.75rem] border border-brand-border/70 bg-brand-panel p-5 shadow-sm md:p-6;
+        @apply rounded-[1.25rem] border-0 bg-brand-panel p-5 shadow-card md:p-6;
     }
 
     .dashboard-panel-divider {
@@ -377,7 +404,7 @@
     }
 
     .dashboard-eyebrow {
-        @apply text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-brand-muted;
+        @apply text-[0.75rem] font-semibold tracking-[0.16em] text-brand-muted uppercase;
     }
 
     .dashboard-title {
@@ -406,16 +433,16 @@
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
-    --brand-canvas: oklch(0.95 0.014 74);
-    --brand-panel: oklch(0.982 0.007 78);
-    --brand-panel-strong: oklch(0.914 0.018 70);
-    --brand-ink: oklch(0.235 0.02 46);
-    --brand-muted: oklch(0.36 0.018 50);
-    --brand-border: oklch(0.87 0.013 70);
-    --brand-accent: oklch(0.43 0.092 45);
-    --brand-accent-soft: oklch(0.9 0.03 67);
-    --brand-highlight: oklch(0.83 0.055 73);
-    --brand-inverse: oklch(0.985 0.006 78);
+    --brand-canvas: #ffffff;
+    --brand-panel: #ffffff;
+    --brand-panel-strong: #f2f2f2;
+    --brand-ink: #222222;
+    --brand-muted: #6a6a6a;
+    --brand-border: #ebebeb;
+    --brand-accent: #ff385c;
+    --brand-accent-soft: #ffe4e9;
+    --brand-highlight: #fff2ec;
+    --brand-inverse: #ffffff;
     --promo-bg: #ffffff;
     --promo-surface: #f7f7f7;
     --promo-surface-strong: #f2f2f2;
@@ -432,8 +459,8 @@
     --card-foreground: hsl(0 0% 3.9%);
     --popover: hsl(0 0% 100%);
     --popover-foreground: hsl(0 0% 3.9%);
-    --primary: hsl(0 0% 9%);
-    --primary-foreground: hsl(0 0% 98%);
+    --primary: hsl(0 0% 13.3%);
+    --primary-foreground: hsl(0 0% 100%);
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);

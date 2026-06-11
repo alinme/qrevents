@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import {
-    IconFileText,
-    IconPhoto,
-    IconVideo,
-} from '@tabler/icons-vue';
+import { IconFileText, IconPhoto, IconVideo } from '@tabler/icons-vue';
 import {
     ChevronLeft,
     ChevronRight,
@@ -209,7 +205,8 @@ const latestKnownAssetId = ref(
 );
 const hasLiveUpdatingAssets = computed(() =>
     assetItems.value.some(
-        (asset) => asset.videoProcessing || asset.moderationStatus === 'processing',
+        (asset) =>
+            asset.videoProcessing || asset.moderationStatus === 'processing',
     ),
 );
 let liveMediaPollId: number | null = null;
@@ -217,7 +214,10 @@ let liveMediaPollId: number | null = null;
 watch(
     () => props.mediaAssets,
     (nextAssets) => {
-        const nextLatestAssetId = Math.max(0, ...nextAssets.map((asset) => asset.id));
+        const nextLatestAssetId = Math.max(
+            0,
+            ...nextAssets.map((asset) => asset.id),
+        );
         if (nextLatestAssetId > latestKnownAssetId.value) {
             const newAssetCount = nextAssets.filter(
                 (asset) => asset.id > latestKnownAssetId.value,
@@ -225,11 +225,16 @@ watch(
             toast.success(
                 newAssetCount === 1
                     ? t('media.feedback.new_upload_single')
-                    : t('media.feedback.new_upload_plural', { count: newAssetCount }),
+                    : t('media.feedback.new_upload_plural', {
+                          count: newAssetCount,
+                      }),
             );
         }
 
-        latestKnownAssetId.value = Math.max(latestKnownAssetId.value, nextLatestAssetId);
+        latestKnownAssetId.value = Math.max(
+            latestKnownAssetId.value,
+            nextLatestAssetId,
+        );
         assetItems.value = [...nextAssets];
         attendeePage.value = 1;
     },
@@ -240,11 +245,12 @@ const formatDateTime = (value: string | null): string => {
         return t('media.shared.unknown');
     }
 
-    const intlLocale = locale.value === 'ro'
-        ? 'ro-RO'
-        : locale.value === 'el'
-          ? 'el-GR'
-          : 'en-GB';
+    const intlLocale =
+        locale.value === 'ro'
+            ? 'ro-RO'
+            : locale.value === 'el'
+              ? 'el-GR'
+              : 'en-GB';
 
     return new Intl.DateTimeFormat(intlLocale, {
         dateStyle: 'medium',
@@ -267,7 +273,9 @@ const formatBytes = (bytes: number): string => {
     return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 };
 
-const moderationPipelineLabel = (pipeline: MediaAsset['moderationPipeline']): string => {
+const moderationPipelineLabel = (
+    pipeline: MediaAsset['moderationPipeline'],
+): string => {
     switch (pipeline) {
         case 'automatic':
             return t('media.pipeline.automatic');
@@ -280,7 +288,9 @@ const moderationPipelineLabel = (pipeline: MediaAsset['moderationPipeline']): st
     }
 };
 
-const wallVisibilityMetaText = (visibility: MediaAsset['wallVisibility']): string => {
+const wallVisibilityMetaText = (
+    visibility: MediaAsset['wallVisibility'],
+): string => {
     switch (visibility) {
         case 'approved':
             return t('media.wall_visibility.approved');
@@ -299,8 +309,9 @@ const showsGridAssetChrome = (asset: MediaAsset): boolean =>
 
 const showsGridAssetAvatar = (): boolean => mediaView.value === 'relaxed';
 
-const moderationMatchLabel = (match: MediaAsset['moderationMatches'][number]): string =>
-    `${match.category}: ${match.keyword}`;
+const moderationMatchLabel = (
+    match: MediaAsset['moderationMatches'][number],
+): string => `${match.category}: ${match.keyword}`;
 
 const kindLabel = (kind: MediaAsset['kind']): string => {
     switch (kind) {
@@ -348,7 +359,9 @@ const moderationIcon = (status: MediaAsset['moderationStatus']) => {
     }
 };
 
-const moderationBadgeClass = (status: MediaAsset['moderationStatus']): string => {
+const moderationBadgeClass = (
+    status: MediaAsset['moderationStatus'],
+): string => {
     switch (status) {
         case 'approved':
             return 'bg-emerald-500/90 text-white';
@@ -399,7 +412,9 @@ const avatarFallbackClass = (value: string | null): string => {
 };
 
 const generatedDisplayFilename = (asset: MediaAsset): string => {
-    const guest = (asset.guestName ?? t('media.shared.guest')).trim() || t('media.shared.guest');
+    const guest =
+        (asset.guestName ?? t('media.shared.guest')).trim() ||
+        t('media.shared.guest');
     const label =
         asset.kind === 'photo'
             ? t('media.kind.photo')
@@ -498,8 +513,12 @@ const groupedAttendees = computed<MediaAttendee[]>(() => {
     }
 
     return Array.from(groups.values()).sort((a, b) => {
-        const aTime = a.latestCreatedAt ? new Date(a.latestCreatedAt).getTime() : 0;
-        const bTime = b.latestCreatedAt ? new Date(b.latestCreatedAt).getTime() : 0;
+        const aTime = a.latestCreatedAt
+            ? new Date(a.latestCreatedAt).getTime()
+            : 0;
+        const bTime = b.latestCreatedAt
+            ? new Date(b.latestCreatedAt).getTime()
+            : 0;
 
         return bTime - aTime;
     });
@@ -573,7 +592,10 @@ const activeAsset = computed<MediaAsset | null>(() => {
         return null;
     }
 
-    return assetItems.value.find((asset) => asset.id === activeAssetId.value) ?? null;
+    return (
+        assetItems.value.find((asset) => asset.id === activeAssetId.value) ??
+        null
+    );
 });
 
 const assetInfoAsset = computed<MediaAsset | null>(() => {
@@ -581,7 +603,9 @@ const assetInfoAsset = computed<MediaAsset | null>(() => {
         return null;
     }
 
-    return assetItems.value.find((asset) => asset.id === assetInfoId.value) ?? null;
+    return (
+        assetItems.value.find((asset) => asset.id === assetInfoId.value) ?? null
+    );
 });
 
 const previewAssets = computed<MediaAsset[]>(() => {
@@ -597,7 +621,9 @@ const activeAssetIndex = computed(() => {
         return -1;
     }
 
-    return previewAssets.value.findIndex((asset) => asset.id === activeAsset.value?.id);
+    return previewAssets.value.findIndex(
+        (asset) => asset.id === activeAsset.value?.id,
+    );
 });
 
 const hasPreviousAsset = computed(() => activeAssetIndex.value > 0);
@@ -644,7 +670,10 @@ watch([kindFilter, moderationFilter, searchQuery], () => {
 watch(
     groupedAttendees,
     () => {
-        attendeePage.value = Math.min(attendeePage.value, attendeePageCount.value);
+        attendeePage.value = Math.min(
+            attendeePage.value,
+            attendeePageCount.value,
+        );
     },
     { immediate: true },
 );
@@ -759,8 +788,10 @@ const copyText = async (value: string, message: string): Promise<void> => {
 const assetThumbnailSource = (asset: MediaAsset): string | null =>
     asset.thumbnailUrl ?? asset.previewUrl ?? null;
 
-const mediaLoadKey = (assetId: number, surface: 'grid' | 'attendee' | 'preview'): string =>
-    `${surface}:${assetId}`;
+const mediaLoadKey = (
+    assetId: number,
+    surface: 'grid' | 'attendee' | 'preview',
+): string => `${surface}:${assetId}`;
 
 const markMediaLoaded = (key: string): void => {
     loadedMediaKeys.value = {
@@ -769,7 +800,8 @@ const markMediaLoaded = (key: string): void => {
     };
 };
 
-const isMediaLoaded = (key: string): boolean => loadedMediaKeys.value[key] === true;
+const isMediaLoaded = (key: string): boolean =>
+    loadedMediaKeys.value[key] === true;
 
 const csrfToken = (): string =>
     document
@@ -793,7 +825,9 @@ const copyAssetLink = async (asset: MediaAsset): Promise<void> => {
 
 const removeAssetLocally = (assetId: number): void => {
     assetItems.value = assetItems.value.filter((item) => item.id !== assetId);
-    selectedAssetIds.value = selectedAssetIds.value.filter((id) => id !== assetId);
+    selectedAssetIds.value = selectedAssetIds.value.filter(
+        (id) => id !== assetId,
+    );
 
     if (activeAssetId.value === assetId) {
         activeAssetId.value = null;
@@ -849,7 +883,7 @@ const requestDeleteAsset = (asset: MediaAsset): void => {
         return;
     }
 
-    if (! window.confirm(t('media.feedback.delete_confirm'))) {
+    if (!window.confirm(t('media.feedback.delete_confirm'))) {
         return;
     }
 
@@ -896,7 +930,10 @@ const bulkDeleteAssets = (): void => {
 const bulkUpdateModeration = (
     moderationStatus: MediaAsset['moderationStatus'],
 ): void => {
-    if (selectedAssetIds.value.length === 0 || moderationAssetId.value !== null) {
+    if (
+        selectedAssetIds.value.length === 0 ||
+        moderationAssetId.value !== null
+    ) {
         return;
     }
 
@@ -983,9 +1020,7 @@ const updateWallVisibility = (
             preserveScroll: true,
             onSuccess: () => {
                 assetItems.value = assetItems.value.map((item) =>
-                    item.id === asset.id
-                        ? { ...item, wallVisibility }
-                        : item,
+                    item.id === asset.id ? { ...item, wallVisibility } : item,
                 );
 
                 toast.success(
@@ -1003,7 +1038,9 @@ const updateWallVisibility = (
 
 const toggleAssetSelection = (assetId: number): void => {
     if (selectedAssetIds.value.includes(assetId)) {
-        selectedAssetIds.value = selectedAssetIds.value.filter((id) => id !== assetId);
+        selectedAssetIds.value = selectedAssetIds.value.filter(
+            (id) => id !== assetId,
+        );
         return;
     }
 
@@ -1012,7 +1049,9 @@ const toggleAssetSelection = (assetId: number): void => {
 
 const toggleSelectAllVisible = (): void => {
     if (allVisibleSelected.value) {
-        const visibleIds = new Set(visibleAssets.value.map((asset) => asset.id));
+        const visibleIds = new Set(
+            visibleAssets.value.map((asset) => asset.id),
+        );
         selectedAssetIds.value = selectedAssetIds.value.filter(
             (id) => !visibleIds.has(id),
         );
@@ -1062,9 +1101,12 @@ const syncLiveMediaPoll = (): void => {
         liveMediaPollId = null;
     }
 
-    liveMediaPollId = window.setInterval(() => {
-        reloadLiveMedia();
-    }, hasLiveUpdatingAssets.value ? 5000 : 8000);
+    liveMediaPollId = window.setInterval(
+        () => {
+            reloadLiveMedia();
+        },
+        hasLiveUpdatingAssets.value ? 5000 : 8000,
+    );
 };
 
 const handleDocumentVisibilityChange = (): void => {
@@ -1076,21 +1118,31 @@ const handleDocumentVisibilityChange = (): void => {
     syncLiveMediaPoll();
 };
 
-watch(hasLiveUpdatingAssets, () => {
-    syncLiveMediaPoll();
-}, { immediate: true });
+watch(
+    hasLiveUpdatingAssets,
+    () => {
+        syncLiveMediaPoll();
+    },
+    { immediate: true },
+);
 
 onMounted(() => {
     if (typeof document === 'undefined') {
         return;
     }
 
-    document.addEventListener('visibilitychange', handleDocumentVisibilityChange);
+    document.addEventListener(
+        'visibilitychange',
+        handleDocumentVisibilityChange,
+    );
 });
 
 onUnmounted(() => {
     if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', handleDocumentVisibilityChange);
+        document.removeEventListener(
+            'visibilitychange',
+            handleDocumentVisibilityChange,
+        );
     }
 
     if (typeof window !== 'undefined' && liveMediaPollId !== null) {
@@ -1133,557 +1185,871 @@ const statCards = computed(() => [
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-7xl">
-            <section class="dashboard-panel">
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div class="max-w-3xl">
-                        <div class="dashboard-eyebrow">
-                            {{ t('media.page.kicker') }}
+                <section class="dashboard-panel">
+                    <div
+                        class="flex flex-wrap items-start justify-between gap-4"
+                    >
+                        <div class="max-w-3xl">
+                            <div class="dashboard-eyebrow">
+                                {{ t('media.page.kicker') }}
+                            </div>
+                            <h1 class="dashboard-title mt-2">
+                                {{ t('media.page.title') }}
+                            </h1>
+                            <p class="dashboard-body mt-2">
+                                {{ t('media.page.description') }}
+                            </p>
                         </div>
-                        <h1 class="dashboard-title mt-2">
-                            {{ t('media.page.title') }}
-                        </h1>
-                        <p class="dashboard-body mt-2">
-                            {{ t('media.page.description') }}
-                        </p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Button
+                                v-if="eventLinks.accountDashboard"
+                                as-child
+                                size="sm"
+                                variant="outline"
+                            >
+                                <a :href="eventLinks.accountDashboard">
+                                    <ExternalLink class="mr-2 size-4" />
+                                    {{ t('app.nav.events') }}
+                                </a>
+                            </Button>
+                            <div
+                                class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1"
+                            >
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(mediaView === 'relaxed')
+                                    "
+                                    :title="t('media.views.relaxed')"
+                                    @click="mediaView = 'relaxed'"
+                                >
+                                    <Columns2
+                                        :class="
+                                            pillToggleIconClass(
+                                                mediaView === 'relaxed',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.views.relaxed')
+                                    }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(
+                                            mediaView === 'balanced',
+                                        )
+                                    "
+                                    :title="t('media.views.balanced')"
+                                    @click="mediaView = 'balanced'"
+                                >
+                                    <Columns3
+                                        :class="
+                                            pillToggleIconClass(
+                                                mediaView === 'balanced',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.views.balanced')
+                                    }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(mediaView === 'dense')
+                                    "
+                                    :title="t('media.views.dense')"
+                                    @click="mediaView = 'dense'"
+                                >
+                                    <Grid2x2
+                                        :class="
+                                            pillToggleIconClass(
+                                                mediaView === 'dense',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.views.dense')
+                                    }}</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
+
+                    <dl
+                        class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4"
+                    >
+                        <div
+                            v-for="card in statCards"
+                            :key="card.key"
+                            class="dashboard-divider-left"
+                        >
+                            <dt
+                                class="dashboard-eyebrow flex items-center gap-2"
+                            >
+                                <component
+                                    :is="card.icon"
+                                    class="size-3.5 text-brand-muted/70"
+                                />
+                                {{ card.title }}
+                            </dt>
+                            <dd
+                                class="mt-2 text-lg font-semibold tracking-tight text-brand-ink"
+                            >
+                                {{ card.value }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div
+                        class="mt-5 flex flex-col gap-3 border-t border-brand-border/70 pt-4"
+                    >
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input
+                                v-model="searchQuery"
+                                type="text"
+                                :placeholder="
+                                    t('media.filters.search_placeholder')
+                                "
+                                class="h-10 min-w-[16rem] flex-1 rounded-xl border border-brand-border bg-brand-inverse px-3 text-sm text-brand-ink placeholder:text-brand-muted/80"
+                            />
+                            <div
+                                class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1"
+                            >
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(kindFilter === 'all')
+                                    "
+                                    :title="t('media.filters.all_uploads')"
+                                    @click="kindFilter = 'all'"
+                                >
+                                    <Grid2x2
+                                        :class="
+                                            pillToggleIconClass(
+                                                kindFilter === 'all',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.filters.all_uploads')
+                                    }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(kindFilter === 'photo')
+                                    "
+                                    :title="t('media.stats.photos')"
+                                    @click="kindFilter = 'photo'"
+                                >
+                                    <IconPhoto
+                                        :class="
+                                            pillToggleIconClass(
+                                                kindFilter === 'photo',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.stats.photos')
+                                    }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(kindFilter === 'video')
+                                    "
+                                    :title="t('media.stats.videos')"
+                                    @click="kindFilter = 'video'"
+                                >
+                                    <IconVideo
+                                        :class="
+                                            pillToggleIconClass(
+                                                kindFilter === 'video',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.stats.videos')
+                                    }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex size-9 items-center justify-center rounded-full transition"
+                                    :class="
+                                        pillToggleClass(kindFilter === 'text')
+                                    "
+                                    :title="t('media.stats.texts')"
+                                    @click="kindFilter = 'text'"
+                                >
+                                    <IconFileText
+                                        :class="
+                                            pillToggleIconClass(
+                                                kindFilter === 'text',
+                                            )
+                                        "
+                                    />
+                                    <span class="sr-only">{{
+                                        t('media.stats.texts')
+                                    }}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <Button
+                                size="sm"
+                                :variant="
+                                    moderationFilter === 'all'
+                                        ? 'secondary'
+                                        : 'outline'
+                                "
+                                @click="moderationFilter = 'all'"
+                            >
+                                {{ t('media.filters.any_status') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                :variant="
+                                    moderationFilter === 'approved'
+                                        ? 'secondary'
+                                        : 'outline'
+                                "
+                                @click="moderationFilter = 'approved'"
+                            >
+                                {{ t('media.filters.approved') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                :variant="
+                                    moderationFilter === 'processing'
+                                        ? 'secondary'
+                                        : 'outline'
+                                "
+                                @click="moderationFilter = 'processing'"
+                            >
+                                {{ t('media.filters.processing') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                :variant="
+                                    moderationFilter === 'rejected'
+                                        ? 'secondary'
+                                        : 'outline'
+                                "
+                                @click="moderationFilter = 'rejected'"
+                            >
+                                {{ t('media.filters.rejected') }}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="canManageMedia && selectedCount > 0"
+                        class="mt-1 flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
+                    >
+                        <p class="text-sm text-slate-700">
+                            {{
+                                t('media.bulk.selected', {
+                                    count: selectedCount,
+                                })
+                            }}
+                        </p>
                         <Button
-                            v-if="eventLinks.accountDashboard"
-                            as-child
                             size="sm"
                             variant="outline"
+                            @click="toggleSelectAllVisible"
                         >
-                            <a :href="eventLinks.accountDashboard">
-                                <ExternalLink class="mr-2 size-4" />
-                                {{ t('app.nav.events') }}
-                            </a>
-                        </Button>
-                        <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
-                        <button
-                            type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full transition"
-                            :class="pillToggleClass(mediaView === 'relaxed')"
-                            :title="t('media.views.relaxed')"
-                            @click="mediaView = 'relaxed'"
-                        >
-                            <Columns2 :class="pillToggleIconClass(mediaView === 'relaxed')" />
-                            <span class="sr-only">{{ t('media.views.relaxed') }}</span>
-                        </button>
-                        <button
-                            type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full transition"
-                            :class="pillToggleClass(mediaView === 'balanced')"
-                            :title="t('media.views.balanced')"
-                            @click="mediaView = 'balanced'"
-                        >
-                            <Columns3 :class="pillToggleIconClass(mediaView === 'balanced')" />
-                            <span class="sr-only">{{ t('media.views.balanced') }}</span>
-                        </button>
-                        <button
-                            type="button"
-                            class="inline-flex size-9 items-center justify-center rounded-full transition"
-                            :class="pillToggleClass(mediaView === 'dense')"
-                            :title="t('media.views.dense')"
-                            @click="mediaView = 'dense'"
-                        >
-                            <Grid2x2 :class="pillToggleIconClass(mediaView === 'dense')" />
-                            <span class="sr-only">{{ t('media.views.dense') }}</span>
-                        </button>
-                        </div>
-                    </div>
-                </div>
-
-                <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div
-                        v-for="card in statCards"
-                        :key="card.key"
-                        class="dashboard-divider-left"
-                    >
-                        <dt class="flex items-center gap-2 dashboard-eyebrow">
-                            <component :is="card.icon" class="size-3.5 text-brand-muted/70" />
-                            {{ card.title }}
-                        </dt>
-                        <dd class="mt-2 text-lg font-semibold tracking-tight text-brand-ink">
-                            {{ card.value }}
-                        </dd>
-                    </div>
-                </dl>
-
-                <div class="mt-5 flex flex-col gap-3 border-t border-brand-border/70 pt-4">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <input
-                            v-model="searchQuery"
-                            type="text"
-                            :placeholder="t('media.filters.search_placeholder')"
-                            class="h-10 min-w-[16rem] flex-1 rounded-xl border border-brand-border bg-brand-inverse px-3 text-sm text-brand-ink placeholder:text-brand-muted/80"
-                        />
-                        <div class="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1">
-                            <button
-                                type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full transition"
-                                :class="pillToggleClass(kindFilter === 'all')"
-                                :title="t('media.filters.all_uploads')"
-                                @click="kindFilter = 'all'"
-                            >
-                                <Grid2x2 :class="pillToggleIconClass(kindFilter === 'all')" />
-                                <span class="sr-only">{{ t('media.filters.all_uploads') }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full transition"
-                                :class="pillToggleClass(kindFilter === 'photo')"
-                                :title="t('media.stats.photos')"
-                                @click="kindFilter = 'photo'"
-                            >
-                                <IconPhoto :class="pillToggleIconClass(kindFilter === 'photo')" />
-                                <span class="sr-only">{{ t('media.stats.photos') }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full transition"
-                                :class="pillToggleClass(kindFilter === 'video')"
-                                :title="t('media.stats.videos')"
-                                @click="kindFilter = 'video'"
-                            >
-                                <IconVideo :class="pillToggleIconClass(kindFilter === 'video')" />
-                                <span class="sr-only">{{ t('media.stats.videos') }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex size-9 items-center justify-center rounded-full transition"
-                                :class="pillToggleClass(kindFilter === 'text')"
-                                :title="t('media.stats.texts')"
-                                @click="kindFilter = 'text'"
-                            >
-                                <IconFileText :class="pillToggleIconClass(kindFilter === 'text')" />
-                                <span class="sr-only">{{ t('media.stats.texts') }}</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <Button
-                            size="sm"
-                            :variant="moderationFilter === 'all' ? 'secondary' : 'outline'"
-                            @click="moderationFilter = 'all'"
-                        >
-                            {{ t('media.filters.any_status') }}
+                            {{
+                                allVisibleSelected
+                                    ? t('media.bulk.unselect_visible')
+                                    : t('media.bulk.select_visible', {
+                                          count: visibleAssets.length,
+                                      })
+                            }}
                         </Button>
                         <Button
                             size="sm"
-                            :variant="moderationFilter === 'approved' ? 'secondary' : 'outline'"
-                            @click="moderationFilter = 'approved'"
+                            variant="outline"
+                            @click="selectedAssetIds = []"
                         >
-                            {{ t('media.filters.approved') }}
+                            {{ t('media.bulk.clear_selection') }}
                         </Button>
                         <Button
                             size="sm"
-                            :variant="moderationFilter === 'processing' ? 'secondary' : 'outline'"
-                            @click="moderationFilter = 'processing'"
+                            variant="outline"
+                            :disabled="moderationAssetId !== null"
+                            data-test="approve-selected-button"
+                            @click="bulkUpdateModeration('approved')"
                         >
-                            {{ t('media.filters.processing') }}
+                            <Check class="mr-2 size-4" />
+                            {{ t('media.bulk.approve') }}
                         </Button>
                         <Button
                             size="sm"
-                            :variant="moderationFilter === 'rejected' ? 'secondary' : 'outline'"
-                            @click="moderationFilter = 'rejected'"
+                            variant="outline"
+                            :disabled="moderationAssetId !== null"
+                            @click="bulkUpdateModeration('rejected')"
                         >
-                            {{ t('media.filters.rejected') }}
+                            <X class="mr-2 size-4" />
+                            {{ t('media.bulk.reject') }}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="destructive"
+                            @click="bulkDeleteOpen = true"
+                        >
+                            <Trash2 class="mr-2 size-4" />
+                            {{ t('media.bulk.delete') }}
                         </Button>
                     </div>
-                </div>
 
-                <div
-                    v-if="canManageMedia && selectedCount > 0"
-                    class="mt-1 flex flex-wrap items-center gap-2 border-t border-black/5 pt-4"
-                >
-                    <p class="text-sm text-slate-700">
-                        {{ t('media.bulk.selected', { count: selectedCount }) }}
-                    </p>
-                    <Button size="sm" variant="outline" @click="toggleSelectAllVisible">
-                        {{
-                            allVisibleSelected
-                                ? t('media.bulk.unselect_visible')
-                                : t('media.bulk.select_visible', { count: visibleAssets.length })
-                        }}
-                    </Button>
-                    <Button size="sm" variant="outline" @click="selectedAssetIds = []">
-                        {{ t('media.bulk.clear_selection') }}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        :disabled="moderationAssetId !== null"
-                        data-test="approve-selected-button"
-                        @click="bulkUpdateModeration('approved')"
+                    <Empty
+                        v-if="!hasAnyUploads"
+                        class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
                     >
-                        <Check class="mr-2 size-4" />
-                        {{ t('media.bulk.approve') }}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        :disabled="moderationAssetId !== null"
-                        @click="bulkUpdateModeration('rejected')"
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <ImageIcon class="size-5" />
+                            </EmptyMedia>
+                            <EmptyTitle>{{
+                                t('media.empty.none_title')
+                            }}</EmptyTitle>
+                            <EmptyDescription>
+                                {{ t('media.empty.none_description') }}
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+
+                    <Empty
+                        v-else-if="filteredAssets.length === 0"
+                        class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
                     >
-                        <X class="mr-2 size-4" />
-                        {{ t('media.bulk.reject') }}
-                    </Button>
-                    <Button size="sm" variant="destructive" @click="bulkDeleteOpen = true">
-                        <Trash2 class="mr-2 size-4" />
-                        {{ t('media.bulk.delete') }}
-                    </Button>
-                </div>
-
-                <Empty
-                    v-if="!hasAnyUploads"
-                    class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
-                >
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <ImageIcon class="size-5" />
-                        </EmptyMedia>
-                        <EmptyTitle>{{ t('media.empty.none_title') }}</EmptyTitle>
-                        <EmptyDescription>
-                            {{ t('media.empty.none_description') }}
-                        </EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
-
-                <Empty
-                    v-else-if="filteredAssets.length === 0"
-                    class="mt-4 rounded-2xl border border-brand-border/70 bg-brand-inverse py-14"
-                >
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <X class="size-5" />
-                        </EmptyMedia>
-                        <EmptyTitle>{{ t('media.empty.filtered_title') }}</EmptyTitle>
-                        <EmptyDescription>
-                            {{ t('media.empty.filtered_description') }}
-                        </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent v-if="hasMediaFiltersApplied">
-                        <Button variant="outline" @click="resetMediaFilters">
-                            {{ t('media.filters.clear') }}
-                        </Button>
-                    </EmptyContent>
-                </Empty>
-
-                <div
-                    v-else
-                    class="mt-4"
-                    :class="mediaGridClass"
-                >
-                    <article
-                        v-for="asset in visibleAssets"
-                        :key="asset.id"
-                        class="group relative overflow-hidden rounded-none bg-slate-100"
-                    >
-                        <div class="relative aspect-[3/4] w-full overflow-hidden">
-                            <div
-                                v-if="
-                                    ((asset.kind === 'photo' || asset.kind === 'video') && assetThumbnailSource(asset))
-                                    && !isMediaLoaded(mediaLoadKey(asset.id, 'grid'))
-                                "
-                                class="absolute inset-0 animate-pulse bg-white/50"
-                            />
-                            <button
-                                type="button"
-                                class="absolute inset-0 z-0 block h-full w-full overflow-hidden text-left"
-                                @click="openAssetDetails(asset, 'main')"
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <X class="size-5" />
+                            </EmptyMedia>
+                            <EmptyTitle>{{
+                                t('media.empty.filtered_title')
+                            }}</EmptyTitle>
+                            <EmptyDescription>
+                                {{ t('media.empty.filtered_description') }}
+                            </EmptyDescription>
+                        </EmptyHeader>
+                        <EmptyContent v-if="hasMediaFiltersApplied">
+                            <Button
+                                variant="outline"
+                                @click="resetMediaFilters"
                             >
-                            <img
-                                v-if="
-                                    asset.kind === 'photo' &&
-                                    assetThumbnailSource(asset)
-                                "
-                                :src="assetThumbnailSource(asset) ?? undefined"
-                                alt="Uploaded event asset"
-                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
-                                :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
-                                @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
-                                @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
-                            />
-                            <img
-                                v-else-if="asset.kind === 'video' && asset.thumbnailUrl"
-                                :src="asset.thumbnailUrl"
-                                alt="Uploaded event video"
-                                class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
-                                :class="isMediaLoaded(mediaLoadKey(asset.id, 'grid')) ? 'opacity-100' : 'opacity-0'"
-                                @load="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
-                                @error="markMediaLoaded(mediaLoadKey(asset.id, 'grid'))"
-                            />
-                            <video
-                                v-else-if="asset.kind === 'video' && asset.previewUrl"
-                                :src="asset.previewUrl"
-                                class="h-full w-full rounded-none object-cover"
-                                preload="metadata"
-                                playsinline
-                            />
-                            <div
-                                v-else-if="asset.kind === 'video' && asset.videoProcessing"
-                                class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 text-center text-slate-500"
-                            >
-                                <LoaderCircle class="size-7 animate-spin text-slate-400" />
-                                <p class="text-xs font-semibold text-slate-700">
-                                    {{ t('media.shared.processing_video') }}
-                                </p>
-                            </div>
-                            <div
-                                v-else-if="asset.kind === 'text'"
-                                class="flex h-full w-full items-center justify-center p-5"
-                                :style="textPostSurfaceStyle(asset)"
-                            >
-                                <p
-                                    class="line-clamp-6 whitespace-pre-wrap text-sm font-medium"
-                                    :style="textPostTextStyle(asset)"
-                                >
-                                    {{ asset.text ?? t('media.kind.text') }}
-                                </p>
-                            </div>
-                            <div
-                                v-else
-                                class="flex h-full w-full items-center justify-center text-sm text-muted-foreground"
-                            >
-                                {{ t('media.shared.preview_unavailable') }}
-                            </div>
+                                {{ t('media.filters.clear') }}
+                            </Button>
+                        </EmptyContent>
+                    </Empty>
 
+                    <div v-else class="mt-4" :class="mediaGridClass">
+                        <article
+                            v-for="asset in visibleAssets"
+                            :key="asset.id"
+                            class="group relative overflow-hidden rounded-none bg-slate-100"
+                        >
                             <div
-                                v-if="showsGridAssetChrome(asset)"
-                                class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/68 via-black/22 to-transparent"
-                            />
-
-                            <div
-                                v-if="showsGridAssetChrome(asset)"
-                                class="absolute left-3 top-3 flex items-center gap-2"
-                            >
-                                <label
-                                    v-if="canManageMedia"
-                                    class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                    :data-test="`asset-select-toggle-${asset.id}`"
-                                    @click.stop
-                                >
-                                    <input
-                                        type="checkbox"
-                                        class="sr-only"
-                                        :data-test="`asset-select-${asset.id}`"
-                                        :checked="selectedAssetIds.includes(asset.id)"
-                                        @click.stop
-                                        @change.stop="toggleAssetSelection(asset.id)"
-                                    />
-                                    <Check
-                                        v-if="selectedAssetIds.includes(asset.id)"
-                                        class="size-4"
-                                    />
-                                </label>
-                                <span
-                                    class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                    :title="kindLabel(asset.kind)"
-                                >
-                                    <component :is="kindIcon(asset.kind)" class="size-4" />
-                                </span>
-                                <span
-                                    class="inline-flex size-8 items-center justify-center rounded-full"
-                                    :class="moderationBadgeClass(asset.moderationStatus)"
-                                    :title="moderationStatusLabel(asset.moderationStatus)"
-                                >
-                                    <component
-                                        :is="moderationIcon(asset.moderationStatus)"
-                                        class="size-4"
-                                    />
-                                </span>
-                            </div>
-                            </button>
-
-                            <div
-                                v-if="showsWallDecisionOverlay(asset)"
-                                class="absolute inset-0 z-20 grid grid-cols-2 overflow-hidden"
-                            >
-                                <button
-                                    type="button"
-                                    class="flex h-full items-center justify-center bg-rose-500/18 text-white transition hover:bg-rose-500/26 disabled:pointer-events-none disabled:opacity-55"
-                                    :disabled="wallVisibilityAssetId === asset.id"
-                                    :aria-label="`Hide ${asset.guestName} upload from photo wall`"
-                                    @click.stop="updateWallVisibility(asset, 'rejected')"
-                                >
-                                    <ThumbsDown class="size-12 sm:size-14" />
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="flex h-full items-center justify-center bg-emerald-500/20 text-white transition hover:bg-emerald-500/28 disabled:pointer-events-none disabled:opacity-55"
-                                    :disabled="wallVisibilityAssetId === asset.id"
-                                    :aria-label="`Show ${asset.guestName} upload on photo wall`"
-                                    @click.stop="updateWallVisibility(asset, 'approved')"
-                                >
-                                    <ThumbsUp class="size-12 sm:size-14" />
-                                </button>
-                            </div>
-
-                            <div
-                                v-if="showsGridAssetChrome(asset)"
-                                class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
+                                class="relative aspect-[3/4] w-full overflow-hidden"
                             >
                                 <div
-                                    class="min-w-0 flex items-center"
-                                    :class="showsGridAssetAvatar() ? 'gap-2' : 'gap-0'"
+                                    v-if="
+                                        (asset.kind === 'photo' ||
+                                            asset.kind === 'video') &&
+                                        assetThumbnailSource(asset) &&
+                                        !isMediaLoaded(
+                                            mediaLoadKey(asset.id, 'grid'),
+                                        )
+                                    "
+                                    class="absolute inset-0 animate-pulse bg-white/50"
+                                />
+                                <button
+                                    type="button"
+                                    class="absolute inset-0 z-0 block h-full w-full overflow-hidden text-left"
+                                    @click="openAssetDetails(asset, 'main')"
                                 >
-                                    <Avatar
-                                        v-if="showsGridAssetAvatar()"
-                                        class="size-9 border border-white/20 shadow-sm"
+                                    <img
+                                        v-if="
+                                            asset.kind === 'photo' &&
+                                            assetThumbnailSource(asset)
+                                        "
+                                        :src="
+                                            assetThumbnailSource(asset) ??
+                                            undefined
+                                        "
+                                        alt="Uploaded event asset"
+                                        class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
+                                        :class="
+                                            isMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="
+                                            markMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                        "
+                                        @error="
+                                            markMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                        "
+                                    />
+                                    <img
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.thumbnailUrl
+                                        "
+                                        :src="asset.thumbnailUrl"
+                                        alt="Uploaded event video"
+                                        class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.01]"
+                                        :class="
+                                            isMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="
+                                            markMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                        "
+                                        @error="
+                                            markMediaLoaded(
+                                                mediaLoadKey(asset.id, 'grid'),
+                                            )
+                                        "
+                                    />
+                                    <video
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.previewUrl
+                                        "
+                                        :src="asset.previewUrl"
+                                        class="h-full w-full rounded-none object-cover"
+                                        preload="metadata"
+                                        playsinline
+                                    />
+                                    <div
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.videoProcessing
+                                        "
+                                        class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 text-center text-slate-500"
                                     >
-                                        <AvatarFallback
-                                            :class="avatarFallbackClass(asset.guestName)"
-                                        >
-                                            {{ guestInitials(asset.guestName) }}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-white">
-                                            {{ asset.guestName }}
-                                        </p>
-                                        <p class="mt-0.5 truncate text-[11px] text-white/70">
-                                            {{ wallVisibilityMetaText(asset.wallVisibility) }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <span class="shrink-0 text-[11px] text-white/75">
-                                    {{ formatDateTime(asset.createdAt) }}
-                                </span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div
-                    v-if="canLoadMore"
-                    class="flex justify-center"
-                >
-                    <Button variant="outline" @click="visibleCount += 24">
-                        {{ t('media.actions.load_more') }}
-                    </Button>
-                </div>
-            </section>
-
-            <section class="space-y-4">
-                <div>
-                    <h2 class="text-xl font-semibold">{{ t('media.attendees.title') }}</h2>
-                    <p class="mt-1 text-sm text-muted-foreground">
-                        {{ t('media.attendees.description') }}
-                    </p>
-                </div>
-
-                <div class="overflow-hidden rounded-2xl border bg-white">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{{ t('media.attendees.table.attendee') }}</TableHead>
-                                <TableHead>{{ t('media.attendees.table.photos') }}</TableHead>
-                                <TableHead>{{ t('media.attendees.table.videos') }}</TableHead>
-                                <TableHead>{{ t('media.attendees.table.text') }}</TableHead>
-                                <TableHead>{{ t('media.attendees.table.last_upload') }}</TableHead>
-                                <TableHead class="text-right">{{ t('media.attendees.table.action') }}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableEmpty
-                                v-if="groupedAttendees.length === 0"
-                                :colspan="6"
-                            >
-                                <Empty class="border-0 p-0">
-                                    <EmptyHeader>
-                                        <EmptyMedia variant="icon">
-                                            <UserRound class="size-5" />
-                                        </EmptyMedia>
-                                        <EmptyTitle>{{ t('media.attendees.empty_title') }}</EmptyTitle>
-                                        <EmptyDescription>
-                                            {{ t('media.attendees.empty_description') }}
-                                        </EmptyDescription>
-                                    </EmptyHeader>
-                                </Empty>
-                            </TableEmpty>
-                            <TableRow
-                                v-for="attendee in paginatedAttendees"
-                                :key="attendee.key"
-                            >
-                                <TableCell>
-                                    <div>
-                                        <p class="font-medium text-slate-900">
-                                            {{ attendee.guestName }}
-                                        </p>
+                                        <LoaderCircle
+                                            class="size-7 animate-spin text-slate-400"
+                                        />
                                         <p
-                                            v-if="attendee.guestEmail"
-                                            class="text-xs text-muted-foreground"
+                                            class="text-xs font-semibold text-slate-700"
                                         >
-                                            {{ attendee.guestEmail }}
+                                            {{
+                                                t(
+                                                    'media.shared.processing_video',
+                                                )
+                                            }}
                                         </p>
                                     </div>
-                                </TableCell>
-                                <TableCell>{{ attendee.photoCount }}</TableCell>
-                                <TableCell>{{ attendee.videoCount }}</TableCell>
-                                <TableCell>{{ attendee.textCount }}</TableCell>
-                                <TableCell>{{ formatDateTime(attendee.latestCreatedAt) }}</TableCell>
-                                <TableCell class="text-right">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        @click="openAttendee(attendee.key)"
+                                    <div
+                                        v-else-if="asset.kind === 'text'"
+                                        class="flex h-full w-full items-center justify-center p-5"
+                                        :style="textPostSurfaceStyle(asset)"
                                     >
-                                        {{ t('media.attendees.view_uploads') }}
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                                        <p
+                                            class="line-clamp-6 text-sm font-medium whitespace-pre-wrap"
+                                            :style="textPostTextStyle(asset)"
+                                        >
+                                            {{
+                                                asset.text ??
+                                                t('media.kind.text')
+                                            }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-else
+                                        class="flex h-full w-full items-center justify-center text-sm text-muted-foreground"
+                                    >
+                                        {{
+                                            t(
+                                                'media.shared.preview_unavailable',
+                                            )
+                                        }}
+                                    </div>
 
-                <div
-                    v-if="groupedAttendees.length > attendeesPerPage"
-                    class="flex items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3"
-                >
-                    <p class="text-sm text-slate-500">
-                        {{ t('media.attendees.page_of', { page: attendeePage, total: attendeePageCount }) }}
-                    </p>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            :disabled="!attendeeHasPreviousPage"
-                            @click="attendeePage = Math.max(1, attendeePage - 1)"
-                        >
-                            {{ t('media.attendees.previous') }}
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            :disabled="!attendeeHasNextPage"
-                            @click="attendeePage = Math.min(attendeePageCount, attendeePage + 1)"
-                        >
-                            {{ t('media.attendees.next') }}
+                                    <div
+                                        v-if="showsGridAssetChrome(asset)"
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/68 via-black/22 to-transparent"
+                                    />
+
+                                    <div
+                                        v-if="showsGridAssetChrome(asset)"
+                                        class="absolute top-3 left-3 flex items-center gap-2"
+                                    >
+                                        <label
+                                            v-if="canManageMedia"
+                                            class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
+                                            :data-test="`asset-select-toggle-${asset.id}`"
+                                            @click.stop
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                class="sr-only"
+                                                :data-test="`asset-select-${asset.id}`"
+                                                :checked="
+                                                    selectedAssetIds.includes(
+                                                        asset.id,
+                                                    )
+                                                "
+                                                @click.stop
+                                                @change.stop="
+                                                    toggleAssetSelection(
+                                                        asset.id,
+                                                    )
+                                                "
+                                            />
+                                            <Check
+                                                v-if="
+                                                    selectedAssetIds.includes(
+                                                        asset.id,
+                                                    )
+                                                "
+                                                class="size-4"
+                                            />
+                                        </label>
+                                        <span
+                                            class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
+                                            :title="kindLabel(asset.kind)"
+                                        >
+                                            <component
+                                                :is="kindIcon(asset.kind)"
+                                                class="size-4"
+                                            />
+                                        </span>
+                                        <span
+                                            class="inline-flex size-8 items-center justify-center rounded-full"
+                                            :class="
+                                                moderationBadgeClass(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                            :title="
+                                                moderationStatusLabel(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                        >
+                                            <component
+                                                :is="
+                                                    moderationIcon(
+                                                        asset.moderationStatus,
+                                                    )
+                                                "
+                                                class="size-4"
+                                            />
+                                        </span>
+                                    </div>
+                                </button>
+
+                                <div
+                                    v-if="showsWallDecisionOverlay(asset)"
+                                    class="absolute inset-0 z-20 grid grid-cols-2 overflow-hidden"
+                                >
+                                    <button
+                                        type="button"
+                                        class="flex h-full items-center justify-center bg-rose-500/18 text-white transition hover:bg-rose-500/26 disabled:pointer-events-none disabled:opacity-55"
+                                        :disabled="
+                                            wallVisibilityAssetId === asset.id
+                                        "
+                                        :aria-label="`Hide ${asset.guestName} upload from photo wall`"
+                                        @click.stop="
+                                            updateWallVisibility(
+                                                asset,
+                                                'rejected',
+                                            )
+                                        "
+                                    >
+                                        <ThumbsDown
+                                            class="size-12 sm:size-14"
+                                        />
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="flex h-full items-center justify-center bg-emerald-500/20 text-white transition hover:bg-emerald-500/28 disabled:pointer-events-none disabled:opacity-55"
+                                        :disabled="
+                                            wallVisibilityAssetId === asset.id
+                                        "
+                                        :aria-label="`Show ${asset.guestName} upload on photo wall`"
+                                        @click.stop="
+                                            updateWallVisibility(
+                                                asset,
+                                                'approved',
+                                            )
+                                        "
+                                    >
+                                        <ThumbsUp class="size-12 sm:size-14" />
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="showsGridAssetChrome(asset)"
+                                    class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
+                                >
+                                    <div
+                                        class="flex min-w-0 items-center"
+                                        :class="
+                                            showsGridAssetAvatar()
+                                                ? 'gap-2'
+                                                : 'gap-0'
+                                        "
+                                    >
+                                        <Avatar
+                                            v-if="showsGridAssetAvatar()"
+                                            class="size-9 border border-white/20 shadow-sm"
+                                        >
+                                            <AvatarFallback
+                                                :class="
+                                                    avatarFallbackClass(
+                                                        asset.guestName,
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    guestInitials(
+                                                        asset.guestName,
+                                                    )
+                                                }}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div class="min-w-0">
+                                            <p
+                                                class="truncate text-sm font-semibold text-white"
+                                            >
+                                                {{ asset.guestName }}
+                                            </p>
+                                            <p
+                                                class="mt-0.5 truncate text-[11px] text-white/70"
+                                            >
+                                                {{
+                                                    wallVisibilityMetaText(
+                                                        asset.wallVisibility,
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="shrink-0 text-[11px] text-white/75"
+                                    >
+                                        {{ formatDateTime(asset.createdAt) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div v-if="canLoadMore" class="flex justify-center">
+                        <Button variant="outline" @click="visibleCount += 24">
+                            {{ t('media.actions.load_more') }}
                         </Button>
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <section class="space-y-4">
+                    <div>
+                        <h2 class="text-xl font-semibold">
+                            {{ t('media.attendees.title') }}
+                        </h2>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            {{ t('media.attendees.description') }}
+                        </p>
+                    </div>
+
+                    <div class="overflow-hidden rounded-2xl border bg-white">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{{
+                                        t('media.attendees.table.attendee')
+                                    }}</TableHead>
+                                    <TableHead>{{
+                                        t('media.attendees.table.photos')
+                                    }}</TableHead>
+                                    <TableHead>{{
+                                        t('media.attendees.table.videos')
+                                    }}</TableHead>
+                                    <TableHead>{{
+                                        t('media.attendees.table.text')
+                                    }}</TableHead>
+                                    <TableHead>{{
+                                        t('media.attendees.table.last_upload')
+                                    }}</TableHead>
+                                    <TableHead class="text-right">{{
+                                        t('media.attendees.table.action')
+                                    }}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableEmpty
+                                    v-if="groupedAttendees.length === 0"
+                                    :colspan="6"
+                                >
+                                    <Empty class="border-0 p-0">
+                                        <EmptyHeader>
+                                            <EmptyMedia variant="icon">
+                                                <UserRound class="size-5" />
+                                            </EmptyMedia>
+                                            <EmptyTitle>{{
+                                                t('media.attendees.empty_title')
+                                            }}</EmptyTitle>
+                                            <EmptyDescription>
+                                                {{
+                                                    t(
+                                                        'media.attendees.empty_description',
+                                                    )
+                                                }}
+                                            </EmptyDescription>
+                                        </EmptyHeader>
+                                    </Empty>
+                                </TableEmpty>
+                                <TableRow
+                                    v-for="attendee in paginatedAttendees"
+                                    :key="attendee.key"
+                                >
+                                    <TableCell>
+                                        <div>
+                                            <p
+                                                class="font-medium text-slate-900"
+                                            >
+                                                {{ attendee.guestName }}
+                                            </p>
+                                            <p
+                                                v-if="attendee.guestEmail"
+                                                class="text-xs text-muted-foreground"
+                                            >
+                                                {{ attendee.guestEmail }}
+                                            </p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{{
+                                        attendee.photoCount
+                                    }}</TableCell>
+                                    <TableCell>{{
+                                        attendee.videoCount
+                                    }}</TableCell>
+                                    <TableCell>{{
+                                        attendee.textCount
+                                    }}</TableCell>
+                                    <TableCell>{{
+                                        formatDateTime(attendee.latestCreatedAt)
+                                    }}</TableCell>
+                                    <TableCell class="text-right">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            @click="openAttendee(attendee.key)"
+                                        >
+                                            {{
+                                                t(
+                                                    'media.attendees.view_uploads',
+                                                )
+                                            }}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    <div
+                        v-if="groupedAttendees.length > attendeesPerPage"
+                        class="flex items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3"
+                    >
+                        <p class="text-sm text-slate-500">
+                            {{
+                                t('media.attendees.page_of', {
+                                    page: attendeePage,
+                                    total: attendeePageCount,
+                                })
+                            }}
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                :disabled="!attendeeHasPreviousPage"
+                                @click="
+                                    attendeePage = Math.max(1, attendeePage - 1)
+                                "
+                            >
+                                {{ t('media.attendees.previous') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                :disabled="!attendeeHasNextPage"
+                                @click="
+                                    attendeePage = Math.min(
+                                        attendeePageCount,
+                                        attendeePage + 1,
+                                    )
+                                "
+                            >
+                                {{ t('media.attendees.next') }}
+                            </Button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 
         <Dialog
             :open="selectedAttendee !== null"
-            @update:open="(open) => { if (!open) selectedAttendeeKey = null; }"
+            @update:open="
+                (open) => {
+                    if (!open) selectedAttendeeKey = null;
+                }
+            "
         >
             <DialogContent class="max-w-5xl rounded-[2rem] p-0">
                 <div class="space-y-5 p-6">
                     <DialogHeader class="text-left">
-                        <DialogTitle>{{ selectedAttendee?.guestName ?? t('media.attendees.uploads_dialog_title') }}</DialogTitle>
+                        <DialogTitle>{{
+                            selectedAttendee?.guestName ??
+                            t('media.attendees.uploads_dialog_title')
+                        }}</DialogTitle>
                         <DialogDescription class="space-y-1">
                             <span class="block">
-                                {{ t('media.attendees.uploads_count', { count: selectedAttendee?.uploadCount ?? 0 }) }}
+                                {{
+                                    t('media.attendees.uploads_count', {
+                                        count:
+                                            selectedAttendee?.uploadCount ?? 0,
+                                    })
+                                }}
                             </span>
                             <span
                                 v-if="selectedAttendee?.latestCreatedAt"
                                 class="block"
                             >
-                                {{ t('media.attendees.last_upload_label') }} {{ formatDateTime(selectedAttendee.latestCreatedAt) }}
+                                {{ t('media.attendees.last_upload_label') }}
+                                {{
+                                    formatDateTime(
+                                        selectedAttendee.latestCreatedAt,
+                                    )
+                                }}
                             </span>
                         </DialogDescription>
                     </DialogHeader>
@@ -1692,7 +2058,9 @@ const statCards = computed(() => [
                         v-if="selectedAttendee"
                         class="flex flex-wrap gap-3 text-sm text-muted-foreground"
                     >
-                        <div class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5">
+                        <div
+                            class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5"
+                        >
                             <UserRound class="size-4" />
                             <span>{{ selectedAttendee.guestName }}</span>
                         </div>
@@ -1720,9 +2088,13 @@ const statCards = computed(() => [
                             <EmptyMedia variant="icon">
                                 <ImageIcon class="size-5" />
                             </EmptyMedia>
-                            <EmptyTitle>{{ t('media.attendees.no_uploads_title') }}</EmptyTitle>
+                            <EmptyTitle>{{
+                                t('media.attendees.no_uploads_title')
+                            }}</EmptyTitle>
                             <EmptyDescription>
-                                {{ t('media.attendees.no_uploads_description') }}
+                                {{
+                                    t('media.attendees.no_uploads_description')
+                                }}
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
@@ -1736,11 +2108,17 @@ const statCards = computed(() => [
                             :key="`attendee-asset-${asset.id}`"
                             class="group relative overflow-hidden rounded-none bg-slate-100"
                         >
-                            <div class="relative aspect-[3/4] w-full overflow-hidden">
+                            <div
+                                class="relative aspect-[3/4] w-full overflow-hidden"
+                            >
                                 <div
                                     v-if="
-                                        ((asset.kind === 'photo' || asset.kind === 'video') && assetThumbnailSource(asset))
-                                        && !isMediaLoaded(mediaLoadKey(asset.id, 'attendee'))
+                                        (asset.kind === 'photo' ||
+                                            asset.kind === 'video') &&
+                                        assetThumbnailSource(asset) &&
+                                        !isMediaLoaded(
+                                            mediaLoadKey(asset.id, 'attendee'),
+                                        )
                                     "
                                     class="absolute inset-0 animate-pulse bg-white/50"
                                 />
@@ -1749,94 +2127,200 @@ const statCards = computed(() => [
                                     class="absolute inset-0 block h-full w-full overflow-hidden text-left"
                                     @click="openAssetDetails(asset, 'attendee')"
                                 >
-                                <img
-                                    v-if="
-                                        asset.kind === 'photo' &&
-                                        assetThumbnailSource(asset)
-                                    "
-                                    :src="assetThumbnailSource(asset) ?? undefined"
-                                    alt="Attendee upload"
-                                    class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
-                                    :class="isMediaLoaded(mediaLoadKey(asset.id, 'attendee')) ? 'opacity-100' : 'opacity-0'"
-                                    @load="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
-                                    @error="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
-                                />
-                                <img
-                                    v-else-if="asset.kind === 'video' && asset.thumbnailUrl"
-                                    :src="asset.thumbnailUrl"
-                                    alt="Attendee video upload"
-                                    class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
-                                    :class="isMediaLoaded(mediaLoadKey(asset.id, 'attendee')) ? 'opacity-100' : 'opacity-0'"
-                                    @load="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
-                                    @error="markMediaLoaded(mediaLoadKey(asset.id, 'attendee'))"
-                                />
-                                <video
-                                    v-else-if="asset.kind === 'video' && asset.previewUrl"
-                                    :src="asset.previewUrl"
-                                    class="h-full w-full rounded-none object-cover"
-                                    preload="metadata"
-                                    playsinline
-                                />
-                                <div
-                                    v-else-if="asset.kind === 'video' && asset.videoProcessing"
-                                    class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 text-center text-slate-500"
-                                >
-                                    <LoaderCircle class="size-7 animate-spin text-slate-400" />
-                                    <p class="text-xs font-semibold text-slate-700">
-                                        {{ t('media.shared.processing_video') }}
-                                    </p>
-                                </div>
-                                <div
-                                    v-else-if="asset.kind === 'text'"
-                                    class="flex h-full w-full items-center justify-center p-5"
-                                    :style="textPostSurfaceStyle(asset)"
-                                >
-                                    <p
-                                        class="line-clamp-6 whitespace-pre-wrap text-sm font-medium"
-                                        :style="textPostTextStyle(asset)"
+                                    <img
+                                        v-if="
+                                            asset.kind === 'photo' &&
+                                            assetThumbnailSource(asset)
+                                        "
+                                        :src="
+                                            assetThumbnailSource(asset) ??
+                                            undefined
+                                        "
+                                        alt="Attendee upload"
+                                        class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
+                                        :class="
+                                            isMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="
+                                            markMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                        "
+                                        @error="
+                                            markMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                        "
+                                    />
+                                    <img
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.thumbnailUrl
+                                        "
+                                        :src="asset.thumbnailUrl"
+                                        alt="Attendee video upload"
+                                        class="h-full w-full rounded-none object-cover transition duration-300 group-hover:scale-[1.03]"
+                                        :class="
+                                            isMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        "
+                                        @load="
+                                            markMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                        "
+                                        @error="
+                                            markMediaLoaded(
+                                                mediaLoadKey(
+                                                    asset.id,
+                                                    'attendee',
+                                                ),
+                                            )
+                                        "
+                                    />
+                                    <video
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.previewUrl
+                                        "
+                                        :src="asset.previewUrl"
+                                        class="h-full w-full rounded-none object-cover"
+                                        preload="metadata"
+                                        playsinline
+                                    />
+                                    <div
+                                        v-else-if="
+                                            asset.kind === 'video' &&
+                                            asset.videoProcessing
+                                        "
+                                        class="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 text-center text-slate-500"
                                     >
-                                        {{ asset.text ?? t('media.kind.text') }}
-                                    </p>
-                                </div>
-
-                                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
-
-                                <div class="absolute left-3 top-3 flex items-center gap-2">
-                                    <span
-                                        class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                        :title="kindLabel(asset.kind)"
-                                    >
-                                        <component :is="kindIcon(asset.kind)" class="size-4" />
-                                    </span>
-                                    <span
-                                        class="inline-flex size-8 items-center justify-center rounded-full"
-                                        :class="moderationBadgeClass(asset.moderationStatus)"
-                                        :title="moderationStatusLabel(asset.moderationStatus)"
-                                    >
-                                        <component
-                                            :is="moderationIcon(asset.moderationStatus)"
-                                            class="size-4"
+                                        <LoaderCircle
+                                            class="size-7 animate-spin text-slate-400"
                                         />
-                                    </span>
-                                </div>
+                                        <p
+                                            class="text-xs font-semibold text-slate-700"
+                                        >
+                                            {{
+                                                t(
+                                                    'media.shared.processing_video',
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-else-if="asset.kind === 'text'"
+                                        class="flex h-full w-full items-center justify-center p-5"
+                                        :style="textPostSurfaceStyle(asset)"
+                                    >
+                                        <p
+                                            class="line-clamp-6 text-sm font-medium whitespace-pre-wrap"
+                                            :style="textPostTextStyle(asset)"
+                                        >
+                                            {{
+                                                asset.text ??
+                                                t('media.kind.text')
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+                                    />
+
+                                    <div
+                                        class="absolute top-3 left-3 flex items-center gap-2"
+                                    >
+                                        <span
+                                            class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
+                                            :title="kindLabel(asset.kind)"
+                                        >
+                                            <component
+                                                :is="kindIcon(asset.kind)"
+                                                class="size-4"
+                                            />
+                                        </span>
+                                        <span
+                                            class="inline-flex size-8 items-center justify-center rounded-full"
+                                            :class="
+                                                moderationBadgeClass(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                            :title="
+                                                moderationStatusLabel(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                        >
+                                            <component
+                                                :is="
+                                                    moderationIcon(
+                                                        asset.moderationStatus,
+                                                    )
+                                                "
+                                                class="size-4"
+                                            />
+                                        </span>
+                                    </div>
                                 </button>
 
-                                <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3">
-                                    <div class="min-w-0 flex items-center gap-2">
-                                        <Avatar class="size-9 border border-white/20 shadow-sm">
+                                <div
+                                    class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
+                                >
+                                    <div
+                                        class="flex min-w-0 items-center gap-2"
+                                    >
+                                        <Avatar
+                                            class="size-9 border border-white/20 shadow-sm"
+                                        >
                                             <AvatarFallback
-                                                :class="avatarFallbackClass(asset.guestName)"
+                                                :class="
+                                                    avatarFallbackClass(
+                                                        asset.guestName,
+                                                    )
+                                                "
                                             >
-                                                {{ guestInitials(asset.guestName) }}
+                                                {{
+                                                    guestInitials(
+                                                        asset.guestName,
+                                                    )
+                                                }}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div class="min-w-0">
-                                            <p class="truncate text-sm font-semibold text-white">
+                                            <p
+                                                class="truncate text-sm font-semibold text-white"
+                                            >
                                                 {{ asset.guestName }}
                                             </p>
                                         </div>
                                     </div>
-                                    <span class="shrink-0 text-[11px] text-white/75">
+                                    <span
+                                        class="shrink-0 text-[11px] text-white/75"
+                                    >
                                         {{ formatDateTime(asset.createdAt) }}
                                     </span>
                                 </div>
@@ -1849,7 +2333,11 @@ const statCards = computed(() => [
 
         <Dialog
             :open="activeAsset !== null"
-            @update:open="(open) => { if (!open) activeAssetId = null; }"
+            @update:open="
+                (open) => {
+                    if (!open) activeAssetId = null;
+                }
+            "
         >
             <DialogContent
                 :show-close-button="false"
@@ -1857,7 +2345,7 @@ const statCards = computed(() => [
             >
                 <div
                     v-if="activeAsset"
-                    class="overflow-hidden rounded-[1.75rem] bg-[#1f1711]"
+                    class="overflow-hidden rounded-[1.75rem] bg-brand-ink"
                 >
                     <div
                         class="relative flex h-[min(92vh,calc(100vh-0.75rem))] touch-pan-y items-center justify-center overflow-hidden"
@@ -1865,27 +2353,58 @@ const statCards = computed(() => [
                         @touchmove="onPreviewTouchMove"
                         @touchend="onPreviewTouchEnd"
                     >
-                        <div class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-[#2f2219]/78 via-[#2f2219]/30 to-transparent sm:h-36" />
-                        <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#241912]/82 via-[#241912]/34 to-transparent sm:h-48" />
+                        <div
+                            class="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-brand-ink/78 via-brand-ink/30 to-transparent sm:h-36"
+                        />
+                        <div
+                            class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-brand-ink/82 via-brand-ink/34 to-transparent sm:h-48"
+                        />
 
-                        <div class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                        <div
+                            class="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5"
+                        >
                             <div class="flex min-w-0 items-center gap-3">
-                                <Avatar class="size-10 border border-white/18 shadow-sm">
+                                <Avatar
+                                    class="size-10 border border-white/18 shadow-sm"
+                                >
                                     <AvatarFallback
-                                        :class="avatarFallbackClass(activeAsset.guestName)"
+                                        :class="
+                                            avatarFallbackClass(
+                                                activeAsset.guestName,
+                                            )
+                                        "
                                     >
-                                        {{ guestInitials(activeAsset.guestName) }}
+                                        {{
+                                            guestInitials(activeAsset.guestName)
+                                        }}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div class="min-w-0 text-white">
-                                    <p class="truncate text-sm font-medium tracking-[0.01em]">
+                                    <p
+                                        class="truncate text-sm font-medium tracking-[0.01em]"
+                                    >
                                         {{ activeAsset.guestName }}
                                     </p>
-                                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/72 sm:text-xs">
-                                        <span class="truncate">{{ formatDateTime(activeAsset.createdAt) }}</span>
-                                        <span class="inline-flex items-center gap-1">
-                                            <component :is="kindIcon(activeAsset.kind)" class="size-3.5" />
-                                            {{ formatBytes(activeAsset.sizeBytes) }}
+                                    <div
+                                        class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/72 sm:text-xs"
+                                    >
+                                        <span class="truncate">{{
+                                            formatDateTime(
+                                                activeAsset.createdAt,
+                                            )
+                                        }}</span>
+                                        <span
+                                            class="inline-flex items-center gap-1"
+                                        >
+                                            <component
+                                                :is="kindIcon(activeAsset.kind)"
+                                                class="size-3.5"
+                                            />
+                                            {{
+                                                formatBytes(
+                                                    activeAsset.sizeBytes,
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                 </div>
@@ -1894,7 +2413,7 @@ const statCards = computed(() => [
                             <div class="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68"
                                     title="Open upload info"
                                     @click="openAssetInfo(activeAsset)"
                                 >
@@ -1902,7 +2421,7 @@ const statCards = computed(() => [
                                 </button>
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
+                                    class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68"
                                     aria-label="Close preview"
                                     @click="activeAssetId = null"
                                 >
@@ -1912,20 +2431,46 @@ const statCards = computed(() => [
                         </div>
 
                         <div
-                            v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl && !isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
+                            v-if="
+                                activeAsset.kind === 'photo' &&
+                                activeAsset.previewUrl &&
+                                !isMediaLoaded(
+                                    mediaLoadKey(activeAsset.id, 'preview'),
+                                )
+                            "
                             class="absolute inset-0 animate-pulse bg-white/8"
                         />
                         <img
-                            v-if="activeAsset.kind === 'photo' && activeAsset.previewUrl"
+                            v-if="
+                                activeAsset.kind === 'photo' &&
+                                activeAsset.previewUrl
+                            "
                             :src="activeAsset.previewUrl"
                             alt="Selected event upload"
                             class="block h-full w-full object-contain px-2 py-3 sm:px-4 sm:py-4"
-                            :class="isMediaLoaded(mediaLoadKey(activeAsset.id, 'preview')) ? 'opacity-100' : 'opacity-0'"
-                            @load="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
-                            @error="markMediaLoaded(mediaLoadKey(activeAsset.id, 'preview'))"
+                            :class="
+                                isMediaLoaded(
+                                    mediaLoadKey(activeAsset.id, 'preview'),
+                                )
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                            "
+                            @load="
+                                markMediaLoaded(
+                                    mediaLoadKey(activeAsset.id, 'preview'),
+                                )
+                            "
+                            @error="
+                                markMediaLoaded(
+                                    mediaLoadKey(activeAsset.id, 'preview'),
+                                )
+                            "
                         />
                         <video
-                            v-else-if="activeAsset.kind === 'video' && activeAsset.previewUrl"
+                            v-else-if="
+                                activeAsset.kind === 'video' &&
+                                activeAsset.previewUrl
+                            "
                             :src="activeAsset.previewUrl"
                             :poster="activeAsset.thumbnailUrl ?? undefined"
                             class="block h-full w-full object-contain px-2 py-3 sm:px-4 sm:py-4"
@@ -1940,7 +2485,9 @@ const statCards = computed(() => [
                             "
                             class="flex h-full w-full flex-col items-center justify-center gap-4 p-6 text-center text-white/78"
                         >
-                            <LoaderCircle class="size-10 animate-spin text-white/55" />
+                            <LoaderCircle
+                                class="size-10 animate-spin text-white/55"
+                            />
                             <div class="space-y-1">
                                 <p class="text-base font-semibold text-white">
                                     {{ t('media.shared.processing_video') }}
@@ -1959,16 +2506,18 @@ const statCards = computed(() => [
                                 :style="textPostSurfaceStyle(activeAsset)"
                             >
                                 <p
-                                    class="max-w-[78%] whitespace-pre-wrap text-center text-xl font-semibold leading-relaxed sm:text-2xl"
+                                    class="max-w-[78%] text-center text-xl leading-relaxed font-semibold whitespace-pre-wrap sm:text-2xl"
                                     :style="textPostTextStyle(activeAsset)"
                                 >
-                                    {{ activeAsset.text ?? t('media.kind.text') }}
+                                    {{
+                                        activeAsset.text ?? t('media.kind.text')
+                                    }}
                                 </p>
                             </div>
                         </div>
                         <button
                             type="button"
-                            class="absolute left-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
+                            class="absolute top-1/2 left-3 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30 sm:left-5"
                             :disabled="!hasPreviousAsset"
                             :aria-label="t('media.actions.previous_upload')"
                             @click="goToPreviousAsset"
@@ -1977,7 +2526,7 @@ const statCards = computed(() => [
                         </button>
                         <button
                             type="button"
-                            class="absolute right-3 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
+                            class="absolute top-1/2 right-3 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30 sm:right-5"
                             :disabled="!hasNextAsset"
                             :aria-label="t('media.actions.next_upload')"
                             @click="goToNextAsset"
@@ -1985,11 +2534,16 @@ const statCards = computed(() => [
                             <ChevronRight class="size-5" />
                         </button>
 
-                        <div class="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-12 sm:px-6 sm:pb-5">
+                        <div
+                            class="absolute inset-x-0 bottom-0 z-20 px-4 pt-12 pb-4 sm:px-6 sm:pb-5"
+                        >
                             <div class="flex flex-col gap-3">
                                 <p
-                                    v-if="activeAsset.kind !== 'text' && activeAsset.message"
-                                    class="max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-white/88"
+                                    v-if="
+                                        activeAsset.kind !== 'text' &&
+                                        activeAsset.message
+                                    "
+                                    class="max-w-3xl text-sm leading-relaxed whitespace-pre-wrap text-white/88"
                                 >
                                     {{ activeAsset.message }}
                                 </p>
@@ -1997,9 +2551,11 @@ const statCards = computed(() => [
                                     <button
                                         v-if="activeAsset.previewUrl"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68"
                                         :title="t('media.actions.copy_link')"
-                                        :aria-label="t('media.actions.copy_link')"
+                                        :aria-label="
+                                            t('media.actions.copy_link')
+                                        "
                                         @click="copyAssetLink(activeAsset)"
                                     >
                                         <Copy class="size-4" />
@@ -2009,69 +2565,141 @@ const statCards = computed(() => [
                                         :href="activeAsset.previewUrl"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68"
-                                        :title="t('media.actions.download_or_open')"
-                                        :aria-label="t('media.actions.download_or_open')"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68"
+                                        :title="
+                                            t('media.actions.download_or_open')
+                                        "
+                                        :aria-label="
+                                            t('media.actions.download_or_open')
+                                        "
                                     >
                                         <Download class="size-4" />
                                     </a>
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
-                                            wallVisibilityAssetId === activeAsset.id ||
-                                            activeAsset.wallVisibility === 'approved'
+                                            wallVisibilityAssetId ===
+                                                activeAsset.id ||
+                                            activeAsset.wallVisibility ===
+                                                'approved'
                                         "
-                                        :title="t('media.actions.show_on_wall_short')"
-                                        :aria-label="wallVisibilityAriaLabel(activeAsset, 'approved')"
-                                        :aria-pressed="activeAsset.wallVisibility === 'approved'"
-                                        @click="updateWallVisibility(activeAsset, 'approved')"
+                                        :title="
+                                            t(
+                                                'media.actions.show_on_wall_short',
+                                            )
+                                        "
+                                        :aria-label="
+                                            wallVisibilityAriaLabel(
+                                                activeAsset,
+                                                'approved',
+                                            )
+                                        "
+                                        :aria-pressed="
+                                            activeAsset.wallVisibility ===
+                                            'approved'
+                                        "
+                                        @click="
+                                            updateWallVisibility(
+                                                activeAsset,
+                                                'approved',
+                                            )
+                                        "
                                     >
                                         <ThumbsUp class="size-4" />
                                     </button>
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
-                                            wallVisibilityAssetId === activeAsset.id ||
-                                            activeAsset.wallVisibility === 'rejected'
+                                            wallVisibilityAssetId ===
+                                                activeAsset.id ||
+                                            activeAsset.wallVisibility ===
+                                                'rejected'
                                         "
-                                        :title="t('media.actions.hide_from_wall_short')"
-                                        :aria-label="wallVisibilityAriaLabel(activeAsset, 'rejected')"
-                                        :aria-pressed="activeAsset.wallVisibility === 'rejected'"
-                                        @click="updateWallVisibility(activeAsset, 'rejected')"
+                                        :title="
+                                            t(
+                                                'media.actions.hide_from_wall_short',
+                                            )
+                                        "
+                                        :aria-label="
+                                            wallVisibilityAriaLabel(
+                                                activeAsset,
+                                                'rejected',
+                                            )
+                                        "
+                                        :aria-pressed="
+                                            activeAsset.wallVisibility ===
+                                            'rejected'
+                                        "
+                                        @click="
+                                            updateWallVisibility(
+                                                activeAsset,
+                                                'rejected',
+                                            )
+                                        "
                                     >
                                         <ThumbsDown class="size-4" />
                                     </button>
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
-                                            moderationAssetId === activeAsset.id ||
-                                            activeAsset.moderationStatus === 'approved'
+                                            moderationAssetId ===
+                                                activeAsset.id ||
+                                            activeAsset.moderationStatus ===
+                                                'approved'
                                         "
                                         :title="t('media.actions.approve')"
-                                        :aria-label="moderationAriaLabel(activeAsset, 'approved')"
-                                        :aria-pressed="activeAsset.moderationStatus === 'approved'"
-                                        @click="updateModeration(activeAsset, 'approved')"
+                                        :aria-label="
+                                            moderationAriaLabel(
+                                                activeAsset,
+                                                'approved',
+                                            )
+                                        "
+                                        :aria-pressed="
+                                            activeAsset.moderationStatus ===
+                                            'approved'
+                                        "
+                                        @click="
+                                            updateModeration(
+                                                activeAsset,
+                                                'approved',
+                                            )
+                                        "
                                     >
                                         <Check class="size-4" />
                                     </button>
                                     <button
                                         v-if="canManageMedia"
                                         type="button"
-                                        class="inline-flex size-10 items-center justify-center rounded-full bg-[#2d221a]/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-[#2d221a]/68 disabled:pointer-events-none disabled:opacity-30"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-brand-ink/48 text-white ring-1 ring-white/16 backdrop-blur transition hover:bg-brand-ink/68 disabled:pointer-events-none disabled:opacity-30"
                                         :disabled="
-                                            moderationAssetId === activeAsset.id ||
-                                            activeAsset.moderationStatus === 'rejected'
+                                            moderationAssetId ===
+                                                activeAsset.id ||
+                                            activeAsset.moderationStatus ===
+                                                'rejected'
                                         "
                                         :title="t('media.actions.reject')"
-                                        :aria-label="moderationAriaLabel(activeAsset, 'rejected')"
-                                        :aria-pressed="activeAsset.moderationStatus === 'rejected'"
-                                        @click="updateModeration(activeAsset, 'rejected')"
+                                        :aria-label="
+                                            moderationAriaLabel(
+                                                activeAsset,
+                                                'rejected',
+                                            )
+                                        "
+                                        :aria-pressed="
+                                            activeAsset.moderationStatus ===
+                                            'rejected'
+                                        "
+                                        @click="
+                                            updateModeration(
+                                                activeAsset,
+                                                'rejected',
+                                            )
+                                        "
                                     >
                                         <X class="size-4" />
                                     </button>
@@ -2080,7 +2708,11 @@ const statCards = computed(() => [
                                         type="button"
                                         class="inline-flex size-10 items-center justify-center rounded-full bg-rose-500/70 text-white ring-1 ring-rose-200/20 backdrop-blur transition hover:bg-rose-500/84"
                                         :title="t('media.actions.delete')"
-                                        :aria-label="t('media.actions.delete_upload', { guest: activeAsset.guestName })"
+                                        :aria-label="
+                                            t('media.actions.delete_upload', {
+                                                guest: activeAsset.guestName,
+                                            })
+                                        "
                                         @click="requestDeleteAsset(activeAsset)"
                                     >
                                         <Trash2 class="size-4" />
@@ -2096,15 +2728,25 @@ const statCards = computed(() => [
         <Drawer
             direction="right"
             :open="assetInfoAsset !== null"
-            @update:open="(open) => { if (!open) assetInfoId = null; }"
+            @update:open="
+                (open) => {
+                    if (!open) assetInfoId = null;
+                }
+            "
         >
-            <DrawerContent class="w-full max-w-xl overflow-hidden border-l border-[#e7dccb] bg-[#f6efe5]">
+            <DrawerContent
+                class="w-full max-w-xl overflow-hidden border-l border-brand-border bg-white"
+            >
                 <div
                     v-if="assetInfoAsset"
                     class="flex h-full max-h-screen flex-col"
                 >
-                    <DrawerHeader class="relative border-b border-[#e7dccb] px-6 py-5 pr-16 text-left">
-                        <DrawerTitle class="text-lg font-semibold text-slate-900">
+                    <DrawerHeader
+                        class="relative border-b border-brand-border px-6 py-5 pr-16 text-left"
+                    >
+                        <DrawerTitle
+                            class="text-lg font-semibold text-slate-900"
+                        >
                             {{ t('media.drawer.title') }}
                         </DrawerTitle>
                         <DrawerDescription class="text-xs text-slate-600">
@@ -2112,7 +2754,7 @@ const statCards = computed(() => [
                         </DrawerDescription>
                         <button
                             type="button"
-                            class="absolute right-5 top-5 inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-white/70 hover:text-slate-900"
+                            class="absolute top-5 right-5 inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-brand-panel-strong hover:text-slate-900"
                             :aria-label="t('media.drawer.close')"
                             @click="assetInfoId = null"
                         >
@@ -2121,35 +2763,53 @@ const statCards = computed(() => [
                     </DrawerHeader>
 
                     <div class="flex-1 overflow-y-auto px-6 py-6">
-                        <div class="flex items-center gap-3 border-b border-[#e7dccb] pb-5">
-                            <Avatar class="size-12 border border-[#e7dccb]">
+                        <div
+                            class="flex items-center gap-3 border-b border-brand-border pb-5"
+                        >
+                            <Avatar class="size-12 border border-brand-border">
                                 <AvatarFallback
-                                    :class="avatarFallbackClass(assetInfoAsset.guestName)"
+                                    :class="
+                                        avatarFallbackClass(
+                                            assetInfoAsset.guestName,
+                                        )
+                                    "
                                 >
-                                    {{ guestInitials(assetInfoAsset.guestName) }}
+                                    {{
+                                        guestInitials(assetInfoAsset.guestName)
+                                    }}
                                 </AvatarFallback>
                             </Avatar>
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900">
+                                <p
+                                    class="truncate text-sm font-semibold text-slate-900"
+                                >
                                     {{ assetInfoAsset.guestName }}
                                 </p>
                                 <p class="truncate text-[11px] text-slate-500">
-                                    {{ formatDateTime(assetInfoAsset.createdAt) }}
+                                    {{
+                                        formatDateTime(assetInfoAsset.createdAt)
+                                    }}
                                 </p>
                             </div>
                         </div>
 
-                        <div class="grid gap-x-6 gap-y-4 border-b border-[#e7dccb] py-5 sm:grid-cols-2">
+                        <div
+                            class="grid gap-x-6 gap-y-4 border-b border-brand-border py-5 sm:grid-cols-2"
+                        >
                             <div class="space-y-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.file') }}
                                 </p>
-                                <p class="break-words text-xs text-slate-700">
+                                <p class="text-xs break-words text-slate-700">
                                     {{ displayAssetFilename(assetInfoAsset) }}
                                 </p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.size') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
@@ -2157,34 +2817,50 @@ const statCards = computed(() => [
                                 </p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.type') }}
                                 </p>
-                                <p class="text-xs capitalize text-slate-700">
+                                <p class="text-xs text-slate-700 capitalize">
                                     {{ kindLabel(assetInfoAsset.kind) }}
                                 </p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.status') }}
                                 </p>
-                                <p class="text-xs capitalize text-slate-700">
-                                    {{ moderationStatusLabel(assetInfoAsset.moderationStatus) }}
+                                <p class="text-xs text-slate-700 capitalize">
+                                    {{
+                                        moderationStatusLabel(
+                                            assetInfoAsset.moderationStatus,
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.pipeline') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
-                                    {{ moderationPipelineLabel(assetInfoAsset.moderationPipeline) }}
+                                    {{
+                                        moderationPipelineLabel(
+                                            assetInfoAsset.moderationPipeline,
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.moderationScore !== null"
                                 class="space-y-1"
                             >
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.score') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
@@ -2195,29 +2871,41 @@ const statCards = computed(() => [
                                 v-if="assetInfoAsset.reviewedAt"
                                 class="space-y-1"
                             >
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.reviewed') }}
                                 </p>
                                 <p class="text-xs text-slate-700">
-                                    {{ formatDateTime(assetInfoAsset.reviewedAt) }}
+                                    {{
+                                        formatDateTime(
+                                            assetInfoAsset.reviewedAt,
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <div
                                 v-if="assetInfoAsset.mimeType"
                                 class="space-y-1 sm:col-span-2"
                             >
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.format') }}
                                 </p>
-                                <p class="break-all text-xs text-slate-700">
+                                <p class="text-xs break-all text-slate-700">
                                     {{ assetInfoAsset.mimeType }}
                                 </p>
                             </div>
                             <div
-                                v-if="assetInfoAsset.moderationMatches.length > 0"
+                                v-if="
+                                    assetInfoAsset.moderationMatches.length > 0
+                                "
                                 class="space-y-2 sm:col-span-2"
                             >
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                <p
+                                    class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                                >
                                     {{ t('media.drawer.matched_rules') }}
                                 </p>
                                 <div class="flex flex-wrap gap-2">
@@ -2233,10 +2921,15 @@ const statCards = computed(() => [
                         </div>
 
                         <div
-                            v-if="assetInfoAsset.guestEmail || assetInfoAsset.guestPhone"
-                            class="space-y-3 border-b border-[#e7dccb] py-5"
+                            v-if="
+                                assetInfoAsset.guestEmail ||
+                                assetInfoAsset.guestPhone
+                            "
+                            class="space-y-3 border-b border-brand-border py-5"
                         >
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                            <p
+                                class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                            >
                                 {{ t('media.drawer.contact') }}
                             </p>
                             <div class="space-y-2">
@@ -2245,7 +2938,9 @@ const statCards = computed(() => [
                                     class="flex items-center gap-3"
                                 >
                                     <Mail class="size-4 text-slate-500" />
-                                    <span class="break-all text-xs text-slate-700">
+                                    <span
+                                        class="text-xs break-all text-slate-700"
+                                    >
                                         {{ assetInfoAsset.guestEmail }}
                                     </span>
                                 </div>
@@ -2262,25 +2957,39 @@ const statCards = computed(() => [
                         </div>
 
                         <div
-                            v-if="assetInfoAsset.kind !== 'text' && assetInfoAsset.message"
-                            class="space-y-2 border-b border-[#e7dccb] py-5"
+                            v-if="
+                                assetInfoAsset.kind !== 'text' &&
+                                assetInfoAsset.message
+                            "
+                            class="space-y-2 border-b border-brand-border py-5"
                         >
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                            <p
+                                class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                            >
                                 {{ t('media.drawer.guest_message') }}
                             </p>
-                            <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+                            <p
+                                class="text-xs leading-relaxed whitespace-pre-wrap text-slate-700"
+                            >
                                 {{ assetInfoAsset.message }}
                             </p>
                         </div>
 
                         <div
-                            v-if="assetInfoAsset.kind === 'text' && assetInfoAsset.text"
-                            class="space-y-2 border-b border-[#e7dccb] py-5"
+                            v-if="
+                                assetInfoAsset.kind === 'text' &&
+                                assetInfoAsset.text
+                            "
+                            class="space-y-2 border-b border-brand-border py-5"
                         >
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                            <p
+                                class="text-[11px] font-semibold tracking-[0.14em] text-slate-600 uppercase"
+                            >
                                 {{ t('media.drawer.text_post') }}
                             </p>
-                            <p class="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+                            <p
+                                class="text-xs leading-relaxed whitespace-pre-wrap text-slate-700"
+                            >
                                 {{ assetInfoAsset.text }}
                             </p>
                         </div>
@@ -2317,7 +3026,10 @@ const statCards = computed(() => [
                                 variant="outline"
                                 :title="t('media.actions.open_preview')"
                                 :aria-label="t('media.actions.open_preview')"
-                                @click="assetInfoId = null; openAssetDetails(assetInfoAsset)"
+                                @click="
+                                    assetInfoId = null;
+                                    openAssetDetails(assetInfoAsset);
+                                "
                             >
                                 <Eye class="size-4" />
                             </Button>
@@ -2326,13 +3038,30 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="outline"
                                     :disabled="
-                                        wallVisibilityAssetId === assetInfoAsset.id ||
-                                        assetInfoAsset.wallVisibility === 'approved'
+                                        wallVisibilityAssetId ===
+                                            assetInfoAsset.id ||
+                                        assetInfoAsset.wallVisibility ===
+                                            'approved'
                                     "
-                                    :title="t('media.actions.show_on_wall_short')"
-                                    :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'approved')"
-                                    :aria-pressed="assetInfoAsset.wallVisibility === 'approved'"
-                                    @click="updateWallVisibility(assetInfoAsset, 'approved')"
+                                    :title="
+                                        t('media.actions.show_on_wall_short')
+                                    "
+                                    :aria-label="
+                                        wallVisibilityAriaLabel(
+                                            assetInfoAsset,
+                                            'approved',
+                                        )
+                                    "
+                                    :aria-pressed="
+                                        assetInfoAsset.wallVisibility ===
+                                        'approved'
+                                    "
+                                    @click="
+                                        updateWallVisibility(
+                                            assetInfoAsset,
+                                            'approved',
+                                        )
+                                    "
                                 >
                                     <ThumbsUp class="size-4" />
                                 </Button>
@@ -2340,13 +3069,30 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="outline"
                                     :disabled="
-                                        wallVisibilityAssetId === assetInfoAsset.id ||
-                                        assetInfoAsset.wallVisibility === 'rejected'
+                                        wallVisibilityAssetId ===
+                                            assetInfoAsset.id ||
+                                        assetInfoAsset.wallVisibility ===
+                                            'rejected'
                                     "
-                                    :title="t('media.actions.hide_from_wall_short')"
-                                    :aria-label="wallVisibilityAriaLabel(assetInfoAsset, 'rejected')"
-                                    :aria-pressed="assetInfoAsset.wallVisibility === 'rejected'"
-                                    @click="updateWallVisibility(assetInfoAsset, 'rejected')"
+                                    :title="
+                                        t('media.actions.hide_from_wall_short')
+                                    "
+                                    :aria-label="
+                                        wallVisibilityAriaLabel(
+                                            assetInfoAsset,
+                                            'rejected',
+                                        )
+                                    "
+                                    :aria-pressed="
+                                        assetInfoAsset.wallVisibility ===
+                                        'rejected'
+                                    "
+                                    @click="
+                                        updateWallVisibility(
+                                            assetInfoAsset,
+                                            'rejected',
+                                        )
+                                    "
                                 >
                                     <ThumbsDown class="size-4" />
                                 </Button>
@@ -2354,13 +3100,28 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="outline"
                                     :disabled="
-                                        moderationAssetId === assetInfoAsset.id ||
-                                        assetInfoAsset.moderationStatus === 'approved'
+                                        moderationAssetId ===
+                                            assetInfoAsset.id ||
+                                        assetInfoAsset.moderationStatus ===
+                                            'approved'
                                     "
                                     :title="t('media.actions.approve')"
-                                    :aria-label="moderationAriaLabel(assetInfoAsset, 'approved')"
-                                    :aria-pressed="assetInfoAsset.moderationStatus === 'approved'"
-                                    @click="updateModeration(assetInfoAsset, 'approved')"
+                                    :aria-label="
+                                        moderationAriaLabel(
+                                            assetInfoAsset,
+                                            'approved',
+                                        )
+                                    "
+                                    :aria-pressed="
+                                        assetInfoAsset.moderationStatus ===
+                                        'approved'
+                                    "
+                                    @click="
+                                        updateModeration(
+                                            assetInfoAsset,
+                                            'approved',
+                                        )
+                                    "
                                 >
                                     <Check class="size-4" />
                                 </Button>
@@ -2368,13 +3129,28 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="outline"
                                     :disabled="
-                                        moderationAssetId === assetInfoAsset.id ||
-                                        assetInfoAsset.moderationStatus === 'rejected'
+                                        moderationAssetId ===
+                                            assetInfoAsset.id ||
+                                        assetInfoAsset.moderationStatus ===
+                                            'rejected'
                                     "
                                     :title="t('media.actions.reject')"
-                                    :aria-label="moderationAriaLabel(assetInfoAsset, 'rejected')"
-                                    :aria-pressed="assetInfoAsset.moderationStatus === 'rejected'"
-                                    @click="updateModeration(assetInfoAsset, 'rejected')"
+                                    :aria-label="
+                                        moderationAriaLabel(
+                                            assetInfoAsset,
+                                            'rejected',
+                                        )
+                                    "
+                                    :aria-pressed="
+                                        assetInfoAsset.moderationStatus ===
+                                        'rejected'
+                                    "
+                                    @click="
+                                        updateModeration(
+                                            assetInfoAsset,
+                                            'rejected',
+                                        )
+                                    "
                                 >
                                     <X class="size-4" />
                                 </Button>
@@ -2382,7 +3158,11 @@ const statCards = computed(() => [
                                     size="icon"
                                     variant="destructive"
                                     :title="t('media.actions.delete')"
-                                    :aria-label="t('media.actions.delete_upload', { guest: assetInfoAsset.guestName })"
+                                    :aria-label="
+                                        t('media.actions.delete_upload', {
+                                            guest: assetInfoAsset.guestName,
+                                        })
+                                    "
                                     @click="requestDeleteAsset(assetInfoAsset)"
                                 >
                                     <Trash2 class="size-4" />
@@ -2397,26 +3177,42 @@ const statCards = computed(() => [
         <AlertDialog
             v-if="canManageMedia"
             :open="bulkDeleteOpen"
-            @update:open="(open) => { bulkDeleteOpen = open; }"
+            @update:open="
+                (open) => {
+                    bulkDeleteOpen = open;
+                }
+            "
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{{ t('media.bulk_dialog.title') }}</AlertDialogTitle>
+                    <AlertDialogTitle>{{
+                        t('media.bulk_dialog.title')
+                    }}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {{ t('media.bulk_dialog.description', { count: selectedCount }) }}
+                        {{
+                            t('media.bulk_dialog.description', {
+                                count: selectedCount,
+                            })
+                        }}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>{{ t('auth.shared.cancel') }}</AlertDialogCancel>
+                    <AlertDialogCancel>{{
+                        t('auth.shared.cancel')
+                    }}</AlertDialogCancel>
                     <AlertDialogAction
                         class="bg-destructive text-white hover:bg-destructive/90"
-                        :disabled="deletingAssetId !== null || selectedCount === 0"
+                        :disabled="
+                            deletingAssetId !== null || selectedCount === 0
+                        "
                         @click="bulkDeleteAssets"
                     >
                         {{
                             deletingAssetId === -1
                                 ? t('media.bulk_dialog.deleting')
-                                : t('media.bulk_dialog.delete_count', { count: selectedCount })
+                                : t('media.bulk_dialog.delete_count', {
+                                      count: selectedCount,
+                                  })
                         }}
                     </AlertDialogAction>
                 </AlertDialogFooter>

@@ -41,15 +41,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     <Head title="Owned Events" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div
-            class="min-h-full bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.14),_transparent_32%),radial-gradient(circle_at_85%_10%,_rgba(251,191,36,0.14),_transparent_22%)]"
-        >
+        <div class="min-h-full bg-brand-canvas">
             <div class="mx-auto flex max-w-7xl flex-col gap-6 p-4 md:p-6">
                 <section
                     class="overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm"
                 >
                     <div
-                        class="border-b border-black/5 bg-[linear-gradient(135deg,#171411_0%,#2d251f_46%,#5f533f_100%)] px-6 py-8 text-white md:px-8"
+                        class="border-b border-black/5 bg-brand-ink px-6 py-8 text-white md:px-8"
                     >
                         <div
                             class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"
@@ -124,13 +122,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                             class="mx-auto flex max-w-md flex-col items-center gap-4"
                         >
                             <div
-                                class="rounded-full bg-[#fbfaf7] p-4 text-[#171411]"
+                                class="rounded-full bg-brand-panel-strong p-4 text-brand-ink"
                             >
                                 <FolderKanban class="size-7" />
                             </div>
                             <div class="space-y-2">
                                 <h2
-                                    class="text-xl font-semibold text-[#171411]"
+                                    class="text-xl font-semibold text-brand-ink"
                                 >
                                     No owned events yet
                                 </h2>
@@ -146,7 +144,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <article
                             v-for="event in ownedEvents"
                             :key="event.id"
-                            class="rounded-[1.5rem] border border-black/6 bg-[#fcfbf8] p-5"
+                            class="rounded-[1.5rem] border border-black/6 bg-brand-panel-strong/40 p-5"
                         >
                             <div class="flex flex-col gap-5">
                                 <div
@@ -185,7 +183,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         </div>
                                         <div class="space-y-1">
                                             <h2
-                                                class="text-2xl font-semibold tracking-tight text-[#171411]"
+                                                class="text-2xl font-semibold tracking-tight text-brand-ink"
                                             >
                                                 {{ event.name }}
                                             </h2>
@@ -210,7 +208,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             Latest activity
                                         </p>
                                         <p
-                                            class="mt-2 text-base font-semibold text-[#171411]"
+                                            class="mt-2 text-base font-semibold text-brand-ink"
                                         >
                                             {{
                                                 event.onboardingComplete
@@ -263,27 +261,27 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <div class="flex flex-wrap gap-3">
                                     <Link
                                         :href="event.primaryAction.url"
-                                        class="inline-flex items-center rounded-md bg-[#171411] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#2b2621]"
+                                        class="inline-flex items-center rounded-md bg-brand-ink px-4 py-2 text-sm font-medium text-brand-inverse transition hover:bg-brand-accent"
                                     >
                                         {{ event.primaryAction.label }}
                                     </Link>
                                     <Link
                                         :href="event.links.media"
-                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#171411] transition hover:bg-[#faf7f1]"
+                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-panel-strong/60"
                                     >
                                         <Camera class="size-4" />
                                         Review media
                                     </Link>
                                     <Link
                                         :href="event.links.settings"
-                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#171411] transition hover:bg-[#faf7f1]"
+                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-panel-strong/60"
                                     >
                                         <Settings class="size-4" />
                                         Settings
                                     </Link>
                                     <Link
                                         :href="event.links.album"
-                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#171411] transition hover:bg-[#faf7f1]"
+                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-panel-strong/60"
                                     >
                                         <ExternalLink class="size-4" />
                                         Album
@@ -294,7 +292,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             event.mediaExportStatus === 'ready'
                                         "
                                         :href="event.links.mediaExportDownload"
-                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#171411] transition hover:bg-[#faf7f1]"
+                                        class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink transition hover:bg-brand-panel-strong/60"
                                     >
                                         <Download class="size-4" />
                                         Download export

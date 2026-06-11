@@ -50,33 +50,41 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="current_password">{{ t('account_settings.password.current_password') }}</Label>
+                        <Label for="current_password">{{
+                            t('account_settings.password.current_password')
+                        }}</Label>
                         <PasswordInput
                             id="current_password"
                             name="current_password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            :placeholder="t('account_settings.password.current_password')"
+                            :placeholder="
+                                t('account_settings.password.current_password')
+                            "
                         />
                         <InputError :message="errors.current_password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">{{ t('account_settings.password.new_password') }}</Label>
+                        <Label for="password">{{
+                            t('account_settings.password.new_password')
+                        }}</Label>
                         <PasswordInput
                             id="password"
                             name="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            :placeholder="t('account_settings.password.new_password')"
+                            :placeholder="
+                                t('account_settings.password.new_password')
+                            "
                         />
                         <InputError :message="errors.password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password_confirmation"
-                            >{{ t('auth.shared.confirm_password') }}</Label
-                        >
+                        <Label for="password_confirmation">{{
+                            t('auth.shared.confirm_password')
+                        }}</Label>
                         <PasswordInput
                             id="password_confirmation"
                             name="password_confirmation"
@@ -102,7 +110,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         >
                             <p
                                 v-show="recentlySuccessful"
-                                class="text-sm text-neutral-600"
+                                class="text-sm text-brand-muted"
                             >
                                 {{ t('auth.shared.saved') }}
                             </p>

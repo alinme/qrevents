@@ -244,3 +244,23 @@ What distinguishes Airbnb is its palette-based token system (`--palette-*`) and 
 5. Generous radius: 8px buttons, 20px cards, 50% controls
 6. Cereal VF at 500–700 weight — no thin weights for any heading
 7. Photography is hero — every listing card is image-first
+
+## 10. QRevents Implementation Notes
+
+How this spec maps onto the codebase:
+
+- **Font**: Airbnb Cereal VF is proprietary, so the app uses **Instrument Sans**
+  (loaded from fonts.bunny.net at weights 400/500/600/700) as the closest
+  freely-licensed substitute. Decorative fonts (Cinzel, Cormorant Garamond,
+  Great Vibes, Montserrat) are intentional product features for invitation and
+  QR print templates — they are not part of the UI theme.
+- **Tokens** (defined in `resources/css/app.css`):
+  - `--promo-*` — marketing + guest-facing surfaces (landing, auth, album access).
+  - `--brand-*` — authenticated app surfaces (dashboard, events, onboarding).
+    Both sets resolve to this spec's palette: white canvas, `#222222` ink,
+    `#6a6a6a` muted, `#ebebeb` lines, `#ff385c` accent.
+  - `--shadow-card` / `--shadow-card-hover` — the three-layer card shadow and
+    hover lift, available as `shadow-card` / `shadow-card-hover` utilities.
+- **Exception — live wall** (`public/Wall.vue`): the projector wall stays dark
+  by design. It is a display surface for venues/TVs, not a browsing UI; a dark
+  background makes guest photography pop and avoids blinding a dim room.

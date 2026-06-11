@@ -25,7 +25,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/composables/useTranslations';
-import { businesses, dashboard, home, login, pricing } from '@/routes';
+import { dashboard, home, login } from '@/routes';
 import { create as onboardingCreate } from '@/routes/onboarding';
 
 defineProps<{
@@ -49,25 +49,28 @@ const localeOptions = [
 ] as const;
 
 const primaryNavItems = computed(() => [
-    { label: t('marketing.nav.how_it_works_simple'), href: `${homeUrl}#how-it-works` },
+    {
+        label: t('marketing.nav.how_it_works_simple'),
+        href: `${homeUrl}#how-it-works`,
+    },
     { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
-    { label: t('marketing.nav.pricing'), href: pricing().url },
-    { label: t('marketing.nav.business'), href: businesses().url },
+    { label: t('marketing.footer.album_access'), href: '/album' },
 ]);
 
 const footerProductLinks = computed(() => [
-    { label: t('marketing.footer.how_it_works'), href: `${homeUrl}#how-it-works` },
+    {
+        label: t('marketing.footer.how_it_works'),
+        href: `${homeUrl}#how-it-works`,
+    },
     { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
     { label: t('marketing.nav.what_changed'), href: `${homeUrl}#services` },
-    { label: t('marketing.nav.pricing'), href: pricing().url },
-    { label: t('marketing.nav.business'), href: businesses().url },
 ]);
 
 const footerUseCaseLinks = computed(() => [
-    { label: t('marketing.nav.weddings'), href: pricing().url },
-    { label: t('marketing.nav.birthdays'), href: pricing().url },
-    { label: t('marketing.nav.corporate'), href: businesses().url },
-    { label: t('marketing.nav.public_events'), href: businesses().url },
+    { label: t('marketing.nav.weddings'), href: `${homeUrl}#how-it-works` },
+    { label: t('marketing.nav.birthdays'), href: `${homeUrl}#how-it-works` },
+    { label: t('marketing.nav.corporate'), href: `${homeUrl}#proof` },
+    { label: t('marketing.nav.public_events'), href: `${homeUrl}#proof` },
 ]);
 
 const footerSupportLinks = computed(() => [
@@ -77,7 +80,9 @@ const footerSupportLinks = computed(() => [
 ]);
 
 const selectedLocaleOption = computed(
-    () => localeOptions.find((option) => option.code === locale.value) ?? localeOptions[0],
+    () =>
+        localeOptions.find((option) => option.code === locale.value) ??
+        localeOptions[0],
 );
 
 const switchMarketingLocale = (nextLocale: string): void => {
@@ -97,18 +102,30 @@ const switchMarketingLocale = (nextLocale: string): void => {
     </Head>
 
     <div class="marketing-shell min-h-screen bg-promo-bg text-promo-ink">
-        <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
+        <div
+            class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden"
+        >
             <div class="mx-auto max-w-[1400px]">
                 <div class="relative h-[34rem]">
-                    <div class="absolute left-[-8rem] top-[-9rem] h-[21rem] w-[21rem] rounded-full bg-promo-warm/70 blur-3xl" />
-                    <div class="absolute right-[-5rem] top-[2rem] h-[24rem] w-[24rem] rounded-full bg-promo-surface-strong/70 blur-3xl" />
-                    <div class="absolute left-[34%] top-[6rem] h-[13rem] w-[13rem] rounded-full bg-promo-purple/60 blur-3xl" />
+                    <div
+                        class="absolute top-[-9rem] left-[-8rem] h-[21rem] w-[21rem] rounded-full bg-promo-warm/70 blur-3xl"
+                    />
+                    <div
+                        class="absolute top-[2rem] right-[-5rem] h-[24rem] w-[24rem] rounded-full bg-promo-surface-strong/70 blur-3xl"
+                    />
+                    <div
+                        class="absolute top-[6rem] left-[34%] h-[13rem] w-[13rem] rounded-full bg-promo-purple/60 blur-3xl"
+                    />
                 </div>
             </div>
         </div>
 
-        <header class="sticky top-0 z-40 border-b border-promo-line/60 bg-promo-bg/92 backdrop-blur-md">
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
+        <header
+            class="sticky top-0 z-40 border-b border-promo-line/60 bg-promo-bg/92 backdrop-blur-md"
+        >
+            <div
+                class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8"
+            >
                 <Link :href="home()" class="flex items-center">
                     <img
                         :src="`/logo.png?v=${brandAssetVersion}`"
@@ -116,7 +133,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         width="154"
                         height="45"
                         class="h-9 w-[9.625rem] max-w-none object-contain object-left sm:h-10 sm:w-[10.75rem]"
-                    >
+                    />
                 </Link>
 
                 <nav class="hidden items-center gap-6 lg:flex">
@@ -137,7 +154,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 type="button"
                                 class="inline-flex items-center gap-3 rounded-full border border-promo-line bg-white px-3 py-2 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
                             >
-                                <span class="text-base leading-none">{{ selectedLocaleOption.flag }}</span>
+                                <span class="text-base leading-none">{{
+                                    selectedLocaleOption.flag
+                                }}</span>
                                 <span class="hidden min-w-0 text-left xl:block">
                                     {{ selectedLocaleOption.nativeLabel }}
                                 </span>
@@ -149,7 +168,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             align="end"
                             class="w-64 rounded-[22px] border-promo-line/80 bg-white p-2 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_8px_18px]"
                         >
-                            <div class="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            <div
+                                class="px-3 pt-1 pb-2 text-[11px] font-semibold tracking-[0.24em] text-promo-primary uppercase"
+                            >
                                 {{ t('marketing.language.label') }}
                             </div>
                             <DropdownMenuItem
@@ -158,21 +179,33 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 class="rounded-[18px] px-3 py-3 focus:bg-promo-surface"
                                 @click="switchMarketingLocale(option.code)"
                             >
-                                <div class="flex w-full items-center justify-between gap-3">
+                                <div
+                                    class="flex w-full items-center justify-between gap-3"
+                                >
                                     <div class="flex items-center gap-3">
-                                        <span class="text-lg leading-none">{{ option.flag }}</span>
+                                        <span class="text-lg leading-none">{{
+                                            option.flag
+                                        }}</span>
                                         <div>
-                                            <div class="text-sm font-semibold text-promo-ink">
+                                            <div
+                                                class="text-sm font-semibold text-promo-ink"
+                                            >
                                                 {{ option.nativeLabel }}
                                             </div>
-                                            <div class="text-xs text-promo-muted">
+                                            <div
+                                                class="text-xs text-promo-muted"
+                                            >
                                                 {{ option.label }}
                                             </div>
                                         </div>
                                     </div>
                                     <div
                                         class="size-2.5 rounded-full"
-                                        :class="locale === option.code ? 'bg-promo-primary' : 'bg-promo-line'"
+                                        :class="
+                                            locale === option.code
+                                                ? 'bg-promo-primary'
+                                                : 'bg-promo-line'
+                                        "
                                     />
                                 </div>
                             </DropdownMenuItem>
@@ -194,7 +227,11 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         "
                         class="inline-flex items-center gap-2 rounded-full bg-promo-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[rgba(255,56,92,0.22)_0px_10px_22px] transition hover:bg-promo-primary-strong"
                     >
-                        {{ authedUser ? t('marketing.actions.open_dashboard') : t('marketing.actions.get_started') }}
+                        {{
+                            authedUser
+                                ? t('marketing.actions.open_dashboard')
+                                : t('marketing.actions.get_started')
+                        }}
                         <ArrowRight class="size-4" />
                     </Link>
                 </div>
@@ -207,7 +244,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             class="rounded-full border-promo-line bg-white text-promo-ink hover:bg-promo-surface lg:hidden"
                         >
                             <Menu class="size-5" />
-                            <span class="sr-only">{{ t('marketing.actions.open_navigation') }}</span>
+                            <span class="sr-only">{{
+                                t('marketing.actions.open_navigation')
+                            }}</span>
                         </Button>
                     </SheetTrigger>
 
@@ -215,8 +254,12 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         side="right"
                         class="border-promo-line bg-promo-bg px-0 text-promo-ink"
                     >
-                        <SheetHeader class="border-b border-promo-line px-6 pb-5 text-left">
-                            <SheetTitle class="text-lg font-extrabold tracking-[-0.02em] text-promo-ink">
+                        <SheetHeader
+                            class="border-b border-promo-line px-6 pb-5 text-left"
+                        >
+                            <SheetTitle
+                                class="text-lg font-extrabold tracking-[-0.02em] text-promo-ink"
+                            >
                                 {{ t('marketing.mobile.title') }}
                             </SheetTitle>
                             <SheetDescription class="text-sm text-promo-muted">
@@ -225,8 +268,12 @@ const switchMarketingLocale = (nextLocale: string): void => {
                         </SheetHeader>
 
                         <div class="flex flex-col gap-6 px-6 py-6">
-                            <div class="rounded-[20px] border border-promo-line/80 bg-white p-4">
-                                <div class="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-promo-primary">
+                            <div
+                                class="rounded-[20px] border border-promo-line/80 bg-white p-4"
+                            >
+                                <div
+                                    class="mb-3 text-[11px] font-semibold tracking-[0.24em] text-promo-primary uppercase"
+                                >
                                     {{ t('marketing.language.label') }}
                                 </div>
                                 <div class="grid gap-2">
@@ -240,22 +287,35 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                                 ? 'border-promo-primary/30 bg-promo-surface'
                                                 : 'border-promo-line bg-white hover:bg-promo-surface'
                                         "
-                                        @click="switchMarketingLocale(option.code)"
+                                        @click="
+                                            switchMarketingLocale(option.code)
+                                        "
                                     >
                                         <div class="flex items-center gap-3">
-                                            <span class="text-lg leading-none">{{ option.flag }}</span>
+                                            <span
+                                                class="text-lg leading-none"
+                                                >{{ option.flag }}</span
+                                            >
                                             <div>
-                                                <div class="text-sm font-semibold text-promo-ink">
+                                                <div
+                                                    class="text-sm font-semibold text-promo-ink"
+                                                >
                                                     {{ option.nativeLabel }}
                                                 </div>
-                                                <div class="text-xs text-promo-muted">
+                                                <div
+                                                    class="text-xs text-promo-muted"
+                                                >
                                                     {{ option.label }}
                                                 </div>
                                             </div>
                                         </div>
                                         <div
                                             class="size-2.5 rounded-full"
-                                            :class="locale === option.code ? 'bg-promo-primary' : 'bg-promo-line'"
+                                            :class="
+                                                locale === option.code
+                                                    ? 'bg-promo-primary'
+                                                    : 'bg-promo-line'
+                                            "
                                         />
                                     </button>
                                 </div>
@@ -272,7 +332,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 </Link>
                             </div>
 
-                            <div class="grid gap-3 border-t border-promo-line pt-6">
+                            <div
+                                class="grid gap-3 border-t border-promo-line pt-6"
+                            >
                                 <Link
                                     v-if="!authedUser"
                                     :href="login()"
@@ -290,7 +352,13 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                     "
                                     class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-4 py-3 text-sm font-semibold text-white"
                                 >
-                                    {{ authedUser ? t('marketing.actions.open_dashboard') : t('marketing.actions.get_started') }}
+                                    {{
+                                        authedUser
+                                            ? t(
+                                                  'marketing.actions.open_dashboard',
+                                              )
+                                            : t('marketing.actions.get_started')
+                                    }}
                                     <ArrowRight class="size-4" />
                                 </Link>
                             </div>
@@ -306,7 +374,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
         <footer class="border-t border-promo-line bg-white">
             <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-                <div class="grid gap-12 border-b border-promo-line pb-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+                <div
+                    class="grid gap-12 border-b border-promo-line pb-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]"
+                >
                     <div>
                         <div class="flex items-center gap-3">
                             <img
@@ -315,10 +385,12 @@ const switchMarketingLocale = (nextLocale: string): void => {
                                 width="154"
                                 height="45"
                                 class="h-9 w-[9.625rem] max-w-none object-contain object-left"
-                            >
+                            />
                         </div>
 
-                        <p class="mt-5 max-w-sm text-sm leading-6 text-promo-muted">
+                        <p
+                            class="mt-5 max-w-sm text-sm leading-6 text-promo-muted"
+                        >
                             {{ t('marketing.footer.description') }}
                         </p>
 
@@ -339,7 +411,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     </div>
 
                     <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
+                        <div
+                            class="text-xs font-semibold tracking-[0.26em] text-promo-primary uppercase"
+                        >
                             {{ t('marketing.footer.product') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
@@ -355,7 +429,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     </div>
 
                     <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
+                        <div
+                            class="text-xs font-semibold tracking-[0.26em] text-promo-primary uppercase"
+                        >
                             {{ t('marketing.nav.use_cases') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
@@ -371,7 +447,9 @@ const switchMarketingLocale = (nextLocale: string): void => {
                     </div>
 
                     <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.26em] text-promo-primary">
+                        <div
+                            class="text-xs font-semibold tracking-[0.26em] text-promo-primary uppercase"
+                        >
                             {{ t('marketing.footer.support_title') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
@@ -383,13 +461,23 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             >
                                 {{ item.label }}
                             </Link>
-                            <a href="#" class="block transition hover:text-promo-ink">{{ t('marketing.footer.privacy') }}</a>
-                            <a href="#" class="block transition hover:text-promo-ink">{{ t('marketing.footer.terms') }}</a>
+                            <a
+                                href="#"
+                                class="block transition hover:text-promo-ink"
+                                >{{ t('marketing.footer.privacy') }}</a
+                            >
+                            <a
+                                href="#"
+                                class="block transition hover:text-promo-ink"
+                                >{{ t('marketing.footer.terms') }}</a
+                            >
                         </div>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-4 pt-6 text-xs uppercase tracking-[0.2em] text-promo-muted sm:flex-row sm:items-center sm:justify-between">
+                <div
+                    class="flex flex-col gap-4 pt-6 text-xs tracking-[0.2em] text-promo-muted uppercase sm:flex-row sm:items-center sm:justify-between"
+                >
                     <div>{{ t('marketing.footer.made_for') }}</div>
                     <div class="inline-flex items-center gap-2">
                         <Star class="size-3.5 fill-current" />

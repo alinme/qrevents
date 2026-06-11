@@ -12,9 +12,15 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
-import { removeGoogleFontStylesheet, syncGoogleFontStylesheet } from '@/lib/google-fonts';
+import {
+    removeGoogleFontStylesheet,
+    syncGoogleFontStylesheet,
+} from '@/lib/google-fonts';
 import { readQrPrintDraft, writeQrPrintDraft } from '@/lib/qr-print-draft';
-import { qrTemplateDefinitions, resolveQrTemplateDefinition } from '@/lib/qr-print-templates';
+import {
+    qrTemplateDefinitions,
+    resolveQrTemplateDefinition,
+} from '@/lib/qr-print-templates';
 
 const props = defineProps<{
     eventId: number;
@@ -30,10 +36,14 @@ const activeTemplateId = ref<string>(qrTemplateDefinitions[0].id);
 const subtitleText = ref<string>('SHARE THE');
 const titleText = ref<string>('LOVE');
 const sloganText = ref<string>('sharing is caring');
-const messageText = ref<string>('Scan the QR code and share your memories by uploading photos, videos or wishes to the newly wed.');
+const messageText = ref<string>(
+    'Scan the QR code and share your memories by uploading photos, videos or wishes to the newly wed.',
+);
 const eventTitleText = ref<string>(props.eventName);
 
-const activeTemplate = computed(() => resolveQrTemplateDefinition(activeTemplateId.value));
+const activeTemplate = computed(() =>
+    resolveQrTemplateDefinition(activeTemplateId.value),
+);
 
 const previewUrlFor = (print = false): string => {
     if (typeof window === 'undefined') {
@@ -125,33 +135,62 @@ const printPoster = (): void => {
         <div class="flex shrink-0 items-start gap-3">
             <div class="min-w-0 flex-1 overflow-x-auto pb-1">
                 <div class="flex min-w-max items-center gap-2 pr-2">
-                <button
-                    v-for="theme in qrTemplateDefinitions"
-                    :key="theme.id"
-                    type="button"
-                    class="rounded-full border px-4 py-2 text-sm font-medium transition"
-                    :class="activeTemplateId === theme.id ? 'border-neutral-950 bg-neutral-950 text-white' : 'border-neutral-300 bg-white/78 text-neutral-700 hover:border-neutral-500'"
-                    @click="activeTemplateId = theme.id"
-                >
-                    {{ theme.label }}
-                </button>
+                    <button
+                        v-for="theme in qrTemplateDefinitions"
+                        :key="theme.id"
+                        type="button"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition"
+                        :class="
+                            activeTemplateId === theme.id
+                                ? 'border-neutral-950 bg-neutral-950 text-white'
+                                : 'border-neutral-300 bg-white/78 text-neutral-700 hover:border-neutral-500'
+                        "
+                        @click="activeTemplateId = theme.id"
+                    >
+                        {{ theme.label }}
+                    </button>
                 </div>
             </div>
 
-            <div class="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1">
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.actions.print_pdf')" @click="printPoster">
+            <div
+                class="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-300 bg-white/82 p-1"
+            >
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    class="rounded-full"
+                    :title="t('event_home.print_pack.actions.print_pdf')"
+                    @click="printPoster"
+                >
                     <Printer class="size-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.open_preview')" @click="openPreview">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    class="rounded-full"
+                    :title="t('event_home.print_pack.open_preview')"
+                    @click="openPreview"
+                >
                     <ExternalLink class="size-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" class="rounded-full" :title="t('event_home.print_pack.configure')" @click="configureOpen = true">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    class="rounded-full"
+                    :title="t('event_home.print_pack.configure')"
+                    @click="configureOpen = true"
+                >
                     <SlidersHorizontal class="size-4" />
                 </Button>
             </div>
         </div>
 
-        <div class="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+        <div
+            class="flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+        >
             <component
                 :is="activeTemplate.component"
                 class="block h-full max-h-full w-auto max-w-full"
@@ -167,12 +206,21 @@ const printPoster = (): void => {
         </div>
 
         <Sheet v-model:open="configureOpen">
-            <SheetContent side="right" class="w-full overflow-y-auto border-l border-neutral-200 bg-[#fcfaf7] sm:max-w-md">
-                <SheetHeader class="space-y-2 border-b border-neutral-200 px-6 py-5">
-                    <SheetTitle class="text-left text-xl font-semibold text-neutral-950">
+            <SheetContent
+                side="right"
+                class="w-full overflow-y-auto border-l border-neutral-200 bg-white sm:max-w-md"
+            >
+                <SheetHeader
+                    class="space-y-2 border-b border-neutral-200 px-6 py-5"
+                >
+                    <SheetTitle
+                        class="text-left text-xl font-semibold text-neutral-950"
+                    >
                         {{ t('event_home.print_pack.configure') }}
                     </SheetTitle>
-                    <SheetDescription class="text-left text-sm leading-6 text-neutral-600">
+                    <SheetDescription
+                        class="text-left text-sm leading-6 text-neutral-600"
+                    >
                         {{ t('event_home.print_pack.configure_description') }}
                     </SheetDescription>
                 </SheetHeader>
@@ -180,7 +228,9 @@ const printPoster = (): void => {
                 <div class="space-y-5 px-6 py-5">
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-neutral-900">
-                            {{ t('event_home.print_pack.copy_fields.subtitle') }}
+                            {{
+                                t('event_home.print_pack.copy_fields.subtitle')
+                            }}
                         </label>
                         <Input v-model="subtitleText" class="rounded-2xl" />
                     </div>
@@ -203,12 +253,20 @@ const printPoster = (): void => {
                         <label class="text-sm font-medium text-neutral-900">
                             {{ t('event_home.print_pack.copy_fields.message') }}
                         </label>
-                        <Textarea v-model="messageText" rows="5" class="min-h-28 rounded-[1.5rem]" />
+                        <Textarea
+                            v-model="messageText"
+                            rows="5"
+                            class="min-h-28 rounded-[1.5rem]"
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-neutral-900">
-                            {{ t('event_home.print_pack.copy_fields.event_title') }}
+                            {{
+                                t(
+                                    'event_home.print_pack.copy_fields.event_title',
+                                )
+                            }}
                         </label>
                         <Input v-model="eventTitleText" class="rounded-2xl" />
                     </div>

@@ -11,10 +11,12 @@ use Laravel\Fortify\Features;
 
 Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
+    'pwaLaunch' => false,
 ])->name('home');
 
 Route::inertia('/launch', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
+    'pwaLaunch' => true,
 ])->name('launch');
 
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');

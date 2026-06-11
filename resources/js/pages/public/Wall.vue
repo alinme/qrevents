@@ -5,6 +5,7 @@ import type { Swiper as SwiperInstance } from 'swiper';
 import { EffectCreative } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import { useTranslations } from '@/composables/useTranslations';
 import 'swiper/css';
 import 'swiper/css/effect-creative';
@@ -481,7 +482,7 @@ const startSlideLifecycle = (): void => {
 
 const setForegroundVideoElement =
     (assetId: number) =>
-    (element: Element | null): void => {
+    (element: Element | ComponentPublicInstance | null): void => {
         if (element instanceof HTMLVideoElement) {
             foregroundVideoElements.set(assetId, element);
 
@@ -493,7 +494,7 @@ const setForegroundVideoElement =
 
 const setBackdropVideoElement =
     (assetId: number) =>
-    (element: Element | null): void => {
+    (element: Element | ComponentPublicInstance | null): void => {
         if (element instanceof HTMLVideoElement) {
             backdropVideoElements.set(assetId, element);
 
@@ -719,7 +720,7 @@ watch(
     <Head :title="t('public.wall.page_title', { eventName })" />
 
     <main
-        class="relative h-screen w-screen overflow-hidden bg-[#040507] text-white"
+        class="relative h-screen w-screen overflow-hidden bg-black text-white"
         :style="wallVars"
     >
         <div

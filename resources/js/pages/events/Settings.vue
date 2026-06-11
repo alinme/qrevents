@@ -210,6 +210,7 @@ type EventLinks = {
     settingsUpdate: string;
     billingUpdate: string;
     billingCheckout: string;
+    collaboratorsStore?: string;
 };
 
 type TabId =
@@ -217,7 +218,8 @@ type TabId =
     | 'billing'
     | 'appearance'
     | 'photo_wall'
-    | 'moderation';
+    | 'moderation'
+    | 'collaborators';
 
 type BillingPlanOption = {
     id: number;
@@ -1621,7 +1623,13 @@ const submitBilling = (): void => {
 };
 
 const submitCollaboratorInvite = (): void => {
-    collaboratorForm.post(props.eventLinks.collaboratorsStore, {
+    const collaboratorsStoreUrl = props.eventLinks.collaboratorsStore;
+
+    if (!collaboratorsStoreUrl) {
+        return;
+    }
+
+    collaboratorForm.post(collaboratorsStoreUrl, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {

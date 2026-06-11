@@ -68,7 +68,9 @@ const user = computed(() => page.props.auth.user);
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">{{ t('auth.shared.email_address') }}</Label>
+                        <Label for="email">{{
+                            t('auth.shared.email_address')
+                        }}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -88,9 +90,13 @@ const user = computed(() => page.props.auth.user);
                             <Link
                                 :href="send()"
                                 as="button"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                class="text-brand-ink underline decoration-brand-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                             >
-                                {{ t('account_settings.profile.resend_verification') }}
+                                {{
+                                    t(
+                                        'account_settings.profile.resend_verification',
+                                    )
+                                }}
                             </Link>
                         </p>
 
@@ -98,7 +104,9 @@ const user = computed(() => page.props.auth.user);
                             v-if="status === 'verification-link-sent'"
                             class="mt-2 text-sm font-medium text-green-600"
                         >
-                            {{ t('account_settings.profile.verification_sent') }}
+                            {{
+                                t('account_settings.profile.verification_sent')
+                            }}
                         </div>
                     </div>
 
@@ -117,7 +125,7 @@ const user = computed(() => page.props.auth.user);
                         >
                             <p
                                 v-show="recentlySuccessful"
-                                class="text-sm text-neutral-600"
+                                class="text-sm text-brand-muted"
                             >
                                 {{ t('auth.shared.saved') }}
                             </p>

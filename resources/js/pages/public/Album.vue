@@ -39,6 +39,7 @@ import type { Swiper as SwiperInstance } from 'swiper';
 import { EffectFade } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import { toast } from 'vue-sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -2706,7 +2707,7 @@ const resumeViewerFromHold = (): void => {
 
 const setViewerVideoElement =
     (assetId: number) =>
-    (element: Element | null): void => {
+    (element: Element | ComponentPublicInstance | null): void => {
         if (element instanceof HTMLVideoElement) {
             viewerVideoElements.set(assetId, element);
 
@@ -2718,7 +2719,7 @@ const setViewerVideoElement =
 
 const setViewerBackdropVideoElement =
     (assetId: number) =>
-    (element: Element | null): void => {
+    (element: Element | ComponentPublicInstance | null): void => {
         if (element instanceof HTMLVideoElement) {
             viewerBackdropVideoElements.set(assetId, element);
 
@@ -5757,12 +5758,12 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="isLanguagePickerOpen"
-                class="fixed inset-0 z-[68] bg-[#fcfaf6]"
+                class="fixed inset-0 z-[68] bg-promo-surface"
             >
                 <div class="flex h-full flex-col">
                     <header
                         :class="[
-                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur',
+                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
                             composerHeaderPaddingClass,
                         ]"
                     >
@@ -5986,11 +5987,11 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="isComposerOpen"
-                class="fixed inset-0 z-[70] bg-[#fcfaf6]"
+                class="fixed inset-0 z-[70] bg-promo-surface"
             >
                 <div
                     v-if="uploadForm.processing"
-                    class="absolute inset-0 z-20 flex items-center justify-center bg-[#fcfaf6]/88 backdrop-blur-sm"
+                    class="absolute inset-0 z-20 flex items-center justify-center bg-promo-surface/88 backdrop-blur-sm"
                 >
                     <div
                         class="flex flex-col items-center gap-4 px-8 text-center"
@@ -6014,7 +6015,7 @@ const onAlbumTouchCancel = (): void => {
                 </div>
                 <div class="flex h-full flex-col">
                     <header
-                        class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 px-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] pb-5 backdrop-blur"
+                        class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 px-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] pb-5 backdrop-blur"
                     >
                         <div
                             class="relative flex min-h-16 items-start justify-center gap-3"
@@ -6529,11 +6530,11 @@ const onAlbumTouchCancel = (): void => {
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div v-if="menuOpen" class="fixed inset-0 z-[72] bg-[#fcfaf6]">
+            <div v-if="menuOpen" class="fixed inset-0 z-[72] bg-promo-surface">
                 <div class="flex h-full flex-col">
                     <header
                         :class="[
-                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-[#fcfaf6]/96 backdrop-blur',
+                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
                             composerHeaderPaddingClass,
                         ]"
                     >
@@ -6798,7 +6799,7 @@ const onAlbumTouchCancel = (): void => {
             "
         >
             <DrawerContent
-                class="safe-bottom z-[70] max-h-[84vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
+                class="safe-bottom z-[70] max-h-[84vh] rounded-t-[2rem] border-t border-slate-200 bg-promo-surface px-0 pb-0"
             >
                 <DrawerHeader
                     class="border-b border-slate-200 px-5 pt-3 pb-5 text-center"
@@ -6964,7 +6965,7 @@ const onAlbumTouchCancel = (): void => {
                                 >
                                     <InputGroupButton
                                         size="sm"
-                                        class="h-8 rounded-full bg-[#1d9bf0] px-3 text-white hover:bg-[#1a8cd8]"
+                                        class="h-8 rounded-full bg-promo-primary px-3 text-white hover:bg-promo-primary-strong"
                                         :disabled="
                                             isAssetCommentPending(
                                                 selectedCommentsAsset.id,
@@ -7017,7 +7018,7 @@ const onAlbumTouchCancel = (): void => {
         >
             <div
                 v-if="selectedAsset"
-                class="fixed inset-0 z-50 overflow-hidden bg-[#040507] text-white"
+                class="fixed inset-0 z-50 overflow-hidden bg-black text-white"
             >
                 <div v-if="selectedAssetBackdropUrl" class="absolute inset-0">
                     <video
@@ -7458,7 +7459,7 @@ const onAlbumTouchCancel = (): void => {
             "
         >
             <DrawerContent
-                class="safe-bottom z-[70] max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-[#fcfaf6] px-0 pb-0"
+                class="safe-bottom z-[70] max-h-[78vh] rounded-t-[2rem] border-t border-slate-200 bg-promo-surface px-0 pb-0"
             >
                 <DrawerHeader
                     class="border-b border-slate-200 px-5 pt-3 pb-5 text-center"
