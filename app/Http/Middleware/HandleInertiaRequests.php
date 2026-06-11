@@ -53,7 +53,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user?->authContext(),
             ],
             'accountNavigation' => $this->sharedAccountNavigation($request),
-            'businessNavigation' => $this->sharedBusinessNavigation($request),
             'sidebarLabel' => $this->sharedSidebarLabel($request),
             'flash' => [
                 'success' => fn (): mixed => $request->session()->get('success'),
@@ -85,17 +84,11 @@ class HandleInertiaRequests extends Middleware
                 'title' => __('app.nav.events'),
                 'href' => route('dashboard'),
             ],
+            [
+                'title' => __('app.nav.create_event'),
+                'href' => route('onboarding.create', ['restart' => 1]),
+            ],
         ];
-    }
-
-    /**
-     * @return list<array{title: string, href: string}>
-     */
-    private function sharedBusinessNavigation(Request $request): array
-    {
-        $user = $request->user();
-
-        return [];
     }
 
     private function sharedSidebarLabel(Request $request): ?string

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -65,7 +65,7 @@ indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::index
-* @see app/Http/Controllers/DashboardController.php:43
+* @see app/Http/Controllers/DashboardController.php:38
 * @route '/dashboard'
 */
 indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -82,7 +82,7 @@ index.form = indexForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 export const ownedEvents = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -97,7 +97,7 @@ ownedEvents.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 ownedEvents.url = (options?: RouteQueryOptions) => {
@@ -106,7 +106,7 @@ ownedEvents.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 ownedEvents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -116,7 +116,7 @@ ownedEvents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 ownedEvents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -126,7 +126,7 @@ ownedEvents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 const ownedEventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -136,7 +136,7 @@ const ownedEventsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 ownedEventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -146,7 +146,7 @@ ownedEventsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> 
 
 /**
 * @see \App\Http\Controllers\DashboardController::ownedEvents
-* @see app/Http/Controllers/DashboardController.php:359
+* @see app/Http/Controllers/DashboardController.php:75
 * @route '/dashboard/events'
 */
 ownedEventsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -163,7 +163,7 @@ ownedEvents.form = ownedEventsForm
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 export const recentActivity = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -178,7 +178,7 @@ recentActivity.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 recentActivity.url = (options?: RouteQueryOptions) => {
@@ -187,7 +187,7 @@ recentActivity.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 recentActivity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -197,7 +197,7 @@ recentActivity.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 recentActivity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -207,7 +207,7 @@ recentActivity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 const recentActivityForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -217,7 +217,7 @@ const recentActivityForm = (options?: RouteQueryOptions): RouteFormDefinition<'g
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 recentActivityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -227,7 +227,7 @@ recentActivityForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get
 
 /**
 * @see \App\Http\Controllers\DashboardController::recentActivity
-* @see app/Http/Controllers/DashboardController.php:364
+* @see app/Http/Controllers/DashboardController.php:80
 * @route '/dashboard/activity'
 */
 recentActivityForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -2103,5 +2103,6 @@
     "onboarding.datepicker.clear": "Șterge",
     "onboarding.datepicker.today": "Azi",
     "onboarding.photos.dashboard_hint": "Personalizează pagina albumului, brandingul și moderarea din panoul tău.",
-    "onboarding.photos.share_title": "Distribuie invitaților"
+    "onboarding.photos.share_title": "Distribuie invitaților",
+    "app.nav.create_event": "Creează eveniment"
 }

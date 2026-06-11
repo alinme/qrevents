@@ -1355,5 +1355,6 @@
     "onboarding.datepicker.clear": "Καθαρισμός",
     "onboarding.datepicker.today": "Σήμερα",
     "onboarding.photos.dashboard_hint": "Προσαρμόστε τη σελίδα του άλμπουμ, την επωνυμία και τον έλεγχο από τον πίνακά σας.",
-    "onboarding.photos.share_title": "Μοιραστείτε με τους καλεσμένους"
+    "onboarding.photos.share_title": "Μοιραστείτε με τους καλεσμένους",
+    "app.nav.create_event": "Δημιουργία εκδήλωσης"
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    CirclePlus,
     Activity,
     ArrowLeft,
-    BriefcaseBusiness,
     Camera,
     CreditCard,
     FolderKanban,
@@ -46,7 +46,6 @@ type PageProps = {
     currentEvent?: CurrentEvent;
     eventNavigation?: EventNavItem[];
     accountNavigation?: EventNavItem[];
-    businessNavigation?: EventNavItem[];
     adminNavigation?: EventNavItem[];
     backNavigation?: EventNavItem;
     sidebarLabel?: string;
@@ -57,9 +56,12 @@ const { t } = useTranslations();
 
 const eventNavigation = computed(() => page.props.eventNavigation ?? []);
 const adminNavigation = computed(() => page.props.adminNavigation ?? []);
-const businessNavigation = computed(() => page.props.businessNavigation ?? []);
 
-const matchesTranslatedTitle = (title: string, english: string, translated: string): boolean => {
+const matchesTranslatedTitle = (
+    title: string,
+    english: string,
+    translated: string,
+): boolean => {
     return title === english || title === translated;
 };
 
@@ -92,8 +94,12 @@ const translatedNavTitle = (title: string): string => {
 const footerBackItem = computed<NavItem | null>(() => {
     const eventBackItem = eventNavigation.value.find(
         (item) =>
-            matchesTranslatedTitle(item.title, 'Dashboard', t('app.nav.dashboard'))
-            || matchesTranslatedTitle(item.title, 'Events', t('app.nav.events')),
+            matchesTranslatedTitle(
+                item.title,
+                'Dashboard',
+                t('app.nav.dashboard'),
+            ) ||
+            matchesTranslatedTitle(item.title, 'Events', t('app.nav.events')),
     );
 
     if (eventBackItem) {
@@ -118,24 +124,54 @@ const footerBackItem = computed<NavItem | null>(() => {
 const mainNavItems = computed<NavItem[]>(() => {
     if (eventNavigation.value.length > 0) {
         return eventNavigation.value
-            .filter((item) => !matchesTranslatedTitle(item.title, 'Dashboard', t('app.nav.dashboard')))
+            .filter(
+                (item) =>
+                    !matchesTranslatedTitle(
+                        item.title,
+                        'Dashboard',
+                        t('app.nav.dashboard'),
+                    ),
+            )
             .map((item) => ({
                 title: translatedNavTitle(item.title),
                 href: item.href,
-                icon:
-                    matchesTranslatedTitle(item.title, 'Workspace', t('app.nav.workspace'))
-                        ? LayoutGrid
-                        : matchesTranslatedTitle(item.title, 'Guests', t('app.nav.guests'))
-                          ? Users
-                        : matchesTranslatedTitle(item.title, 'Media', t('app.nav.media'))
-                          ? Camera
-                          : matchesTranslatedTitle(item.title, 'Settings', t('app.nav.settings'))
-                            ? Settings
-                            : matchesTranslatedTitle(item.title, 'Invite Studio', t('app.nav.invite_studio'))
-                              ? ScrollText
-                            : matchesTranslatedTitle(item.title, 'QR Studio', t('app.nav.print_pack'))
+                icon: matchesTranslatedTitle(
+                    item.title,
+                    'Workspace',
+                    t('app.nav.workspace'),
+                )
+                    ? LayoutGrid
+                    : matchesTranslatedTitle(
+                            item.title,
+                            'Guests',
+                            t('app.nav.guests'),
+                        )
+                      ? Users
+                      : matchesTranslatedTitle(
+                              item.title,
+                              'Media',
+                              t('app.nav.media'),
+                          )
+                        ? Camera
+                        : matchesTranslatedTitle(
+                                item.title,
+                                'Settings',
+                                t('app.nav.settings'),
+                            )
+                          ? Settings
+                          : matchesTranslatedTitle(
+                                  item.title,
+                                  'Invite Studio',
+                                  t('app.nav.invite_studio'),
+                              )
+                            ? ScrollText
+                            : matchesTranslatedTitle(
+                                    item.title,
+                                    'QR Studio',
+                                    t('app.nav.print_pack'),
+                                )
                               ? QrCode
-                            : LayoutGrid,
+                              : LayoutGrid,
             }));
     }
 
@@ -160,44 +196,30 @@ const mainNavItems = computed<NavItem[]>(() => {
         }));
     }
 
-    if (businessNavigation.value.length > 0) {
-        return businessNavigation.value.map((item) => ({
-            title: translatedNavTitle(item.title),
-            href: item.href,
-            icon:
-                item.title === 'Business'
-                    ? BriefcaseBusiness
-                    : item.title === 'Billing'
-                        ? CreditCard
-                        : item.title === 'Events'
-                            ? FolderKanban
-                            : LayoutGrid,
-        }));
-    }
-
     const accountNavigation = page.props.accountNavigation ?? [];
     if (accountNavigation.length > 0) {
         return accountNavigation.map((item) => ({
             title: translatedNavTitle(item.title),
             href: item.href,
-            icon:
-                item.title === 'Overview'
-                    ? LayoutGrid
-                    : item.title === 'Business'
-                      ? BriefcaseBusiness
-                      : item.title === 'Billing'
-                        ? CreditCard
-                          : item.title === 'Events'
-                            ? FolderKanban
-                      : item.title === 'Owned Events'
-                        ? Camera
-                        : item.title === 'Admin'
-                          ? Shield
-                          : item.title === 'Shared Events'
-                            ? Users
-                            : item.title === 'Recent Activity'
-                              ? Activity
-                              : LayoutGrid,
+            icon: matchesTranslatedTitle(
+                item.title,
+                'Events',
+                t('app.nav.events'),
+            )
+                ? FolderKanban
+                : matchesTranslatedTitle(
+                        item.title,
+                        'Create event',
+                        t('app.nav.create_event'),
+                    )
+                  ? CirclePlus
+                  : matchesTranslatedTitle(
+                          item.title,
+                          'Admin',
+                          t('app.nav.admin'),
+                      )
+                    ? Shield
+                    : LayoutGrid,
         }));
     }
 
@@ -210,8 +232,10 @@ const mainNavItems = computed<NavItem[]>(() => {
     ];
 });
 
-const eventTitle = computed(
-    () => translatedNavTitle(page.props.sidebarLabel ?? page.props.currentEvent?.name ?? 'Account'),
+const eventTitle = computed(() =>
+    translatedNavTitle(
+        page.props.sidebarLabel ?? page.props.currentEvent?.name ?? 'Account',
+    ),
 );
 </script>
 

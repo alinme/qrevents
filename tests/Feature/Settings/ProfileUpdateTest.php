@@ -14,7 +14,6 @@ test('profile page is displayed', function () {
             ->component('settings/Profile')
             ->where('sidebarLabel', 'Account')
             ->where('accountNavigation.0.title', 'Events')
-            ->where('businessNavigation', [])
         );
 });
 

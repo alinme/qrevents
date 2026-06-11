@@ -107,7 +107,6 @@ test('multi-event user accounts stay on the main dashboard without business tool
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
             ->where('auth.user.accountType', User::ACCOUNT_TYPE_USER)
-            ->where('dashboardLinks.business', null)
             ->where('summary.ownedEventCount', 3)
         );
 });
