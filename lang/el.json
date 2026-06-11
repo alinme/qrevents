@@ -1359,5 +1359,12 @@
     "auth.layout.feature_walls": "Ζωντανοί τοίχοι",
     "auth.layout.feature_qr": "Κοινοποίηση QR",
     "auth.layout.feature_downloads": "Εύκολες λήψεις",
-    "auth.layout.account_access": "Πρόσβαση λογαριασμού"
+    "auth.layout.account_access": "Πρόσβαση λογαριασμού",
+    "onboarding.datepicker.label": "Ημερομηνία",
+    "onboarding.datepicker.open": "Άνοιγμα",
+    "onboarding.datepicker.placeholder": "Επιλέξτε ημερομηνία",
+    "onboarding.datepicker.heading": "Επιλέξτε ημερομηνία",
+    "onboarding.datepicker.description": "Επιλέξτε την ημέρα της εκδήλωσής σας.",
+    "onboarding.datepicker.clear": "Καθαρισμός",
+    "onboarding.datepicker.today": "Σήμερα"
 }

@@ -12,6 +12,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import PrettyDatePicker from '@/components/onboarding/PrettyDatePicker.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -112,8 +113,6 @@ const weddingTitleSuggestions = computed(() => {
 const namePlaceholder = computed(() =>
     t(`onboarding.placeholders.${form.type || 'other'}`),
 );
-
-const minEventDate = new Date().toISOString().slice(0, 10);
 
 const selectType = (value: string): void => {
     form.type = value;
@@ -412,12 +411,9 @@ const submit = (): void => {
                     <Label for="event-date">
                         {{ t('onboarding.create.date_label') }}
                     </Label>
-                    <Input
+                    <PrettyDatePicker
                         id="event-date"
                         v-model="form.event_date"
-                        type="date"
-                        :min="minEventDate"
-                        class="h-12 text-base"
                     />
                     <InputError :message="form.errors.event_date" />
                 </div>

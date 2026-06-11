@@ -2107,5 +2107,12 @@
     "auth.layout.feature_walls": "Live walls",
     "auth.layout.feature_qr": "QR sharing",
     "auth.layout.feature_downloads": "Easy downloads",
-    "auth.layout.account_access": "Account access"
+    "auth.layout.account_access": "Account access",
+    "onboarding.datepicker.label": "Date",
+    "onboarding.datepicker.open": "Open",
+    "onboarding.datepicker.placeholder": "Pick a date",
+    "onboarding.datepicker.heading": "Pick a date",
+    "onboarding.datepicker.description": "Choose the calendar day for your event.",
+    "onboarding.datepicker.clear": "Clear",
+    "onboarding.datepicker.today": "Today"
 }

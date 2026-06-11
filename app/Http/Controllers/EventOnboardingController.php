@@ -6,8 +6,6 @@ use App\Http\Requests\StoreEventOnboardingRequest;
 use App\Models\Event;
 use App\Models\Plan;
 use App\Models\User;
-use App\Support\BusinessPlanCatalog;
-use App\Support\BusinessWalletManager;
 use App\Support\EventLifecycleWindows;
 use App\Support\IsgdShortUrlManager;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -16,16 +14,13 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EventOnboardingController extends Controller
 {
     public function __construct(
-        private BusinessPlanCatalog $businessPlanCatalog,
     ) {}
 
     public function create(Request $request): Response|RedirectResponse
@@ -49,11 +44,6 @@ class EventOnboardingController extends Controller
         return Inertia::render('onboarding/Create', $this->onboardingCreateProps($request));
     }
 
-    public function createBusiness(Request $request): Response|RedirectResponse
-    {
-        return $this->create($request);
-    }
-
     public function store(StoreEventOnboardingRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -64,39 +54,6 @@ class EventOnboardingController extends Controller
         $event->update([
             'onboarding_step' => 'photos',
         ]);
-
-        return to_route('onboarding.photos', $event)->with('success', 'Event created.');
-    }
-
-    public function storeBusiness(
-        StoreEventOnboardingRequest $request,
-        BusinessWalletManager $businessWalletManager,
-    ): RedirectResponse {
-        $validated = $request->validated();
-        $user = $request->user();
-        abort_unless($user !== null && $user->isBusinessAccount(), 403);
-        abort_unless($user->hasCompletedBusinessOnboarding(), 403);
-
-        $plan = $this->resolveSelectedPlan($validated['plan_slug'] ?? null, true);
-        if (! $businessWalletManager->canAffordPlan($user, $plan)) {
-            $availableCredits = (int) $user->business_wallet_credits;
-            $requiredCredits = $businessWalletManager->planCreditCost($plan);
-            $missingCredits = max($requiredCredits - $availableCredits, 0);
-
-            throw ValidationException::withMessages([
-                'plan_slug' => "This {$plan->name} event needs {$requiredCredits} credits. Your wallet has {$availableCredits}, so top up {$missingCredits} more first.",
-            ]);
-        }
-
-        $event = DB::transaction(function () use ($user, $validated, $plan, $businessWalletManager): Event {
-            $event = $this->createEventFromValidatedData($user, $validated, $plan, true);
-            $businessWalletManager->debitForEvent($user, $event, $plan);
-            $event->update([
-                'onboarding_step' => 'photos',
-            ]);
-
-            return $event;
-        });
 
         return to_route('onboarding.photos', $event)->with('success', 'Event created.');
     }
@@ -204,75 +161,48 @@ class EventOnboardingController extends Controller
         };
     }
 
-    private function resolveSelectedPlan(?string $slug, bool $businessMode = false): Plan
+    private function resolveSelectedPlan(): Plan
     {
-        $normalizedSlug = is_string($slug) ? Str::lower(trim($slug)) : '';
-
-        if ($normalizedSlug !== '') {
-            $selectedPlan = $businessMode
-                ? $this->businessPlanCatalog->query()->where('slug', $normalizedSlug)->first()
-                : Plan::query()
-                    ->where('slug', $normalizedSlug)
-                    ->where('is_active', true)
-                    ->first();
-
-            if ($selectedPlan !== null) {
-                return $selectedPlan;
-            }
-
-            abort_if($businessMode, 422, 'Choose an available business plan.');
-        }
-
-        $activeDefaultPlan = $businessMode
-            ? $this->businessPlanCatalog->query()->where('is_default', true)->first()
-            : Plan::query()
-                ->where('is_active', true)
-                ->where('is_default', true)
-                ->orderBy('price_cents')
-                ->first();
+        $activeDefaultPlan = Plan::query()
+            ->where('is_active', true)
+            ->where('is_default', true)
+            ->orderBy('price_cents')
+            ->first();
 
         if ($activeDefaultPlan !== null) {
             return $activeDefaultPlan;
         }
 
-        $fallbackActivePlan = $businessMode
-            ? $this->businessPlanCatalog->query()->first()
-            : Plan::query()
-                ->where('is_active', true)
-                ->orderBy('price_cents')
-                ->first();
+        $fallbackActivePlan = Plan::query()
+            ->where('is_active', true)
+            ->orderBy('price_cents')
+            ->first();
 
         if ($fallbackActivePlan !== null) {
             return $fallbackActivePlan;
         }
 
-        abort_if($businessMode, 500, 'Business plans are not configured.');
-
-        return tap(
-            Plan::query()->firstOrNew(['slug' => 'free']),
-            function (Plan $plan): void {
-                $plan->fill([
-                    'name' => 'Free',
-                    'description' => 'Small events with a lightweight album and simple setup.',
-                    'currency' => 'EUR',
-                    'price_cents' => 0,
-                    'storage_limit_bytes' => 3221225472,
-                    'upload_limit' => 100,
-                    'retention_days' => 7,
-                    'grace_days' => 0,
-                    'upload_window_days' => 1,
-                    'customization_tier' => 'basic',
-                    'download_all_enabled' => false,
-                    'moderation_tools_enabled' => false,
-                    'remove_app_branding' => false,
-                    'video_max_duration_seconds' => 30,
-                    'photo_max_size_bytes' => 15728640,
-                    'video_max_size_bytes' => 314572800,
-                    'is_active' => true,
-                    'is_default' => true,
-                ]);
-                $plan->save();
-            },
+        return Plan::query()->firstOrCreate(
+            ['slug' => 'free'],
+            [
+                'name' => 'Free',
+                'currency' => 'EUR',
+                'price_cents' => 0,
+                'storage_limit_bytes' => 3221225472,
+                'upload_limit' => 100,
+                'retention_days' => 7,
+                'grace_days' => 0,
+                'upload_window_days' => 1,
+                'customization_tier' => 'basic',
+                'download_all_enabled' => false,
+                'moderation_tools_enabled' => false,
+                'remove_app_branding' => false,
+                'video_max_duration_seconds' => 30,
+                'photo_max_size_bytes' => 15728640,
+                'video_max_size_bytes' => 314572800,
+                'is_active' => true,
+                'is_default' => true,
+            ],
         );
     }
 
@@ -283,9 +213,8 @@ class EventOnboardingController extends Controller
         User $user,
         array $validated,
         ?Plan $resolvedPlan = null,
-        bool $businessMode = false,
     ): Event {
-        $plan = $resolvedPlan ?? $this->resolveSelectedPlan(null, $businessMode);
+        $plan = $resolvedPlan ?? $this->resolveSelectedPlan();
         $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
         $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
         $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
@@ -298,7 +227,7 @@ class EventOnboardingController extends Controller
             (int) $plan->grace_days,
         );
         $branding = $this->initialBranding($validated);
-        $isPaid = $businessMode || (int) $plan->price_cents === 0;
+        $isPaid = (int) $plan->price_cents === 0;
         $retentionEndsAt = $isPaid && $windows['upload_window_ends_at'] !== null
             ? $windows['upload_window_ends_at']->addDays((int) $plan->retention_days)->endOfDay()
             : null;
@@ -469,7 +398,7 @@ class EventOnboardingController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function onboardingCreateProps(Request $request, bool $businessMode = false): array
+    private function onboardingCreateProps(Request $request): array
     {
         return [
             'defaultTimezone' => config('events.default_timezone'),

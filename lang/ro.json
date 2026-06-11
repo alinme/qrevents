@@ -2107,5 +2107,12 @@
     "auth.layout.feature_walls": "Pereți live",
     "auth.layout.feature_qr": "Partajare QR",
     "auth.layout.feature_downloads": "Descărcări simple",
-    "auth.layout.account_access": "Acces cont"
+    "auth.layout.account_access": "Acces cont",
+    "onboarding.datepicker.label": "Data",
+    "onboarding.datepicker.open": "Deschide",
+    "onboarding.datepicker.placeholder": "Alege o dată",
+    "onboarding.datepicker.heading": "Alege o dată",
+    "onboarding.datepicker.description": "Alege ziua din calendar pentru evenimentul tău.",
+    "onboarding.datepicker.clear": "Șterge",
+    "onboarding.datepicker.today": "Azi"
 }
