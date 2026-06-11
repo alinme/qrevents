@@ -44,13 +44,15 @@ const interpolateTranslation = (
     template: string,
     replacements: Record<string, string | number>,
 ): string =>
-    template.replace(/:([A-Za-z0-9_]+)/g, (match, name) => {
-        if (!(name in replacements)) {
-            return match;
-        }
-
-        return String(replacements[name]);
-    });
+    // Match Laravel's translator: replace each known placeholder directly,
+    // longest name first, so ":max" still applies inside ":maxs".
+    Object.keys(replacements)
+        .sort((a, b) => b.length - a.length)
+        .reduce(
+            (result, name) =>
+                result.split(`:${name}`).join(String(replacements[name])),
+            template,
+        );
 
 export function useTranslations() {
     const page = usePage<TranslationPageProps>();

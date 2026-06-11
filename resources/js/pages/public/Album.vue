@@ -5748,7 +5748,7 @@ const onAlbumTouchCancel = (): void => {
                 <div class="flex h-full flex-col">
                     <header
                         :class="[
-                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
+                            'sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
                             composerHeaderPaddingClass,
                         ]"
                     >
@@ -6000,7 +6000,7 @@ const onAlbumTouchCancel = (): void => {
                 </div>
                 <div class="flex h-full flex-col">
                     <header
-                        class="safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 px-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] pb-5 backdrop-blur"
+                        class="sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 px-5 pt-[calc(env(safe-area-inset-top)+0.9rem)] pb-5 backdrop-blur"
                     >
                         <div
                             class="relative flex min-h-16 items-start justify-center gap-3"
@@ -6519,7 +6519,7 @@ const onAlbumTouchCancel = (): void => {
                 <div class="flex h-full flex-col">
                     <header
                         :class="[
-                            'safe-top sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
+                            'sticky top-0 z-10 border-b border-slate-200 bg-promo-surface/96 backdrop-blur',
                             composerHeaderPaddingClass,
                         ]"
                     >
@@ -6549,12 +6549,10 @@ const onAlbumTouchCancel = (): void => {
                         <section
                             class="rounded-[1.9rem] border border-slate-200 bg-white p-5 shadow-sm"
                         >
-                            <div
-                                class="flex flex-col gap-5 sm:flex-row sm:items-start"
-                            >
-                                <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="relative shrink-0">
                                     <Avatar
-                                        class="size-20 border border-slate-200"
+                                        class="size-16 border border-slate-200"
                                     >
                                         <AvatarImage
                                             v-if="currentGuestAvatarUrl"
@@ -6574,33 +6572,6 @@ const onAlbumTouchCancel = (): void => {
                                             {{ guestInitials(guestName) }}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                        <p
-                                            class="text-base font-semibold text-slate-900"
-                                        >
-                                            {{
-                                                t(
-                                                    'public.album.settings.profile_title',
-                                                )
-                                            }}
-                                        </p>
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            {{
-                                                t(
-                                                    'public.album.menu.signed_in_as',
-                                                )
-                                            }}
-                                            <span
-                                                class="font-semibold text-slate-900"
-                                                >{{
-                                                    guestName.trim() ||
-                                                    t('public.shared.guest')
-                                                }}</span
-                                            >
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
                                     <input
                                         ref="guestAvatarInputRef"
                                         type="file"
@@ -6610,20 +6581,40 @@ const onAlbumTouchCancel = (): void => {
                                     />
                                     <button
                                         type="button"
-                                        class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                        class="absolute -right-1 -bottom-1 inline-flex size-7 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white shadow-sm transition hover:bg-slate-700"
+                                        :aria-label="
+                                            t('public.album.choose_avatar')
+                                        "
                                         @click="guestAvatarInputRef?.click()"
                                     >
-                                        {{ t('public.album.choose_avatar') }}
-                                    </button>
-                                    <button
-                                        v-if="currentGuestAvatarUrl"
-                                        type="button"
-                                        class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                        @click="clearGuestAvatarSelection"
-                                    >
-                                        {{ t('public.shared.remove') }}
+                                        <Camera class="size-3.5" />
                                     </button>
                                 </div>
+                                <div class="min-w-0 flex-1">
+                                    <p
+                                        class="truncate text-base font-semibold text-slate-900"
+                                    >
+                                        {{
+                                            guestName.trim() ||
+                                            t('public.shared.guest')
+                                        }}
+                                    </p>
+                                    <p class="mt-0.5 text-sm text-slate-500">
+                                        {{
+                                            t(
+                                                'public.album.settings.profile_title',
+                                            )
+                                        }}
+                                    </p>
+                                </div>
+                                <button
+                                    v-if="currentGuestAvatarUrl"
+                                    type="button"
+                                    class="shrink-0 rounded-full px-3 py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+                                    @click="clearGuestAvatarSelection"
+                                >
+                                    {{ t('public.shared.remove') }}
+                                </button>
                             </div>
 
                             <div class="mt-5 grid gap-4">
