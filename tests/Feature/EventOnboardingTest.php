@@ -87,6 +87,7 @@ it('creates an event from onboarding and calculates event windows', function () 
         'wedding_partner_two_first_name' => 'Rachel',
         'wedding_family_name' => 'Ionescu',
         'attendee_estimate' => 140,
+        'event_date' => '2026-05-14',
         'event_dates' => [
             [
                 'label' => 'Civil day',
@@ -206,6 +207,7 @@ it('keeps multi-event owners as regular users after creating another event', fun
         'wedding_partner_two_first_name' => 'Bianca',
         'wedding_family_name' => 'Popa',
         'attendee_estimate' => 140,
+        'event_date' => now()->addMonth()->toDateString(),
         'event_dates' => [
             [
                 'label' => 'Main day',
@@ -298,6 +300,7 @@ it('blocks event dates too far in the future', function () {
         'wedding_partner_two_first_name' => 'Rachel',
         'wedding_family_name' => 'Ionescu',
         'attendee_estimate' => 80,
+        'event_date' => '2030-12-31',
         'event_dates' => [
             [
                 'label' => 'Main day',
@@ -318,7 +321,7 @@ it('blocks event dates too far in the future', function () {
     ]);
 
     $response->assertRedirect(route('onboarding.create'));
-    $response->assertSessionHasErrors(['event_dates.0.date']);
+    $response->assertSessionHasErrors(['event_date', 'event_dates.0.date']);
 
     CarbonImmutable::setTestNow();
 });
@@ -357,6 +360,7 @@ it('creates an event for the signed-in owner without collecting account details 
         'wedding_partner_two_first_name' => 'Luca',
         'wedding_family_name' => 'Popescu',
         'attendee_estimate' => 120,
+        'event_date' => now()->addMonth()->toDateString(),
         'event_dates' => [
             [
                 'label' => 'Main day',
@@ -409,6 +413,7 @@ it('allows a selected moment to skip the address when marked accordingly', funct
         'type' => 'party',
         'name' => 'Launch Party',
         'attendee_estimate' => 90,
+        'event_date' => now()->addMonth()->toDateString(),
         'event_dates' => [
             [
                 'label' => 'Main day',
@@ -445,7 +450,49 @@ it('allows a selected moment to skip the address when marked accordingly', funct
         ]);
 });
 
-it('requires at least two relevant moments for baptisms', function () {
+it('ignores a submitted plan slug and always starts events on the default free plan', function () {
+    $freePlan = Plan::factory()->create([
+        'name' => 'Free',
+        'slug' => 'free',
+        'price_cents' => 0,
+        'upload_limit' => 100,
+        'retention_days' => 7,
+        'grace_days' => 0,
+        'upload_window_days' => 1,
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+    Plan::factory()->create([
+        'name' => 'Pro',
+        'slug' => 'pro',
+        'price_cents' => 9900,
+        'upload_limit' => 1000000,
+        'retention_days' => 365,
+        'grace_days' => 7,
+        'upload_window_days' => 90,
+        'is_active' => true,
+        'is_default' => false,
+    ]);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $this->post(route('onboarding.store'), [
+        'plan_slug' => 'pro',
+        'type' => 'party',
+        'name' => 'Launch Party',
+        'event_date' => now()->addMonth()->toDateString(),
+        'timezone' => 'Europe/Bucharest',
+    ])->assertRedirect();
+
+    $event = $user->events()->latest('id')->firstOrFail();
+
+    expect($event->plan_id)->toBe($freePlan->id)
+        ->and($event->is_paid)->toBeTrue()
+        ->and($event->payment_due_at)->toBeNull();
+});
+
+it('creates an event from the minimal wizard payload alone', function () {
     Plan::factory()->create([
         'name' => 'Free',
         'slug' => 'free',
@@ -461,32 +508,24 @@ it('requires at least two relevant moments for baptisms', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->from(route('onboarding.create'))->post(route('onboarding.store'), [
-        'plan_slug' => 'free',
-        'type' => 'baptism',
-        'name' => 'Matei Baptism',
-        'attendee_estimate' => 80,
-        'event_dates' => [
-            [
-                'label' => 'Main day',
-                'date' => now()->addMonth()->toDateString(),
-            ],
-        ],
-        'sub_events' => [
-            [
-                'key' => 'church-ceremony',
-                'label' => 'Church ceremony',
-                'date' => now()->addMonth()->toDateString(),
-                'start_time' => '11:00',
-                'address' => 'Saint George Church, Bucharest',
-                'no_address' => false,
-            ],
-        ],
+    $eventDate = now()->addMonth()->toDateString();
+
+    $response = $this->post(route('onboarding.store'), [
+        'type' => 'birthday',
+        'name' => "Maria's 30th Birthday",
+        'event_date' => $eventDate,
         'timezone' => 'Europe/Bucharest',
     ]);
 
-    $response->assertRedirect(route('onboarding.create'));
-    $response->assertSessionHasErrors(['sub_events']);
+    $event = Event::query()->firstOrFail();
+
+    $response->assertRedirect(route('onboarding.photos', $event));
+
+    expect($event->type)->toBe('birthday')
+        ->and($event->event_date?->toDateString())->toBe($eventDate)
+        ->and($event->attendee_estimate)->toBeNull()
+        ->and($event->sub_events)->toBe([])
+        ->and($event->is_paid)->toBeTrue();
 });
 
 it('marks onboarding complete when the ready route is opened', function () {

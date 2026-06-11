@@ -285,7 +285,7 @@ class EventOnboardingController extends Controller
         ?Plan $resolvedPlan = null,
         bool $businessMode = false,
     ): Event {
-        $plan = $resolvedPlan ?? $this->resolveSelectedPlan($validated['plan_slug'] ?? null, $businessMode);
+        $plan = $resolvedPlan ?? $this->resolveSelectedPlan(null, $businessMode);
         $timezone = $validated['timezone'] ?? config('events.default_timezone', 'Europe/Bucharest');
         $eventDates = $this->normalizeEventDates($validated['event_dates'] ?? []);
         $subEvents = $this->normalizeSubEvents($validated['sub_events'] ?? []);
@@ -313,7 +313,9 @@ class EventOnboardingController extends Controller
             'event_dates' => $eventDates,
             'sub_events' => $subEvents,
             'timezone' => $timezone,
-            'attendee_estimate' => (int) $validated['attendee_estimate'],
+            'attendee_estimate' => isset($validated['attendee_estimate'])
+                ? (int) $validated['attendee_estimate']
+                : null,
             'status' => $windows['status'],
             'onboarding_step' => 'creating',
             'currency' => $plan->currency,
@@ -471,24 +473,13 @@ class EventOnboardingController extends Controller
     {
         return [
             'defaultTimezone' => config('events.default_timezone'),
-            'defaultPlanSlug' => $this->resolveSelectedPlan($request->query('plan'), $businessMode)->slug,
             'owner' => $request->user() === null
                 ? null
                 : [
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                 ],
-            'businessMode' => $businessMode,
-            'businessWalletCredits' => $businessMode && $request->user() !== null
-                ? (int) $request->user()->business_wallet_credits
-                : null,
-            'businessTopUpUrl' => null,
-            'accountNavigation' => [],
-            'businessNavigation' => [],
-            'dashboardLinks' => null,
-            'sidebarLabel' => $businessMode ? 'Business' : null,
             'submitUrl' => route('onboarding.store'),
-            'pricingPlans' => $this->pricingPlansPayload($businessMode),
             'eventTypes' => [
                 [
                     'value' => 'wedding',
@@ -620,42 +611,5 @@ class EventOnboardingController extends Controller
                 ],
             ],
         ];
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function pricingPlansPayload(bool $businessMode = false): array
-    {
-        $planQuery = $businessMode
-            ? $this->businessPlanCatalog->query()
-            : Plan::query()
-                ->where('is_active', true)
-                ->orderBy('price_cents');
-
-        return $planQuery
-            ->get()
-            ->map(function (Plan $plan) use ($businessMode): array {
-                return [
-                    'slug' => $plan->slug,
-                    'name' => $plan->name,
-                    'priceLabel' => (int) $plan->price_cents === 0
-                        ? 'Free'
-                        : sprintf('EUR %.2f', $plan->price_cents / 100),
-                    'billingLabel' => (int) $plan->price_cents === 0 ? 'No CC required' : 'One-time fee',
-                    'uploadLimitLabel' => (int) $plan->upload_limit >= 1000000
-                        ? 'Unlimited uploads'
-                        : number_format((int) $plan->upload_limit).' uploads',
-                    'retentionLabel' => number_format((int) $plan->retention_days).' days saved',
-                    'activeWindowLabel' => number_format((int) $plan->upload_window_days).' day access',
-                    'customizationTier' => $plan->customization_tier,
-                    'downloadAllEnabled' => (bool) $plan->download_all_enabled,
-                    'moderationToolsEnabled' => (bool) $plan->moderation_tools_enabled,
-                    'isDefault' => (bool) $plan->is_default,
-                    'businessCreditCost' => $businessMode ? (int) ($plan->business_credit_cost ?? 0) : null,
-                ];
-            })
-            ->values()
-            ->all();
     }
 }

@@ -15,13 +15,6 @@ class StoreEventOnboardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'plan_slug' => [
-                'required',
-                'string',
-                Rule::exists('plans', 'slug')->where(
-                    fn ($query) => $query->where('is_active', true),
-                ),
-            ],
             'type' => ['required', 'string', Rule::in([
                 'wedding',
                 'party',
@@ -31,17 +24,17 @@ class StoreEventOnboardingRequest extends FormRequest
                 'other',
             ])],
             'name' => ['required', 'string', 'min:3', 'max:120'],
-            'wedding_partner_one_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
-            'wedding_partner_two_first_name' => ['nullable', 'string', 'max:60', 'required_if:type,wedding'],
-            'wedding_family_name' => ['nullable', 'string', 'max:80', 'required_if:type,wedding'],
-            'attendee_estimate' => ['required', 'integer', 'min:1', 'max:100000'],
+            'wedding_partner_one_first_name' => ['nullable', 'string', 'max:60'],
+            'wedding_partner_two_first_name' => ['nullable', 'string', 'max:60'],
+            'wedding_family_name' => ['nullable', 'string', 'max:80'],
+            'attendee_estimate' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'event_date' => [
-                'nullable',
+                'required',
                 'date',
                 'after_or_equal:today',
                 'before_or_equal:'.now()->addMonths((int) config('events.event_date_max_months', 18))->toDateString(),
             ],
-            'event_dates' => ['required', 'array', 'min:1', 'max:8'],
+            'event_dates' => ['nullable', 'array', 'max:8'],
             'event_dates.*.label' => ['nullable', 'string', 'max:80'],
             'event_dates.*.date' => [
                 'required',
@@ -49,7 +42,7 @@ class StoreEventOnboardingRequest extends FormRequest
                 'after_or_equal:today',
                 'before_or_equal:'.now()->addMonths((int) config('events.event_date_max_months', 18))->toDateString(),
             ],
-            'sub_events' => ['required', 'array', 'min:1', 'max:8'],
+            'sub_events' => ['nullable', 'array', 'max:8'],
             'sub_events.*.key' => ['required', 'string', 'max:64', 'distinct'],
             'sub_events.*.label' => ['required', 'string', 'max:80'],
             'sub_events.*.date' => [
@@ -70,24 +63,9 @@ class StoreEventOnboardingRequest extends FormRequest
         return [
             function ($validator): void {
                 $subEvents = $this->input('sub_events', []);
-                $type = (string) $this->input('type', '');
 
                 if (! is_array($subEvents)) {
                     return;
-                }
-
-                $minimumRequiredSubEvents = match ($type) {
-                    'baptism' => 2,
-                    default => 1,
-                };
-
-                if (count($subEvents) < $minimumRequiredSubEvents) {
-                    $validator->errors()->add(
-                        'sub_events',
-                        $minimumRequiredSubEvents === 2
-                            ? 'Choose at least two relevant moments for this event type.'
-                            : 'Choose at least one relevant moment for this event type.',
-                    );
                 }
 
                 foreach ($subEvents as $index => $subEvent) {
@@ -114,14 +92,9 @@ class StoreEventOnboardingRequest extends FormRequest
         $months = (int) config('events.event_date_max_months', 18);
 
         return [
-            'plan_slug.required' => 'Choose a plan before creating the event.',
-            'plan_slug.exists' => 'Choose an available plan.',
-            'wedding_partner_one_first_name.required_if' => 'Add the first partner name so we can suggest a polished wedding title.',
-            'wedding_partner_two_first_name.required_if' => 'Add the second partner name so we can suggest a polished wedding title.',
-            'wedding_family_name.required_if' => 'Add the family name so we can build wedding title suggestions.',
+            'event_date.required' => 'Pick the day of your event so we can prepare the album.',
             'event_date.before_or_equal' => "Event dates can be at most {$months} months in the future.",
             'event_date.after_or_equal' => 'Event date cannot be in the past.',
-            'event_dates.required' => 'Add at least one event date so we can prepare your album timeline.',
             'event_dates.*.date.required' => 'Each event date needs a calendar day.',
             'event_dates.*.date.before_or_equal' => "Event dates can be at most {$months} months in the future.",
             'event_dates.*.date.after_or_equal' => 'Event dates cannot be in the past.',

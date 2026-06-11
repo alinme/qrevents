@@ -49,6 +49,7 @@ test('new onboarding events inherit the current active default plan for their cu
             'wedding_family_name' => 'Popescu',
             'venue_address' => '20 Lake View Road, Bucharest',
             'attendee_estimate' => 180,
+            'event_date' => now()->addMonth()->toDateString(),
             'event_dates' => [
                 [
                     'label' => 'Main day',

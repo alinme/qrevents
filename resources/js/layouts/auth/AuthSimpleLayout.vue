@@ -16,19 +16,6 @@ const props = withDefaults(
         headingEyebrow: 'Account access',
     },
 );
-
-const previewTiles = [
-    {
-        title: 'Guests join instantly',
-        body: 'Share one link or QR code so anyone can upload in seconds.',
-        icon: QrCode,
-    },
-    {
-        title: 'Moments stay organized',
-        body: 'Albums, approvals, walls, and downloads live in one simple dashboard.',
-        icon: Camera,
-    },
-];
 </script>
 
 <template>
@@ -100,35 +87,54 @@ const previewTiles = [
                             </p>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <article
-                                v-for="tile in previewTiles"
-                                :key="tile.title"
-                                class="rounded-[22px] border border-promo-line bg-white p-4 shadow-card"
+                        <div class="relative hidden max-w-md pb-8 lg:block">
+                            <div
+                                class="overflow-hidden rounded-[1.6rem] shadow-[rgba(0,0,0,0.04)_0px_6px_16px,rgba(0,0,0,0.12)_0px_20px_40px]"
                             >
-                                <div class="flex items-start gap-3">
-                                    <div
-                                        class="flex size-10 items-center justify-center rounded-[16px] bg-promo-surface text-promo-primary"
+                                <img
+                                    src="/images/album/jeremy-bg-md.jpg"
+                                    alt="Guests sharing event photos in a digital album"
+                                    class="aspect-[16/11] w-full object-cover"
+                                    loading="lazy"
+                                />
+                            </div>
+
+                            <div
+                                class="absolute -bottom-2 -left-4 inline-flex items-center gap-3 rounded-[1.1rem] bg-white px-4 py-3 shadow-card"
+                            >
+                                <span
+                                    class="flex size-9 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                                >
+                                    <QrCode class="size-4.5" />
+                                </span>
+                                <span>
+                                    <span
+                                        class="block text-sm font-semibold text-promo-ink"
                                     >
-                                        <component
-                                            :is="tile.icon"
-                                            class="size-4.5"
-                                        />
-                                    </div>
-                                    <div>
-                                        <h3
-                                            class="text-sm font-semibold text-promo-ink"
-                                        >
-                                            {{ tile.title }}
-                                        </h3>
-                                        <p
-                                            class="mt-1.5 text-sm leading-6 text-promo-muted"
-                                        >
-                                            {{ tile.body }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </article>
+                                        Guests join instantly
+                                    </span>
+                                    <span
+                                        class="block text-xs text-promo-muted"
+                                    >
+                                        Scan and upload in seconds
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div
+                                class="absolute -top-3 -right-3 inline-flex items-center gap-3 rounded-[1.1rem] bg-white px-4 py-3 shadow-card"
+                            >
+                                <span
+                                    class="flex size-9 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                                >
+                                    <MonitorPlay class="size-4.5" />
+                                </span>
+                                <span
+                                    class="block text-sm font-semibold text-promo-ink"
+                                >
+                                    Live slideshow ready
+                                </span>
+                            </div>
                         </div>
 
                         <div

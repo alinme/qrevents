@@ -3,318 +3,68 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     ArrowRight,
+    BadgeCheck,
     CalendarDays,
-    Clock3,
-    MapPin,
-    Plus,
+    Check,
+    LogOut,
+    PartyPopper,
     Sparkles,
-    Users,
-    X,
 } from 'lucide-vue-next';
-import { computed, nextTick, ref, watch } from 'vue';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
-import ChoiceCardRadioGroup from '@/components/onboarding/ChoiceCardRadioGroup.vue';
-import PrettyDatePicker from '@/components/onboarding/PrettyDatePicker.vue';
-import PrettyTimePicker from '@/components/onboarding/PrettyTimePicker.vue';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { home } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
-
-type EventSubEventOption = {
-    key: string;
-    label: string;
-    description: string;
-    imageUrl: string;
-    defaultSelected: boolean;
-    required: boolean;
-};
+import { home, logout } from '@/routes';
 
 type EventTypeOption = {
     value: string;
     label: string;
     description: string;
     imageUrl: string;
-    subEvents: EventSubEventOption[];
 };
-
-type PricingPlanOption = {
-    slug: string;
-    name: string;
-    priceLabel: string;
-    billingLabel: string;
-    uploadLimitLabel: string;
-    retentionLabel: string;
-    activeWindowLabel: string;
-    customizationTier: 'basic' | 'better' | 'advanced';
-    downloadAllEnabled: boolean;
-    moderationToolsEnabled: boolean;
-    isDefault: boolean;
-    businessCreditCost?: number | null;
-};
-
-type EventDateInput = {
-    label: string;
-    date: string;
-};
-
-type SelectedSubEvent = {
-    key: string;
-    label: string;
-    date: string;
-    start_time: string;
-    address: string;
-    no_address: boolean;
-    required: boolean;
-};
-
-type OnboardingStep = 1 | 2 | 3;
-type CheckedState = boolean | 'indeterminate';
 
 const props = defineProps<{
-    eventTypes: EventTypeOption[];
-    pricingPlans: PricingPlanOption[];
     defaultTimezone: string;
-    defaultPlanSlug: string;
-    businessMode?: boolean;
-    businessWalletCredits?: number | null;
-    businessTopUpUrl?: string | null;
-    accountNavigation?: Array<{
-        title: string;
-        href: string;
-    }>;
-    businessNavigation?: Array<{
-        title: string;
-        href: string;
-    }>;
-    dashboardLinks?: {
-        overview: string;
-        business: string | null;
-        createBusiness: string;
-    } | null;
-    sidebarLabel?: string | null;
+    owner: { name: string; email: string } | null;
+    eventTypes: EventTypeOption[];
     submitUrl: string;
-    owner: {
-        name: string;
-        email: string;
-    } | null;
 }>();
 
-const step = ref<OnboardingStep>(1);
-const wizardPanelRef = ref<HTMLElement | null>(null);
-const formActionsRef = ref<HTMLElement | null>(null);
-const lastSuggestedWeddingTitle = ref('');
-const isBusinessMode = computed(() => props.businessMode === true);
-const rootComponent = computed(() => (isBusinessMode.value ? AppLayout : 'div'));
-const businessBreadcrumbs = computed<BreadcrumbItem[]>(() => {
-    if (! isBusinessMode.value || props.dashboardLinks == null) {
-        return [];
-    }
-
-    return [
-        {
-            title: 'Dashboard',
-            href: props.dashboardLinks.overview,
-        },
-        {
-            title: 'Business',
-            href: props.dashboardLinks.business ?? props.dashboardLinks.overview,
-        },
-        {
-            title: 'Create event',
-            href: props.dashboardLinks.createBusiness,
-        },
-    ];
-});
-const rootProps = computed(() =>
-    isBusinessMode.value
-        ? { breadcrumbs: businessBreadcrumbs.value }
-        : {},
-);
-const headerHomeHref = computed(() =>
-    isBusinessMode.value
-        ? (props.dashboardLinks?.business ?? props.dashboardLinks?.overview ?? home().url)
-        : home(),
-);
-
-const stepItems = [
-    {
-        number: 1,
-        label: 'Format',
-        title: 'Choose the event type and plan',
-        description: 'Start with the right event format and the package that matches your upload volume, access window, and controls.',
-    },
-    {
-        number: 2,
-        label: 'Essentials',
-        title: 'Capture the basics',
-        description: 'Name, wedding naming details, and guest estimate shape the event before you schedule the exact moments.',
-    },
-    {
-        number: 3,
-        label: 'Timeline',
-        title: 'Map dates and moments',
-        description: 'Support multi-day events and the sub-events that matter for this format.',
-    },
-] as const;
-
-const attendeePresets = [30, 75, 150, 300, 600, 1200] as const;
-
-const createEventDate = (label = ''): EventDateInput => ({
-    label,
-    date: '',
-});
-
-const createSelectedSubEvent = (
-    subEventOption: EventSubEventOption,
-    date = '',
-): SelectedSubEvent => ({
-    key: subEventOption.key,
-    label: subEventOption.label,
-    date,
-    start_time: '',
-    address: '',
-    no_address: false,
-    required: subEventOption.required,
-});
-
-const defaultSelectedSubEventsForType = (
-    eventType: EventTypeOption | undefined,
-    date = '',
-): SelectedSubEvent[] =>
-    (eventType?.subEvents ?? [])
-        .filter((subEvent) => subEvent.defaultSelected)
-        .map((subEvent) => createSelectedSubEvent(subEvent, date));
+const currentStep = ref(1);
+const totalSteps = 3;
 
 const form = useForm({
-    plan_slug: props.defaultPlanSlug,
-    type: props.eventTypes[0]?.value ?? 'wedding',
+    type: '',
     name: '',
     wedding_partner_one_first_name: '',
     wedding_partner_two_first_name: '',
     wedding_family_name: '',
-    attendee_estimate: '',
-    event_dates: [createEventDate('Main day')],
-    sub_events: defaultSelectedSubEventsForType(props.eventTypes[0], '') as SelectedSubEvent[],
+    event_date: '',
     timezone: props.defaultTimezone,
 });
 
-const selectedType = computed<EventTypeOption | undefined>(() =>
-    props.eventTypes.find((eventType) => eventType.value === form.type),
-);
+const steps = [
+    { number: 1, label: 'Occasion' },
+    { number: 2, label: 'Name' },
+    { number: 3, label: 'Date' },
+];
 
-const availableSubEvents = computed<EventSubEventOption[]>(() => selectedType.value?.subEvents ?? []);
-const selectedPlan = computed<PricingPlanOption | undefined>(() =>
-    props.pricingPlans.find((plan) => plan.slug === form.plan_slug),
+const selectedType = computed(() =>
+    props.eventTypes.find((option) => option.value === form.type),
 );
-const businessWalletCredits = computed(() => props.businessWalletCredits ?? 0);
-const selectedBusinessPlanCost = computed(() => selectedPlan.value?.businessCreditCost ?? 0);
-const selectedBusinessPlanAffordable = computed(() =>
-    !isBusinessMode.value || selectedBusinessPlanCost.value <= businessWalletCredits.value,
-);
-const missingBusinessCredits = computed(() =>
-    Math.max(selectedBusinessPlanCost.value - businessWalletCredits.value, 0),
-);
-const remainingBusinessCredits = computed(() =>
-    Math.max(businessWalletCredits.value - selectedBusinessPlanCost.value, 0),
-);
-const businessTopUpHref = computed(() => props.businessTopUpUrl ?? home().url);
-
-const selectedSubEventKeys = computed(() => new Set(form.sub_events.map((subEvent) => subEvent.key)));
-
-const reviewEventDates = computed(() =>
-    form.event_dates.filter((eventDate) => eventDate.date.trim() !== ''),
-);
-
 const isWeddingType = computed(() => form.type === 'wedding');
-
-const firstKnownDate = computed(() => reviewEventDates.value[0]?.date ?? '');
-const subEventHasAddressDecision = (subEvent: SelectedSubEvent): boolean =>
-    subEvent.no_address || subEvent.address.trim().length >= 6;
-
-const addressedMomentsCount = computed(() =>
-    form.sub_events.filter((subEvent) => subEventHasAddressDecision(subEvent)).length,
-);
-
-const progressWidth = computed(() => `${((step.value - 1) / (stepItems.length - 1)) * 100}%`);
-
-const canMoveToNext = computed(() => {
-    if (step.value === 1) {
-        return Boolean(selectedType.value) && form.plan_slug.trim() !== '';
-    }
-
-    if (step.value === 2) {
-        const hasWeddingNamingFields = !isWeddingType.value || (
-            form.wedding_partner_one_first_name.trim().length >= 2
-            && form.wedding_partner_two_first_name.trim().length >= 2
-            && form.wedding_family_name.trim().length >= 2
-        );
-
-        return hasWeddingNamingFields
-            && form.name.trim().length >= 3
-            && Number(form.attendee_estimate) > 0;
-    }
-
-    const timelineComplete = reviewEventDates.value.length > 0
-        && form.sub_events.length > 0
-        && form.sub_events.every((subEvent) =>
-            subEvent.date.trim() !== ''
-            && subEvent.start_time.trim() !== ''
-            && subEventHasAddressDecision(subEvent),
-        );
-
-    if (!timelineComplete) {
-        return false;
-    }
-
-    return true;
-});
-const canSubmitEvent = computed(() =>
-    canMoveToNext.value && (!isBusinessMode.value || selectedBusinessPlanAffordable.value),
-);
-
-const scrollToWizardPanel = (): void => {
-    if (typeof window === 'undefined' || wizardPanelRef.value === null) {
-        return;
-    }
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    window.setTimeout(() => {
-        wizardPanelRef.value?.scrollIntoView({
-            behavior: prefersReducedMotion ? 'auto' : 'smooth',
-            block: 'start',
-        });
-    }, 40);
-};
-
-const scrollToFormActions = (): void => {
-    if (typeof window === 'undefined' || formActionsRef.value === null) {
-        return;
-    }
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    window.setTimeout(() => {
-        formActionsRef.value?.scrollIntoView({
-            behavior: prefersReducedMotion ? 'auto' : 'smooth',
-            block: 'center',
-        });
-    }, 40);
-};
 
 const titleCaseWords = (value: string): string =>
     value
         .trim()
         .split(/\s+/)
-        .filter((part) => part.length > 0)
-        .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+        .filter((word) => word.length > 0)
+        .map(
+            (word) =>
+                word.charAt(0).toLocaleUpperCase() +
+                word.slice(1).toLocaleLowerCase(),
+        )
         .join(' ');
 
 const weddingTitleSuggestions = computed(() => {
@@ -322,1190 +72,390 @@ const weddingTitleSuggestions = computed(() => {
         return [] as string[];
     }
 
-    const partnerOneFirstName = titleCaseWords(form.wedding_partner_one_first_name);
-    const partnerTwoFirstName = titleCaseWords(form.wedding_partner_two_first_name);
+    const partnerOne = titleCaseWords(form.wedding_partner_one_first_name);
+    const partnerTwo = titleCaseWords(form.wedding_partner_two_first_name);
     const familyName = titleCaseWords(form.wedding_family_name);
 
-    if (partnerOneFirstName === '' || partnerTwoFirstName === '' || familyName === '') {
+    if (partnerOne === '' || partnerTwo === '') {
         return [] as string[];
     }
 
-    return Array.from(new Set([
-        `${partnerOneFirstName} & ${partnerTwoFirstName} ${familyName} Wedding`,
-        `${partnerOneFirstName} & ${partnerTwoFirstName} ${familyName} Wedding Weekend`,
-        `${partnerOneFirstName} & ${partnerTwoFirstName} Wedding Day`,
-        `${partnerOneFirstName} and ${partnerTwoFirstName} Wedding Celebration`,
-        `${partnerOneFirstName} + ${partnerTwoFirstName} | Wedding Weekend`,
-        `The ${familyName} Wedding`,
-        `The ${familyName} Wedding Weekend`,
-        `${familyName} Family Wedding Celebration`,
-        `Celebrating ${partnerOneFirstName} & ${partnerTwoFirstName}`,
-        `${partnerOneFirstName} & ${partnerTwoFirstName} Say Yes`,
-        `${partnerOneFirstName} & ${partnerTwoFirstName} Forever Starts Here`,
-        `${partnerOneFirstName} and ${partnerTwoFirstName} | ${familyName} Celebration`,
-    ]));
+    return Array.from(
+        new Set(
+            [
+                `${partnerOne} & ${partnerTwo}`,
+                familyName !== '' ? `The ${familyName} Wedding` : '',
+                `${partnerOne} & ${partnerTwo} Wedding Day`,
+                familyName !== ''
+                    ? `${partnerOne} & ${partnerTwo} ${familyName} Wedding`
+                    : '',
+                `Celebrating ${partnerOne} & ${partnerTwo}`,
+            ].filter((title) => title !== ''),
+        ),
+    ).slice(0, 4);
 });
 
-const weddingTitlePlaceholder = computed(() =>
-    weddingTitleSuggestions.value[0] ?? 'Dan and Rachel Wedding Weekend',
-);
-
-const applyWeddingTitleSuggestion = (value: string): void => {
-    form.name = value;
-    lastSuggestedWeddingTitle.value = value;
-};
-
-const syncSuggestedWeddingTitle = (): void => {
-    if (!isWeddingType.value || weddingTitleSuggestions.value.length === 0) {
-        return;
+const namePlaceholder = computed(() => {
+    switch (form.type) {
+        case 'wedding':
+            return 'Ana & Luca Wedding';
+        case 'birthday':
+            return "Maria's 30th Birthday";
+        case 'engagement':
+            return 'Ana & Luca Engagement Party';
+        case 'baptism':
+            return "Little Sofia's Baptism";
+        case 'party':
+            return 'Summer Rooftop Party';
+        default:
+            return 'Our Celebration';
     }
+});
 
-    const nextSuggestedTitle = weddingTitleSuggestions.value[0] ?? '';
-    const currentTitle = form.name.trim();
+const minEventDate = new Date().toISOString().slice(0, 10);
 
-    if (
-        currentTitle === ''
-        || currentTitle === lastSuggestedWeddingTitle.value
-        || weddingTitleSuggestions.value.includes(currentTitle)
-    ) {
-        form.name = nextSuggestedTitle;
-        lastSuggestedWeddingTitle.value = nextSuggestedTitle;
-    }
+const selectType = (value: string): void => {
+    form.type = value;
+    form.clearErrors('type');
+    currentStep.value = 2;
 };
 
-watch(
-    () => form.type,
-    (nextType, previousType) => {
-        const nextTypeOption = props.eventTypes.find((eventType) => eventType.value === nextType);
-        const nextDefaultSubEvents = defaultSelectedSubEventsForType(nextTypeOption, firstKnownDate.value);
-        const existingSubEvents = new Map(
-            form.sub_events.map((subEvent) => [subEvent.key, subEvent]),
-        );
+const stepTwoValid = computed(() => form.name.trim().length >= 3);
+const stepThreeValid = computed(() => form.event_date !== '');
 
-        form.sub_events = nextDefaultSubEvents.map((subEvent) => {
-            const existingSubEvent = existingSubEvents.get(subEvent.key);
-
-            return existingSubEvent === undefined
-                ? subEvent
-                : {
-                    ...subEvent,
-                    date: existingSubEvent.date,
-                    start_time: existingSubEvent.start_time,
-                    address: existingSubEvent.address,
-                    no_address: existingSubEvent.no_address,
-                };
-        });
-
-        if (step.value === 1 && nextType !== previousType) {
-            void nextTick(() => {
-                scrollToFormActions();
-            });
-        }
-    },
-);
-
-watch(
-    () => [
-        form.type,
-        form.wedding_partner_one_first_name,
-        form.wedding_partner_two_first_name,
-        form.wedding_family_name,
-    ],
-    () => {
-        syncSuggestedWeddingTitle();
-    },
-);
-
-const handleEventTypeCardClick = (): void => {
-    if (step.value !== 1) {
-        return;
-    }
-
-    scrollToFormActions();
-};
-
-const handlePlanCardClick = (): void => {
-    if (step.value !== 1) {
-        return;
-    }
-
-    scrollToFormActions();
-};
-
-const goToNext = (): void => {
-    if (!canMoveToNext.value || step.value === 3) {
-        return;
-    }
-
-    step.value = (step.value + 1) as OnboardingStep;
-    void nextTick(() => {
-        scrollToWizardPanel();
-    });
-};
-
-const goToPrevious = (): void => {
-    if (step.value === 1) {
-        return;
-    }
-
-    step.value = (step.value - 1) as OnboardingStep;
-    void nextTick(() => {
-        scrollToWizardPanel();
-    });
-};
-
-const addEventDate = (): void => {
-    if (form.event_dates.length >= 6) {
-        return;
-    }
-
-    form.event_dates.push(createEventDate(`Day ${form.event_dates.length + 1}`));
-};
-
-const removeEventDate = (index: number): void => {
-    if (form.event_dates.length === 1) {
-        form.event_dates[0] = createEventDate('Main day');
-
-        return;
-    }
-
-    form.event_dates.splice(index, 1);
-};
-
-const applyAttendeePreset = (value: number): void => {
-    form.attendee_estimate = String(value);
-};
-
-const isSubEventSelected = (key: string): boolean => selectedSubEventKeys.value.has(key);
-
-const toggleSubEvent = (subEventOption: EventSubEventOption): void => {
-    const existingSubEventIndex = form.sub_events.findIndex((subEvent) => subEvent.key === subEventOption.key);
-
-    if (existingSubEventIndex >= 0) {
-        if (form.sub_events[existingSubEventIndex]?.required) {
-            return;
-        }
-
-        form.sub_events.splice(existingSubEventIndex, 1);
-
-        return;
-    }
-
-    form.sub_events.push(createSelectedSubEvent(subEventOption, firstKnownDate.value));
-};
-
-const removeSubEvent = (key: string): void => {
-    const existingSubEventIndex = form.sub_events.findIndex((subEvent) => subEvent.key === key);
-
-    if (existingSubEventIndex >= 0 && !form.sub_events[existingSubEventIndex]?.required) {
-        form.sub_events.splice(existingSubEventIndex, 1);
+const goBack = (): void => {
+    if (currentStep.value > 1) {
+        currentStep.value -= 1;
     }
 };
 
-const updateSubEventNoAddress = (index: number, checked: CheckedState): void => {
-    const currentSubEvent = form.sub_events[index];
-
-    if (currentSubEvent === undefined) {
-        return;
+const continueToDate = (): void => {
+    if (stepTwoValid.value) {
+        form.clearErrors('name');
+        currentStep.value = 3;
     }
-
-    const noAddress = checked === true;
-
-    form.sub_events[index] = {
-        ...currentSubEvent,
-        no_address: noAddress,
-        address: noAddress ? '' : currentSubEvent.address,
-    };
-    form.sub_events = [...form.sub_events];
 };
 
-const toggleSubEventNoAddress = (index: number): void => {
-    const currentSubEvent = form.sub_events[index];
-
-    if (currentSubEvent === undefined) {
-        return;
-    }
-
-    updateSubEventNoAddress(index, !currentSubEvent.no_address);
-};
-
-const fieldError = (field: string): string | undefined => {
-    const errors = form.errors as Record<string, string | undefined>;
-
-    return errors[field];
+const fieldToStep: Record<string, number> = {
+    type: 1,
+    name: 2,
+    wedding_partner_one_first_name: 2,
+    wedding_partner_two_first_name: 2,
+    wedding_family_name: 2,
+    event_date: 3,
 };
 
 const submit = (): void => {
-    form.transform((data) => {
-        const eventDates = data.event_dates
-            .map((eventDate, index) => ({
-                label: eventDate.label.trim() !== '' ? eventDate.label.trim() : `Event day ${index + 1}`,
-                date: eventDate.date,
-            }))
-            .filter((eventDate) => eventDate.date.trim() !== '');
-        const subEvents = data.sub_events.map((subEvent) => ({
-            key: subEvent.key,
-            label: subEvent.label,
-            date: subEvent.date,
-            start_time: subEvent.start_time,
-            address: subEvent.no_address ? null : subEvent.address.trim(),
-            no_address: subEvent.no_address,
-        }));
-
-        return {
-            ...data,
-            attendee_estimate: Number(data.attendee_estimate),
-            event_date: eventDates[0]?.date ?? subEvents[0]?.date ?? null,
-            event_dates: eventDates,
-            sub_events: subEvents,
-        };
-    }).post(props.submitUrl, {
-        preserveScroll: true,
+    form.post(props.submitUrl, {
         onError: (errors) => {
-            if (errors.type || errors.plan_slug) {
-                step.value = 1;
-                void nextTick(() => {
-                    scrollToWizardPanel();
-                });
-
-                return;
+            const firstField = Object.keys(errors)[0];
+            const step = firstField ? fieldToStep[firstField] : undefined;
+            if (step !== undefined) {
+                currentStep.value = step;
             }
-
-            if (
-                errors.name
-                || errors.attendee_estimate
-                || errors.wedding_partner_one_first_name
-                || errors.wedding_partner_two_first_name
-                || errors.wedding_family_name
-            ) {
-                step.value = 2;
-                void nextTick(() => {
-                    scrollToWizardPanel();
-                });
-
-                return;
-            }
-
-            step.value = 3;
-            void nextTick(() => {
-                scrollToWizardPanel();
-            });
         },
     });
 };
 </script>
 
 <template>
-    <Head title="Create your event" />
+    <Head title="Create your album" />
 
-    <component :is="rootComponent" v-bind="rootProps">
-    <div :class="isBusinessMode ? 'min-h-svh bg-brand-canvas text-brand-ink' : 'min-h-svh bg-[linear-gradient(180deg,oklch(0.989_0.01_338)_0%,oklch(0.982_0.012_338)_58%,oklch(0.989_0.006_28)_100%)] text-promo-ink'">
-        <div v-if="!isBusinessMode" class="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
-            <div class="mx-auto max-w-7xl">
-                <div class="relative h-[24rem]">
-                    <div class="absolute left-[-4rem] top-[-6rem] h-[14rem] w-[14rem] rounded-full bg-promo-purple/22 blur-[90px]" />
-                    <div class="absolute right-[-3rem] top-[2rem] h-[16rem] w-[16rem] rounded-full bg-promo-surface-strong/35 blur-[110px]" />
-                </div>
-            </div>
-        </div>
-
-        <div class="mx-auto flex min-h-svh max-w-7xl flex-col px-5 py-6 lg:px-8 lg:py-8">
-            <header
-                v-if="!isBusinessMode"
-                class="flex flex-col gap-4 py-2 lg:flex-row lg:items-center lg:justify-between"
+    <div class="flex min-h-screen flex-col bg-white text-promo-ink">
+        <header class="border-b border-promo-line">
+            <div
+                class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6"
             >
+                <Link :href="home()" class="flex items-center">
+                    <img
+                        src="/logo.png"
+                        alt="EventSmart"
+                        width="124"
+                        height="36"
+                        class="h-8 w-auto object-contain"
+                    />
+                </Link>
+
                 <div class="flex items-center gap-3">
-                    <Link :href="headerHomeHref" class="inline-flex items-center gap-3">
-                        <div class="flex size-11 items-center justify-center rounded-[16px] bg-promo-primary text-white shadow-[0_8px_18px_rgba(232,79,154,0.12)]">
-                            <AppLogoIcon class="size-7 fill-current" />
-                        </div>
-                        <div>
-                            <p class="text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-promo-primary">
-                                EventSmart
-                            </p>
-                            <p class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink">
-                                Event planning setup
-                            </p>
-                        </div>
+                    <span
+                        v-if="owner"
+                        class="hidden text-sm text-promo-muted sm:block"
+                    >
+                        {{ owner.email }}
+                    </span>
+                    <Link
+                        :href="logout()"
+                        method="post"
+                        as="button"
+                        class="inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
+                    >
+                        <LogOut class="size-4" />
+                        Log out
                     </Link>
                 </div>
+            </div>
+        </header>
 
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="rounded-full bg-promo-surface px-4 py-2 text-sm font-medium text-promo-muted">
-                        Setup takes about 2 minutes
+        <main class="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
+            <div class="mb-10 flex items-center justify-center gap-2">
+                <template v-for="step in steps" :key="step.number">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="flex size-8 items-center justify-center rounded-full text-sm font-semibold transition"
+                            :class="
+                                currentStep > step.number
+                                    ? 'bg-promo-primary text-white'
+                                    : currentStep === step.number
+                                      ? 'bg-promo-ink text-white'
+                                      : 'bg-promo-surface-strong text-promo-muted'
+                            "
+                        >
+                            <Check
+                                v-if="currentStep > step.number"
+                                class="size-4"
+                            />
+                            <template v-else>{{ step.number }}</template>
+                        </span>
+                        <span
+                            class="hidden text-sm font-medium sm:block"
+                            :class="
+                                currentStep >= step.number
+                                    ? 'text-promo-ink'
+                                    : 'text-promo-muted'
+                            "
+                        >
+                            {{ step.label }}
+                        </span>
                     </div>
-                    <div class="rounded-full border border-promo-line px-4 py-2 text-sm font-medium text-promo-muted">
-                        Step {{ step }} of {{ stepItems.length }}
+                    <span
+                        v-if="step.number < totalSteps"
+                        class="h-px w-8 bg-promo-line sm:w-12"
+                    />
+                </template>
+            </div>
+
+            <!-- Step 1: Occasion -->
+            <section v-if="currentStep === 1">
+                <div class="text-center">
+                    <p class="marketing-kicker inline-flex items-center gap-2">
+                        <PartyPopper class="size-4" />
+                        Step 1 of 3
+                    </p>
+                    <h1
+                        class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
+                    >
+                        What are you celebrating?
+                    </h1>
+                    <p class="mt-3 text-base text-promo-muted">
+                        We'll tailor the album around your occasion.
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <button
+                        v-for="option in eventTypes"
+                        :key="option.value"
+                        type="button"
+                        class="group overflow-hidden rounded-[1.25rem] text-left shadow-card transition hover:shadow-card-hover"
+                        :class="
+                            form.type === option.value
+                                ? 'ring-2 ring-promo-primary'
+                                : ''
+                        "
+                        @click="selectType(option.value)"
+                    >
+                        <div class="relative aspect-[16/9] overflow-hidden">
+                            <img
+                                :src="option.imageUrl"
+                                :alt="option.label"
+                                class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                                loading="lazy"
+                            />
+                        </div>
+                        <div class="px-4 py-3">
+                            <span class="text-sm font-semibold text-promo-ink">
+                                {{ option.label }}
+                            </span>
+                        </div>
+                    </button>
+                </div>
+                <InputError class="mt-3" :message="form.errors.type" />
+            </section>
+
+            <!-- Step 2: Name -->
+            <section v-else-if="currentStep === 2" class="mx-auto max-w-xl">
+                <div class="text-center">
+                    <p class="marketing-kicker inline-flex items-center gap-2">
+                        <Sparkles class="size-4" />
+                        Step 2 of 3
+                    </p>
+                    <h1
+                        class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
+                    >
+                        Name your album
+                    </h1>
+                    <p class="mt-3 text-base text-promo-muted">
+                        This is the title guests see when they join
+                        {{
+                            selectedType
+                                ? `your ${selectedType.label.toLowerCase()}`
+                                : 'your event'
+                        }}.
+                    </p>
+                </div>
+
+                <div
+                    v-if="isWeddingType"
+                    class="mt-8 rounded-[1.25rem] bg-promo-surface/70 p-5"
+                >
+                    <p class="text-sm font-medium text-promo-ink">
+                        Want title ideas? Add your names
+                        <span class="font-normal text-promo-muted">
+                            (optional)
+                        </span>
+                    </p>
+                    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                        <Input
+                            v-model="form.wedding_partner_one_first_name"
+                            placeholder="First name"
+                            autocomplete="off"
+                        />
+                        <Input
+                            v-model="form.wedding_partner_two_first_name"
+                            placeholder="First name"
+                            autocomplete="off"
+                        />
+                        <Input
+                            v-model="form.wedding_family_name"
+                            placeholder="Family name"
+                            autocomplete="off"
+                        />
+                    </div>
+                    <div
+                        v-if="weddingTitleSuggestions.length > 0"
+                        class="mt-4 flex flex-wrap gap-2"
+                    >
+                        <button
+                            v-for="suggestion in weddingTitleSuggestions"
+                            :key="suggestion"
+                            type="button"
+                            class="rounded-full border px-4 py-2 text-sm font-medium transition"
+                            :class="
+                                form.name === suggestion
+                                    ? 'border-promo-primary bg-promo-primary/10 text-promo-primary'
+                                    : 'border-promo-line bg-white text-promo-ink hover:bg-promo-surface'
+                            "
+                            @click="form.name = suggestion"
+                        >
+                            {{ suggestion }}
+                        </button>
                     </div>
                 </div>
-            </header>
 
-            <main class="flex-1 py-4 lg:py-6">
-                <section
-                    ref="wizardPanelRef"
-                    :class="isBusinessMode ? 'scroll-mt-6 overflow-hidden rounded-[1.75rem] border border-brand-border/70 bg-brand-panel shadow-sm lg:scroll-mt-8' : 'scroll-mt-6 overflow-hidden rounded-[32px] border border-promo-line/80 bg-white shadow-[0_14px_36px_rgba(232,79,154,0.06)] lg:scroll-mt-8'"
+                <div class="mt-8 grid gap-2">
+                    <Label for="event-name">Album name</Label>
+                    <Input
+                        id="event-name"
+                        v-model="form.name"
+                        type="text"
+                        :placeholder="namePlaceholder"
+                        maxlength="120"
+                        class="h-12 text-base"
+                        autofocus
+                    />
+                    <InputError :message="form.errors.name" />
+                </div>
+
+                <div class="mt-8 flex items-center justify-between">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-promo-muted transition hover:text-promo-ink"
+                        @click="goBack"
+                    >
+                        <ArrowLeft class="size-4" />
+                        Back
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full bg-promo-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-promo-primary disabled:cursor-not-allowed disabled:opacity-40"
+                        :disabled="!stepTwoValid"
+                        @click="continueToDate"
+                    >
+                        Continue
+                        <ArrowRight class="size-4" />
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3: Date -->
+            <section v-else class="mx-auto max-w-xl">
+                <div class="text-center">
+                    <p class="marketing-kicker inline-flex items-center gap-2">
+                        <CalendarDays class="size-4" />
+                        Step 3 of 3
+                    </p>
+                    <h1
+                        class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
+                    >
+                        When is the big day?
+                    </h1>
+                    <p class="mt-3 text-base text-promo-muted">
+                        Uploads open around your date. You can fine-tune
+                        everything later in settings.
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-2">
+                    <Label for="event-date">Event date</Label>
+                    <Input
+                        id="event-date"
+                        v-model="form.event_date"
+                        type="date"
+                        :min="minEventDate"
+                        class="h-12 text-base"
+                    />
+                    <InputError :message="form.errors.event_date" />
+                </div>
+
+                <div
+                    class="mt-8 flex items-start gap-3 rounded-[1.25rem] bg-promo-surface/70 p-5"
                 >
-                    <div :class="isBusinessMode ? 'border-b border-brand-border/70 px-6 py-6 sm:px-8' : 'border-b border-promo-line px-6 py-6 sm:px-8'">
-                        <div
-                            class="mb-5 flex flex-wrap gap-2 border-b pb-5"
-                            :class="isBusinessMode ? 'border-brand-border/70' : 'border-promo-line'"
-                        >
-                            <div
-                                v-for="stepItem in stepItems"
-                                :key="`step-${stepItem.number}`"
-                                class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium"
-                                :class="isBusinessMode
-                                    ? (stepItem.number === step
-                                        ? 'border-brand-ink bg-brand-ink text-brand-inverse'
-                                        : stepItem.number < step
-                                          ? 'border-brand-border bg-brand-highlight/25 text-brand-ink'
-                                          : 'border-brand-border bg-brand-inverse text-brand-muted')
-                                    : (stepItem.number === step
-                                        ? 'border-promo-primary bg-promo-primary text-white'
-                                        : stepItem.number < step
-                                          ? 'border-promo-line bg-promo-surface text-promo-ink'
-                                          : 'border-promo-line bg-white text-promo-muted')"
-                            >
-                                <span class="text-[0.72rem] font-semibold uppercase tracking-[0.16em]">
-                                    0{{ stepItem.number }}
-                                </span>
-                                <span>{{ stepItem.label }}</span>
-                            </div>
-                        </div>
+                    <span
+                        class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                    >
+                        <BadgeCheck class="size-5" />
+                    </span>
+                    <p class="text-sm leading-6 text-promo-muted">
+                        <span class="font-semibold text-promo-ink">
+                            Free to start — no card needed.
+                        </span>
+                        Your album begins on the free plan. You can upgrade
+                        anytime from your dashboard for more uploads, longer
+                        retention, and one-click export.
+                    </p>
+                </div>
 
-                        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                            <div>
-                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-xs font-semibold uppercase tracking-[0.16em] text-promo-primary'">
-                                    {{ stepItems[step - 1]?.label }}
-                                </p>
-                                <h2 :class="isBusinessMode ? 'mt-3 text-2xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-3xl font-extrabold tracking-[-0.05em] text-promo-ink'">
-                                    {{ stepItems[step - 1]?.title }}
-                                </h2>
-                                <p :class="isBusinessMode ? 'dashboard-body mt-3 max-w-2xl' : 'mt-3 max-w-2xl text-sm leading-7 text-promo-muted'">
-                                    {{ stepItems[step - 1]?.description }}
-                                </p>
-                            </div>
-
-                            <div class="min-w-0 lg:w-72">
-                                <div :class="isBusinessMode ? 'h-2 rounded-full bg-brand-highlight/35' : 'h-2 rounded-full bg-promo-surface'">
-                                    <div
-                                        :class="isBusinessMode ? 'h-full rounded-full bg-brand-ink transition-all duration-300' : 'h-full rounded-full bg-promo-primary transition-all duration-300'"
-                                        :style="{ width: progressWidth }"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form class="space-y-8 px-6 py-6 sm:px-8 sm:py-8" @submit.prevent="submit">
-                        <section v-if="step === 1" class="space-y-6">
-                            <ChoiceCardRadioGroup
-                                v-model="form.type"
-                                :options="props.eventTypes"
-                                @option-click="handleEventTypeCardClick"
-                            />
-
-                            <InputError :message="form.errors.type" />
-
-                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
-                                <template v-if="isBusinessMode">
-                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                                        <div>
-                                            <h3 class="text-lg font-semibold tracking-tight text-brand-ink">
-                                                Select the paid plan
-                                            </h3>
-                                            <p class="dashboard-body mt-1">
-                                                Business events use credits. Free is not available here.
-                                            </p>
-                                        </div>
-
-                                        <p class="text-sm font-medium text-brand-muted">
-                                            {{ businessWalletCredits }} credits available
-                                        </p>
-                                    </div>
-
-                                    <div
-                                        v-if="selectedPlan"
-                                        class="flex flex-col gap-3 border-y border-brand-border/70 py-4 sm:flex-row sm:items-center sm:justify-between"
-                                    >
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-brand-ink">
-                                                {{ `${selectedPlan.name} uses ${selectedBusinessPlanCost} credits` }}
-                                            </p>
-                                            <p class="dashboard-meta mt-1">
-                                                {{
-                                                    selectedBusinessPlanAffordable
-                                                        ? `${remainingBusinessCredits} credits will remain after creation.`
-                                                        : `You need ${missingBusinessCredits} more credits before you can create this event.`
-                                                }}
-                                            </p>
-                                        </div>
-
-                                        <Button
-                                            v-if="!selectedBusinessPlanAffordable"
-                                            as-child
-                                            variant="outline"
-                                            class="border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20"
-                                        >
-                                            <Link :href="businessTopUpHref">
-                                                Top up credits
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                </template>
-
-                                <div v-else class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                                    <div>
-                                        <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                            <Sparkles class="size-3.5" />
-                                            Choose your plan
-                                        </div>
-                                        <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
-                                            Pick the event package that fits this celebration
-                                        </h3>
-                                        <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                            You can start with Free or choose a paid plan now so the event gets the right limits and controls from day one.
-                                        </p>
-                                    </div>
-
-                                    <div class="rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-muted">
-                                        {{ selectedPlan ? `${selectedPlan.name} · ${selectedPlan.priceLabel}` : 'Choose a plan' }}
-                                    </div>
-                                </div>
-
-                                <div :class="isBusinessMode ? 'mt-5 grid gap-3 lg:grid-cols-2' : 'mt-5 grid gap-4 xl:grid-cols-3'">
-                                    <button
-                                        v-for="plan in props.pricingPlans"
-                                        :key="plan.slug"
-                                        type="button"
-                                        class="min-h-52 border px-5 py-5 text-left transition duration-200"
-                                        :class="
-                                            isBusinessMode
-                                                ? (form.plan_slug === plan.slug
-                                                    ? 'rounded-[1rem] border-brand-ink bg-brand-inverse'
-                                                    : 'rounded-[1rem] border-brand-border bg-transparent hover:bg-brand-highlight/15')
-                                                : (form.plan_slug === plan.slug
-                                                    ? 'border-promo-primary bg-white shadow-[0_10px_24px_rgba(232,79,154,0.08)]'
-                                                    : 'border-promo-line bg-white/70 hover:bg-white')
-                                        "
-                                        @click="
-                                            form.plan_slug = plan.slug;
-                                            handlePlanCardClick();
-                                        "
-                                    >
-                                        <div class="flex items-start justify-between gap-4">
-                                            <div>
-                                                <p :class="isBusinessMode ? 'dashboard-eyebrow text-brand-muted' : 'text-sm font-semibold uppercase tracking-[0.16em] text-promo-primary'">
-                                                    {{ plan.name }}
-                                                </p>
-                                                <h4 :class="isBusinessMode ? 'mt-2 text-xl font-semibold tracking-tight text-brand-ink' : 'mt-3 text-2xl font-extrabold tracking-[-0.05em] text-promo-ink'">
-                                                    {{ isBusinessMode ? `${plan.businessCreditCost ?? 0} credits` : plan.priceLabel }}
-                                                </h4>
-                                                <p :class="isBusinessMode ? 'mt-1 text-sm text-brand-muted' : 'mt-2 text-sm text-promo-muted'">
-                                                    {{ isBusinessMode ? 'Paid from your business wallet' : plan.billingLabel }}
-                                                </p>
-                                            </div>
-
-                                            <div
-                                                v-if="plan.isDefault"
-                                                :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-2.5 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-muted' : 'rounded-full bg-promo-surface px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-promo-primary'"
-                                            >
-                                                Recommended
-                                            </div>
-                                        </div>
-
-                                        <div :class="isBusinessMode ? 'mt-4 space-y-1.5 text-sm text-brand-muted' : 'mt-5 space-y-2 text-sm text-promo-muted'">
-                                            <p>{{ plan.uploadLimitLabel }}</p>
-                                            <p>{{ plan.retentionLabel }}</p>
-                                            <p>{{ plan.activeWindowLabel }}</p>
-                                            <p v-if="!isBusinessMode" class="capitalize">{{ plan.customizationTier }} customization</p>
-                                        </div>
-
-                                        <p
-                                            v-if="isBusinessMode"
-                                            class="mt-4 text-sm font-medium"
-                                            :class="
-                                                (plan.businessCreditCost ?? 0) <= businessWalletCredits
-                                                    ? 'text-emerald-700'
-                                                    : 'text-amber-700'
-                                            "
-                                        >
-                                            {{
-                                                (plan.businessCreditCost ?? 0) <= businessWalletCredits
-                                                    ? `${Math.max(businessWalletCredits - (plan.businessCreditCost ?? 0), 0)} credits left after creation`
-                                                    : `Need ${Math.max((plan.businessCreditCost ?? 0) - businessWalletCredits, 0)} more credits`
-                                            }}
-                                        </p>
-
-                                        <div v-if="!isBusinessMode" class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
-                                            <span
-                                                class="rounded-full px-3 py-1"
-                                                :class="
-                                                    plan.downloadAllEnabled
-                                                        ? 'bg-emerald-50 text-emerald-700'
-                                                        : 'bg-slate-100 text-slate-500'
-                                                "
-                                            >
-                                                {{ plan.downloadAllEnabled ? 'ZIP export' : 'No ZIP export' }}
-                                            </span>
-                                            <span
-                                                class="rounded-full px-3 py-1"
-                                                :class="
-                                                    plan.moderationToolsEnabled
-                                                        ? 'bg-emerald-50 text-emerald-700'
-                                                        : 'bg-slate-100 text-slate-500'
-                                                "
-                                            >
-                                                {{ plan.moderationToolsEnabled ? 'Moderation tools' : 'No moderation tools' }}
-                                            </span>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                <InputError :message="form.errors.plan_slug" class="mt-4" />
-                            </div>
-                        </section>
-
-                        <section v-if="step === 2" class="space-y-8">
-                            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                                <div class="space-y-5">
-                                    <div
-                                        v-if="isWeddingType"
-                                        :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
-                                    >
-                                        <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
-                                            <Sparkles v-if="!isBusinessMode" class="size-3.5" />
-                                            Wedding naming
-                                        </div>
-
-                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink'">
-                                            We can build the wedding title for you
-                                        </h3>
-                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
-                                            Add the couple&apos;s first names and the family name. We&apos;ll suggest polished event titles you can use right away.
-                                        </p>
-
-                                        <div class="mt-5 grid gap-4 md:grid-cols-2">
-                                            <div class="grid gap-2">
-                                                <Label for="wedding_partner_one_first_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Groom / partner one
-                                                </Label>
-                                                <Input
-                                                    id="wedding_partner_one_first_name"
-                                                    v-model="form.wedding_partner_one_first_name"
-                                                    name="wedding_partner_one_first_name"
-                                                    placeholder="Andrei"
-                                                    :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
-                                                />
-                                                <InputError :message="form.errors.wedding_partner_one_first_name" />
-                                            </div>
-
-                                            <div class="grid gap-2">
-                                                <Label for="wedding_partner_two_first_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Bride / partner two
-                                                </Label>
-                                                <Input
-                                                    id="wedding_partner_two_first_name"
-                                                    v-model="form.wedding_partner_two_first_name"
-                                                    name="wedding_partner_two_first_name"
-                                                    placeholder="Maria"
-                                                    :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
-                                                />
-                                                <InputError :message="form.errors.wedding_partner_two_first_name" />
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-4 grid gap-2">
-                                            <Label for="wedding_family_name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                Family name
-                                            </Label>
-                                            <Input
-                                                id="wedding_family_name"
-                                                v-model="form.wedding_family_name"
-                                                name="wedding_family_name"
-                                                placeholder="Popescu"
-                                                :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
-                                            />
-                                            <InputError :message="form.errors.wedding_family_name" />
-                                        </div>
-
-                                        <div
-                                            v-if="weddingTitleSuggestions.length > 0"
-                                            class="mt-5 space-y-3"
-                                        >
-                                            <div class="flex items-center justify-between gap-3">
-                                                <p :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Suggested titles
-                                                </p>
-                                                <p :class="isBusinessMode ? 'text-xs text-brand-muted' : 'text-xs text-promo-muted'">
-                                                    Tap one to use it
-                                                </p>
-                                            </div>
-
-                                            <div class="grid gap-3 sm:grid-cols-2">
-                                                <button
-                                                    v-for="suggestion in weddingTitleSuggestions"
-                                                    :key="suggestion"
-                                                    type="button"
-                                                    class="rounded-[18px] border px-4 py-3 text-left text-sm font-medium transition-colors duration-200"
-                                                    :class="
-                                                        isBusinessMode
-                                                            ? (form.name.trim() === suggestion
-                                                                ? 'border-brand-ink bg-brand-inverse text-brand-ink shadow-sm'
-                                                                : 'border-brand-border bg-brand-inverse text-brand-muted hover:bg-brand-highlight/15')
-                                                            : (form.name.trim() === suggestion
-                                                                ? 'border-promo-primary bg-white text-promo-ink shadow-[0_8px_18px_rgba(232,79,154,0.08)]'
-                                                                : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white')
-                                                    "
-                                                    @click="applyWeddingTitleSuggestion(suggestion)"
-                                                >
-                                                    {{ suggestion }}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid gap-2">
-                                        <Label for="name" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                            Event name
-                                        </Label>
-                                        <Input
-                                            id="name"
-                                            v-model="form.name"
-                                            name="name"
-                                            :placeholder="weddingTitlePlaceholder"
-                                            :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-promo-surface/40'"
-                                        />
-                                        <p
-                                            v-if="isWeddingType"
-                                            :class="isBusinessMode ? 'text-xs leading-5 text-brand-muted' : 'text-xs leading-5 text-promo-muted'"
-                                        >
-                                            You can keep one of the suggested titles or write your own.
-                                        </p>
-                                        <InputError :message="form.errors.name" />
-                                    </div>
-
-                                    <div :class="isBusinessMode ? 'border-t border-dashed border-brand-border pt-4 text-sm text-brand-muted' : 'border-t border-dashed border-promo-line pt-4 text-sm text-promo-muted'">
-                                        {{
-                                            isWeddingType
-                                                ? 'Wedding addresses are collected on each selected moment in the next step.'
-                                                : 'The event address is collected on the main moment in the next step, with a no-address option for online or flexible events.'
-                                        }}
-                                    </div>
-                                </div>
-
-                                <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
-                                    <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
-                                        <Users v-if="!isBusinessMode" class="size-3.5" />
-                                        Guest planning
-                                    </div>
-
-                                    <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink'">
-                                        How many attendees are you expecting?
-                                    </h3>
-                                    <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
-                                        An estimate is enough. This will help later with planning recommendations and supplier-related features.
-                                    </p>
-
-                                    <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                                        <button
-                                            v-for="preset in attendeePresets"
-                                            :key="preset"
-                                            type="button"
-                                            class="min-h-20 rounded-[18px] border px-4 py-4 text-left transition-colors duration-200"
-                                            :class="
-                                                isBusinessMode
-                                                    ? (Number(form.attendee_estimate) === preset
-                                                        ? 'border-brand-ink bg-brand-inverse text-brand-ink'
-                                                        : 'border-brand-border bg-brand-inverse text-brand-muted hover:bg-brand-highlight/15')
-                                                    : (Number(form.attendee_estimate) === preset
-                                                        ? 'border-promo-primary bg-white text-promo-ink'
-                                                        : 'border-promo-line bg-white/70 text-promo-muted hover:bg-white')
-                                            "
-                                            @click="applyAttendeePreset(preset)"
-                                        >
-                                            <span class="block text-lg font-bold text-current">
-                                                {{ preset }}
-                                            </span>
-                                            <span class="block text-[0.72rem] uppercase tracking-[0.16em]">
-                                                guests
-                                            </span>
-                                        </button>
-                                    </div>
-
-                                    <div class="mt-4 grid gap-2">
-                                        <Label for="attendee_estimate" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                            Custom estimate
-                                        </Label>
-                                        <Input
-                                            id="attendee_estimate"
-                                            v-model="form.attendee_estimate"
-                                            name="attendee_estimate"
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            placeholder="Type a number"
-                                            :class="isBusinessMode ? 'h-12 rounded-[20px] border-brand-border bg-brand-inverse' : 'h-12 rounded-[20px] border-promo-line bg-white'"
-                                        />
-                                        <InputError :message="form.errors.attendee_estimate" />
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section v-if="step === 3" class="space-y-8">
-                            <div :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'">
-                                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
-                                            <CalendarDays v-if="!isBusinessMode" class="size-3.5" />
-                                            Event dates
-                                        </div>
-                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink'">
-                                            Add every day that matters
-                                        </h3>
-                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
-                                            One date works, but this can also support rehearsal dinners, second days, conferences, or multi-day celebrations.
-                                        </p>
-                                    </div>
-
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        :class="isBusinessMode ? 'rounded-full border-brand-border bg-brand-inverse text-brand-ink hover:bg-brand-highlight/20' : 'rounded-full border-promo-line bg-white text-promo-ink'"
-                                        :disabled="form.event_dates.length >= 6"
-                                        @click="addEventDate"
-                                    >
-                                        <Plus class="mr-2 size-4" />
-                                        Add date
-                                    </Button>
-                                </div>
-
-                                <div class="mt-5 space-y-3">
-                                    <div
-                                        v-for="(eventDate, index) in form.event_dates"
-                                        :key="`event-date-${index}`"
-                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'border-t border-promo-line pt-4 first:border-t-0 first:pt-0'"
-                                    >
-                                        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto] md:items-end">
-                                            <div class="grid gap-2">
-                                                <Label :for="`event-date-label-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Label
-                                                </Label>
-                                                <Input
-                                                    :id="`event-date-label-${index}`"
-                                                    v-model="eventDate.label"
-                                                    :name="`event_dates.${index}.label`"
-                                                    placeholder="Main day, church day, rehearsal, second day..."
-                                                    :class="isBusinessMode ? 'h-11 rounded-[18px] border-brand-border bg-brand-inverse' : 'h-11 rounded-[18px] border-promo-line bg-promo-surface/35'"
-                                                />
-                                            </div>
-
-                                            <div class="grid gap-2">
-                                                <Label :for="`event-date-date-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Date
-                                                </Label>
-                                                <PrettyDatePicker
-                                                    :id="`event-date-date-${index}`"
-                                                    v-model="eventDate.date"
-                                                    placeholder="Choose event day"
-                                                />
-                                            </div>
-
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                :class="isBusinessMode ? 'h-12 rounded-full text-brand-muted md:h-11' : 'h-12 rounded-full text-promo-muted md:h-11'"
-                                                :disabled="form.event_dates.length === 1"
-                                                @click="removeEventDate(index)"
-                                            >
-                                                <X class="size-4" />
-                                            </Button>
-                                        </div>
-
-                                        <InputError :message="fieldError(`event_dates.${index}.date`)" class="mt-3" />
-                                    </div>
-                                </div>
-
-                                <InputError :message="form.errors.event_dates" class="mt-3" />
-                            </div>
-
-                            <div class="space-y-5">
-                                <div>
-                                    <div :class="isBusinessMode ? 'dashboard-eyebrow' : 'inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary'">
-                                        <Clock3 v-if="!isBusinessMode" class="size-3.5" />
-                                        Relevant moments
-                                    </div>
-                                    <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink'">
-                                        Pick the moments you need for {{ selectedType?.label ?? 'this event' }}
-                                    </h3>
-                                    <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
-                                        We only show moments that make sense for the selected event type.
-                                    </p>
-                                </div>
-
-                                <div class="grid gap-4 lg:grid-cols-2">
-                                    <button
-                                        v-for="subEventOption in availableSubEvents"
-                                        :key="subEventOption.key"
-                                        type="button"
-                                        class="group relative overflow-hidden rounded-[26px] border text-left transition duration-200"
-                                        :class="
-                                            isSubEventSelected(subEventOption.key)
-                                                ? 'border-promo-primary shadow-[0_10px_24px_rgba(232,79,154,0.10)]'
-                                                : 'border-neutral-300 shadow-[0_8px_20px_rgba(17,24,39,0.04)]'
-                                        "
-                                        @click="toggleSubEvent(subEventOption)"
-                                    >
-                                        <div
-                                            class="absolute inset-0 bg-cover bg-center"
-                                            :class="
-                                                isSubEventSelected(subEventOption.key)
-                                                    ? 'grayscale-0 saturate-110'
-                                                    : 'grayscale contrast-110'
-                                            "
-                                            :style="{ backgroundImage: `url(${subEventOption.imageUrl})` }"
-                                        />
-                                        <div
-                                            class="absolute inset-0 transition duration-300"
-                                            :class="
-                                                isSubEventSelected(subEventOption.key)
-                                                    ? 'bg-linear-to-t from-[rgba(42,22,35,0.80)] via-[rgba(42,22,35,0.24)] to-[rgba(255,255,255,0.03)]'
-                                                    : 'bg-linear-to-t from-[rgba(17,17,17,0.70)] via-[rgba(17,17,17,0.28)] to-[rgba(255,255,255,0.06)]'
-                                            "
-                                        />
-
-                                        <div class="relative flex min-h-52 flex-col justify-between p-5 text-white">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <span
-                                                    class="rounded-full px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] transition duration-300"
-                                                    :class="
-                                                        isSubEventSelected(subEventOption.key)
-                                                            ? 'bg-white/14 text-white'
-                                                            : 'bg-white/78 text-neutral-900'
-                                                    "
-                                                >
-                                                    {{ subEventOption.required ? 'Required moment' : 'Optional moment' }}
-                                                </span>
-
-                                                <span
-                                                    class="size-3 rounded-full border transition duration-300"
-                                                    :class="
-                                                        isSubEventSelected(subEventOption.key)
-                                                            ? 'border-promo-primary bg-promo-primary shadow-[0_0_0_3px_rgba(255,255,255,0.16)]'
-                                                            : 'border-white/95 bg-white/85'
-                                                    "
-                                                >
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <h4 class="text-2xl font-extrabold tracking-[-0.04em]">
-                                                    {{ subEventOption.label }}
-                                                </h4>
-                                                <p class="mt-3 max-w-sm text-sm leading-6 text-white/84">
-                                                    {{ subEventOption.description }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                    v-if="form.sub_events.length > 0"
-                                :class="isBusinessMode ? 'space-y-5 border-t border-brand-border/70 pt-6' : 'space-y-5 border-t border-promo-line pt-6'"
-                            >
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                                    <div>
-                                        <h3 :class="isBusinessMode ? 'text-lg font-semibold tracking-tight text-brand-ink' : 'text-xl font-bold tracking-[-0.04em] text-promo-ink'">
-                                            Schedule the selected moments
-                                        </h3>
-                                        <p :class="isBusinessMode ? 'dashboard-body' : 'mt-2 text-sm leading-6 text-promo-muted'">
-                                            Each selected moment needs a date, start time, and address unless it does not need one.
-                                        </p>
-                                    </div>
-
-                                    <div :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-4 py-2 text-sm text-brand-muted' : 'rounded-full bg-promo-surface px-4 py-2 text-sm text-promo-muted'">
-                                        {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} selected
-                                    </div>
-                                </div>
-
-                                <div class="mt-5 space-y-3">
-                                    <div
-                                        v-for="(subEvent, index) in form.sub_events"
-                                        :key="subEvent.key"
-                                        :class="isBusinessMode ? 'border-t border-brand-border/70 pt-4 first:border-t-0 first:pt-0' : 'border-t border-promo-line pt-4 first:border-t-0 first:pt-0'"
-                                    >
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p :class="isBusinessMode ? 'text-base font-semibold text-brand-ink' : 'text-base font-semibold text-promo-ink'">
-                                                    {{ subEvent.label }}
-                                                </p>
-                                                <p :class="isBusinessMode ? 'mt-1 text-sm text-brand-muted' : 'mt-1 text-sm text-promo-muted'">
-                                                    Add the date, starting hour, and address for this moment.
-                                                </p>
-                                            </div>
-
-                                            <div class="flex items-center gap-2">
-                                                <span
-                                                    v-if="subEvent.required"
-                                                    :class="isBusinessMode ? 'rounded-full border border-brand-border bg-brand-inverse px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-muted' : 'rounded-full bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-promo-primary'"
-                                                >
-                                                    Required
-                                                </span>
-                                                <button
-                                                    v-else
-                                                    type="button"
-                                                    :class="isBusinessMode ? 'rounded-full p-2 text-brand-muted transition-colors hover:bg-brand-highlight/15' : 'rounded-full p-2 text-promo-muted transition-colors hover:bg-white'"
-                                                    @click="removeSubEvent(subEvent.key)"
-                                                >
-                                                    <X class="size-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-4 grid gap-3 md:grid-cols-2">
-                                            <div class="grid gap-2">
-                                                <Label :for="`sub-event-date-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Date
-                                                </Label>
-                                                <PrettyDatePicker
-                                                    :id="`sub-event-date-${index}`"
-                                                    v-model="subEvent.date"
-                                                    placeholder="Choose sub-event day"
-                                                />
-                                                <InputError :message="fieldError(`sub_events.${index}.date`)" />
-                                            </div>
-
-                                            <div class="grid gap-2">
-                                                <Label :for="`sub-event-time-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Start time
-                                                </Label>
-                                                <PrettyTimePicker
-                                                    :id="`sub-event-time-${index}`"
-                                                    v-model="subEvent.start_time"
-                                                    placeholder="Choose start time"
-                                                />
-                                                <InputError :message="fieldError(`sub_events.${index}.start_time`)" />
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-4 grid gap-3">
-                                            <div class="grid gap-2">
-                                                <Label :for="`sub-event-address-${index}`" :class="isBusinessMode ? 'text-sm font-semibold text-brand-ink' : 'text-sm font-semibold text-promo-ink'">
-                                                    Address
-                                                </Label>
-                                                <Textarea
-                                                    :id="`sub-event-address-${index}`"
-                                                    v-model="subEvent.address"
-                                                    :name="`sub_events.${index}.address`"
-                                                    :disabled="subEvent.no_address"
-                                                    placeholder="Venue name, street, city, or location details for this moment."
-                                                    :class="[
-                                                        isBusinessMode ? 'min-h-24 rounded-[18px] border-brand-border bg-brand-inverse' : 'min-h-24 rounded-[18px] border-promo-line bg-white',
-                                                        subEvent.no_address ? 'opacity-60' : '',
-                                                    ]"
-                                                />
-                                                <InputError :message="fieldError(`sub_events.${index}.address`)" />
-                                            </div>
-
-                                            <div
-                                                :class="isBusinessMode ? 'inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-brand-border bg-brand-inverse px-4 py-3 text-sm text-brand-muted' : 'inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-promo-line bg-white px-4 py-3 text-sm text-promo-muted'"
-                                                role="button"
-                                                tabindex="0"
-                                                @click="toggleSubEventNoAddress(index)"
-                                                @keydown.enter.prevent="toggleSubEventNoAddress(index)"
-                                                @keydown.space.prevent="toggleSubEventNoAddress(index)"
-                                            >
-                                                <Checkbox
-                                                    :checked="subEvent.no_address"
-                                                    @click.stop
-                                                    @update:checked="(checked: CheckedState) => updateSubEventNoAddress(index, checked)"
-                                                />
-                                                This moment has no address
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="isBusinessMode"
-                                class="space-y-4 border-t border-brand-border/70 pt-6"
-                            >
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                                    <div>
-                                        <h3 class="text-lg font-semibold tracking-tight text-brand-ink">
-                                            Review before create
-                                        </h3>
-                                        <p class="dashboard-body mt-1">
-                                            Confirm the owner and the billing impact, then create the workspace.
-                                        </p>
-                                    </div>
-                                    <p class="text-sm font-medium text-brand-muted">
-                                        {{ businessWalletCredits }} credits available
-                                    </p>
-                                </div>
-
-                                <div class="grid gap-4 sm:grid-cols-2">
-                                    <div class="space-y-1">
-                                        <p class="dashboard-eyebrow">Owner</p>
-                                        <p class="text-sm font-semibold text-brand-ink">{{ props.owner?.name }}</p>
-                                        <p class="text-sm text-brand-muted">{{ props.owner?.email }}</p>
-                                    </div>
-
-                                    <div class="space-y-1">
-                                        <p class="dashboard-eyebrow">Plan</p>
-                                        <p class="text-sm font-semibold text-brand-ink">
-                                            {{ selectedPlan?.name ?? 'Choose a plan' }}
-                                        </p>
-                                        <p class="text-sm text-brand-muted">
-                                            {{
-                                                selectedPlan
-                                                    ? `${selectedBusinessPlanCost} credits will be used for this event.`
-                                                    : 'Pick the paid business plan for this event.'
-                                            }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div
-                                    v-if="selectedPlan"
-                                    class="grid gap-2 border-t border-brand-border/70 pt-4 text-sm text-brand-muted"
-                                >
-                                    <p
-                                        class="font-medium"
-                                        :class="
-                                            selectedBusinessPlanAffordable
-                                                ? 'text-emerald-800'
-                                                : 'text-amber-900'
-                                        "
-                                    >
-                                        {{
-                                            selectedBusinessPlanAffordable
-                                                ? `${remainingBusinessCredits} credits will remain after this event.`
-                                                : `You need ${missingBusinessCredits} more credits before you can create this event.`
-                                        }}
-                                    </p>
-                                    <p>{{ selectedPlan.uploadLimitLabel }}</p>
-                                    <p>{{ selectedPlan.retentionLabel }}</p>
-                                    <p>{{ selectedPlan.activeWindowLabel }}</p>
-                                    <div
-                                        v-if="!selectedBusinessPlanAffordable"
-                                        class="border-t border-brand-border/70 pt-3"
-                                    >
-                                        <Link :href="businessTopUpHref" class="font-semibold text-brand-ink hover:text-brand-accent">
-                                            Top up credits
-                                        </Link>
-                                        <span> to unlock this plan before you submit.</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                                <div class="space-y-5 border-t border-promo-line pt-6">
-                                    <div class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                        <Users class="size-3.5" />
-                                        Event owner
-                                    </div>
-                                    <h3 class="mt-4 text-xl font-bold tracking-[-0.04em] text-promo-ink">
-                                        Owner account connected
-                                    </h3>
-                                    <p class="mt-2 text-sm leading-6 text-promo-muted">
-                                        This event will be created under the signed-in owner account.
-                                    </p>
-
-                                    <div class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
-                                        <p class="font-semibold text-promo-ink">{{ props.owner?.name }}</p>
-                                        <p class="mt-1">{{ props.owner?.email }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-4 border-t border-promo-line pt-6">
-                                    <div class="inline-flex items-center gap-2 rounded-full bg-promo-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-promo-primary">
-                                        <Sparkles class="size-3.5" />
-                                        Selected plan
-                                    </div>
-                                    <h3 class="mt-4 text-lg font-bold tracking-[-0.04em] text-promo-ink">
-                                        {{ selectedPlan?.name ?? 'Choose a plan' }}
-                                    </h3>
-                                    <p class="mt-2 text-sm text-promo-muted">
-                                        {{ selectedPlan?.priceLabel ?? 'The plan you pick in step 1 will define the event limits and unlocks.' }}
-                                    </p>
-
-                                    <div v-if="selectedPlan" class="mt-5 border-t border-promo-line pt-4 text-sm text-promo-muted">
-                                        <div class="border-b border-promo-line py-3">
-                                            {{ selectedPlan.uploadLimitLabel }}
-                                        </div>
-                                        <div class="border-b border-promo-line py-3">
-                                            {{ selectedPlan.retentionLabel }}
-                                        </div>
-                                        <div class="py-3">
-                                            {{ selectedPlan.activeWindowLabel }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <div
-                            ref="formActionsRef"
-                            :class="isBusinessMode ? 'flex flex-col gap-4 border-t border-brand-border/70 pt-6 lg:flex-row lg:items-center lg:justify-between' : 'flex flex-col gap-4 border-t border-promo-line pt-6 lg:flex-row lg:items-center lg:justify-between'"
-                        >
-                            <div :class="isBusinessMode ? 'grid gap-2 text-sm text-brand-muted md:grid-cols-3 md:gap-4' : 'grid gap-2 text-sm text-promo-muted md:grid-cols-3 md:gap-4'">
-                                <div class="inline-flex items-center gap-2">
-                                    <MapPin :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
-                                    {{ addressedMomentsCount }} / {{ form.sub_events.length }} moment{{ form.sub_events.length === 1 ? '' : 's' }} addressed
-                                </div>
-                                <div class="inline-flex items-center gap-2">
-                                    <CalendarDays :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
-                                    {{ reviewEventDates.length }} date{{ reviewEventDates.length === 1 ? '' : 's' }}
-                                </div>
-                                <div class="inline-flex items-center gap-2">
-                                    <Users :class="isBusinessMode ? 'size-4 text-brand-accent' : 'size-4 text-promo-primary'" />
-                                    {{ form.attendee_estimate || '0' }} guests · {{ selectedPlan?.name ?? 'No plan' }}
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col-reverse gap-3 sm:flex-row">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    :class="isBusinessMode ? 'h-12 w-full rounded-full text-brand-muted hover:text-brand-ink sm:w-auto' : 'h-12 w-full rounded-full text-promo-muted hover:text-promo-ink sm:w-auto'"
-                                    :disabled="step === 1 || form.processing"
-                                    @click="goToPrevious"
-                                >
-                                    <ArrowLeft class="mr-2 size-4" />
-                                    Back
-                                </Button>
-
-                                <Button
-                                    v-if="step < 3"
-                                    type="button"
-                                    :class="isBusinessMode ? 'h-12 w-full rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent sm:w-auto' : 'h-12 w-full rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong sm:w-auto'"
-                                    :disabled="!canMoveToNext || form.processing"
-                                    @click="goToNext"
-                                >
-                                    Continue
-                                    <ArrowRight class="ml-2 size-4" />
-                                </Button>
-
-                                <Button
-                                    v-else
-                                    type="submit"
-                                    :class="isBusinessMode ? 'h-12 w-full rounded-full bg-brand-ink px-6 text-brand-inverse hover:bg-brand-accent sm:w-auto' : 'h-12 w-full rounded-full bg-promo-primary px-6 text-white hover:bg-promo-primary-strong sm:w-auto'"
-                                    :disabled="form.processing || !canSubmitEvent"
-                                >
-                                    <Spinner v-if="form.processing" class="mr-2" />
-                                    Create my event
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
-                </section>
-            </main>
-        </div>
+                <div class="mt-8 flex items-center justify-between">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-promo-muted transition hover:text-promo-ink"
+                        @click="goBack"
+                    >
+                        <ArrowLeft class="size-4" />
+                        Back
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full bg-promo-primary px-7 py-3.5 text-sm font-semibold text-white shadow-[rgba(255,56,92,0.25)_0px_10px_22px] transition hover:bg-promo-primary-strong disabled:cursor-not-allowed disabled:opacity-40"
+                        :disabled="!stepThreeValid || form.processing"
+                        @click="submit"
+                    >
+                        <Spinner v-if="form.processing" />
+                        Create my free album
+                        <ArrowRight v-if="!form.processing" class="size-4" />
+                    </button>
+                </div>
+            </section>
+        </main>
     </div>
-    </component>
 </template>
