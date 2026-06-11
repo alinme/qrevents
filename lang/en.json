@@ -2106,5 +2106,15 @@
     "onboarding.datepicker.today": "Today",
     "onboarding.photos.dashboard_hint": "Customize your album page, branding, and moderation from your dashboard.",
     "onboarding.photos.share_title": "Share with guests",
-    "app.nav.create_event": "Create event"
+    "app.nav.create_event": "Create event",
+    "event_home.print_pack.defaults.subtitle": "SHARE THE",
+    "event_home.print_pack.defaults.title": "LOVE",
+    "event_home.print_pack.defaults.slogan": "sharing is caring",
+    "event_home.print_pack.defaults.message_wedding": "Scan the QR code and share your memories by uploading photos, videos or wishes to the newly weds.",
+    "event_home.print_pack.defaults.message_baptism": "Scan the QR code and share your memories by uploading photos, videos or wishes for the family.",
+    "event_home.print_pack.defaults.message_birthday": "Scan the QR code and share your memories by uploading photos, videos or birthday wishes.",
+    "event_home.print_pack.defaults.message_generic": "Scan the QR code and share your memories by uploading photos, videos or wishes to the hosts.",
+    "event_home.print_pack.actions.print_label": "Print",
+    "event_home.print_pack.actions.preview_label": "Preview",
+    "event_home.print_pack.actions.customize_label": "Customize"
 }

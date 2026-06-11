@@ -25,6 +25,7 @@ import {
 const props = defineProps<{
     eventId: number;
     eventName: string;
+    eventType?: string | null;
     albumQrDataUrl: string;
     previewUrl: string;
 }>();
@@ -33,12 +34,24 @@ const { t } = useTranslations();
 const configureOpen = ref(false);
 const activeTemplateId = ref<string>(qrTemplateDefinitions[0].id);
 
-const subtitleText = ref<string>('SHARE THE');
-const titleText = ref<string>('LOVE');
-const sloganText = ref<string>('sharing is caring');
-const messageText = ref<string>(
-    'Scan the QR code and share your memories by uploading photos, videos or wishes to the newly wed.',
-);
+const defaultMessageKey = (): string => {
+    switch (props.eventType) {
+        case 'wedding':
+        case 'engagement':
+            return 'event_home.print_pack.defaults.message_wedding';
+        case 'baptism':
+            return 'event_home.print_pack.defaults.message_baptism';
+        case 'birthday':
+            return 'event_home.print_pack.defaults.message_birthday';
+        default:
+            return 'event_home.print_pack.defaults.message_generic';
+    }
+};
+
+const subtitleText = ref<string>(t('event_home.print_pack.defaults.subtitle'));
+const titleText = ref<string>(t('event_home.print_pack.defaults.title'));
+const sloganText = ref<string>(t('event_home.print_pack.defaults.slogan'));
+const messageText = ref<string>(t(defaultMessageKey()));
 const eventTitleText = ref<string>(props.eventName);
 
 const activeTemplate = computed(() =>
@@ -158,32 +171,41 @@ const printPoster = (): void => {
                 <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="sm"
                     class="rounded-full"
                     :title="t('event_home.print_pack.actions.print_pdf')"
                     @click="printPoster"
                 >
                     <Printer class="size-4" />
+                    <span class="hidden sm:inline">
+                        {{ t('event_home.print_pack.actions.print_label') }}
+                    </span>
                 </Button>
                 <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="sm"
                     class="rounded-full"
                     :title="t('event_home.print_pack.open_preview')"
                     @click="openPreview"
                 >
                     <ExternalLink class="size-4" />
+                    <span class="hidden sm:inline">
+                        {{ t('event_home.print_pack.actions.preview_label') }}
+                    </span>
                 </Button>
                 <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="sm"
                     class="rounded-full"
                     :title="t('event_home.print_pack.configure')"
                     @click="configureOpen = true"
                 >
                     <SlidersHorizontal class="size-4" />
+                    <span class="hidden sm:inline">
+                        {{ t('event_home.print_pack.actions.customize_label') }}
+                    </span>
                 </Button>
             </div>
         </div>

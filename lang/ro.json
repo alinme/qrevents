@@ -2106,5 +2106,15 @@
     "onboarding.datepicker.today": "Azi",
     "onboarding.photos.dashboard_hint": "Personalizează pagina albumului, brandingul și moderarea din panoul tău.",
     "onboarding.photos.share_title": "Distribuie invitaților",
-    "app.nav.create_event": "Creează eveniment"
+    "app.nav.create_event": "Creează eveniment",
+    "event_home.print_pack.defaults.subtitle": "ÎMPARTE",
+    "event_home.print_pack.defaults.title": "IUBIREA",
+    "event_home.print_pack.defaults.slogan": "amintirile se trăiesc împreună",
+    "event_home.print_pack.defaults.message_wedding": "Scanează codul QR și împărtășește amintirile încărcând fotografii, clipuri sau urări pentru proaspeții căsătoriți.",
+    "event_home.print_pack.defaults.message_baptism": "Scanează codul QR și împărtășește amintirile încărcând fotografii, clipuri sau urări pentru familie.",
+    "event_home.print_pack.defaults.message_birthday": "Scanează codul QR și împărtășește amintirile încărcând fotografii, clipuri sau urări de ziua lor.",
+    "event_home.print_pack.defaults.message_generic": "Scanează codul QR și împărtășește amintirile încărcând fotografii, clipuri sau urări pentru gazde.",
+    "event_home.print_pack.actions.print_label": "Printează",
+    "event_home.print_pack.actions.preview_label": "Previzualizare",
+    "event_home.print_pack.actions.customize_label": "Personalizează"
 }

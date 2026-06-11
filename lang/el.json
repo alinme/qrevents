@@ -1376,5 +1376,15 @@
     "event_settings.collaborators.viewer": "Θεατής",
     "event_settings.collaborators.pending_note": "Ο συνεργάτης παραμένει προσκεκλημένος μέχρι να αποδεχθεί τον σύνδεσμο που στάλθηκε με email.",
     "event_settings.collaborators.inviting": "Αποστολή πρόσκλησης...",
-    "event_settings.collaborators.send_invite": "Αποστολή πρόσκλησης"
+    "event_settings.collaborators.send_invite": "Αποστολή πρόσκλησης",
+    "event_home.print_pack.defaults.subtitle": "ΜΟΙΡΑΣΟΥ ΤΗΝ",
+    "event_home.print_pack.defaults.title": "ΑΓΑΠΗ",
+    "event_home.print_pack.defaults.slogan": "οι αναμνήσεις μοιράζονται",
+    "event_home.print_pack.defaults.message_wedding": "Σαρώστε τον κωδικό QR και μοιραστείτε τις αναμνήσεις σας με φωτογραφίες, βίντεο ή ευχές για τους νεόνυμφους.",
+    "event_home.print_pack.defaults.message_baptism": "Σαρώστε τον κωδικό QR και μοιραστείτε τις αναμνήσεις σας με φωτογραφίες, βίντεο ή ευχές για την οικογένεια.",
+    "event_home.print_pack.defaults.message_birthday": "Σαρώστε τον κωδικό QR και μοιραστείτε τις αναμνήσεις σας με φωτογραφίες, βίντεο ή ευχές γενεθλίων.",
+    "event_home.print_pack.defaults.message_generic": "Σαρώστε τον κωδικό QR και μοιραστείτε τις αναμνήσεις σας με φωτογραφίες, βίντεο ή ευχές για τους οικοδεσπότες.",
+    "event_home.print_pack.actions.print_label": "Εκτύπωση",
+    "event_home.print_pack.actions.preview_label": "Προεπισκόπηση",
+    "event_home.print_pack.actions.customize_label": "Προσαρμογή"
 }

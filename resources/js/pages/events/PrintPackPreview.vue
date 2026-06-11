@@ -17,6 +17,7 @@ import {
 type EventPayload = {
     id: number;
     name: string;
+    type?: string | null;
 };
 
 type EventLinks = {
@@ -32,12 +33,25 @@ const props = defineProps<{
 const { t } = useTranslations();
 
 const activeTemplateId = ref<string>(qrTemplateDefinitions[0].id);
-const subtitleText = ref('SHARE THE');
-const titleText = ref('LOVE');
-const sloganText = ref('sharing is caring');
-const messageText = ref(
-    'Scan the QR code and share your memories by uploading photos, videos or wishes to the newly wed.',
-);
+
+const defaultMessageKey = (): string => {
+    switch (props.currentEvent.type) {
+        case 'wedding':
+        case 'engagement':
+            return 'event_home.print_pack.defaults.message_wedding';
+        case 'baptism':
+            return 'event_home.print_pack.defaults.message_baptism';
+        case 'birthday':
+            return 'event_home.print_pack.defaults.message_birthday';
+        default:
+            return 'event_home.print_pack.defaults.message_generic';
+    }
+};
+
+const subtitleText = ref(t('event_home.print_pack.defaults.subtitle'));
+const titleText = ref(t('event_home.print_pack.defaults.title'));
+const sloganText = ref(t('event_home.print_pack.defaults.slogan'));
+const messageText = ref(t(defaultMessageKey()));
 const eventTitleText = ref(props.currentEvent.name);
 
 const activeTemplate = computed(() =>

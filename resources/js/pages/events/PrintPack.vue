@@ -9,6 +9,7 @@ import type { BreadcrumbItem } from '@/types';
 type EventPayload = {
     id: number;
     name: string;
+    type?: string | null;
 };
 
 type EventLinks = {
@@ -52,6 +53,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
                     class="min-h-0 flex-1"
                     :event-id="currentEvent.id"
                     :event-name="currentEvent.name"
+                    :event-type="currentEvent.type"
                     :album-qr-data-url="eventLinks.albumQrDataUrl"
                     :preview-url="eventLinks.printPackPreview"
                 />

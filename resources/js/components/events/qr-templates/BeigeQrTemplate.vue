@@ -1,49 +1,75 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import {
+    qrTemplateGeometry,
+    qrZoneHeightFraction,
+} from '@/lib/qr-print-geometry';
 import type { QrTemplateProps } from './types';
 
 const props = defineProps<QrTemplateProps>();
+
+const geometry = qrTemplateGeometry.beige;
 
 const fontVariables = computed<Record<string, string>>(() => ({
     '--qr-heading-font': props.fonts.headingFamily,
     '--qr-body-font': props.fonts.bodyFamily,
 }));
+
+const zoneStyles = {
+    header: { top: `${geometry.headerTop * 100}%` },
+    message: { top: `${geometry.messageTop * 100}%` },
+    qr: {
+        left: `${geometry.qr.left * 100}%`,
+        top: `${geometry.qr.top * 100}%`,
+        width: `${geometry.qr.width * 100}%`,
+        height: `${qrZoneHeightFraction(geometry) * 100}%`,
+    },
+    footer: { top: `${geometry.footerTop * 100}%` },
+};
 </script>
 
 <template>
-    <article :style="fontVariables" class="qr-template qr-template-beige relative mx-auto aspect-[1/1.4142] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(53,36,24,0.16)]">
+    <article
+        :style="fontVariables"
+        class="qr-template qr-template-beige relative mx-auto aspect-[1410/2000] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[2rem] shadow-[0_34px_80px_rgba(53,36,24,0.16)]"
+    >
         <div class="qr-template__art absolute inset-0" />
-        <div class="qr-template__wash absolute inset-0" />
 
-        <div class="relative z-10 flex h-full flex-col items-center justify-between px-[8%] py-[7.5%] text-center text-[#2f211a]">
-            <header>
-                <p class="qr-template__subtitle">
-                    {{ subtitle }}
-                </p>
-                <h2 class="qr-template__title">
-                    {{ title }}
-                </h2>
-                <p class="qr-template__slogan">
-                    {{ slogan }}
-                </p>
-            </header>
+        <header
+            class="absolute right-[8%] left-[8%] text-center text-[#2f211a]"
+            :style="zoneStyles.header"
+        >
+            <p class="qr-template__subtitle">{{ subtitle }}</p>
+            <h2 class="qr-template__title">{{ title }}</h2>
+            <p class="qr-template__slogan">{{ slogan }}</p>
+        </header>
 
-            <div class="flex w-full flex-col items-center gap-[3.6cqh]">
-                <div class="qr-template__qr-frame w-full max-w-[44cqw]">
-                    <img :src="qrDataUrl" :alt="previewAlt" class="block h-auto w-full">
-                </div>
+        <p
+            class="qr-template__message absolute right-[14%] left-[14%] text-center"
+            :style="zoneStyles.message"
+        >
+            {{ message }}
+        </p>
 
-                <p class="qr-template__message">
-                    {{ message }}
-                </p>
+        <div
+            class="absolute flex items-center justify-center"
+            :style="zoneStyles.qr"
+        >
+            <div class="qr-template__qr-frame h-[88%] w-[88%]">
+                <img
+                    :src="qrDataUrl"
+                    :alt="previewAlt"
+                    class="block h-full w-full object-contain"
+                />
             </div>
-
-            <footer class="qr-template__footer w-full max-w-[76cqw] border-t border-[#50382c]/15 pt-[2.2cqh]">
-                <p class="qr-template__event-title">
-                    {{ eventTitle }}
-                </p>
-            </footer>
         </div>
+
+        <footer
+            class="qr-template__footer absolute right-[18%] left-[18%] border-t border-[#50382c]/15 pt-[1.6cqh] text-center"
+            :style="zoneStyles.footer"
+        >
+            <p class="qr-template__event-title">{{ eventTitle }}</p>
+        </footer>
     </article>
 </template>
 
@@ -57,12 +83,6 @@ const fontVariables = computed<Record<string, string>>(() => ({
     background:
         center / cover no-repeat url('/qr-bg-themes/beige-base.png'),
         #f7efe6;
-}
-
-.qr-template__wash {
-    background:
-        radial-gradient(circle at top, rgba(255, 255, 255, 0.34), transparent 42%),
-        linear-gradient(180deg, rgba(255, 249, 243, 0.52), rgba(255, 252, 249, 0.68));
 }
 
 .qr-template__subtitle {
@@ -92,14 +112,12 @@ const fontVariables = computed<Record<string, string>>(() => ({
 }
 
 .qr-template__qr-frame {
-    border-radius: 1.6rem;
-    background: rgb(255 255 255 / 0.94);
-    padding: clamp(0.35rem, calc(var(--qr-unit) * 0.72), 0.68rem);
-    box-shadow: 0 24px 52px rgba(60, 38, 30, 0.12);
+    border-radius: 1.2rem;
+    background: #ffffff;
+    padding: clamp(0.35rem, calc(var(--qr-unit) * 0.9), 0.8rem);
 }
 
 .qr-template__message {
-    max-width: 66cqw;
     white-space: pre-line;
     font-family: var(--qr-body-font);
     font-size: clamp(0.72rem, calc(var(--qr-unit) * 2.02), 1.02rem);
@@ -108,9 +126,14 @@ const fontVariables = computed<Record<string, string>>(() => ({
     text-wrap: pretty;
 }
 
+.qr-template__footer {
+    font-family: var(--qr-body-font);
+}
+
 .qr-template__event-title {
-    font-size: clamp(0.88rem, calc(var(--qr-unit) * 2.45), 1.5rem);
+    font-size: clamp(0.85rem, calc(var(--qr-unit) * 2.5), 1.35rem);
     font-weight: 700;
     letter-spacing: 0.01em;
+    color: #2f211a;
 }
 </style>
