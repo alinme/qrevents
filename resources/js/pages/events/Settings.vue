@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     IconDownload,
     IconEye,
@@ -25,6 +25,7 @@ import {
     Sparkles,
     User,
     UserPlus,
+    Users,
     WandSparkles,
     X,
 } from 'lucide-vue-next';
@@ -133,6 +134,10 @@ type CollaboratorPayload = {
     email: string;
     role: 'owner' | 'manager' | 'viewer';
     status: 'active' | 'invited' | 'accepted' | 'pending';
+    links?: {
+        update: string;
+        destroy: string;
+    } | null;
 };
 
 type EventPlanFeatures = {
@@ -210,7 +215,7 @@ type EventLinks = {
     settingsUpdate: string;
     billingUpdate: string;
     billingCheckout: string;
-    collaboratorsStore?: string;
+    collaboratorsStore: string;
 };
 
 type TabId =
@@ -445,6 +450,11 @@ const allTabItems = computed<
         label: t('event_settings.tabs.moderation'),
         icon: ShieldCheck,
     },
+    {
+        id: 'collaborators',
+        label: t('event_settings.tabs.collaborators'),
+        icon: Users,
+    },
 ]);
 
 const planFeatures = computed(() => props.currentEvent.planFeatures);
@@ -485,6 +495,7 @@ const requestedTab = computed<TabId | null>(() => {
         case 'appearance':
         case 'photo_wall':
         case 'moderation':
+        case 'collaborators':
         case 'general':
             return tab;
         default:
@@ -1649,6 +1660,48 @@ const onCollaboratorRoleChange = (value: unknown): void => {
         collaboratorForm.role =
             value as (typeof collaboratorRoleOptions)[number];
     }
+};
+
+const pendingCollaboratorId = ref<number | string | null>(null);
+
+const updateCollaboratorRole = (
+    collaborator: CollaboratorPayload,
+    value: unknown,
+): void => {
+    if (
+        !collaborator.links ||
+        typeof value !== 'string' ||
+        !(collaboratorRoleOptions as readonly string[]).includes(value) ||
+        value === collaborator.role
+    ) {
+        return;
+    }
+
+    pendingCollaboratorId.value = collaborator.id;
+    router.patch(
+        collaborator.links.update,
+        { role: value },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                pendingCollaboratorId.value = null;
+            },
+        },
+    );
+};
+
+const removeCollaborator = (collaborator: CollaboratorPayload): void => {
+    if (!collaborator.links) {
+        return;
+    }
+
+    pendingCollaboratorId.value = collaborator.id;
+    router.delete(collaborator.links.destroy, {
+        preserveScroll: true,
+        onFinish: () => {
+            pendingCollaboratorId.value = null;
+        },
+    });
 };
 
 watch(
@@ -3633,7 +3686,7 @@ function resolveSupportedTimezones(): string[] {
 
                             <div class="overflow-hidden rounded-xl border">
                                 <div
-                                    class="grid grid-cols-[2fr_1fr_1fr] border-b bg-muted/20 px-4 py-3 text-sm font-semibold"
+                                    class="grid grid-cols-[2fr_1fr_1fr_2.5rem] items-center gap-2 border-b bg-muted/20 px-4 py-3 text-sm font-semibold"
                                 >
                                     <p>
                                         {{
@@ -3656,16 +3709,60 @@ function resolveSupportedTimezones(): string[] {
                                             )
                                         }}
                                     </p>
+                                    <span class="sr-only">
+                                        {{
+                                            t(
+                                                'event_settings.collaborators.table.actions',
+                                            )
+                                        }}
+                                    </span>
                                 </div>
                                 <div
                                     v-for="collaborator in collaboratorRows"
                                     :key="collaborator.id"
-                                    class="grid grid-cols-[2fr_1fr_1fr] px-4 py-4 text-sm"
+                                    class="grid grid-cols-[2fr_1fr_1fr_2.5rem] items-center gap-2 px-4 py-4 text-sm"
                                 >
-                                    <p>{{ collaborator.email }}</p>
-                                    <p class="capitalize">
-                                        {{ collaborator.role }}
+                                    <p class="truncate">
+                                        {{ collaborator.email }}
                                     </p>
+                                    <div>
+                                        <NativeSelect
+                                            v-if="collaborator.links"
+                                            class="h-9 w-full max-w-36"
+                                            :model-value="collaborator.role"
+                                            :disabled="
+                                                pendingCollaboratorId ===
+                                                collaborator.id
+                                            "
+                                            @change="
+                                                (event: Event) =>
+                                                    updateCollaboratorRole(
+                                                        collaborator,
+                                                        (
+                                                            event.target as HTMLSelectElement
+                                                        ).value,
+                                                    )
+                                            "
+                                        >
+                                            <NativeSelectOption value="manager">
+                                                {{
+                                                    t(
+                                                        'event_settings.collaborators.manager',
+                                                    )
+                                                }}
+                                            </NativeSelectOption>
+                                            <NativeSelectOption value="viewer">
+                                                {{
+                                                    t(
+                                                        'event_settings.collaborators.viewer',
+                                                    )
+                                                }}
+                                            </NativeSelectOption>
+                                        </NativeSelect>
+                                        <p v-else class="capitalize">
+                                            {{ collaborator.role }}
+                                        </p>
+                                    </div>
                                     <div>
                                         <Badge
                                             :variant="
@@ -3689,6 +3786,29 @@ function resolveSupportedTimezones(): string[] {
                                                       )
                                             }}
                                         </Badge>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <Button
+                                            v-if="collaborator.links"
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            class="size-9 rounded-full text-muted-foreground hover:text-destructive"
+                                            :disabled="
+                                                pendingCollaboratorId ===
+                                                collaborator.id
+                                            "
+                                            :aria-label="
+                                                t(
+                                                    'event_settings.collaborators.remove',
+                                                )
+                                            "
+                                            @click="
+                                                removeCollaborator(collaborator)
+                                            "
+                                        >
+                                            <X class="size-4" />
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

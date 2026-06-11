@@ -64,6 +64,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class EventController extends Controller
 {
@@ -1395,19 +1396,56 @@ class EventController extends Controller
             $expiresAt,
             ['collaborator' => $collaborator->id],
         );
-        Notification::route('mail', $normalizedEmail)->notify(
-            new EventCollaboratorInviteNotification(
-                eventName: $event->name,
-                inviterName: (string) $request->user()->name,
-                acceptUrl: $acceptUrl,
-                expiresAt: $expiresAt,
-            ),
-        );
+
+        try {
+            Notification::route('mail', $normalizedEmail)->notify(
+                new EventCollaboratorInviteNotification(
+                    eventName: $event->name,
+                    inviterName: (string) $request->user()->name,
+                    acceptUrl: $acceptUrl,
+                    expiresAt: $expiresAt,
+                ),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return back()->with(
             'success',
             'Invite sent. Collaborator remains invited until accepting the email link.',
         );
+    }
+
+    public function updateCollaborator(
+        Request $request,
+        Event $event,
+        EventCollaborator $collaborator,
+    ): RedirectResponse {
+        $this->assertOwnership($request, $event);
+        abort_unless($collaborator->event_id === $event->id, 404);
+
+        $validated = $request->validate([
+            'role' => ['required', 'string', Rule::in(['manager', 'viewer'])],
+        ]);
+
+        $collaborator->update([
+            'role' => $validated['role'],
+        ]);
+
+        return back()->with('success', 'Collaborator role updated.');
+    }
+
+    public function destroyCollaborator(
+        Request $request,
+        Event $event,
+        EventCollaborator $collaborator,
+    ): RedirectResponse {
+        $this->assertOwnership($request, $event);
+        abort_unless($collaborator->event_id === $event->id, 404);
+
+        $collaborator->delete();
+
+        return back()->with('success', 'Collaborator removed.');
     }
 
     public function acceptCollaboratorInvite(Request $request, EventCollaborator $collaborator): Response|RedirectResponse
@@ -2434,7 +2472,7 @@ class EventController extends Controller
      */
     private function eventProps(Request $request, Event $event): array
     {
-        $event->loadMissing(['user:id,email', 'plan']);
+        $event->loadMissing(['user:id,email', 'collaborators', 'plan']);
         $albumUrl = $this->publicAlbumUrl($event);
         $publicShortLinks = app(IsgdShortUrlManager::class)->forEvent($event);
         $showEventOverviewLink = $this->shouldShowEventOverviewLink($request);
@@ -2482,6 +2520,30 @@ class EventController extends Controller
         if (! is_string($albumPermission) || ! in_array($albumPermission, ['view_upload', 'view_only', 'upload_only'], true)) {
             $albumPermission = $event->album_public ? 'view_upload' : 'upload_only';
         }
+
+        $ownerEmail = (string) ($event->user?->email ?? '');
+        $collaborators = [
+            [
+                'id' => "owner-{$event->id}",
+                'email' => $ownerEmail,
+                'role' => 'owner',
+                'status' => 'active',
+                'links' => null,
+            ],
+            ...$event->collaborators
+                ->sortByDesc('id')
+                ->map(fn (EventCollaborator $collaborator): array => [
+                    'id' => $collaborator->id,
+                    'email' => $collaborator->email,
+                    'role' => $collaborator->role,
+                    'status' => $this->normalizeCollaboratorStatus($collaborator->status),
+                    'links' => [
+                        'update' => route('events.collaborators.update', [$event, $collaborator]),
+                        'destroy' => route('events.collaborators.destroy', [$event, $collaborator]),
+                    ],
+                ])
+                ->all(),
+        ];
 
         return [
             'currentEvent' => [
@@ -2555,7 +2617,7 @@ class EventController extends Controller
                     'failedAt' => $event->media_export_failed_at?->toIso8601String(),
                     'error' => $event->media_export_error,
                 ],
-                'collaborators' => [],
+                'collaborators' => $collaborators,
                 'settings' => [
                     'displayLanguage' => $branding['display_language'] ?? 'automatic',
                     'hideSideImages' => (bool) ($branding['hide_side_images'] ?? false),
@@ -2599,6 +2661,7 @@ class EventController extends Controller
                 'settingsUpdate' => route('events.settings.update', $event),
                 'billingUpdate' => route('events.billing.update', $event),
                 'billingCheckout' => route('events.billing.checkout', $event),
+                'collaboratorsStore' => route('events.collaborators.store', $event),
                 'album' => $albumUrl,
                 'albumShortUrl' => $publicShortLinks['albumShortUrl'],
                 'albumAccessCode' => $event->publicAlbumCode(),
@@ -3599,7 +3662,7 @@ class EventController extends Controller
         $attendees = $assets
             ->groupBy(fn (array $asset): string => (string) $asset['guestKey'])
             ->map(function ($group, string $key): array {
-                /** @var \Illuminate\Support\Collection<int, array<string, mixed>> $group */
+                /** @var Collection<int, array<string, mixed>> $group */
                 $first = $group->first();
                 $latestCreatedAt = $group
                     ->pluck('createdAt')
@@ -3633,7 +3696,7 @@ class EventController extends Controller
     }
 
     /**
-     * @param  array{byToken: \Illuminate\Support\Collection<string, EventGuest>, byName: \Illuminate\Support\Collection<string, EventGuest>}  $guestLookups
+     * @param  array{byToken: Collection<string, EventGuest>, byName: Collection<string, EventGuest>}  $guestLookups
      * @return array{assets: array<int, array<string, mixed>>, nextCursor: int|null, hasMore: bool}
      */
     private function publicAlbumAssetPagePayload(
@@ -4468,7 +4531,7 @@ class EventController extends Controller
     }
 
     /**
-     * @param  array{byToken: \Illuminate\Support\Collection<string, EventGuest>, byName: \Illuminate\Support\Collection<string, EventGuest>}  $guestLookups
+     * @param  array{byToken: Collection<string, EventGuest>, byName: Collection<string, EventGuest>}  $guestLookups
      * @return array<string, mixed>
      */
     private function publicAlbumAssetProps(Event $event, EventAsset $asset, array $guestLookups): array
@@ -4558,7 +4621,7 @@ class EventController extends Controller
     }
 
     /**
-     * @return array{byToken: \Illuminate\Support\Collection<string, EventGuest>, byName: \Illuminate\Support\Collection<string, EventGuest>}
+     * @return array{byToken: Collection<string, EventGuest>, byName: Collection<string, EventGuest>}
      */
     private function eventGuestLookups(Event $event): array
     {
@@ -4576,7 +4639,7 @@ class EventController extends Controller
     }
 
     /**
-     * @param  array{byToken: \Illuminate\Support\Collection<string, EventGuest>, byName: \Illuminate\Support\Collection<string, EventGuest>}  $guestLookups
+     * @param  array{byToken: Collection<string, EventGuest>, byName: Collection<string, EventGuest>}  $guestLookups
      */
     private function guestForAsset(EventAsset $asset, array $guestLookups): ?EventGuest
     {
@@ -5433,7 +5496,7 @@ class EventController extends Controller
             }
 
             return Storage::disk($disk)->url($path);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -5459,7 +5522,7 @@ class EventController extends Controller
             );
 
             return redirect()->away($url);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return Storage::disk($disk)->download($path, $filename);
         }
     }
@@ -5475,7 +5538,7 @@ class EventController extends Controller
                 $path,
                 now()->addMinutes((int) config('events.upload_temporary_url_ttl_minutes', 30)),
             ));
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return Storage::disk($disk)->response($path);
         }
     }
@@ -5525,7 +5588,7 @@ class EventController extends Controller
     ): string|false {
         try {
             $path = Storage::disk($disk)->putFileAs($directory, $file, $filename, ['visibility' => 'private']);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Log::warning('Event storage file upload failed.', [
                 'disk' => $disk,
                 'directory' => $directory,
@@ -5561,7 +5624,7 @@ class EventController extends Controller
     ): bool {
         try {
             $stored = Storage::disk($disk)->put($path, $contents, $options);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Log::warning('Event storage write failed.', [
                 'disk' => $disk,
                 'path' => $path,
@@ -5596,7 +5659,7 @@ class EventController extends Controller
 
         try {
             return Storage::disk($disk)->exists($path);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Log::warning('Event storage existence check failed.', [
                 'disk' => $disk,
                 'path' => $path,

@@ -58,7 +58,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('events/{event}/settings', [EventController::class, 'updateSettings'])->name('events.settings.update');
     Route::patch('events/{event}/billing', [EventController::class, 'updateBilling'])->name('events.billing.update');
     Route::post('events/{event}/billing/checkout', [EventController::class, 'createBillingCheckout'])->name('events.billing.checkout');
+    Route::post('events/{event}/collaborators', [EventController::class, 'storeCollaborator'])->name('events.collaborators.store');
+    Route::patch('events/{event}/collaborators/{collaborator}', [EventController::class, 'updateCollaborator'])->name('events.collaborators.update');
+    Route::delete('events/{event}/collaborators/{collaborator}', [EventController::class, 'destroyCollaborator'])->name('events.collaborators.destroy');
 });
+Route::get('collaborator-invites/{collaborator}/accept', [EventController::class, 'acceptCollaboratorInvite'])
+    ->middleware(['signed'])
+    ->name('events.collaborators.accept');
+Route::post('collaborator-invites/{collaborator}/complete-register', [EventController::class, 'completeCollaboratorInviteRegistration'])
+    ->middleware(['signed'])
+    ->name('events.collaborators.complete-register');
+Route::post('collaborator-invites/{collaborator}/complete-login', [EventController::class, 'completeCollaboratorInviteLogin'])
+    ->middleware(['signed'])
+    ->name('events.collaborators.complete-login');
 Route::post('stripe/webhook', StripeWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('stripe.webhook');
