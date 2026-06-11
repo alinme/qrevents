@@ -3,13 +3,21 @@ import { Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
     BadgeCheck,
+    Check,
+    ChevronDown,
     CirclePlay,
-    LayoutDashboard,
+    Download,
+    Images,
+    MessageSquareText,
+    Minus,
     MonitorPlay,
+    Palette,
     QrCode,
+    ShieldCheck,
+    Smartphone,
+    Star,
 } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
-import MarketingProductPreview from '@/components/marketing/MarketingProductPreview.vue';
 import MarketingSectionHeading from '@/components/marketing/MarketingSectionHeading.vue';
 import {
     Dialog,
@@ -46,59 +54,57 @@ const guestAlbumHintStorageKey = 'qrevents-last-guest-album';
 const resumeGuestAlbum = ref<StoredGuestAlbumHint | null>(null);
 const resumeGuestAlbumOpen = ref(false);
 
-const quickProof = [
-    t('marketing.home.simple.proof.1'),
-    t('marketing.home.simple.proof.2'),
-    t('marketing.home.simple.proof.3'),
+const heroPills = [
+    t('marketing.home.hero.pill_free'),
+    t('marketing.home.hero.pill_setup'),
+    t('marketing.home.hero.no_app_title'),
 ];
 
-const walkthrough = [
-    {
-        step: t('marketing.shared.step', { number: '1' }),
-        title: t('marketing.home.simple.steps.1.title'),
-        body: t('marketing.home.simple.steps.1.body'),
-        variant: 'event-setup' as const,
-        caption: 'Plan, date, album code, wall link.',
-    },
-    {
-        step: t('marketing.shared.step', { number: '2' }),
-        title: t('marketing.home.simple.steps.2.title'),
-        body: t('marketing.home.simple.steps.2.body'),
-        variant: 'guest-flow' as const,
-        caption: 'QR or short code. No app download.',
-    },
-    {
-        step: t('marketing.shared.step', { number: '3' }),
-        title: t('marketing.home.simple.steps.3.title'),
-        body: t('marketing.home.simple.steps.3.body'),
-        variant: 'live-wall' as const,
-        caption: 'Uploads show up on the wall in seconds.',
-    },
-];
+const flowImages = [
+    '/images/album/beatriz-bg-md.jpg',
+    '/images/album/jeremy-bg-md.jpg',
+    '/images/album/nathan-bg-md.jpg',
+    '/images/album/alvin-bg-md.jpg',
+] as const;
 
-const visualExamples = [
-    {
-        icon: QrCode,
-        title: t('marketing.home.simple.examples.1.title'),
-        body: t('marketing.home.simple.examples.1.body'),
-        variant: 'album-access' as const,
-        caption: 'Short code entry on mobile.',
-    },
-    {
-        icon: MonitorPlay,
-        title: t('marketing.home.simple.examples.2.title'),
-        body: t('marketing.home.simple.examples.2.body'),
-        variant: 'live-wall' as const,
-        caption: 'TV-friendly live wall.',
-    },
-    {
-        icon: LayoutDashboard,
-        title: t('marketing.home.simple.examples.3.title'),
-        body: t('marketing.home.simple.examples.3.body'),
-        variant: 'business-dashboard' as const,
-        caption: 'Moderation and export in one dashboard.',
-    },
-];
+const walkthrough = [1, 2, 3, 4].map((step, index) => ({
+    step: t('marketing.shared.step', { number: String(step) }),
+    title: t(`marketing.home.flow.items.${step}.title`),
+    body: t(`marketing.home.flow.items.${step}.description`),
+    highlights: [1, 2, 3].map((h) =>
+        t(`marketing.home.flow.items.${step}.highlights.${h}`),
+    ),
+    image: flowImages[index],
+    imageAlt: t(`marketing.home.flow.items.${step}.image_alt`),
+}));
+
+const capabilityIcons = [
+    Images,
+    Download,
+    Smartphone,
+    QrCode,
+    MonitorPlay,
+    Palette,
+    MessageSquareText,
+    ShieldCheck,
+] as const;
+
+const capabilities = capabilityIcons.map((icon, index) => ({
+    icon,
+    title: t(`marketing.home.capabilities.items.${index + 1}.title`),
+    body: t(`marketing.home.capabilities.items.${index + 1}.description`),
+}));
+
+const comparisonRows = [1, 2, 3, 4, 5, 6].map((row) => ({
+    label: t(`marketing.home.comparison.rows.${row}.label`),
+    ours: t(`marketing.home.comparison.rows.${row}.ours`),
+    others: t(`marketing.home.comparison.rows.${row}.others`),
+}));
+
+const faqItems = [1, 2, 3, 4, 5].map((item) => ({
+    question: t(`marketing.home.faq.items.${item}.question`),
+    answer: t(`marketing.home.faq.items.${item}.answer`),
+}));
 
 const isStandalonePwa = (): boolean => {
     if (typeof window === 'undefined') {
@@ -298,246 +304,378 @@ onMounted(() => {
             </DialogContent>
         </Dialog>
 
+        <!-- Hero -->
         <section
-            class="mx-auto grid max-w-7xl gap-10 px-4 pt-10 pb-18 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:pt-16 lg:pb-24"
+            class="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-10 pb-20 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:pt-16 lg:pb-28"
         >
             <div class="max-w-2xl">
-                <p class="marketing-kicker inline-flex items-center gap-2">
-                    <BadgeCheck class="size-4" />
-                    {{ t('marketing.home.simple.hero.kicker') }}
-                </p>
-                <h1
-                    class="marketing-display mt-6 text-[3.2rem] sm:text-[4rem] lg:text-[4.8rem]"
+                <p
+                    class="inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-4 py-2 text-xs font-semibold tracking-[0.14em] text-promo-primary uppercase shadow-card"
                 >
-                    {{ t('marketing.home.simple.hero.title') }}
+                    <BadgeCheck class="size-4" />
+                    {{ t('marketing.home.hero.badge') }}
+                </p>
+
+                <h1
+                    class="mt-6 text-[2.6rem] leading-[1.04] font-bold tracking-[-0.03em] text-promo-ink sm:text-[3.4rem] lg:text-[3.9rem]"
+                >
+                    {{ t('marketing.home.hero.title') }}
                 </h1>
-                <p class="marketing-copy mt-6 max-w-xl">
-                    {{ t('marketing.home.simple.hero.description') }}
+
+                <p
+                    class="mt-6 max-w-xl text-base leading-7 text-promo-muted sm:text-lg sm:leading-8"
+                >
+                    {{ t('marketing.home.hero.description') }}
                 </p>
 
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                     <Link
                         :href="onboardingCreate({ query: { plan: 'free' } })"
-                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-7 py-4 text-base font-semibold text-white shadow-[rgba(255,56,92,0.25)_0px_12px_28px] transition hover:bg-promo-primary-strong"
                     >
                         {{ t('marketing.actions.create_event') }}
                         <ArrowRight class="size-4" />
                     </Link>
                     <a
                         href="#how-it-works"
-                        class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                        class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-7 py-4 text-base font-semibold text-promo-ink transition hover:bg-promo-surface"
                     >
-                        {{ t('marketing.home.simple.hero.secondary_cta') }}
-                        <CirclePlay class="size-4" />
+                        <CirclePlay class="size-5 text-promo-primary" />
+                        {{ t('marketing.home.hero.watch_demo') }}
                     </a>
                 </div>
 
-                <div class="mt-8 grid gap-3 sm:grid-cols-3">
-                    <div
-                        v-for="item in quickProof"
-                        :key="item"
-                        class="rounded-[1.35rem] border border-promo-line bg-white px-4 py-4 text-sm font-medium text-promo-ink shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+                <div
+                    class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-promo-muted"
+                >
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="flex text-promo-primary">
+                            <Star
+                                v-for="i in 5"
+                                :key="i"
+                                class="size-4 fill-current"
+                            />
+                        </span>
+                        {{ t('marketing.home.hero.rating') }}
+                    </span>
+                    <span
+                        v-for="pill in heroPills"
+                        :key="pill"
+                        class="inline-flex items-center gap-1.5"
                     >
-                        {{ item }}
-                    </div>
+                        <Check class="size-4 text-promo-primary" />
+                        {{ pill }}
+                    </span>
                 </div>
             </div>
 
-            <MarketingProductPreview
-                variant="hero"
-                caption="Scan. Upload. Relive together."
-                aspect-class="aspect-[5/4] lg:aspect-[4/3]"
-            />
-        </section>
-
-        <section
-            id="how-it-works"
-            class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8"
-        >
-            <MarketingSectionHeading
-                :eyebrow="t('marketing.home.simple.sections.flow.eyebrow')"
-                :title="t('marketing.home.simple.sections.flow.title')"
-                :description="
-                    t('marketing.home.simple.sections.flow.description')
-                "
-            />
-
-            <div
-                class="mt-14 divide-y divide-promo-line border-y border-promo-line"
-            >
-                <article
-                    v-for="item in walkthrough"
-                    :key="item.step"
-                    class="grid gap-8 py-8 lg:grid-cols-[0.76fr_1.24fr] lg:items-center"
+            <div class="relative mx-auto w-full max-w-xl lg:max-w-none">
+                <div
+                    class="overflow-hidden rounded-[2rem] shadow-[rgba(0,0,0,0.04)_0px_6px_16px,rgba(0,0,0,0.12)_0px_24px_48px]"
                 >
-                    <div class="max-w-md">
-                        <p class="marketing-kicker">
-                            {{ item.step }}
-                        </p>
-                        <h3
-                            class="marketing-display mt-3 text-[2rem] sm:text-[2.4rem]"
-                        >
-                            {{ item.title }}
-                        </h3>
-                        <p class="marketing-copy mt-4">
-                            {{ item.body }}
-                        </p>
-                    </div>
-
-                    <MarketingProductPreview
-                        :variant="item.variant"
-                        :caption="item.caption"
+                    <img
+                        src="/images/album/drew-bg-md.jpg"
+                        :alt="t('marketing.home.hero.gallery_main_alt')"
+                        class="aspect-[4/3] w-full object-cover"
+                        fetchpriority="high"
                     />
-                </article>
+                </div>
+
+                <div
+                    class="absolute -bottom-8 -left-4 w-44 overflow-hidden rounded-[1.4rem] border-4 border-white shadow-[rgba(0,0,0,0.18)_0px_18px_36px] sm:-left-8 sm:w-56"
+                >
+                    <img
+                        src="/images/album/sandy-bg-sm.jpg"
+                        :alt="t('marketing.home.hero.gallery_moment_alt')"
+                        class="aspect-[4/3] w-full object-cover"
+                        loading="lazy"
+                    />
+                </div>
+
+                <div
+                    class="absolute -top-5 -left-3 inline-flex items-center gap-3 rounded-[1.2rem] bg-white px-4 py-3 shadow-card sm:-left-6"
+                >
+                    <span
+                        class="flex size-10 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                    >
+                        <QrCode class="size-5" />
+                    </span>
+                    <span>
+                        <span
+                            class="block text-sm font-semibold text-promo-ink"
+                        >
+                            {{ t('marketing.home.hero.join_qr_title') }}
+                        </span>
+                        <span class="block text-xs text-promo-muted">
+                            {{ t('marketing.home.hero.join_qr_description') }}
+                        </span>
+                    </span>
+                </div>
+
+                <div
+                    class="absolute -right-3 -bottom-5 inline-flex items-center gap-3 rounded-[1.2rem] bg-white px-4 py-3 shadow-card sm:-right-5"
+                >
+                    <span
+                        class="flex size-10 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                    >
+                        <MonitorPlay class="size-5" />
+                    </span>
+                    <span>
+                        <span
+                            class="block text-sm font-semibold text-promo-ink"
+                        >
+                            {{ t('marketing.home.hero.live_wall_title') }}
+                        </span>
+                        <span class="block text-xs text-promo-muted">
+                            {{ t('marketing.home.hero.no_app_description') }}
+                        </span>
+                    </span>
+                </div>
             </div>
         </section>
 
-        <section id="proof" class="bg-white">
-            <div class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
+        <!-- How it works -->
+        <section
+            id="how-it-works"
+            class="border-y border-promo-line bg-promo-surface/60"
+        >
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <MarketingSectionHeading
-                    :eyebrow="
-                        t('marketing.home.simple.sections.examples.eyebrow')
-                    "
-                    :title="t('marketing.home.simple.sections.examples.title')"
-                    :description="
-                        t('marketing.home.simple.sections.examples.description')
-                    "
+                    :eyebrow="t('marketing.home.flow.eyebrow')"
+                    :title="t('marketing.home.flow.title')"
+                    :description="t('marketing.home.flow.description')"
                     centered
                 />
 
-                <div class="mt-14 grid gap-8 lg:grid-cols-3">
+                <div class="mt-16 space-y-16 lg:space-y-20">
                     <article
-                        v-for="item in visualExamples"
-                        :key="item.title"
-                        class="space-y-5"
+                        v-for="(item, index) in walkthrough"
+                        :key="item.step"
+                        class="grid items-center gap-8 lg:grid-cols-2 lg:gap-16"
                     >
-                        <div class="flex items-center gap-3 text-promo-ink">
-                            <component
-                                :is="item.icon"
-                                class="size-5 text-promo-primary"
-                            />
-                            <h3 class="text-lg font-semibold">
+                        <div
+                            class="max-w-xl"
+                            :class="{ 'lg:order-2': index % 2 === 1 }"
+                        >
+                            <p class="marketing-kicker">{{ item.step }}</p>
+                            <h3
+                                class="mt-3 text-2xl font-bold tracking-[-0.02em] text-promo-ink sm:text-3xl"
+                            >
                                 {{ item.title }}
                             </h3>
+                            <p
+                                class="mt-4 text-base leading-7 text-promo-muted"
+                            >
+                                {{ item.body }}
+                            </p>
+                            <ul class="mt-6 space-y-3">
+                                <li
+                                    v-for="highlight in item.highlights"
+                                    :key="highlight"
+                                    class="flex items-center gap-3 text-sm font-medium text-promo-ink"
+                                >
+                                    <span
+                                        class="flex size-6 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                                    >
+                                        <Check class="size-3.5" />
+                                    </span>
+                                    {{ highlight }}
+                                </li>
+                            </ul>
                         </div>
-                        <p class="marketing-copy">
-                            {{ item.body }}
-                        </p>
-                        <MarketingProductPreview
-                            :variant="item.variant"
-                            :caption="item.caption"
-                            aspect-class="aspect-[4/3]"
-                        />
+
+                        <div :class="{ 'lg:order-1': index % 2 === 1 }">
+                            <div
+                                class="overflow-hidden rounded-[1.5rem] shadow-card"
+                            >
+                                <img
+                                    :src="item.image"
+                                    :alt="item.imageAlt"
+                                    class="aspect-[16/10] w-full object-cover transition duration-500 hover:scale-[1.02]"
+                                    loading="lazy"
+                                />
+                            </div>
+                        </div>
                     </article>
                 </div>
             </div>
         </section>
 
+        <!-- Capabilities -->
         <section
             id="services"
-            class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8"
+            class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"
         >
             <MarketingSectionHeading
-                :eyebrow="t('marketing.home.simple.sections.updates.eyebrow')"
-                :title="t('marketing.home.simple.sections.updates.title')"
-                :description="
-                    t('marketing.home.simple.sections.updates.description')
-                "
+                :eyebrow="t('marketing.home.capabilities.eyebrow')"
+                :title="t('marketing.home.capabilities.title')"
+                :description="t('marketing.home.capabilities.description')"
+                centered
             />
 
-            <div
-                class="mt-14 grid gap-8 lg:grid-cols-[0.84fr_1.16fr] lg:items-center"
-            >
-                <div class="space-y-4">
-                    <div
-                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
+            <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <article
+                    v-for="capability in capabilities"
+                    :key="capability.title"
+                    class="rounded-[1.25rem] bg-white p-6 shadow-card transition hover:shadow-card-hover"
+                >
+                    <span
+                        class="flex size-11 items-center justify-center rounded-full bg-promo-primary/10 text-promo-primary"
                     >
-                        <h3 class="text-lg font-semibold text-promo-ink">
-                            {{ t('marketing.home.simple.updates.1.title') }}
-                        </h3>
-                        <p class="marketing-copy mt-2">
-                            {{
-                                t('marketing.home.simple.updates.1.description')
-                            }}
-                        </p>
-                    </div>
-                    <div
-                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
-                    >
-                        <h3 class="text-lg font-semibold text-promo-ink">
-                            {{ t('marketing.home.simple.updates.2.title') }}
-                        </h3>
-                        <p class="marketing-copy mt-2">
-                            {{
-                                t('marketing.home.simple.updates.2.description')
-                            }}
-                        </p>
-                    </div>
-                    <div
-                        class="rounded-[1.35rem] border border-promo-line bg-white px-5 py-5 shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px]"
-                    >
-                        <h3 class="text-lg font-semibold text-promo-ink">
-                            {{ t('marketing.home.simple.updates.3.title') }}
-                        </h3>
-                        <p class="marketing-copy mt-2">
-                            {{
-                                t('marketing.home.simple.updates.3.description')
-                            }}
-                        </p>
-                    </div>
-                </div>
-
-                <MarketingProductPreview
-                    variant="story-collage"
-                    caption="Album code, guest post, live wall."
-                    aspect-class="aspect-[5/4]"
-                />
+                        <component :is="capability.icon" class="size-5" />
+                    </span>
+                    <h3 class="mt-4 text-base font-semibold text-promo-ink">
+                        {{ capability.title }}
+                    </h3>
+                    <p class="mt-2 text-sm leading-6 text-promo-muted">
+                        {{ capability.body }}
+                    </p>
+                </article>
             </div>
         </section>
 
-        <section id="cta" class="mx-auto max-w-7xl px-4 py-18 sm:px-6 lg:px-8">
-            <div
-                class="grid gap-8 border-y border-promo-line py-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center"
-            >
-                <div class="max-w-xl">
-                    <p class="marketing-kicker">
-                        {{ t('marketing.home.simple.sections.cta.eyebrow') }}
+        <!-- Comparison -->
+        <section
+            id="proof"
+            class="border-y border-promo-line bg-promo-surface/60"
+        >
+            <div class="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
+                <MarketingSectionHeading
+                    :eyebrow="t('marketing.home.comparison.eyebrow')"
+                    :title="t('marketing.home.comparison.title')"
+                    :description="t('marketing.home.comparison.description')"
+                    centered
+                />
+
+                <div
+                    class="mt-14 overflow-hidden rounded-[1.5rem] bg-white shadow-card"
+                >
+                    <div
+                        class="hidden grid-cols-[1fr_1.2fr_1.2fr] gap-4 border-b border-promo-line px-6 py-4 text-xs font-semibold tracking-[0.14em] uppercase sm:grid"
+                    >
+                        <span class="text-promo-muted">&nbsp;</span>
+                        <span class="text-promo-primary">
+                            {{ t('marketing.shared.our_product') }}
+                        </span>
+                        <span class="text-promo-muted">
+                            {{ t('marketing.shared.other_apps') }}
+                        </span>
+                    </div>
+
+                    <div
+                        v-for="(row, index) in comparisonRows"
+                        :key="row.label"
+                        class="grid gap-3 px-6 py-5 sm:grid-cols-[1fr_1.2fr_1.2fr] sm:gap-4"
+                        :class="{
+                            'border-t border-promo-line': index > 0,
+                        }"
+                    >
+                        <div class="text-sm font-semibold text-promo-ink">
+                            {{ row.label }}
+                        </div>
+                        <div
+                            class="flex items-start gap-2 text-sm text-promo-ink"
+                        >
+                            <span
+                                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-promo-primary/12 text-promo-primary"
+                            >
+                                <Check class="size-3" />
+                            </span>
+                            {{ row.ours }}
+                        </div>
+                        <div
+                            class="flex items-start gap-2 text-sm text-promo-muted"
+                        >
+                            <span
+                                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-promo-surface-strong text-promo-muted"
+                            >
+                                <Minus class="size-3" />
+                            </span>
+                            {{ row.others }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+            <MarketingSectionHeading
+                :eyebrow="t('marketing.home.faq.eyebrow')"
+                :title="t('marketing.home.faq.title')"
+                :description="t('marketing.home.faq.description')"
+                centered
+            />
+
+            <div class="mt-12 space-y-3">
+                <details
+                    v-for="item in faqItems"
+                    :key="item.question"
+                    class="group rounded-[1.25rem] bg-white shadow-card"
+                >
+                    <summary
+                        class="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-base font-semibold text-promo-ink [&::-webkit-details-marker]:hidden"
+                    >
+                        {{ item.question }}
+                        <ChevronDown
+                            class="size-5 shrink-0 text-promo-muted transition group-open:rotate-180"
+                        />
+                    </summary>
+                    <p class="px-6 pb-6 text-sm leading-7 text-promo-muted">
+                        {{ item.answer }}
+                    </p>
+                </details>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section id="cta" class="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
+            <div class="relative overflow-hidden rounded-[2rem]">
+                <img
+                    src="/images/album/nathan-bg-md.jpg"
+                    :alt="t('marketing.home.hero.gallery_moment_alt')"
+                    class="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                />
+                <div
+                    class="absolute inset-0 bg-[linear-gradient(100deg,rgba(20,12,8,0.82)_0%,rgba(20,12,8,0.55)_55%,rgba(20,12,8,0.25)_100%)]"
+                />
+
+                <div
+                    class="relative px-7 py-16 sm:px-12 sm:py-20 lg:px-16 lg:py-24"
+                >
+                    <p
+                        class="text-xs font-semibold tracking-[0.2em] text-white/80 uppercase"
+                    >
+                        {{ t('marketing.home.cta.eyebrow') }}
                     </p>
                     <h2
-                        class="marketing-display mt-3 text-[2.5rem] sm:text-[3rem]"
+                        class="mt-4 max-w-2xl text-3xl leading-tight font-bold tracking-[-0.02em] text-white sm:text-4xl lg:text-[2.75rem]"
                     >
-                        {{ t('marketing.home.simple.sections.cta.title') }}
+                        {{ t('marketing.home.cta.title') }}
                     </h2>
-                    <p class="marketing-copy mt-4">
-                        {{
-                            t('marketing.home.simple.sections.cta.description')
-                        }}
+                    <p class="mt-5 max-w-xl text-base leading-7 text-white/85">
+                        {{ t('marketing.home.cta.description') }}
                     </p>
 
-                    <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+                    <div class="mt-9 flex flex-col gap-3 sm:flex-row">
                         <Link
                             :href="
                                 onboardingCreate({ query: { plan: 'free' } })
                             "
-                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-6 py-4 text-sm font-semibold text-white transition hover:bg-promo-primary-strong"
+                            class="inline-flex items-center justify-center gap-2 rounded-full bg-promo-primary px-7 py-4 text-base font-semibold text-white transition hover:bg-promo-primary-strong"
                         >
                             {{ t('marketing.actions.create_event') }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             href="/album"
-                            class="inline-flex items-center justify-center gap-2 rounded-full border border-promo-line bg-white px-6 py-4 text-sm font-semibold text-promo-ink transition hover:bg-promo-surface"
+                            class="inline-flex items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 px-7 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20"
                         >
                             {{ t('marketing.footer.album_access') }}
                         </Link>
                     </div>
                 </div>
-
-                <MarketingProductPreview
-                    variant="story-collage"
-                    caption="Everything guests need, at a glance."
-                    aspect-class="aspect-[16/10]"
-                />
             </div>
         </section>
     </MarketingLayout>
