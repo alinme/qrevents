@@ -6391,7 +6391,7 @@ const onAlbumTouchCancel = (): void => {
                                         "
                                         placeholder=""
                                         rows="7"
-                                        class="max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pt-[30%] pb-10 text-center text-[3.65rem] leading-[1.08] font-semibold outline-none sm:text-[4.4rem]"
+                                        class="text-wish-composer max-h-full min-h-56 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pt-[30%] pb-10 text-center leading-tight font-semibold outline-none"
                                         :class="[
                                             !canUploadText ||
                                             textForm.processing
@@ -7616,10 +7616,17 @@ const onAlbumTouchCancel = (): void => {
 }
 
 :deep(input),
-:deep(textarea),
+:deep(textarea:not(.text-wish-composer)),
 :deep(select),
 [contenteditable='true'] {
     font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Keep the typed wish exactly as large as the canvas placeholder.
+   Stays >= 16px, so iOS still won't zoom on focus. */
+:deep(.text-wish-composer) {
+    font-size: clamp(2rem, 8.5vw, 2.45rem);
     -webkit-text-size-adjust: 100%;
 }
 
