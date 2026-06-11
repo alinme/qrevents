@@ -53,7 +53,6 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'summary' => $data['summary'],
             'continueSetupEvent' => $data['continueSetupEvent'],
-            'accountNavigation' => $data['accountNavigation'],
             'dashboardLinks' => $data['dashboardLinks'],
             'ownedEvents' => $data['ownedEvents'],
             'collaboratorEvents' => $data['collaboratorEvents'],
@@ -162,16 +161,6 @@ class DashboardController extends Controller
                     $assetStats[$continueSetupEvent->id] ?? $defaultStats,
                 )
                 : null,
-            'accountNavigation' => [
-                [
-                    'title' => __('app.nav.events'),
-                    'href' => $accountOverviewUrl,
-                ],
-                [
-                    'title' => __('app.nav.create_event'),
-                    'href' => route('onboarding.create', ['restart' => 1]),
-                ],
-            ],
             'dashboardLinks' => [
                 'overview' => $accountOverviewUrl,
                 'ownedEvents' => $accountOverviewUrl.'#events',

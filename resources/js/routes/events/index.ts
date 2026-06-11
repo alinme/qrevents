@@ -11,7 +11,7 @@ import wall86584a from './wall'
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-export const show = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -26,7 +26,7 @@ show.definition = {
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-show.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -59,7 +59,7 @@ show.url = (args: { event: number | { id: number } } | [event: number | { id: nu
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-show.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -69,7 +69,7 @@ show.get = (args: { event: number | { id: number } } | [event: number | { id: nu
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-show.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -79,7 +79,7 @@ show.head = (args: { event: number | { id: number } } | [event: number | { id: n
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-const showForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const showForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -89,7 +89,7 @@ const showForm = (args: { event: number | { id: number } } | [event: number | { 
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-showForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -99,7 +99,7 @@ showForm.get = (args: { event: number | { id: number } } | [event: number | { id
 * @see app/Http/Controllers/EventController.php:100
 * @route '/events/{event}'
 */
-showForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -116,7 +116,7 @@ show.form = showForm
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-export const printPack = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const printPack = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: printPack.url(args, options),
     method: 'get',
 })
@@ -131,7 +131,7 @@ printPack.definition = {
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-printPack.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+printPack.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -164,7 +164,7 @@ printPack.url = (args: { event: number | { id: number } } | [event: number | { i
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-printPack.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+printPack.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: printPack.url(args, options),
     method: 'get',
 })
@@ -174,7 +174,7 @@ printPack.get = (args: { event: number | { id: number } } | [event: number | { i
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-printPack.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+printPack.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: printPack.url(args, options),
     method: 'head',
 })
@@ -184,7 +184,7 @@ printPack.head = (args: { event: number | { id: number } } | [event: number | { 
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-const printPackForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const printPackForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: printPack.url(args, options),
     method: 'get',
 })
@@ -194,7 +194,7 @@ const printPackForm = (args: { event: number | { id: number } } | [event: number
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-printPackForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+printPackForm.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: printPack.url(args, options),
     method: 'get',
 })
@@ -204,7 +204,7 @@ printPackForm.get = (args: { event: number | { id: number } } | [event: number |
 * @see app/Http/Controllers/EventController.php:133
 * @route '/events/{event}/print-pack'
 */
-printPackForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+printPackForm.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: printPack.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -221,7 +221,7 @@ printPack.form = printPackForm
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-export const media = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const media = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: media.url(args, options),
     method: 'get',
 })
@@ -236,7 +236,7 @@ media.definition = {
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-media.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+media.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -269,7 +269,7 @@ media.url = (args: { event: number | { id: number } } | [event: number | { id: n
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-media.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+media.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: media.url(args, options),
     method: 'get',
 })
@@ -279,7 +279,7 @@ media.get = (args: { event: number | { id: number } } | [event: number | { id: n
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-media.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+media.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: media.url(args, options),
     method: 'head',
 })
@@ -289,7 +289,7 @@ media.head = (args: { event: number | { id: number } } | [event: number | { id: 
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-const mediaForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const mediaForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: media.url(args, options),
     method: 'get',
 })
@@ -299,7 +299,7 @@ const mediaForm = (args: { event: number | { id: number } } | [event: number | {
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-mediaForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+mediaForm.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: media.url(args, options),
     method: 'get',
 })
@@ -309,7 +309,7 @@ mediaForm.get = (args: { event: number | { id: number } } | [event: number | { i
 * @see app/Http/Controllers/EventController.php:111
 * @route '/events/{event}/media'
 */
-mediaForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+mediaForm.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: media.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -326,7 +326,7 @@ media.form = mediaForm
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-export const settings = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const settings = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: settings.url(args, options),
     method: 'get',
 })
@@ -341,7 +341,7 @@ settings.definition = {
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-settings.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+settings.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -374,7 +374,7 @@ settings.url = (args: { event: number | { id: number } } | [event: number | { id
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-settings.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+settings.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: settings.url(args, options),
     method: 'get',
 })
@@ -384,7 +384,7 @@ settings.get = (args: { event: number | { id: number } } | [event: number | { id
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-settings.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+settings.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: settings.url(args, options),
     method: 'head',
 })
@@ -394,7 +394,7 @@ settings.head = (args: { event: number | { id: number } } | [event: number | { i
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-const settingsForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const settingsForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: settings.url(args, options),
     method: 'get',
 })
@@ -404,7 +404,7 @@ const settingsForm = (args: { event: number | { id: number } } | [event: number 
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-settingsForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+settingsForm.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: settings.url(args, options),
     method: 'get',
 })
@@ -414,7 +414,7 @@ settingsForm.get = (args: { event: number | { id: number } } | [event: number | 
 * @see app/Http/Controllers/EventController.php:860
 * @route '/events/{event}/settings'
 */
-settingsForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+settingsForm.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: settings.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

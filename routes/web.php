@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventOnboardingController;
@@ -35,6 +36,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/events', [DashboardController::class, 'ownedEvents'])->name('dashboard.events');
     Route::get('dashboard/activity', [DashboardController::class, 'recentActivity'])->name('dashboard.activity');
+
+    Route::get('admin', [AdminController::class, 'index'])->name('admin.overview');
+    Route::get('admin/events', [AdminController::class, 'events'])->name('admin.events');
+    Route::get('admin/plans', [AdminController::class, 'plans'])->name('admin.plans');
+    Route::post('admin/plans', [AdminController::class, 'storePlan'])->name('admin.plans.store');
+    Route::patch('admin/plans/{plan}', [AdminController::class, 'updatePlan'])->name('admin.plans.update');
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('events/{event}/print-pack', [EventController::class, 'printPack'])->name('events.print-pack');

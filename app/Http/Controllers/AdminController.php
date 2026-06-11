@@ -2,52 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RunEventCleanupRequest;
-use App\Http\Requests\UpdateEventCleanupReviewRequest;
 use App\Http\Requests\UpsertPlanRequest;
 use App\Models\Event;
 use App\Models\EventAsset;
 use App\Models\Plan;
 use App\Models\User;
-use App\Support\EventDataPurger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminController extends Controller
 {
-    public function __construct(private readonly EventDataPurger $eventDataPurger) {}
-
     public function index(Request $request): Response
     {
         $this->assertSuperAdmin($request);
 
         return Inertia::render('admin/Overview', [
+            ...$this->sharedPageProps(),
             'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
-            'recentUsers' => $this->usersList(limit: 8),
-            'recentEvents' => $this->eventRows(limit: 8),
-            'billingQueue' => $this->billingAttentionRows(limit: 8),
-        ]);
-    }
-
-    public function users(Request $request): Response
-    {
-        $this->assertSuperAdmin($request);
-
-        return Inertia::render('admin/Users', [
-            'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
-            'users' => $this->usersList(),
+            'recentEvents' => $this->eventRows(
+                Event::query()
+                    ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
+                    ->withCount('assets')
+                    ->latest('id')
+                    ->limit(8)
+                    ->get(),
+            ),
         ]);
     }
 
@@ -55,28 +38,39 @@ class AdminController extends Controller
     {
         $this->assertSuperAdmin($request);
 
+        $search = trim((string) $request->string('search'));
+
+        $events = Event::query()
+            ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
+            ->withCount('assets')
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search): void {
+                            $userQuery
+                                ->where('email', 'like', "%{$search}%")
+                                ->orWhere('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
         return Inertia::render('admin/Events', [
-            'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
-            'events' => $this->eventRows(),
-        ]);
-    }
-
-    public function billing(Request $request): Response
-    {
-        $this->assertSuperAdmin($request);
-
-        return Inertia::render('admin/Billing', [
-            'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
-            'attentionEvents' => $this->billingAttentionRows(),
-            'recentPayments' => $this->recentPaymentRows(),
+            ...$this->sharedPageProps(),
+            'events' => $this->eventRows($events->getCollection()),
+            'pagination' => [
+                'currentPage' => $events->currentPage(),
+                'lastPage' => $events->lastPage(),
+                'total' => $events->total(),
+                'prevPageUrl' => $events->previousPageUrl(),
+                'nextPageUrl' => $events->nextPageUrl(),
+            ],
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
@@ -85,54 +79,10 @@ class AdminController extends Controller
         $this->assertSuperAdmin($request);
 
         return Inertia::render('admin/Plans', [
-            'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
+            ...$this->sharedPageProps(),
             'plans' => $this->planRows(),
+            'planStoreUrl' => route('admin.plans.store'),
         ]);
-    }
-
-    public function cleanup(Request $request): Response
-    {
-        $this->assertSuperAdmin($request);
-
-        return Inertia::render('admin/Cleanup', [
-            'summary' => $this->summary(),
-            'adminNavigation' => $this->adminNavigation(),
-            'adminLinks' => $this->adminLinks(),
-            'backNavigation' => $this->dashboardBackNavigation($request),
-            'sidebarLabel' => 'Admin',
-            'cleanupEvents' => $this->cleanupRows(),
-        ]);
-    }
-
-    public function cleanupEvent(RunEventCleanupRequest $request, Event $event): RedirectResponse
-    {
-        $action = (string) $request->string('action');
-
-        return match ($action) {
-            'clear_export' => $this->handleClearExportCleanup($event),
-            'purge_media' => $this->handlePurgeMediaCleanup($event),
-            default => back()->with('error', 'Unknown cleanup action.'),
-        };
-    }
-
-    public function updateCleanupReview(UpdateEventCleanupReviewRequest $request, Event $event): RedirectResponse
-    {
-        $reviewState = (string) $request->string('review_state');
-
-        $event->forceFill([
-            'cleanup_review_state' => $reviewState === 'clear' ? null : $reviewState,
-            'cleanup_reviewed_at' => $reviewState === 'clear' ? null : now(),
-        ])->save();
-
-        return back()->with('success', match ($reviewState) {
-            'approved' => 'Cleanup approved for this event.',
-            'protected' => 'Cleanup protection enabled for this event.',
-            default => 'Cleanup review cleared for this event.',
-        });
     }
 
     public function storePlan(UpsertPlanRequest $request): RedirectResponse
@@ -167,191 +117,80 @@ class AdminController extends Controller
     }
 
     /**
-     * @return array<string, int>
+     * @return array<string, mixed>
+     */
+    private function sharedPageProps(): array
+    {
+        return [
+            'adminNavigation' => [
+                [
+                    'title' => __('app.nav.overview'),
+                    'href' => route('admin.overview'),
+                ],
+                [
+                    'title' => __('app.nav.events'),
+                    'href' => route('admin.events'),
+                ],
+                [
+                    'title' => __('app.nav.plans'),
+                    'href' => route('admin.plans'),
+                ],
+            ],
+            'backNavigation' => [
+                'title' => __('app.nav.dashboard'),
+                'href' => route('dashboard'),
+            ],
+            'sidebarLabel' => 'Admin',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
      */
     private function summary(): array
     {
-        $totalAllocatedStorageBytes = (int) (Event::query()->sum('storage_limit_bytes') ?? 0);
-        $totalUsedStorageBytes = (int) (Event::query()->sum('storage_used_bytes') ?? 0);
+        $statusCounts = Event::query()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $storageUsedBytes = (int) (Event::query()->sum('storage_used_bytes') ?? 0);
 
         return [
             'totalUsers' => User::query()->count(),
-            'businessCount' => User::query()->whereHas('events')->count(),
             'totalEvents' => Event::query()->count(),
-            'totalPlans' => Plan::query()->count(),
-            'activePlanCount' => Plan::query()->where('is_active', true)->count(),
-            'defaultPlanCount' => Plan::query()->where('is_default', true)->count(),
             'totalUploads' => EventAsset::query()->count(),
-            'pendingModerationCount' => EventAsset::query()->where('moderation_status', 'processing')->count(),
-            'unpaidEventCount' => Event::query()->where('is_paid', false)->count(),
-            'overdueEventCount' => Event::query()
-                ->where('is_paid', false)
-                ->whereNotNull('payment_due_at')
-                ->where('payment_due_at', '<', now())
-                ->where('status', '!=', Event::STATUS_LOCKED)
-                ->count(),
-            'lockedEventCount' => Event::query()->where('status', Event::STATUS_LOCKED)->count(),
-            'cleanupPendingReviewCount' => Event::query()
-                ->where(function ($query): void {
-                    $query
-                        ->where('status', Event::STATUS_LOCKED)
-                        ->orWhere('status', Event::STATUS_EXPIRED);
-                })
-                ->whereNull('cleanup_review_state')
-                ->count(),
-            'cleanupApprovedCount' => Event::query()->where('cleanup_review_state', 'approved')->count(),
-            'cleanupProtectedCount' => Event::query()->where('cleanup_review_state', 'protected')->count(),
-            'cleanupCompletedCount' => Event::query()->where('cleanup_review_state', 'completed')->count(),
-            'totalAllocatedStorageBytes' => $totalAllocatedStorageBytes,
-            'totalUsedStorageBytes' => $totalUsedStorageBytes,
-            'totalFreeStorageBytes' => max(0, $totalAllocatedStorageBytes - $totalUsedStorageBytes),
-            'storageCleanupCandidateCount' => Event::query()
-                ->whereIn('status', [Event::STATUS_LOCKED, Event::STATUS_EXPIRED])
-                ->where('storage_used_bytes', '>', 0)
-                ->count(),
+            'storageUsedBytes' => $storageUsedBytes,
+            'storageUsedLabel' => $this->humanBytes($storageUsedBytes),
+            'eventsByStatus' => collect([
+                Event::STATUS_DRAFT => ['Draft', 'amber'],
+                Event::STATUS_SCHEDULED => ['Scheduled', 'violet'],
+                Event::STATUS_LIVE => ['Live', 'emerald'],
+                Event::STATUS_GRACE => ['Grace', 'sky'],
+                Event::STATUS_LOCKED => ['Locked', 'rose'],
+                Event::STATUS_EXPIRED => ['Expired', 'zinc'],
+            ])
+                ->map(fn (array $meta, string $status): array => [
+                    'status' => $status,
+                    'label' => $meta[0],
+                    'tone' => $meta[1],
+                    'count' => (int) ($statusCounts[$status] ?? 0),
+                ])
+                ->values()
+                ->all(),
         ];
     }
 
     /**
-     * @return list<array{title: string, href: string}>
-     */
-    private function adminNavigation(): array
-    {
-        return [
-            [
-                'title' => 'Overview',
-                'href' => route('admin.overview'),
-            ],
-            [
-                'title' => 'Users',
-                'href' => route('admin.users'),
-            ],
-            [
-                'title' => 'Events',
-                'href' => route('admin.events'),
-            ],
-            [
-                'title' => 'Plans',
-                'href' => route('admin.plans'),
-            ],
-            [
-                'title' => 'Billing',
-                'href' => route('admin.billing'),
-            ],
-            [
-                'title' => 'Cleanup',
-                'href' => route('admin.cleanup'),
-            ],
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function adminLinks(): array
-    {
-        return [
-            'overview' => route('admin.overview'),
-            'users' => route('admin.users'),
-            'events' => route('admin.events'),
-            'plans' => route('admin.plans'),
-            'plansStore' => route('admin.plans.store'),
-            'billing' => route('admin.billing'),
-            'cleanup' => route('admin.cleanup'),
-            'dashboard' => route('dashboard'),
-        ];
-    }
-
-    /**
-     * @return array{title: string, href: string}
-     */
-    private function dashboardBackNavigation(Request $request): array
-    {
-        $user = $request->user();
-
-        if (
-            $user !== null
-            && $user->canAccessAdmin()
-        ) {
-            return [
-                'title' => 'Dashboard',
-                'href' => route('dashboard'),
-            ];
-        }
-
-        return [
-            'title' => 'Dashboard',
-            'href' => route('dashboard'),
-        ];
-    }
-
-    /**
+     * @param  Collection<int, Event>  $events
      * @return list<array<string, mixed>>
      */
-    private function usersList(int $limit = 48): array
+    private function eventRows($events): array
     {
-        return User::query()
-            ->withCount([
-                'events',
-                'events as unpaid_events_count' => fn ($query) => $query->where('is_paid', false),
-                'events as locked_events_count' => fn ($query) => $query->where('status', Event::STATUS_LOCKED),
-            ])
-            ->withSum('events as total_storage_limit_bytes', 'storage_limit_bytes')
-            ->withSum('events as total_storage_used_bytes', 'storage_used_bytes')
-            ->with([
-                'events' => fn ($query) => $query
-                    ->select(['id', 'user_id', 'name', 'plan_id', 'created_at'])
-                    ->with('plan:id,name')
-                    ->latest('id')
-                    ->limit(1),
-            ])
-            ->latest('id')
-            ->limit($limit)
-            ->get()
-            ->map(function (User $user): array {
-                $latestEvent = $user->events->first();
-                $storageQuota = $this->storageQuotaMeta(
-                    (int) ($user->total_storage_limit_bytes ?? 0),
-                    (int) ($user->total_storage_used_bytes ?? 0),
-                );
-
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'isSuperAdmin' => $user->canAccessAdmin(),
-                    'eventCount' => (int) ($user->events_count ?? 0),
-                    'unpaidEventCount' => (int) ($user->unpaid_events_count ?? 0),
-                    'lockedEventCount' => (int) ($user->locked_events_count ?? 0),
-                    'latestEventName' => $latestEvent?->name,
-                    'latestEventPlan' => $latestEvent?->plan?->name,
-                    'latestEventUrl' => $latestEvent !== null ? route('events.show', $latestEvent) : null,
-                    'createdAt' => $user->created_at?->toIso8601String(),
-                    'storage' => $storageQuota,
-                ];
-            })
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function eventRows(int $limit = 48): array
-    {
-        return Event::query()
-            ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
-            ->withCount(['assets', 'guests'])
-            ->latest('id')
-            ->limit($limit)
-            ->get()
+        return $events
             ->map(function (Event $event): array {
                 [$statusLabel, $statusTone] = $this->eventStatusMeta($event);
                 [$billingLabel, $billingTone] = $this->billingMeta($event);
-                $storageQuota = $this->storageQuotaMeta(
-                    (int) $event->storage_limit_bytes,
-                    (int) $event->storage_used_bytes,
-                );
 
                 return [
                     'id' => $event->id,
@@ -364,112 +203,10 @@ class AdminController extends Controller
                     'statusTone' => $statusTone,
                     'billingLabel' => $billingLabel,
                     'billingTone' => $billingTone,
-                    'eventDate' => $event->event_date?->toDateString(),
+                    'isPaid' => (bool) $event->is_paid,
+                    'assetCount' => (int) ($event->assets_count ?? 0),
                     'createdAt' => $event->created_at?->toIso8601String(),
-                    'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
-                    'paidAt' => $event->paid_at?->toIso8601String(),
-                    'guestCount' => (int) ($event->guests_count ?? 0),
-                    'assetCount' => (int) ($event->assets_count ?? 0),
-                    'isPaid' => $event->is_paid,
-                    'storage' => $storageQuota,
-                    'billingNote' => $event->billing_note,
                     'links' => [
-                        'event' => route('events.show', $event),
-                        'media' => route('events.media', $event),
-                        'settings' => route('events.settings', $event),
-                    ],
-                ];
-            })
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function billingAttentionRows(int $limit = 24): array
-    {
-        return Event::query()
-            ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
-            ->withCount('assets')
-            ->where(function ($query): void {
-                $query
-                    ->where('status', Event::STATUS_LOCKED)
-                    ->orWhere('status', Event::STATUS_EXPIRED)
-                    ->orWhere('is_paid', false);
-            })
-            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [Event::STATUS_LOCKED])
-            ->orderBy('payment_due_at')
-            ->latest('id')
-            ->limit($limit)
-            ->get()
-            ->map(function (Event $event): array {
-                [$queueLabel, $queueTone] = $this->billingQueueMeta($event);
-                $storageQuota = $this->storageQuotaMeta(
-                    (int) $event->storage_limit_bytes,
-                    (int) $event->storage_used_bytes,
-                );
-                $cleanupPolicy = $this->cleanupPolicyMeta($event, $storageQuota);
-
-                return [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'ownerName' => $event->user?->name ?? 'Unknown owner',
-                    'ownerEmail' => $event->user?->email ?? 'Unknown owner',
-                    'planName' => $event->plan?->name ?? 'Custom plan',
-                    'planPriceLabel' => $this->planPriceLabel($event->plan),
-                    'queueLabel' => $queueLabel,
-                    'queueTone' => $queueTone,
-                    'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
-                    'paidAt' => $event->paid_at?->toIso8601String(),
-                    'status' => $event->status,
-                    'assetCount' => (int) ($event->assets_count ?? 0),
-                    'hasExportArchive' => $this->eventHasStoredExportArchive($event),
-                    'canPurgeMedia' => $cleanupPolicy['canRunCleanup'],
-                    'billingNote' => $event->billing_note,
-                    'storage' => $storageQuota,
-                    'cleanup' => $cleanupPolicy,
-                    'links' => [
-                        'event' => route('events.show', $event),
-                        'settings' => route('events.settings', $event),
-                        'cleanup' => route('admin.events.cleanup', $event),
-                        'cleanupReview' => route('admin.events.cleanup-review', $event),
-                    ],
-                ];
-            })
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function recentPaymentRows(int $limit = 24): array
-    {
-        return Event::query()
-            ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
-            ->whereNotNull('paid_at')
-            ->latest('paid_at')
-            ->limit($limit)
-            ->get()
-            ->map(function (Event $event): array {
-                $storageQuota = $this->storageQuotaMeta(
-                    (int) $event->storage_limit_bytes,
-                    (int) $event->storage_used_bytes,
-                );
-
-                return [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'ownerName' => $event->user?->name ?? 'Unknown owner',
-                    'ownerEmail' => $event->user?->email ?? 'Unknown owner',
-                    'planName' => $event->plan?->name ?? 'Custom plan',
-                    'planPriceLabel' => $this->planPriceLabel($event->plan),
-                    'paidAt' => $event->paid_at?->toIso8601String(),
-                    'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
-                    'storage' => $storageQuota,
-                    'links' => [
-                        'event' => route('events.show', $event),
                         'settings' => route('events.settings', $event),
                     ],
                 ];
@@ -490,95 +227,34 @@ class AdminController extends Controller
             ->orderBy('currency')
             ->orderBy('price_cents')
             ->get()
-            ->map(function (Plan $plan): array {
-                return [
-                    'id' => $plan->id,
-                    'name' => $plan->name,
-                    'slug' => $plan->slug,
-                    'description' => $plan->description,
-                    'currency' => $plan->currency,
-                    'priceCents' => (int) $plan->price_cents,
-                    'priceLabel' => $this->planPriceLabel($plan),
-                    'storageLimitBytes' => (int) $plan->storage_limit_bytes,
-                    'storageLimitLabel' => $this->humanBytes((int) $plan->storage_limit_bytes),
-                    'uploadLimit' => (int) $plan->upload_limit,
-                    'retentionDays' => (int) $plan->retention_days,
-                    'graceDays' => (int) $plan->grace_days,
-                    'uploadWindowDays' => (int) $plan->upload_window_days,
-                    'customizationTier' => (string) $plan->customization_tier,
-                    'downloadAllEnabled' => (bool) $plan->download_all_enabled,
-                    'moderationToolsEnabled' => (bool) $plan->moderation_tools_enabled,
-                    'removeAppBranding' => (bool) $plan->remove_app_branding,
-                    'videoMaxDurationSeconds' => (int) $plan->video_max_duration_seconds,
-                    'photoMaxSizeBytes' => (int) $plan->photo_max_size_bytes,
-                    'videoMaxSizeBytes' => (int) $plan->video_max_size_bytes,
-                    'isActive' => $plan->is_active,
-                    'isDefault' => $plan->is_default,
-                    'eventCount' => (int) ($plan->events_count ?? 0),
-                    'createdAt' => $plan->created_at?->toIso8601String(),
-                    'updatedAt' => $plan->updated_at?->toIso8601String(),
-                    'links' => [
-                        'update' => route('admin.plans.update', $plan),
-                    ],
-                ];
-            })
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function cleanupRows(int $limit = 64): array
-    {
-        return Event::query()
-            ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
-            ->withCount('assets')
-            ->where(function ($query): void {
-                $query
-                    ->whereIn('status', [Event::STATUS_LOCKED, Event::STATUS_EXPIRED])
-                    ->orWhereNotNull('cleanup_review_state');
-            })
-            ->latest('cleanup_reviewed_at')
-            ->latest('id')
-            ->limit($limit)
-            ->get()
-            ->map(function (Event $event): array {
-                [$queueLabel, $queueTone] = $this->billingQueueMeta($event);
-                $storageQuota = $this->storageQuotaMeta(
-                    (int) $event->storage_limit_bytes,
-                    (int) $event->storage_used_bytes,
-                );
-                $cleanupPolicy = $this->cleanupPolicyMeta($event, $storageQuota);
-
-                return [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'ownerName' => $event->user?->name ?? 'Unknown owner',
-                    'ownerEmail' => $event->user?->email ?? 'Unknown owner',
-                    'planName' => $event->plan?->name ?? 'Custom plan',
-                    'planPriceLabel' => $this->planPriceLabel($event->plan),
-                    'queueLabel' => $queueLabel,
-                    'queueTone' => $queueTone,
-                    'paymentDueAt' => $event->payment_due_at?->toIso8601String(),
-                    'paidAt' => $event->paid_at?->toIso8601String(),
-                    'status' => $event->status,
-                    'reviewStateRaw' => $event->cleanup_review_state,
-                    'reviewedAt' => $event->cleanup_reviewed_at?->toIso8601String(),
-                    'assetCount' => (int) ($event->assets_count ?? 0),
-                    'hasExportArchive' => $this->eventHasStoredExportArchive($event),
-                    'canPurgeMedia' => $cleanupPolicy['canRunCleanup'],
-                    'billingNote' => $event->billing_note,
-                    'storage' => $storageQuota,
-                    'cleanup' => $cleanupPolicy,
-                    'links' => [
-                        'event' => route('events.show', $event),
-                        'settings' => route('events.settings', $event),
-                        'cleanup' => route('admin.events.cleanup', $event),
-                        'cleanupReview' => route('admin.events.cleanup-review', $event),
-                    ],
-                ];
-            })
+            ->map(fn (Plan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+                'description' => $plan->description,
+                'currency' => $plan->currency,
+                'priceCents' => (int) $plan->price_cents,
+                'priceLabel' => $this->planPriceLabel($plan),
+                'storageLimitGb' => (int) round($plan->storage_limit_bytes / 1073741824),
+                'storageLimitLabel' => $this->humanBytes((int) $plan->storage_limit_bytes),
+                'uploadLimit' => (int) $plan->upload_limit,
+                'retentionDays' => (int) $plan->retention_days,
+                'graceDays' => (int) $plan->grace_days,
+                'uploadWindowDays' => (int) $plan->upload_window_days,
+                'customizationTier' => (string) $plan->customization_tier,
+                'videoMaxDurationSeconds' => (int) $plan->video_max_duration_seconds,
+                'photoMaxSizeMb' => (int) round($plan->photo_max_size_bytes / 1048576),
+                'videoMaxSizeMb' => (int) round($plan->video_max_size_bytes / 1048576),
+                'downloadAllEnabled' => (bool) $plan->download_all_enabled,
+                'moderationToolsEnabled' => (bool) $plan->moderation_tools_enabled,
+                'removeAppBranding' => (bool) $plan->remove_app_branding,
+                'isActive' => (bool) $plan->is_active,
+                'isDefault' => (bool) $plan->is_default,
+                'eventCount' => (int) ($plan->events_count ?? 0),
+                'links' => [
+                    'update' => route('admin.plans.update', $plan),
+                ],
+            ])
             ->values()
             ->all();
     }
@@ -621,30 +297,6 @@ class AdminController extends Controller
         }
 
         return ['Payment due soon', 'amber'];
-    }
-
-    /**
-     * @return array{0: string, 1: string}
-     */
-    private function billingQueueMeta(Event $event): array
-    {
-        if ($event->status === Event::STATUS_LOCKED) {
-            return ['Locked', 'rose'];
-        }
-
-        if ($event->status === Event::STATUS_EXPIRED) {
-            return ['Expired', 'zinc'];
-        }
-
-        if ($event->is_paid) {
-            return ['Paid', 'emerald'];
-        }
-
-        if ($event->payment_due_at?->isPast()) {
-            return ['Overdue', 'rose'];
-        }
-
-        return ['Awaiting payment', 'amber'];
     }
 
     private function planPriceLabel(?Plan $plan): string
@@ -705,159 +357,6 @@ class AdminController extends Controller
         }
     }
 
-    private function handleClearExportCleanup(Event $event): RedirectResponse
-    {
-        $cleared = $this->eventDataPurger->clearEventExportArchive($event);
-
-        return back()->with(
-            $cleared ? 'success' : 'info',
-            $cleared ? 'Stored export archive cleared.' : 'No stored export archive was found for this event.',
-        );
-    }
-
-    private function handlePurgeMediaCleanup(Event $event): RedirectResponse
-    {
-        $cleanupPolicy = $this->cleanupPolicyMeta(
-            $event,
-            $this->storageQuotaMeta((int) $event->storage_limit_bytes, (int) $event->storage_used_bytes),
-        );
-
-        if (! $cleanupPolicy['canRunCleanup']) {
-            throw ValidationException::withMessages([
-                'action' => 'Media purge is only available after cleanup review is approved for locked or expired events.',
-            ]);
-        }
-
-        $result = $this->eventDataPurger->purgeEventMedia($event);
-
-        if ($result['deletedAssetCount'] === 0 && ! $result['clearedExport']) {
-            return back()->with('info', 'This event had no stored media or export archive to purge.');
-        }
-
-        $message = "{$result['deletedAssetCount']} media item(s) purged";
-        if ($result['reclaimedStorageBytes'] > 0) {
-            $message .= " and {$this->humanBytes($result['reclaimedStorageBytes'])} reclaimed";
-        }
-        if ($result['clearedExport']) {
-            $message .= '. Export archive cleared too.';
-        } else {
-            $message .= '.';
-        }
-
-        return back()->with('success', $message);
-    }
-
-    private function canPurgeEventMedia(Event $event): bool
-    {
-        return in_array($event->status, [Event::STATUS_LOCKED, Event::STATUS_EXPIRED], true);
-    }
-
-    private function eventHasStoredExportArchive(Event $event): bool
-    {
-        return is_string($event->media_export_disk)
-            && $event->media_export_disk !== ''
-            && is_string($event->media_export_path)
-            && $event->media_export_path !== '';
-    }
-
-    /**
-     * @param  array{
-     *   limitBytes: int,
-     *   usedBytes: int,
-     *   freeBytes: int,
-     *   usagePercent: int,
-     *   isNearLimit: bool,
-     *   isOverLimit: bool
-     * }  $storageQuota
-     * @return array{
-     *   stateCode: string,
-     *   stateLabel: string,
-     *   stateTone: string,
-     *   hint: string,
-     *   candidateAt: string|null,
-     *   canRunCleanup: bool
-     * }
-     */
-    private function cleanupPolicyMeta(Event $event, array $storageQuota): array
-    {
-        $referenceAt = match ($event->status) {
-            Event::STATUS_LOCKED => $event->payment_due_at ?? $event->grace_ends_at ?? $event->hard_lock_at,
-            Event::STATUS_EXPIRED => $event->retention_ends_at,
-            default => null,
-        };
-
-        $thresholdDays = $event->status === Event::STATUS_EXPIRED
-            ? (int) config('events.cleanup_policy.expired_candidate_after_days', 7)
-            : (int) config('events.cleanup_policy.locked_candidate_after_days', 14);
-        $candidateAt = $referenceAt?->copy()->addDays(max(0, $thresholdDays));
-        $needsCleanup = $storageQuota['usedBytes'] > 0 || $this->eventHasStoredExportArchive($event);
-        $isDue = $candidateAt !== null && now($event->timezone ?: config('events.default_timezone', 'UTC'))->gte($candidateAt);
-
-        if ($event->cleanup_review_state === 'completed') {
-            return [
-                'stateCode' => 'completed',
-                'stateLabel' => 'Completed',
-                'stateTone' => 'emerald',
-                'hint' => 'Cleanup already ran for this event.',
-                'candidateAt' => $candidateAt?->toIso8601String(),
-                'canRunCleanup' => false,
-            ];
-        }
-
-        if ($event->cleanup_review_state === 'protected') {
-            return [
-                'stateCode' => 'protected',
-                'stateLabel' => 'Protected',
-                'stateTone' => 'sky',
-                'hint' => 'Cleanup is intentionally blocked until you clear protection.',
-                'candidateAt' => $candidateAt?->toIso8601String(),
-                'canRunCleanup' => false,
-            ];
-        }
-
-        if (! $this->canPurgeEventMedia($event) || ! $needsCleanup) {
-            return [
-                'stateCode' => 'not_due',
-                'stateLabel' => 'Not due',
-                'stateTone' => 'zinc',
-                'hint' => 'Cleanup only applies to locked or expired events that still occupy storage.',
-                'candidateAt' => $candidateAt?->toIso8601String(),
-                'canRunCleanup' => false,
-            ];
-        }
-
-        if (! $isDue) {
-            return [
-                'stateCode' => 'cooldown',
-                'stateLabel' => 'Cooldown',
-                'stateTone' => 'zinc',
-                'hint' => 'This event is not old enough to become a cleanup candidate yet.',
-                'candidateAt' => $candidateAt?->toIso8601String(),
-                'canRunCleanup' => false,
-            ];
-        }
-
-        if ($event->cleanup_review_state === 'approved') {
-            return [
-                'stateCode' => 'approved',
-                'stateLabel' => 'Approved',
-                'stateTone' => 'emerald',
-                'hint' => 'Cleanup has been approved and purge can run safely.',
-                'candidateAt' => $candidateAt?->toIso8601String(),
-                'canRunCleanup' => true,
-            ];
-        }
-
-        return [
-            'stateCode' => 'review',
-            'stateLabel' => 'Needs review',
-            'stateTone' => 'amber',
-            'hint' => 'Review and explicitly approve this event before destructive cleanup runs.',
-            'candidateAt' => $candidateAt?->toIso8601String(),
-            'canRunCleanup' => false,
-        ];
-    }
-
     private function humanBytes(int $bytes): string
     {
         if ($bytes <= 0) {
@@ -869,32 +368,5 @@ class AdminController extends Controller
         $value = $bytes / (1024 ** $power);
 
         return sprintf('%s %s', $value >= 10 || $power === 0 ? number_format($value, 0) : number_format($value, 1), $units[$power]);
-    }
-
-    /**
-     * @return array{
-     *   limitBytes: int,
-     *   usedBytes: int,
-     *   freeBytes: int,
-     *   usagePercent: int,
-     *   isNearLimit: bool,
-     *   isOverLimit: bool
-     * }
-     */
-    private function storageQuotaMeta(int $limitBytes, int $usedBytes): array
-    {
-        $safeLimit = max(0, $limitBytes);
-        $safeUsed = max(0, $usedBytes);
-        $freeBytes = max(0, $safeLimit - $safeUsed);
-        $usagePercent = $safeLimit > 0 ? (int) round(($safeUsed / $safeLimit) * 100) : 0;
-
-        return [
-            'limitBytes' => $safeLimit,
-            'usedBytes' => $safeUsed,
-            'freeBytes' => $freeBytes,
-            'usagePercent' => max(0, $usagePercent),
-            'isNearLimit' => $safeLimit > 0 && $safeUsed >= (int) floor($safeLimit * 0.8),
-            'isOverLimit' => $safeLimit > 0 && $safeUsed > $safeLimit,
-        ];
     }
 }

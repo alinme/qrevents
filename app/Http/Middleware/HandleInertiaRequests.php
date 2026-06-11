@@ -79,7 +79,7 @@ class HandleInertiaRequests extends Middleware
             return [];
         }
 
-        return [
+        $navigation = [
             [
                 'title' => __('app.nav.events'),
                 'href' => route('dashboard'),
@@ -89,6 +89,15 @@ class HandleInertiaRequests extends Middleware
                 'href' => route('onboarding.create', ['restart' => 1]),
             ],
         ];
+
+        if ($user->canAccessAdmin()) {
+            $navigation[] = [
+                'title' => __('app.nav.admin'),
+                'href' => route('admin.overview'),
+            ];
+        }
+
+        return $navigation;
     }
 
     private function sharedSidebarLabel(Request $request): ?string
