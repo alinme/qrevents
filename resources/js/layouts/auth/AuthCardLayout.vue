@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import {
     Card,
     CardContent,
@@ -25,9 +24,13 @@ defineProps<{
                 :href="home()"
                 class="flex items-center gap-2 self-center font-medium"
             >
-                <div class="flex h-9 w-9 items-center justify-center">
-                    <AppLogoIcon class="size-9 fill-current text-promo-ink" />
-                </div>
+                <img
+                    src="/logo.png?v=20260329-6"
+                    alt="EventSmart"
+                    width="154"
+                    height="45"
+                    class="h-9 w-auto object-contain"
+                />
             </Link>
 
             <div class="flex flex-col gap-6">

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { home } from '@/routes';
 
 const page = usePage();
@@ -24,12 +23,13 @@ defineProps<{
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"
             >
-                <span
-                    class="mr-2 flex size-10 items-center justify-center rounded-2xl bg-white/96 shadow-sm"
-                >
-                    <AppLogoIcon class="size-8" />
-                </span>
-                {{ name }}
+                <img
+                    src="/logo.png?v=20260329-6"
+                    :alt="String(name ?? 'EventSmart')"
+                    width="154"
+                    height="45"
+                    class="h-9 w-auto object-contain"
+                />
             </Link>
         </div>
         <div class="lg:p-8">

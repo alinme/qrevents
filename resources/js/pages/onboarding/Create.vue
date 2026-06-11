@@ -15,6 +15,7 @@ import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import { home, logout } from '@/routes';
 
 type EventTypeOption = {
@@ -31,6 +32,8 @@ const props = defineProps<{
     submitUrl: string;
 }>();
 
+const { t } = useTranslations();
+
 const currentStep = ref(1);
 const totalSteps = 3;
 
@@ -45,14 +48,17 @@ const form = useForm({
 });
 
 const steps = [
-    { number: 1, label: 'Occasion' },
-    { number: 2, label: 'Name' },
-    { number: 3, label: 'Date' },
+    { number: 1, label: t('onboarding.steps.occasion') },
+    { number: 2, label: t('onboarding.steps.name') },
+    { number: 3, label: t('onboarding.steps.date') },
 ];
 
-const selectedType = computed(() =>
-    props.eventTypes.find((option) => option.value === form.type),
-);
+const stepIndicator = (current: number): string =>
+    t('onboarding.steps.indicator', {
+        current: String(current),
+        total: String(totalSteps),
+    });
+
 const isWeddingType = computed(() => form.type === 'wedding');
 
 const titleCaseWords = (value: string): string =>
@@ -80,37 +86,32 @@ const weddingTitleSuggestions = computed(() => {
         return [] as string[];
     }
 
+    const replacements = {
+        one: partnerOne,
+        two: partnerTwo,
+        family: familyName,
+    };
+
     return Array.from(
         new Set(
             [
                 `${partnerOne} & ${partnerTwo}`,
-                familyName !== '' ? `The ${familyName} Wedding` : '',
-                `${partnerOne} & ${partnerTwo} Wedding Day`,
                 familyName !== ''
-                    ? `${partnerOne} & ${partnerTwo} ${familyName} Wedding`
+                    ? t('onboarding.suggestions.family_wedding', replacements)
                     : '',
-                `Celebrating ${partnerOne} & ${partnerTwo}`,
+                t('onboarding.suggestions.wedding_day', replacements),
+                familyName !== ''
+                    ? t('onboarding.suggestions.full_wedding', replacements)
+                    : '',
+                t('onboarding.suggestions.celebrating', replacements),
             ].filter((title) => title !== ''),
         ),
     ).slice(0, 4);
 });
 
-const namePlaceholder = computed(() => {
-    switch (form.type) {
-        case 'wedding':
-            return 'Ana & Luca Wedding';
-        case 'birthday':
-            return "Maria's 30th Birthday";
-        case 'engagement':
-            return 'Ana & Luca Engagement Party';
-        case 'baptism':
-            return "Little Sofia's Baptism";
-        case 'party':
-            return 'Summer Rooftop Party';
-        default:
-            return 'Our Celebration';
-    }
-});
+const namePlaceholder = computed(() =>
+    t(`onboarding.placeholders.${form.type || 'other'}`),
+);
 
 const minEventDate = new Date().toISOString().slice(0, 10);
 
@@ -159,7 +160,7 @@ const submit = (): void => {
 </script>
 
 <template>
-    <Head title="Create your album" />
+    <Head :title="t('onboarding.create.head_title')" />
 
     <div class="flex min-h-screen flex-col bg-white text-promo-ink">
         <header class="border-b border-promo-line">
@@ -190,7 +191,7 @@ const submit = (): void => {
                         class="inline-flex items-center gap-2 rounded-full border border-promo-line bg-white px-4 py-2 text-sm font-medium text-promo-ink transition hover:bg-promo-surface"
                     >
                         <LogOut class="size-4" />
-                        Log out
+                        {{ t('onboarding.layout.log_out') }}
                     </Link>
                 </div>
             </div>
@@ -239,15 +240,15 @@ const submit = (): void => {
                 <div class="text-center">
                     <p class="marketing-kicker inline-flex items-center gap-2">
                         <PartyPopper class="size-4" />
-                        Step 1 of 3
+                        {{ stepIndicator(1) }}
                     </p>
                     <h1
                         class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                     >
-                        What are you celebrating?
+                        {{ t('onboarding.create.occasion_title') }}
                     </h1>
                     <p class="mt-3 text-base text-promo-muted">
-                        We'll tailor the album around your occasion.
+                        {{ t('onboarding.create.occasion_description') }}
                     </p>
                 </div>
 
@@ -274,7 +275,7 @@ const submit = (): void => {
                         </div>
                         <div class="px-4 py-3">
                             <span class="text-sm font-semibold text-promo-ink">
-                                {{ option.label }}
+                                {{ t(`onboarding.types.${option.value}`) }}
                             </span>
                         </div>
                     </button>
@@ -287,20 +288,15 @@ const submit = (): void => {
                 <div class="text-center">
                     <p class="marketing-kicker inline-flex items-center gap-2">
                         <Sparkles class="size-4" />
-                        Step 2 of 3
+                        {{ stepIndicator(2) }}
                     </p>
                     <h1
                         class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                     >
-                        Name your album
+                        {{ t('onboarding.create.name_title') }}
                     </h1>
                     <p class="mt-3 text-base text-promo-muted">
-                        This is the title guests see when they join
-                        {{
-                            selectedType
-                                ? `your ${selectedType.label.toLowerCase()}`
-                                : 'your event'
-                        }}.
+                        {{ t('onboarding.create.name_description') }}
                     </p>
                 </div>
 
@@ -309,25 +305,31 @@ const submit = (): void => {
                     class="mt-8 rounded-[1.25rem] bg-promo-surface/70 p-5"
                 >
                     <p class="text-sm font-medium text-promo-ink">
-                        Want title ideas? Add your names
+                        {{ t('onboarding.create.ideas_title') }}
                         <span class="font-normal text-promo-muted">
-                            (optional)
+                            {{ t('onboarding.create.ideas_optional') }}
                         </span>
                     </p>
                     <div class="mt-3 grid gap-3 sm:grid-cols-3">
                         <Input
                             v-model="form.wedding_partner_one_first_name"
-                            placeholder="First name"
+                            :placeholder="
+                                t('onboarding.create.first_name_placeholder')
+                            "
                             autocomplete="off"
                         />
                         <Input
                             v-model="form.wedding_partner_two_first_name"
-                            placeholder="First name"
+                            :placeholder="
+                                t('onboarding.create.first_name_placeholder')
+                            "
                             autocomplete="off"
                         />
                         <Input
                             v-model="form.wedding_family_name"
-                            placeholder="Family name"
+                            :placeholder="
+                                t('onboarding.create.family_name_placeholder')
+                            "
                             autocomplete="off"
                         />
                     </div>
@@ -353,7 +355,9 @@ const submit = (): void => {
                 </div>
 
                 <div class="mt-8 grid gap-2">
-                    <Label for="event-name">Album name</Label>
+                    <Label for="event-name">
+                        {{ t('onboarding.create.name_label') }}
+                    </Label>
                     <Input
                         id="event-name"
                         v-model="form.name"
@@ -373,7 +377,7 @@ const submit = (): void => {
                         @click="goBack"
                     >
                         <ArrowLeft class="size-4" />
-                        Back
+                        {{ t('onboarding.create.back') }}
                     </button>
                     <button
                         type="button"
@@ -381,7 +385,7 @@ const submit = (): void => {
                         :disabled="!stepTwoValid"
                         @click="continueToDate"
                     >
-                        Continue
+                        {{ t('onboarding.create.continue') }}
                         <ArrowRight class="size-4" />
                     </button>
                 </div>
@@ -392,21 +396,22 @@ const submit = (): void => {
                 <div class="text-center">
                     <p class="marketing-kicker inline-flex items-center gap-2">
                         <CalendarDays class="size-4" />
-                        Step 3 of 3
+                        {{ stepIndicator(3) }}
                     </p>
                     <h1
                         class="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                     >
-                        When is the big day?
+                        {{ t('onboarding.create.date_title') }}
                     </h1>
                     <p class="mt-3 text-base text-promo-muted">
-                        Uploads open around your date. You can fine-tune
-                        everything later in settings.
+                        {{ t('onboarding.create.date_description') }}
                     </p>
                 </div>
 
                 <div class="mt-8 grid gap-2">
-                    <Label for="event-date">Event date</Label>
+                    <Label for="event-date">
+                        {{ t('onboarding.create.date_label') }}
+                    </Label>
                     <Input
                         id="event-date"
                         v-model="form.event_date"
@@ -427,11 +432,9 @@ const submit = (): void => {
                     </span>
                     <p class="text-sm leading-6 text-promo-muted">
                         <span class="font-semibold text-promo-ink">
-                            Free to start — no card needed.
+                            {{ t('onboarding.create.free_title') }}
                         </span>
-                        Your album begins on the free plan. You can upgrade
-                        anytime from your dashboard for more uploads, longer
-                        retention, and one-click export.
+                        {{ t('onboarding.create.free_body') }}
                     </p>
                 </div>
 
@@ -442,7 +445,7 @@ const submit = (): void => {
                         @click="goBack"
                     >
                         <ArrowLeft class="size-4" />
-                        Back
+                        {{ t('onboarding.create.back') }}
                     </button>
                     <button
                         type="button"
@@ -451,7 +454,7 @@ const submit = (): void => {
                         @click="submit"
                     >
                         <Spinner v-if="form.processing" />
-                        Create my free album
+                        {{ t('onboarding.create.submit') }}
                         <ArrowRight v-if="!form.processing" class="size-4" />
                     </button>
                 </div>

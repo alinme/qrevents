@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight, Download, ExternalLink, Images } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/composables/useTranslations';
 
 defineProps<{
     eventName: string;
@@ -17,24 +18,34 @@ defineProps<{
     businessMode?: boolean;
     dashboardUrl?: string | null;
 }>();
+
+const { t } = useTranslations();
 </script>
 
 <template>
-    <Head title="Add your first photos" />
+    <Head :title="t('onboarding.photos.head_title')" />
 
-    <div class="min-h-screen bg-brand-canvas px-4 py-10 text-brand-ink md:px-6 md:py-14">
-        <div class="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-2xl items-center justify-center">
+    <div
+        class="min-h-screen bg-brand-canvas px-4 py-10 text-brand-ink md:px-6 md:py-14"
+    >
+        <div
+            class="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-2xl items-center justify-center"
+        >
             <div class="w-full text-center">
-                <span class="dashboard-chip">Album setup</span>
+                <span class="dashboard-chip">{{
+                    t('onboarding.photos.badge')
+                }}</span>
 
-                <h1 class="mt-5 text-3xl font-semibold tracking-tight text-brand-ink sm:text-[2.3rem]">
-                    Let&apos;s add your first photos
+                <h1
+                    class="mt-5 text-3xl font-semibold tracking-tight text-brand-ink sm:text-[2.3rem]"
+                >
+                    {{ t('onboarding.photos.title') }}
                 </h1>
 
-                <p class="mx-auto mt-3 max-w-xl text-base leading-7 text-brand-muted">
-                    Scan the QR code for
-                    <span class="font-semibold text-brand-ink">{{ eventName }}</span>
-                    and start uploading.
+                <p
+                    class="mx-auto mt-3 max-w-xl text-base leading-7 text-brand-muted"
+                >
+                    {{ t('onboarding.photos.description', { eventName }) }}
                 </p>
 
                 <div class="mt-8 flex justify-center">
@@ -46,20 +57,30 @@ defineProps<{
                 </div>
 
                 <div class="mt-5 space-y-2 text-center">
-                    <p class="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-brand-muted">
-                        Album code
+                    <p
+                        class="text-[0.72rem] font-semibold tracking-[0.22em] text-brand-muted uppercase"
+                    >
+                        {{ t('onboarding.photos.album_code') }}
                     </p>
-                    <p class="text-3xl font-semibold tracking-[0.32em] text-brand-ink">
+                    <p
+                        class="text-3xl font-semibold tracking-[0.32em] text-brand-ink"
+                    >
                         {{ albumAccessCode }}
                     </p>
-                    <p class="mx-auto max-w-md text-sm leading-6 text-brand-muted">
-                        No QR reader? Visit {{ albumAccessShortcutUrl }} and enter this code.
+                    <p
+                        class="mx-auto max-w-md text-sm leading-6 text-brand-muted"
+                    >
+                        {{
+                            t('onboarding.photos.no_qr', {
+                                url: albumAccessShortcutUrl,
+                            })
+                        }}
                     </p>
                     <p
                         v-if="albumShortUrl || wallShortUrl"
                         class="mx-auto max-w-md text-sm leading-6 text-brand-muted"
                     >
-                        Short links:
+                        {{ t('onboarding.photos.short_links') }}
                         <span v-if="albumShortUrl">{{ albumShortUrl }}</span>
                         <span v-if="albumShortUrl && wallShortUrl"> · </span>
                         <span v-if="wallShortUrl">{{ wallShortUrl }}</span>
@@ -67,7 +88,10 @@ defineProps<{
                 </div>
 
                 <div class="mx-auto mt-8 flex max-w-md flex-col gap-3">
-                    <Button as-child class="justify-between rounded-full bg-brand-accent text-white hover:bg-brand-accent/90">
+                    <Button
+                        as-child
+                        class="justify-between rounded-full bg-brand-accent text-white hover:bg-brand-accent/90"
+                    >
                         <a
                             :href="albumUrl"
                             target="_blank"
@@ -75,13 +99,17 @@ defineProps<{
                         >
                             <span class="inline-flex items-center gap-2">
                                 <ExternalLink class="size-4" />
-                                Open digital album
+                                {{ t('onboarding.photos.open_album') }}
                             </span>
                             <ArrowRight class="size-4" />
                         </a>
                     </Button>
 
-                    <Button as-child variant="outline" class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20">
+                    <Button
+                        as-child
+                        variant="outline"
+                        class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20"
+                    >
                         <a
                             :href="wallUrl"
                             target="_blank"
@@ -89,32 +117,42 @@ defineProps<{
                         >
                             <span class="inline-flex items-center gap-2">
                                 <Images class="size-4" />
-                                Open photo wall
+                                {{ t('onboarding.photos.open_wall') }}
                             </span>
                             <ArrowRight class="size-4" />
                         </a>
                     </Button>
 
-                    <Button as-child variant="outline" class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20">
+                    <Button
+                        as-child
+                        variant="outline"
+                        class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20"
+                    >
                         <a
                             :href="qrCodeDataUrl"
                             download="digital-album-qr.svg"
                         >
                             <span class="inline-flex items-center gap-2">
                                 <Download class="size-4" />
-                                Download QR code
+                                {{ t('onboarding.photos.download_qr') }}
                             </span>
                             <ArrowRight class="size-4" />
                         </a>
                     </Button>
 
-                    <Button as-child variant="outline" class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20">
+                    <Button
+                        as-child
+                        variant="outline"
+                        class="justify-between rounded-full border-brand-border bg-brand-panel text-brand-ink hover:bg-brand-highlight/20"
+                    >
                         <a
                             :href="albumAccessEntryUrl"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            <span>Open code entry page</span>
+                            <span>{{
+                                t('onboarding.photos.open_code_entry')
+                            }}</span>
                             <ArrowRight class="size-4" />
                         </a>
                     </Button>
@@ -126,7 +164,7 @@ defineProps<{
                         class="rounded-full text-brand-muted hover:text-brand-ink"
                     >
                         <Link :href="dashboardUrl">
-                            {{ businessMode ? 'Go to business dashboard' : 'Go to dashboard' }}
+                            {{ t('onboarding.photos.go_dashboard') }}
                         </Link>
                     </Button>
 
@@ -136,7 +174,9 @@ defineProps<{
                         variant="ghost"
                         class="rounded-full text-brand-muted hover:text-brand-ink"
                     >
-                        <Link :href="readyUrl">Go to dashboard</Link>
+                        <Link :href="readyUrl">{{
+                            t('onboarding.photos.go_dashboard')
+                        }}</Link>
                     </Button>
                 </div>
             </div>

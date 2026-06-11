@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Camera, MonitorPlay, QrCode, Sparkles } from 'lucide-vue-next';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { computed } from 'vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { home } from '@/routes';
+
+const brandAssetVersion = '20260329-6';
+const { t } = useTranslations();
 
 const props = withDefaults(
     defineProps<{
@@ -13,8 +17,12 @@ const props = withDefaults(
     }>(),
     {
         contentWidth: 'default',
-        headingEyebrow: 'Account access',
+        headingEyebrow: undefined,
     },
+);
+
+const eyebrow = computed(
+    () => props.headingEyebrow ?? t('auth.layout.account_access'),
 );
 </script>
 
@@ -38,27 +46,14 @@ const props = withDefaults(
         <div
             class="mx-auto flex min-h-svh w-full max-w-6xl flex-col gap-8 px-6 py-6 lg:gap-10 lg:px-8 lg:py-8"
         >
-            <Link
-                :href="home()"
-                class="inline-flex items-center gap-3 self-start"
-            >
-                <div
-                    class="flex size-12 items-center justify-center rounded-[18px] bg-linear-to-br from-promo-primary to-promo-primary-strong text-white shadow-[0_12px_28px_rgba(255,56,92,0.22)]"
-                >
-                    <AppLogoIcon class="size-8 fill-current" />
-                </div>
-                <div>
-                    <div
-                        class="text-[0.68rem] font-semibold tracking-[0.24em] text-promo-primary uppercase"
-                    >
-                        EventSmart
-                    </div>
-                    <div
-                        class="text-xl font-extrabold tracking-[-0.04em] text-promo-ink"
-                    >
-                        Friendly event sharing
-                    </div>
-                </div>
+            <Link :href="home()" class="inline-flex items-center self-start">
+                <img
+                    :src="`/logo.png?v=${brandAssetVersion}`"
+                    alt="EventSmart"
+                    width="154"
+                    height="45"
+                    class="h-9 w-[9.625rem] max-w-none object-contain object-left sm:h-10 sm:w-[10.75rem]"
+                />
             </Link>
 
             <div
@@ -71,19 +66,17 @@ const props = withDefaults(
                                 class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[0.65rem] font-semibold tracking-[0.22em] text-promo-primary uppercase shadow-[0_10px_24px_rgba(0,0,0,0.04)]"
                             >
                                 <Sparkles class="size-3.5" />
-                                Event access
+                                {{ t('auth.layout.badge') }}
                             </p>
                             <h2
                                 class="max-w-md text-3xl leading-tight font-extrabold tracking-[-0.05em] text-promo-ink md:text-[2.5rem]"
                             >
-                                Run your event album from one calm place.
+                                {{ t('auth.layout.title') }}
                             </h2>
                             <p
                                 class="max-w-md text-sm leading-7 text-promo-muted md:text-[0.95rem]"
                             >
-                                Sign in to manage albums, share your QR code,
-                                review uploads, and collect every memory without
-                                extra apps or messy setup.
+                                {{ t('auth.layout.description') }}
                             </p>
                         </div>
 
@@ -93,7 +86,7 @@ const props = withDefaults(
                             >
                                 <img
                                     src="/images/album/jeremy-bg-md.jpg"
-                                    alt="Guests sharing event photos in a digital album"
+                                    :alt="t('auth.layout.photo_alt')"
                                     class="aspect-[16/11] w-full object-cover"
                                     loading="lazy"
                                 />
@@ -111,12 +104,12 @@ const props = withDefaults(
                                     <span
                                         class="block text-sm font-semibold text-promo-ink"
                                     >
-                                        Guests join instantly
+                                        {{ t('auth.layout.chip_join_title') }}
                                     </span>
                                     <span
                                         class="block text-xs text-promo-muted"
                                     >
-                                        Scan and upload in seconds
+                                        {{ t('auth.layout.chip_join_body') }}
                                     </span>
                                 </span>
                             </div>
@@ -132,7 +125,7 @@ const props = withDefaults(
                                 <span
                                     class="block text-sm font-semibold text-promo-ink"
                                 >
-                                    Live slideshow ready
+                                    {{ t('auth.layout.chip_wall') }}
                                 </span>
                             </div>
                         </div>
@@ -144,15 +137,15 @@ const props = withDefaults(
                                 <MonitorPlay
                                     class="size-4 text-promo-primary"
                                 />
-                                Live walls
+                                {{ t('auth.layout.feature_walls') }}
                             </div>
                             <div class="inline-flex items-center gap-2">
                                 <QrCode class="size-4 text-promo-primary" />
-                                QR sharing
+                                {{ t('auth.layout.feature_qr') }}
                             </div>
                             <div class="inline-flex items-center gap-2">
                                 <Camera class="size-4 text-promo-primary" />
-                                Easy downloads
+                                {{ t('auth.layout.feature_downloads') }}
                             </div>
                         </div>
                     </slot>
@@ -173,7 +166,7 @@ const props = withDefaults(
                             <p
                                 class="text-xs font-semibold tracking-[0.22em] text-promo-primary uppercase"
                             >
-                                {{ props.headingEyebrow }}
+                                {{ eyebrow }}
                             </p>
                             <h1
                                 class="text-3xl font-extrabold tracking-[-0.05em] text-promo-ink md:text-[2.25rem]"
