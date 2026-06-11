@@ -4,7 +4,7 @@ use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('profile page is displayed', function () {
-    $user = User::factory()->business()->create();
+    $user = User::factory()->create();
 
     $this
         ->actingAs($user)
@@ -14,8 +14,7 @@ test('profile page is displayed', function () {
             ->component('settings/Profile')
             ->where('sidebarLabel', 'Account')
             ->where('accountNavigation.0.title', 'Events')
-            ->where('accountNavigation.1.title', 'Business')
-            ->where('businessNavigation.0.title', 'Business')
+            ->where('businessNavigation', [])
         );
 });
 

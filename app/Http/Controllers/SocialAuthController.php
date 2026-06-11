@@ -170,8 +170,8 @@ class SocialAuthController extends Controller
     private function pullSocialAuthRedirectRoute(Request $request): string
     {
         return match ($request->session()->pull('social_auth_screen')) {
-            self::SCREEN_REGISTER => 'register',
-            self::SCREEN_REGISTER_BUSINESS => 'register.business',
+            self::SCREEN_REGISTER,
+            self::SCREEN_REGISTER_BUSINESS => 'register',
             default => 'login',
         };
     }
