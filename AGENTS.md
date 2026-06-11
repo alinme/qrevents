@@ -41,13 +41,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 - `fortify-development` — Laravel Fortify headless authentication backend development. Activate when implementing authentication features including login, registration, password reset, email verification, two-factor authentication (2FA/TOTP), profile updates, headless auth, authentication scaffolding, or auth guards in Laravel applications.
 
-## Global Tooling
-
-- If `gstack` skills are available in the current Codex session, prefer the matching `gstack-*` skill for browser-heavy investigation, QA, release, review, or planning work.
-- Prefer `gstack-browse` for supported web browsing and browser automation tasks when it is available and the task benefits from it.
-- Do not block on `gstack`. If the skills are unavailable in the current session, continue with the built-in tools and the repo-local skills already defined here.
-- Higher-priority system and developer instructions still win if they conflict with a `gstack` workflow.
-
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
@@ -155,6 +148,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 ## PHPDoc Blocks
 
 - Add useful array shape type definitions when appropriate.
+
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
+- You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
 
 === tests rules ===
 
@@ -299,27 +299,5 @@ Vue components must have a single root element.
 - Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
 - IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
 - IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
-
-=== qrevents deployment ===
-
-# Production deploy (eventsmart.app)
-
-After code changes on `main`, the agent should deploy end-to-end unless the user opts out. Default deploy path is GitHub Actions via `.github/workflows/deploy.yml`. SSH alias: `eventsmart` (see `~/.ssh/config`). App directory on server: `/home/eventsmart/htdocs/eventsmart.app`.
-
-1. **Local:** `git push origin main` (after the minimum relevant local tests and Pint pass, when applicable).
-2. **GitHub Actions default:** verify the `deploy` workflow completed successfully, then verify the live site and deployed commit before claiming success.
-3. **Manual fallback only if needed:** `ssh eventsmart`, `cd /home/eventsmart/htdocs/eventsmart.app`, preserve unrelated generated drift, `git pull origin main`, then run only the needed steps:
-   - Composer install only when Composer dependencies changed.
-   - npm install/ci only when Node dependencies changed.
-   - frontend build only when frontend files changed.
-   - migrations only when migration files changed.
-   - `optimize:clear` + config/route/view cache for backend changes.
-4. **Queues:** `php artisan queue:restart` then `pm2 restart qrevents-queue` only for queue-related changes.
-
-GitHub Actions notes:
-- Deploy secrets and SSH deploy key are already configured in the GitHub repo.
-- `tests` and `linter` are manual-only and should not be part of normal production deploys unless the user explicitly asks.
-
-Full command list and health checks: `DEPLOY_CHECKLIST.md`. Scheduler should already be configured on the server; verify with `php artisan schedule:list` when needed.
 
 </laravel-boost-guidelines>
