@@ -395,7 +395,7 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
                         <div class="mt-6 flex items-center gap-3">
                             <a
-                                href="#faq"
+                                :href="`${homeUrl}#faq`"
                                 class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
                                 <CircleHelp class="size-4" />
