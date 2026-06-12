@@ -60,7 +60,7 @@ store.form = storeForm
 * @see app/Http/Controllers/AdminController.php:102
 * @route '/admin/plans/{plan}'
 */
-export const update = (args: { plan: string | number | { id: string | number } } | [plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const update = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -75,7 +75,7 @@ update.definition = {
 * @see app/Http/Controllers/AdminController.php:102
 * @route '/admin/plans/{plan}'
 */
-update.url = (args: { plan: string | number | { id: string | number } } | [plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { plan: args }
     }
@@ -108,7 +108,7 @@ update.url = (args: { plan: string | number | { id: string | number } } | [plan:
 * @see app/Http/Controllers/AdminController.php:102
 * @route '/admin/plans/{plan}'
 */
-update.patch = (args: { plan: string | number | { id: string | number } } | [plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -118,7 +118,7 @@ update.patch = (args: { plan: string | number | { id: string | number } } | [pla
 * @see app/Http/Controllers/AdminController.php:102
 * @route '/admin/plans/{plan}'
 */
-const updateForm = (args: { plan: string | number | { id: string | number } } | [plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -133,7 +133,7 @@ const updateForm = (args: { plan: string | number | { id: string | number } } | 
 * @see app/Http/Controllers/AdminController.php:102
 * @route '/admin/plans/{plan}'
 */
-updateForm.patch = (args: { plan: string | number | { id: string | number } } | [plan: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.patch = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',

@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/EventController.php:705
 * @route '/events/{event}/exports/media'
 */
-export const start = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const start = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: start.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ start.definition = {
 * @see app/Http/Controllers/EventController.php:705
 * @route '/events/{event}/exports/media'
 */
-start.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+start.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -52,7 +52,7 @@ start.url = (args: { event: string | number | { id: string | number } } | [event
 * @see app/Http/Controllers/EventController.php:705
 * @route '/events/{event}/exports/media'
 */
-start.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+start.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: start.url(args, options),
     method: 'post',
 })
@@ -62,7 +62,7 @@ start.post = (args: { event: string | number | { id: string | number } } | [even
 * @see app/Http/Controllers/EventController.php:705
 * @route '/events/{event}/exports/media'
 */
-const startForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const startForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: start.url(args, options),
     method: 'post',
 })
@@ -72,7 +72,7 @@ const startForm = (args: { event: string | number | { id: string | number } } | 
 * @see app/Http/Controllers/EventController.php:705
 * @route '/events/{event}/exports/media'
 */
-startForm.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+startForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: start.url(args, options),
     method: 'post',
 })
@@ -84,7 +84,7 @@ start.form = startForm
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-export const download = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const download = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: download.url(args, options),
     method: 'get',
 })
@@ -99,7 +99,7 @@ download.definition = {
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-download.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+download.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -132,7 +132,7 @@ download.url = (args: { event: string | number | { id: string | number } } | [ev
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-download.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+download.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: download.url(args, options),
     method: 'get',
 })
@@ -142,7 +142,7 @@ download.get = (args: { event: string | number | { id: string | number } } | [ev
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-download.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+download.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: download.url(args, options),
     method: 'head',
 })
@@ -152,7 +152,7 @@ download.head = (args: { event: string | number | { id: string | number } } | [e
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-const downloadForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const downloadForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: download.url(args, options),
     method: 'get',
 })
@@ -162,7 +162,7 @@ const downloadForm = (args: { event: string | number | { id: string | number } }
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-downloadForm.get = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+downloadForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: download.url(args, options),
     method: 'get',
 })
@@ -172,7 +172,7 @@ downloadForm.get = (args: { event: string | number | { id: string | number } } |
 * @see app/Http/Controllers/EventController.php:745
 * @route '/events/{event}/exports/media/download'
 */
-downloadForm.head = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+downloadForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: download.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

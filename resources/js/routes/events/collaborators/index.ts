@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/EventController.php:1364
 * @route '/events/{event}/collaborators'
 */
-export const store = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ store.definition = {
 * @see app/Http/Controllers/EventController.php:1364
 * @route '/events/{event}/collaborators'
 */
-store.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -52,7 +52,7 @@ store.url = (args: { event: string | number | { id: string | number } } | [event
 * @see app/Http/Controllers/EventController.php:1364
 * @route '/events/{event}/collaborators'
 */
-store.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -62,7 +62,7 @@ store.post = (args: { event: string | number | { id: string | number } } | [even
 * @see app/Http/Controllers/EventController.php:1364
 * @route '/events/{event}/collaborators'
 */
-const storeForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -72,7 +72,7 @@ const storeForm = (args: { event: string | number | { id: string | number } } | 
 * @see app/Http/Controllers/EventController.php:1364
 * @route '/events/{event}/collaborators'
 */
-storeForm.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -84,7 +84,7 @@ store.form = storeForm
 * @see app/Http/Controllers/EventController.php:1441
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-export const update = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const update = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -99,7 +99,7 @@ update.definition = {
 * @see app/Http/Controllers/EventController.php:1441
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-update.url = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+update.url = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             event: args[0],
@@ -129,7 +129,7 @@ update.url = (args: { event: string | number | { id: string | number }, collabor
 * @see app/Http/Controllers/EventController.php:1441
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-update.patch = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -139,7 +139,7 @@ update.patch = (args: { event: string | number | { id: string | number }, collab
 * @see app/Http/Controllers/EventController.php:1441
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-const updateForm = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -154,7 +154,7 @@ const updateForm = (args: { event: string | number | { id: string | number }, co
 * @see app/Http/Controllers/EventController.php:1441
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-updateForm.patch = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.patch = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -171,7 +171,7 @@ update.form = updateForm
 * @see app/Http/Controllers/EventController.php:1460
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-export const destroy = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -186,7 +186,7 @@ destroy.definition = {
 * @see app/Http/Controllers/EventController.php:1460
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-destroy.url = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             event: args[0],
@@ -216,7 +216,7 @@ destroy.url = (args: { event: string | number | { id: string | number }, collabo
 * @see app/Http/Controllers/EventController.php:1460
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-destroy.delete = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -226,7 +226,7 @@ destroy.delete = (args: { event: string | number | { id: string | number }, coll
 * @see app/Http/Controllers/EventController.php:1460
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-const destroyForm = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -241,7 +241,7 @@ const destroyForm = (args: { event: string | number | { id: string | number }, c
 * @see app/Http/Controllers/EventController.php:1460
 * @route '/events/{event}/collaborators/{collaborator}'
 */
-destroyForm.delete = (args: { event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } } | [event: string | number | { id: string | number }, collaborator: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { event: number | { id: number }, collaborator: number | { id: number } } | [event: number | { id: number }, collaborator: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -258,7 +258,7 @@ destroy.form = destroyForm
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-export const accept = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const accept = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: accept.url(args, options),
     method: 'get',
 })
@@ -273,7 +273,7 @@ accept.definition = {
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-accept.url = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+accept.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { collaborator: args }
     }
@@ -306,7 +306,7 @@ accept.url = (args: { collaborator: string | number | { id: string | number } } 
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-accept.get = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+accept.get = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: accept.url(args, options),
     method: 'get',
 })
@@ -316,7 +316,7 @@ accept.get = (args: { collaborator: string | number | { id: string | number } } 
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-accept.head = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+accept.head = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: accept.url(args, options),
     method: 'head',
 })
@@ -326,7 +326,7 @@ accept.head = (args: { collaborator: string | number | { id: string | number } }
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-const acceptForm = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const acceptForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: accept.url(args, options),
     method: 'get',
 })
@@ -336,7 +336,7 @@ const acceptForm = (args: { collaborator: string | number | { id: string | numbe
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-acceptForm.get = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+acceptForm.get = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: accept.url(args, options),
     method: 'get',
 })
@@ -346,7 +346,7 @@ acceptForm.get = (args: { collaborator: string | number | { id: string | number 
 * @see app/Http/Controllers/EventController.php:1473
 * @route '/collaborator-invites/{collaborator}/accept'
 */
-acceptForm.head = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+acceptForm.head = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: accept.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -363,7 +363,7 @@ accept.form = acceptForm
 * @see app/Http/Controllers/EventController.php:1505
 * @route '/collaborator-invites/{collaborator}/complete-register'
 */
-export const completeRegister = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const completeRegister = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: completeRegister.url(args, options),
     method: 'post',
 })
@@ -378,7 +378,7 @@ completeRegister.definition = {
 * @see app/Http/Controllers/EventController.php:1505
 * @route '/collaborator-invites/{collaborator}/complete-register'
 */
-completeRegister.url = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+completeRegister.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { collaborator: args }
     }
@@ -411,7 +411,7 @@ completeRegister.url = (args: { collaborator: string | number | { id: string | n
 * @see app/Http/Controllers/EventController.php:1505
 * @route '/collaborator-invites/{collaborator}/complete-register'
 */
-completeRegister.post = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+completeRegister.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: completeRegister.url(args, options),
     method: 'post',
 })
@@ -421,7 +421,7 @@ completeRegister.post = (args: { collaborator: string | number | { id: string | 
 * @see app/Http/Controllers/EventController.php:1505
 * @route '/collaborator-invites/{collaborator}/complete-register'
 */
-const completeRegisterForm = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const completeRegisterForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: completeRegister.url(args, options),
     method: 'post',
 })
@@ -431,7 +431,7 @@ const completeRegisterForm = (args: { collaborator: string | number | { id: stri
 * @see app/Http/Controllers/EventController.php:1505
 * @route '/collaborator-invites/{collaborator}/complete-register'
 */
-completeRegisterForm.post = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+completeRegisterForm.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: completeRegister.url(args, options),
     method: 'post',
 })
@@ -443,7 +443,7 @@ completeRegister.form = completeRegisterForm
 * @see app/Http/Controllers/EventController.php:1543
 * @route '/collaborator-invites/{collaborator}/complete-login'
 */
-export const completeLogin = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const completeLogin = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: completeLogin.url(args, options),
     method: 'post',
 })
@@ -458,7 +458,7 @@ completeLogin.definition = {
 * @see app/Http/Controllers/EventController.php:1543
 * @route '/collaborator-invites/{collaborator}/complete-login'
 */
-completeLogin.url = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+completeLogin.url = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { collaborator: args }
     }
@@ -491,7 +491,7 @@ completeLogin.url = (args: { collaborator: string | number | { id: string | numb
 * @see app/Http/Controllers/EventController.php:1543
 * @route '/collaborator-invites/{collaborator}/complete-login'
 */
-completeLogin.post = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+completeLogin.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: completeLogin.url(args, options),
     method: 'post',
 })
@@ -501,7 +501,7 @@ completeLogin.post = (args: { collaborator: string | number | { id: string | num
 * @see app/Http/Controllers/EventController.php:1543
 * @route '/collaborator-invites/{collaborator}/complete-login'
 */
-const completeLoginForm = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const completeLoginForm = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: completeLogin.url(args, options),
     method: 'post',
 })
@@ -511,7 +511,7 @@ const completeLoginForm = (args: { collaborator: string | number | { id: string 
 * @see app/Http/Controllers/EventController.php:1543
 * @route '/collaborator-invites/{collaborator}/complete-login'
 */
-completeLoginForm.post = (args: { collaborator: string | number | { id: string | number } } | [collaborator: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+completeLoginForm.post = (args: { collaborator: number | { id: number } } | [collaborator: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: completeLogin.url(args, options),
     method: 'post',
 })

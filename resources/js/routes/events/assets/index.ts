@@ -6,7 +6,7 @@ import wallVisibility from './wall-visibility'
 * @see app/Http/Controllers/EventController.php:791
 * @route '/events/{event}/assets/bulk-delete'
 */
-export const bulkDestroy = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const bulkDestroy = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: bulkDestroy.url(args, options),
     method: 'post',
 })
@@ -21,7 +21,7 @@ bulkDestroy.definition = {
 * @see app/Http/Controllers/EventController.php:791
 * @route '/events/{event}/assets/bulk-delete'
 */
-bulkDestroy.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+bulkDestroy.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -54,7 +54,7 @@ bulkDestroy.url = (args: { event: string | number | { id: string | number } } | 
 * @see app/Http/Controllers/EventController.php:791
 * @route '/events/{event}/assets/bulk-delete'
 */
-bulkDestroy.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+bulkDestroy.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: bulkDestroy.url(args, options),
     method: 'post',
 })
@@ -64,7 +64,7 @@ bulkDestroy.post = (args: { event: string | number | { id: string | number } } |
 * @see app/Http/Controllers/EventController.php:791
 * @route '/events/{event}/assets/bulk-delete'
 */
-const bulkDestroyForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const bulkDestroyForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: bulkDestroy.url(args, options),
     method: 'post',
 })
@@ -74,7 +74,7 @@ const bulkDestroyForm = (args: { event: string | number | { id: string | number 
 * @see app/Http/Controllers/EventController.php:791
 * @route '/events/{event}/assets/bulk-delete'
 */
-bulkDestroyForm.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+bulkDestroyForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: bulkDestroy.url(args, options),
     method: 'post',
 })
@@ -86,7 +86,7 @@ bulkDestroy.form = bulkDestroyForm
 * @see app/Http/Controllers/EventController.php:814
 * @route '/events/{event}/assets/bulk-moderation'
 */
-export const bulkModeration = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const bulkModeration = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: bulkModeration.url(args, options),
     method: 'post',
 })
@@ -101,7 +101,7 @@ bulkModeration.definition = {
 * @see app/Http/Controllers/EventController.php:814
 * @route '/events/{event}/assets/bulk-moderation'
 */
-bulkModeration.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+bulkModeration.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
@@ -134,7 +134,7 @@ bulkModeration.url = (args: { event: string | number | { id: string | number } }
 * @see app/Http/Controllers/EventController.php:814
 * @route '/events/{event}/assets/bulk-moderation'
 */
-bulkModeration.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+bulkModeration.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: bulkModeration.url(args, options),
     method: 'post',
 })
@@ -144,7 +144,7 @@ bulkModeration.post = (args: { event: string | number | { id: string | number } 
 * @see app/Http/Controllers/EventController.php:814
 * @route '/events/{event}/assets/bulk-moderation'
 */
-const bulkModerationForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const bulkModerationForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: bulkModeration.url(args, options),
     method: 'post',
 })
@@ -154,7 +154,7 @@ const bulkModerationForm = (args: { event: string | number | { id: string | numb
 * @see app/Http/Controllers/EventController.php:814
 * @route '/events/{event}/assets/bulk-moderation'
 */
-bulkModerationForm.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+bulkModerationForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: bulkModeration.url(args, options),
     method: 'post',
 })
@@ -166,7 +166,7 @@ bulkModeration.form = bulkModerationForm
 * @see app/Http/Controllers/EventController.php:775
 * @route '/events/{event}/assets/{asset}'
 */
-export const destroy = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -181,7 +181,7 @@ destroy.definition = {
 * @see app/Http/Controllers/EventController.php:775
 * @route '/events/{event}/assets/{asset}'
 */
-destroy.url = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             event: args[0],
@@ -211,7 +211,7 @@ destroy.url = (args: { event: string | number | { id: string | number }, asset: 
 * @see app/Http/Controllers/EventController.php:775
 * @route '/events/{event}/assets/{asset}'
 */
-destroy.delete = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -221,7 +221,7 @@ destroy.delete = (args: { event: string | number | { id: string | number }, asse
 * @see app/Http/Controllers/EventController.php:775
 * @route '/events/{event}/assets/{asset}'
 */
-const destroyForm = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -236,7 +236,7 @@ const destroyForm = (args: { event: string | number | { id: string | number }, a
 * @see app/Http/Controllers/EventController.php:775
 * @route '/events/{event}/assets/{asset}'
 */
-destroyForm.delete = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -253,7 +253,7 @@ destroy.form = destroyForm
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-export const thumbnail = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const thumbnail = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: thumbnail.url(args, options),
     method: 'get',
 })
@@ -268,7 +268,7 @@ thumbnail.definition = {
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-thumbnail.url = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+thumbnail.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             event: args[0],
@@ -298,7 +298,7 @@ thumbnail.url = (args: { event: string | number | { id: string | number }, asset
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-thumbnail.get = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+thumbnail.get = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: thumbnail.url(args, options),
     method: 'get',
 })
@@ -308,7 +308,7 @@ thumbnail.get = (args: { event: string | number | { id: string | number }, asset
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-thumbnail.head = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+thumbnail.head = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: thumbnail.url(args, options),
     method: 'head',
 })
@@ -318,7 +318,7 @@ thumbnail.head = (args: { event: string | number | { id: string | number }, asse
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-const thumbnailForm = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const thumbnailForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: thumbnail.url(args, options),
     method: 'get',
 })
@@ -328,7 +328,7 @@ const thumbnailForm = (args: { event: string | number | { id: string | number },
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-thumbnailForm.get = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+thumbnailForm.get = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: thumbnail.url(args, options),
     method: 'get',
 })
@@ -338,7 +338,7 @@ thumbnailForm.get = (args: { event: string | number | { id: string | number }, a
 * @see app/Http/Controllers/EventController.php:134
 * @route '/events/{event}/assets/{asset}/thumbnail'
 */
-thumbnailForm.head = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+thumbnailForm.head = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: thumbnail.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -355,7 +355,7 @@ thumbnail.form = thumbnailForm
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-export const preview = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const preview = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: preview.url(args, options),
     method: 'get',
 })
@@ -370,7 +370,7 @@ preview.definition = {
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-preview.url = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+preview.url = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             event: args[0],
@@ -400,7 +400,7 @@ preview.url = (args: { event: string | number | { id: string | number }, asset: 
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-preview.get = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+preview.get = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: preview.url(args, options),
     method: 'get',
 })
@@ -410,7 +410,7 @@ preview.get = (args: { event: string | number | { id: string | number }, asset: 
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-preview.head = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+preview.head = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: preview.url(args, options),
     method: 'head',
 })
@@ -420,7 +420,7 @@ preview.head = (args: { event: string | number | { id: string | number }, asset:
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-const previewForm = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const previewForm = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: preview.url(args, options),
     method: 'get',
 })
@@ -430,7 +430,7 @@ const previewForm = (args: { event: string | number | { id: string | number }, a
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-previewForm.get = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+previewForm.get = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: preview.url(args, options),
     method: 'get',
 })
@@ -440,7 +440,7 @@ previewForm.get = (args: { event: string | number | { id: string | number }, ass
 * @see app/Http/Controllers/EventController.php:145
 * @route '/events/{event}/assets/{asset}/preview'
 */
-previewForm.head = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+previewForm.head = (args: { event: number | { id: number }, asset: number | { id: number } } | [event: number | { id: number }, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: preview.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

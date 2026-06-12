@@ -255,7 +255,7 @@ textPost.form = textPostForm
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-export const assetDownload = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const assetDownload = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetDownload.url(args, options),
     method: 'get',
 })
@@ -270,7 +270,7 @@ assetDownload.definition = {
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-assetDownload.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+assetDownload.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -298,7 +298,7 @@ assetDownload.url = (args: { shareToken: string | number, asset: string | number
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-assetDownload.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+assetDownload.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetDownload.url(args, options),
     method: 'get',
 })
@@ -308,7 +308,7 @@ assetDownload.get = (args: { shareToken: string | number, asset: string | number
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-assetDownload.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+assetDownload.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: assetDownload.url(args, options),
     method: 'head',
 })
@@ -318,7 +318,7 @@ assetDownload.head = (args: { shareToken: string | number, asset: string | numbe
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-const assetDownloadForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const assetDownloadForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetDownload.url(args, options),
     method: 'get',
 })
@@ -328,7 +328,7 @@ const assetDownloadForm = (args: { shareToken: string | number, asset: string | 
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-assetDownloadForm.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetDownloadForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetDownload.url(args, options),
     method: 'get',
 })
@@ -338,7 +338,7 @@ assetDownloadForm.get = (args: { shareToken: string | number, asset: string | nu
 * @see app/Http/Controllers/EventController.php:2335
 * @route '/a/{shareToken}/assets/{asset}/download'
 */
-assetDownloadForm.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetDownloadForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetDownload.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -355,7 +355,7 @@ assetDownload.form = assetDownloadForm
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-export const assetPreview = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const assetPreview = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetPreview.url(args, options),
     method: 'get',
 })
@@ -370,7 +370,7 @@ assetPreview.definition = {
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-assetPreview.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+assetPreview.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -398,7 +398,7 @@ assetPreview.url = (args: { shareToken: string | number, asset: string | number 
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-assetPreview.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+assetPreview.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetPreview.url(args, options),
     method: 'get',
 })
@@ -408,7 +408,7 @@ assetPreview.get = (args: { shareToken: string | number, asset: string | number 
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-assetPreview.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+assetPreview.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: assetPreview.url(args, options),
     method: 'head',
 })
@@ -418,7 +418,7 @@ assetPreview.head = (args: { shareToken: string | number, asset: string | number
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-const assetPreviewForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const assetPreviewForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetPreview.url(args, options),
     method: 'get',
 })
@@ -428,7 +428,7 @@ const assetPreviewForm = (args: { shareToken: string | number, asset: string | n
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-assetPreviewForm.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetPreviewForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetPreview.url(args, options),
     method: 'get',
 })
@@ -438,7 +438,7 @@ assetPreviewForm.get = (args: { shareToken: string | number, asset: string | num
 * @see app/Http/Controllers/EventController.php:2352
 * @route '/a/{shareToken}/assets/{asset}/preview'
 */
-assetPreviewForm.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetPreviewForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetPreview.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -455,7 +455,7 @@ assetPreview.form = assetPreviewForm
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-export const assetThumbnail = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const assetThumbnail = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetThumbnail.url(args, options),
     method: 'get',
 })
@@ -470,7 +470,7 @@ assetThumbnail.definition = {
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-assetThumbnail.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+assetThumbnail.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -498,7 +498,7 @@ assetThumbnail.url = (args: { shareToken: string | number, asset: string | numbe
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-assetThumbnail.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+assetThumbnail.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: assetThumbnail.url(args, options),
     method: 'get',
 })
@@ -508,7 +508,7 @@ assetThumbnail.get = (args: { shareToken: string | number, asset: string | numbe
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-assetThumbnail.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+assetThumbnail.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: assetThumbnail.url(args, options),
     method: 'head',
 })
@@ -518,7 +518,7 @@ assetThumbnail.head = (args: { shareToken: string | number, asset: string | numb
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-const assetThumbnailForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const assetThumbnailForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetThumbnail.url(args, options),
     method: 'get',
 })
@@ -528,7 +528,7 @@ const assetThumbnailForm = (args: { shareToken: string | number, asset: string |
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-assetThumbnailForm.get = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetThumbnailForm.get = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetThumbnail.url(args, options),
     method: 'get',
 })
@@ -538,7 +538,7 @@ assetThumbnailForm.get = (args: { shareToken: string | number, asset: string | n
 * @see app/Http/Controllers/EventController.php:2368
 * @route '/a/{shareToken}/assets/{asset}/thumbnail'
 */
-assetThumbnailForm.head = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+assetThumbnailForm.head = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: assetThumbnail.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -555,7 +555,7 @@ assetThumbnail.form = assetThumbnailForm
 * @see app/Http/Controllers/EventController.php:2384
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
-export const assetDelete = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const assetDelete = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: assetDelete.url(args, options),
     method: 'post',
 })
@@ -570,7 +570,7 @@ assetDelete.definition = {
 * @see app/Http/Controllers/EventController.php:2384
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
-assetDelete.url = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+assetDelete.url = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             shareToken: args[0],
@@ -598,7 +598,7 @@ assetDelete.url = (args: { shareToken: string | number, asset: string | number |
 * @see app/Http/Controllers/EventController.php:2384
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
-assetDelete.post = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+assetDelete.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: assetDelete.url(args, options),
     method: 'post',
 })
@@ -608,7 +608,7 @@ assetDelete.post = (args: { shareToken: string | number, asset: string | number 
 * @see app/Http/Controllers/EventController.php:2384
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
-const assetDeleteForm = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const assetDeleteForm = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: assetDelete.url(args, options),
     method: 'post',
 })
@@ -618,7 +618,7 @@ const assetDeleteForm = (args: { shareToken: string | number, asset: string | nu
 * @see app/Http/Controllers/EventController.php:2384
 * @route '/a/{shareToken}/assets/{asset}/delete'
 */
-assetDeleteForm.post = (args: { shareToken: string | number, asset: string | number | { id: string | number } } | [shareToken: string | number, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+assetDeleteForm.post = (args: { shareToken: string | number, asset: number | { id: number } } | [shareToken: string | number, asset: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: assetDelete.url(args, options),
     method: 'post',
 })
