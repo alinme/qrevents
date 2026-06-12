@@ -1386,5 +1386,8 @@
     "event_home.print_pack.defaults.message_generic": "Σαρώστε τον κωδικό QR και μοιραστείτε τις αναμνήσεις σας με φωτογραφίες, βίντεο ή ευχές για τους οικοδεσπότες.",
     "event_home.print_pack.actions.print_label": "Εκτύπωση",
     "event_home.print_pack.actions.preview_label": "Προεπισκόπηση",
-    "event_home.print_pack.actions.customize_label": "Προσαρμογή"
+    "event_home.print_pack.actions.customize_label": "Προσαρμογή",
+    "media.actions.select_upload": "Επιλογή αρχείου από :guest",
+    "media.attendees.toggle_show": "Εμφάνιση συμμετεχόντων",
+    "media.attendees.toggle_hide": "Απόκρυψη συμμετεχόντων"
 }

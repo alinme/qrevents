@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:847
+* @see app/Http/Controllers/EventController.php:869
 * @route '/events/{event}/assets/{asset}/wall-visibility'
 */
 export const update = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -16,7 +16,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:847
+* @see app/Http/Controllers/EventController.php:869
 * @route '/events/{event}/assets/{asset}/wall-visibility'
 */
 update.url = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
@@ -46,7 +46,7 @@ update.url = (args: { event: string | number | { id: string | number }, asset: s
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:847
+* @see app/Http/Controllers/EventController.php:869
 * @route '/events/{event}/assets/{asset}/wall-visibility'
 */
 update.patch = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -56,7 +56,7 @@ update.patch = (args: { event: string | number | { id: string | number }, asset:
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:847
+* @see app/Http/Controllers/EventController.php:869
 * @route '/events/{event}/assets/{asset}/wall-visibility'
 */
 const updateForm = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -71,7 +71,7 @@ const updateForm = (args: { event: string | number | { id: string | number }, as
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:847
+* @see app/Http/Controllers/EventController.php:869
 * @route '/events/{event}/assets/{asset}/wall-visibility'
 */
 updateForm.patch = (args: { event: string | number | { id: string | number }, asset: string | number | { id: string | number } } | [event: string | number | { id: string | number }, asset: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

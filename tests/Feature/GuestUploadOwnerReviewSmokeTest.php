@@ -56,7 +56,24 @@ it('covers guest upload through owner review and export download', function () {
             ->where('eventNavigation.3.title', 'QR Studio')
             ->where('mediaAssets.0.guestName', 'Elena')
             ->where('mediaAssets.0.moderationStatus', 'processing')
+            ->where('mediaAssets.0.thumbnailUrl', route('events.assets.thumbnail', [$event, $asset]))
+            ->where('mediaAssets.0.previewUrl', route('events.assets.preview', [$event, $asset]))
         );
+
+    // The owner can stream thumbnails/previews even before the asset is approved.
+    $this->actingAs($owner)
+        ->get(route('events.assets.thumbnail', [$event, $asset]))
+        ->assertOk();
+
+    $this->actingAs($owner)
+        ->get(route('events.assets.preview', [$event, $asset]))
+        ->assertOk();
+
+    $stranger = User::factory()->create();
+
+    $this->actingAs($stranger)
+        ->get(route('events.assets.thumbnail', [$event, $asset]))
+        ->assertForbidden();
 
     $this->actingAs($owner)
         ->from(route('events.media', $event))

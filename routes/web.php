@@ -54,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('events/{event}/assets/{asset}', [EventController::class, 'destroyAsset'])->name('events.assets.destroy');
     Route::patch('events/{event}/assets/{asset}/moderation', [EventController::class, 'updateAssetModeration'])->name('events.assets.moderation.update');
     Route::patch('events/{event}/assets/{asset}/wall-visibility', [EventController::class, 'updateAssetWallVisibility'])->name('events.assets.wall-visibility.update');
+    Route::get('events/{event}/assets/{asset}/thumbnail', [EventController::class, 'assetThumbnail'])->name('events.assets.thumbnail');
+    Route::get('events/{event}/assets/{asset}/preview', [EventController::class, 'assetPreview'])->name('events.assets.preview');
     Route::get('events/{event}/settings', [EventController::class, 'settings'])->name('events.settings');
     Route::patch('events/{event}/settings', [EventController::class, 'updateSettings'])->name('events.settings.update');
     Route::patch('events/{event}/billing', [EventController::class, 'updateBilling'])->name('events.billing.update');
