@@ -38,7 +38,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Detect deploy scope
         id: scope
@@ -50,10 +50,12 @@ jobs:
           AFTER="${{ github.sha }}"
           ZERO_SHA="0000000000000000000000000000000000000000"
 
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "$ZERO_SHA" ]; then
-            CHANGED_FILES="$(git show --pretty='' --name-only "$AFTER")"
-          else
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "$ZERO_SHA" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             CHANGED_FILES="$(git diff --name-only "$BEFORE" "$AFTER")"
+          else
+            # Manual dispatch, force-push, or unknown base: deploy everything.
+            echo "No usable base commit; treating all paths as changed."
+            CHANGED_FILES="$(git ls-files)"
           fi
 
           echo "Changed files:"
