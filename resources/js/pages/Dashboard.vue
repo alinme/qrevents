@@ -685,7 +685,11 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                                                     )
                                                 "
                                             >
-                                                {{ activity.moderationStatus }}
+                                                {{
+                                                    t(
+                                                        `event_home.status.${activity.moderationStatus}`,
+                                                    )
+                                                }}
                                             </span>
                                             <ExternalLink
                                                 class="size-4 text-brand-muted/70"

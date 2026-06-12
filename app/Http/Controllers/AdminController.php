@@ -163,12 +163,12 @@ class AdminController extends Controller
             'storageUsedBytes' => $storageUsedBytes,
             'storageUsedLabel' => $this->humanBytes($storageUsedBytes),
             'eventsByStatus' => collect([
-                Event::STATUS_DRAFT => ['Draft', 'amber'],
-                Event::STATUS_SCHEDULED => ['Scheduled', 'violet'],
-                Event::STATUS_LIVE => ['Live', 'emerald'],
-                Event::STATUS_GRACE => ['Grace', 'sky'],
-                Event::STATUS_LOCKED => ['Locked', 'rose'],
-                Event::STATUS_EXPIRED => ['Expired', 'zinc'],
+                Event::STATUS_DRAFT => [__('admin.status.draft'), 'amber'],
+                Event::STATUS_SCHEDULED => [__('admin.status.scheduled'), 'violet'],
+                Event::STATUS_LIVE => [__('admin.status.live'), 'emerald'],
+                Event::STATUS_GRACE => [__('admin.status.grace'), 'sky'],
+                Event::STATUS_LOCKED => [__('admin.status.locked'), 'rose'],
+                Event::STATUS_EXPIRED => [__('admin.status.expired'), 'zinc'],
             ])
                 ->map(fn (array $meta, string $status): array => [
                     'status' => $status,
@@ -265,16 +265,16 @@ class AdminController extends Controller
     private function eventStatusMeta(Event $event): array
     {
         if ($event->onboarding_completed_at === null) {
-            return ['Setup in progress', 'amber'];
+            return [__('admin.status.setup_in_progress'), 'amber'];
         }
 
         return match ($event->status) {
-            Event::STATUS_LIVE => ['Live now', 'emerald'],
-            Event::STATUS_GRACE => ['Grace period', 'sky'],
-            Event::STATUS_LOCKED => ['Locked', 'rose'],
-            Event::STATUS_EXPIRED => ['Expired', 'zinc'],
-            Event::STATUS_DRAFT => ['Draft', 'amber'],
-            default => ['Scheduled', 'violet'],
+            Event::STATUS_LIVE => [__('admin.status.live_now'), 'emerald'],
+            Event::STATUS_GRACE => [__('admin.status.grace'), 'sky'],
+            Event::STATUS_LOCKED => [__('admin.status.locked'), 'rose'],
+            Event::STATUS_EXPIRED => [__('admin.status.expired'), 'zinc'],
+            Event::STATUS_DRAFT => [__('admin.status.draft'), 'amber'],
+            default => [__('admin.status.scheduled'), 'violet'],
         };
     }
 
@@ -284,7 +284,7 @@ class AdminController extends Controller
     private function billingMeta(Event $event): array
     {
         if ($event->is_paid) {
-            return ['Paid', 'emerald'];
+            return [__('admin.events.billing.paid'), 'emerald'];
         }
 
         $paymentDueAt = $event->payment_due_at ?? $event->grace_ends_at;
@@ -293,10 +293,10 @@ class AdminController extends Controller
         }
 
         if ($paymentDueAt->isPast()) {
-            return ['Payment overdue', 'rose'];
+            return [__('admin.events.billing.overdue'), 'rose'];
         }
 
-        return ['Payment due soon', 'amber'];
+        return [__('admin.events.billing.due_soon'), 'amber'];
     }
 
     private function planPriceLabel(?Plan $plan): string

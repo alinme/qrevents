@@ -5,6 +5,7 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { badgeClass, formatDateTime } from '@/lib/dashboard';
 import type { BreadcrumbItem } from '@/types';
 import type { Tone } from '@/types/dashboard';
@@ -42,13 +43,15 @@ const props = defineProps<{
     };
 }>();
 
+const { t } = useTranslations();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Admin',
+        title: t('admin.shared.admin'),
         href: '/admin',
     },
     {
-        title: 'Events',
+        title: t('admin.events.title'),
         href: '/admin/events',
     },
 ];
@@ -68,7 +71,7 @@ const submitSearch = (): void => {
 </script>
 
 <template>
-    <Head title="Admin · Events" />
+    <Head :title="t('admin.events.head_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -78,11 +81,18 @@ const submitSearch = (): void => {
                         class="dashboard-panel-divider flex flex-col gap-4 pb-4 lg:flex-row lg:items-end lg:justify-between"
                     >
                         <div>
-                            <p class="dashboard-eyebrow">Admin</p>
-                            <h1 class="dashboard-title mt-2">Events</h1>
+                            <p class="dashboard-eyebrow">
+                                {{ t('admin.shared.admin') }}
+                            </p>
+                            <h1 class="dashboard-title mt-2">
+                                {{ t('admin.events.title') }}
+                            </h1>
                             <p class="dashboard-body mt-2">
-                                {{ pagination.total }} event(s) across the
-                                platform.
+                                {{
+                                    t('admin.events.total', {
+                                        count: pagination.total,
+                                    })
+                                }}
                             </p>
                         </div>
 
@@ -93,8 +103,10 @@ const submitSearch = (): void => {
                             <Input
                                 v-model="search"
                                 type="search"
-                                placeholder="Search by event or owner"
-                                aria-label="Search events"
+                                :placeholder="
+                                    t('admin.events.search.placeholder')
+                                "
+                                :aria-label="t('admin.events.search.aria')"
                             />
                             <Button
                                 type="submit"
@@ -102,7 +114,7 @@ const submitSearch = (): void => {
                                 class="rounded-full bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                             >
                                 <Search class="size-4" />
-                                Search
+                                {{ t('admin.events.search.submit') }}
                             </Button>
                         </form>
                     </div>
@@ -111,7 +123,7 @@ const submitSearch = (): void => {
                         v-if="events.length === 0"
                         class="dashboard-body py-10"
                     >
-                        No events match this search.
+                        {{ t('admin.events.empty') }}
                     </div>
 
                     <div v-else class="overflow-x-auto pt-2">
@@ -120,12 +132,24 @@ const submitSearch = (): void => {
                                 <tr
                                     class="border-b border-brand-border/70 text-[0.72rem] font-semibold tracking-wide text-brand-muted uppercase"
                                 >
-                                    <th class="py-3 pr-4">Event</th>
-                                    <th class="py-3 pr-4">Owner</th>
-                                    <th class="py-3 pr-4">Plan</th>
-                                    <th class="py-3 pr-4">Billing</th>
-                                    <th class="py-3 pr-4">Uploads</th>
-                                    <th class="py-3 pr-4">Created</th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.event') }}
+                                    </th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.owner') }}
+                                    </th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.plan') }}
+                                    </th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.billing') }}
+                                    </th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.uploads') }}
+                                    </th>
+                                    <th class="py-3 pr-4">
+                                        {{ t('admin.events.table.created') }}
+                                    </th>
                                     <th class="py-3"></th>
                                 </tr>
                             </thead>
@@ -176,7 +200,11 @@ const submitSearch = (): void => {
                                             variant="outline"
                                         >
                                             <Link :href="event.links.settings">
-                                                Billing settings
+                                                {{
+                                                    t(
+                                                        'admin.events.billing_settings',
+                                                    )
+                                                }}
                                             </Link>
                                         </Button>
                                     </td>
@@ -190,8 +218,12 @@ const submitSearch = (): void => {
                         class="mt-4 flex items-center justify-between border-t border-brand-border/70 pt-4"
                     >
                         <p class="dashboard-meta">
-                            Page {{ pagination.currentPage }} of
-                            {{ pagination.lastPage }}
+                            {{
+                                t('admin.events.pagination.page', {
+                                    current: pagination.currentPage,
+                                    last: pagination.lastPage,
+                                })
+                            }}
                         </p>
                         <div class="flex gap-2">
                             <Button
@@ -204,7 +236,7 @@ const submitSearch = (): void => {
                                 }"
                             >
                                 <Link :href="pagination.prevPageUrl ?? '#'">
-                                    Previous
+                                    {{ t('admin.events.pagination.previous') }}
                                 </Link>
                             </Button>
                             <Button
@@ -217,7 +249,7 @@ const submitSearch = (): void => {
                                 }"
                             >
                                 <Link :href="pagination.nextPageUrl ?? '#'">
-                                    Next
+                                    {{ t('admin.events.pagination.next') }}
                                 </Link>
                             </Button>
                         </div>

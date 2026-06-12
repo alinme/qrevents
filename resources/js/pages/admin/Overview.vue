@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Camera, FolderKanban, HardDrive, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { badgeClass, formatDateTime } from '@/lib/dashboard';
 import type { BreadcrumbItem } from '@/types';
 import type { Tone } from '@/types/dashboard';
@@ -43,31 +44,33 @@ const props = defineProps<{
     recentEvents: AdminEventRow[];
 }>();
 
+const { t } = useTranslations();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Admin',
+        title: t('admin.shared.admin'),
         href: '/admin',
     },
 ];
 
 const stats = computed(() => [
     {
-        label: 'Users',
+        label: t('admin.overview.stats.users'),
         value: props.summary.totalUsers,
         icon: Users,
     },
     {
-        label: 'Events',
+        label: t('admin.overview.stats.events'),
         value: props.summary.totalEvents,
         icon: FolderKanban,
     },
     {
-        label: 'Uploads',
+        label: t('admin.overview.stats.uploads'),
         value: props.summary.totalUploads,
         icon: Camera,
     },
     {
-        label: 'Storage used',
+        label: t('admin.overview.stats.storage_used'),
         value: props.summary.storageUsedLabel,
         icon: HardDrive,
     },
@@ -75,17 +78,20 @@ const stats = computed(() => [
 </script>
 
 <template>
-    <Head title="Admin · Overview" />
+    <Head :title="t('admin.overview.head_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-6xl">
                 <section class="dashboard-panel">
-                    <p class="dashboard-eyebrow">Admin</p>
-                    <h1 class="dashboard-title mt-2">Platform overview</h1>
+                    <p class="dashboard-eyebrow">
+                        {{ t('admin.shared.admin') }}
+                    </p>
+                    <h1 class="dashboard-title mt-2">
+                        {{ t('admin.overview.title') }}
+                    </h1>
                     <p class="dashboard-body mt-2">
-                        A quick pulse on accounts, events, and storage across
-                        the platform.
+                        {{ t('admin.overview.description') }}
                     </p>
 
                     <dl
@@ -134,17 +140,17 @@ const stats = computed(() => [
                     >
                         <div>
                             <h2 class="dashboard-section-title">
-                                Recent events
+                                {{ t('admin.overview.recent.title') }}
                             </h2>
                             <p class="dashboard-body mt-1">
-                                The latest events created on the platform.
+                                {{ t('admin.overview.recent.description') }}
                             </p>
                         </div>
                         <Link
                             href="/admin/events"
                             class="text-sm font-semibold text-brand-ink underline underline-offset-4 hover:text-brand-accent"
                         >
-                            View all events
+                            {{ t('admin.overview.recent.view_all') }}
                         </Link>
                     </div>
 
@@ -152,7 +158,7 @@ const stats = computed(() => [
                         v-if="recentEvents.length === 0"
                         class="dashboard-body py-10"
                     >
-                        No events yet.
+                        {{ t('admin.overview.recent.empty') }}
                     </div>
 
                     <div v-else class="divide-y divide-brand-border/70">

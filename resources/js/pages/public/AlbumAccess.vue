@@ -3,7 +3,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { QrCode } from 'lucide-vue-next';
 import { computed, nextTick, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { Button } from '@/components/ui/button';
+
+const { t } = useTranslations();
 
 const props = defineProps<{
     submitUrl: string;
@@ -163,7 +166,7 @@ watch(
 </script>
 
 <template>
-    <Head title="Open album" />
+    <Head :title="t('public.album_access.head_title')" />
 
     <main
         class="min-h-svh bg-[linear-gradient(180deg,oklch(0.989_0.01_338)_0%,oklch(0.982_0.012_338)_58%,oklch(0.989_0.006_28)_100%)] px-4 py-6 text-promo-ink sm:px-6"
@@ -187,7 +190,7 @@ watch(
                         <p
                             class="text-lg font-extrabold tracking-[-0.04em] text-promo-ink"
                         >
-                            Open an album
+                            {{ t('public.album_access.brand_line') }}
                         </p>
                     </div>
                 </Link>
@@ -197,19 +200,17 @@ watch(
                         class="mx-auto inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[0.75rem] font-semibold tracking-[0.16em] text-promo-primary uppercase shadow-[0_10px_24px_rgba(232,79,154,0.08)]"
                     >
                         <QrCode class="size-4" />
-                        Album code
+                        {{ t('public.album_access.badge') }}
                     </div>
                     <h1
                         class="text-3xl font-extrabold tracking-[-0.05em] text-promo-ink sm:text-4xl"
                     >
-                        Enter the album code
+                        {{ t('public.album_access.title') }}
                     </h1>
                     <p
                         class="mx-auto max-w-lg text-sm leading-7 text-promo-muted sm:text-base"
                     >
-                        Enter the 4-character code from the QR card. Choose
-                        album or wall first and we will open it automatically as
-                        soon as the code is complete.
+                        {{ t('public.album_access.description') }}
                     </p>
                 </div>
 
@@ -230,7 +231,7 @@ watch(
                             "
                             @click="setTarget('album')"
                         >
-                            Album
+                            {{ t('public.album_access.target_album') }}
                         </button>
                         <button
                             type="button"
@@ -242,7 +243,7 @@ watch(
                             "
                             @click="setTarget('wall')"
                         >
-                            Wall
+                            {{ t('public.album_access.target_wall') }}
                         </button>
                     </div>
 
@@ -255,7 +256,11 @@ watch(
                             <span
                                 class="block text-[0.72rem] font-semibold tracking-[0.16em] text-promo-muted uppercase"
                             >
-                                {{ `Code ${index + 1}` }}
+                                {{
+                                    t('public.album_access.segment_label', {
+                                        number: String(index + 1),
+                                    })
+                                }}
                             </span>
                             <input
                                 :ref="
@@ -294,14 +299,17 @@ watch(
                         >
                             {{
                                 form.processing
-                                    ? 'Opening album…'
-                                    : 'Open album'
+                                    ? t('public.album_access.submitting')
+                                    : t('public.album_access.submit')
                             }}
                         </Button>
 
                         <p class="text-sm text-promo-muted">
-                            No QR reader? Visit {{ entryShortcutUrl }} and enter
-                            the 4-character code.
+                            {{
+                                t('public.album_access.no_qr', {
+                                    url: entryShortcutUrl,
+                                })
+                            }}
                         </p>
                     </div>
                 </form>

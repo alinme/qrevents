@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import type { BreadcrumbItem } from '@/types';
 
 type AdminPlanRow = {
@@ -42,13 +43,15 @@ const props = defineProps<{
     planStoreUrl: string;
 }>();
 
+const { t } = useTranslations();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Admin',
+        title: t('admin.shared.admin'),
         href: '/admin',
     },
     {
-        title: 'Plans',
+        title: t('admin.plans.title'),
         href: '/admin/plans',
     },
 ];
@@ -80,7 +83,9 @@ const form = useForm({
 const isEditing = computed(() => editingPlanId.value !== null);
 
 const formTitle = computed(() =>
-    isEditing.value ? 'Edit plan' : 'Create plan',
+    isEditing.value
+        ? t('admin.plans.form.edit_title')
+        : t('admin.plans.form.create_title'),
 );
 
 const resetForm = (): void => {
@@ -185,15 +190,15 @@ const makeDefault = (plan: AdminPlanRow): void => {
 const planMeta = (plan: AdminPlanRow): string =>
     [
         plan.storageLimitLabel,
-        `${plan.uploadLimit} uploads`,
-        `${plan.uploadWindowDays}-day window`,
-        `${plan.retentionDays}-day retention`,
-        `${plan.eventCount} event(s)`,
+        t('admin.plans.meta.uploads', { count: plan.uploadLimit }),
+        t('admin.plans.meta.upload_window', { days: plan.uploadWindowDays }),
+        t('admin.plans.meta.retention', { days: plan.retentionDays }),
+        t('admin.plans.meta.events', { count: plan.eventCount }),
     ].join(' · ');
 </script>
 
 <template>
-    <Head title="Admin · Plans" />
+    <Head :title="t('admin.plans.head_title')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
@@ -203,11 +208,14 @@ const planMeta = (plan: AdminPlanRow): string =>
                 >
                     <section class="dashboard-panel">
                         <div class="dashboard-panel-divider pb-4">
-                            <p class="dashboard-eyebrow">Admin</p>
-                            <h1 class="dashboard-title mt-2">Plans</h1>
+                            <p class="dashboard-eyebrow">
+                                {{ t('admin.shared.admin') }}
+                            </p>
+                            <h1 class="dashboard-title mt-2">
+                                {{ t('admin.plans.title') }}
+                            </h1>
                             <p class="dashboard-body mt-2">
-                                Packages offered at checkout. The default plan
-                                is preselected for new events.
+                                {{ t('admin.plans.description') }}
                             </p>
                         </div>
 
@@ -215,7 +223,7 @@ const planMeta = (plan: AdminPlanRow): string =>
                             v-if="plans.length === 0"
                             class="dashboard-body py-10"
                         >
-                            No plans yet. Create the first one.
+                            {{ t('admin.plans.empty') }}
                         </div>
 
                         <div v-else class="divide-y divide-brand-border/70">
@@ -247,15 +255,23 @@ const planMeta = (plan: AdminPlanRow): string =>
                                             >
                                                 {{
                                                     plan.isActive
-                                                        ? 'Active'
-                                                        : 'Inactive'
+                                                        ? t(
+                                                              'admin.plans.status.active',
+                                                          )
+                                                        : t(
+                                                              'admin.plans.status.inactive',
+                                                          )
                                                 }}
                                             </span>
                                             <span
                                                 v-if="plan.isDefault"
                                                 class="dashboard-chip bg-sky-100 text-sky-800"
                                             >
-                                                Default
+                                                {{
+                                                    t(
+                                                        'admin.plans.status.default',
+                                                    )
+                                                }}
                                             </span>
                                         </div>
                                         <p
@@ -282,7 +298,7 @@ const planMeta = (plan: AdminPlanRow): string =>
                                             variant="outline"
                                             @click="editPlan(plan)"
                                         >
-                                            Edit
+                                            {{ t('admin.plans.actions.edit') }}
                                         </Button>
                                         <Button
                                             size="sm"
@@ -291,8 +307,12 @@ const planMeta = (plan: AdminPlanRow): string =>
                                         >
                                             {{
                                                 plan.isActive
-                                                    ? 'Deactivate'
-                                                    : 'Activate'
+                                                    ? t(
+                                                          'admin.plans.actions.deactivate',
+                                                      )
+                                                    : t(
+                                                          'admin.plans.actions.activate',
+                                                      )
                                             }}
                                         </Button>
                                         <Button
@@ -301,7 +321,11 @@ const planMeta = (plan: AdminPlanRow): string =>
                                             variant="outline"
                                             @click="makeDefault(plan)"
                                         >
-                                            Make default
+                                            {{
+                                                t(
+                                                    'admin.plans.actions.make_default',
+                                                )
+                                            }}
                                         </Button>
                                     </div>
                                 </div>
@@ -322,14 +346,16 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 variant="ghost"
                                 @click="resetForm"
                             >
-                                New plan instead
+                                {{ t('admin.plans.form.new_instead') }}
                             </Button>
                         </div>
 
                         <form class="space-y-4 pt-4" @submit.prevent="submit">
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <div class="space-y-1.5">
-                                    <Label for="plan-name">Name</Label>
+                                    <Label for="plan-name">{{
+                                        t('admin.plans.form.name')
+                                    }}</Label>
                                     <Input
                                         id="plan-name"
                                         v-model="form.name"
@@ -343,7 +369,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     </p>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-slug">Slug</Label>
+                                    <Label for="plan-slug">{{
+                                        t('admin.plans.form.slug')
+                                    }}</Label>
                                     <Input id="plan-slug" v-model="form.slug" />
                                     <p
                                         v-if="form.errors.slug"
@@ -355,9 +383,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                             </div>
 
                             <div class="space-y-1.5">
-                                <Label for="plan-description"
-                                    >Description</Label
-                                >
+                                <Label for="plan-description">{{
+                                    t('admin.plans.form.description')
+                                }}</Label>
                                 <Input
                                     id="plan-description"
                                     v-model="form.description"
@@ -372,7 +400,9 @@ const planMeta = (plan: AdminPlanRow): string =>
 
                             <div class="grid gap-4 sm:grid-cols-3">
                                 <div class="space-y-1.5">
-                                    <Label for="plan-currency">Currency</Label>
+                                    <Label for="plan-currency">{{
+                                        t('admin.plans.form.currency')
+                                    }}</Label>
                                     <Input
                                         id="plan-currency"
                                         v-model="form.currency"
@@ -387,9 +417,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     </p>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-price"
-                                        >Price (cents)</Label
-                                    >
+                                    <Label for="plan-price">{{
+                                        t('admin.plans.form.price_cents')
+                                    }}</Label>
                                     <Input
                                         id="plan-price"
                                         v-model.number="form.price_cents"
@@ -405,9 +435,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     </p>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-storage"
-                                        >Storage (GB)</Label
-                                    >
+                                    <Label for="plan-storage">{{
+                                        t('admin.plans.form.storage_gb')
+                                    }}</Label>
                                     <Input
                                         id="plan-storage"
                                         v-model.number="form.storage_limit_gb"
@@ -426,9 +456,9 @@ const planMeta = (plan: AdminPlanRow): string =>
 
                             <div class="grid gap-4 sm:grid-cols-3">
                                 <div class="space-y-1.5">
-                                    <Label for="plan-uploads"
-                                        >Upload limit</Label
-                                    >
+                                    <Label for="plan-uploads">{{
+                                        t('admin.plans.form.upload_limit')
+                                    }}</Label>
                                     <Input
                                         id="plan-uploads"
                                         v-model.number="form.upload_limit"
@@ -438,9 +468,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     />
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-window"
-                                        >Upload window (days)</Label
-                                    >
+                                    <Label for="plan-window">{{
+                                        t('admin.plans.form.upload_window_days')
+                                    }}</Label>
                                     <Input
                                         id="plan-window"
                                         v-model.number="form.upload_window_days"
@@ -450,9 +480,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     />
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-retention"
-                                        >Retention (days)</Label
-                                    >
+                                    <Label for="plan-retention">{{
+                                        t('admin.plans.form.retention_days')
+                                    }}</Label>
                                     <Input
                                         id="plan-retention"
                                         v-model.number="form.retention_days"
@@ -465,7 +495,9 @@ const planMeta = (plan: AdminPlanRow): string =>
 
                             <div class="grid gap-4 sm:grid-cols-3">
                                 <div class="space-y-1.5">
-                                    <Label for="plan-grace">Grace (days)</Label>
+                                    <Label for="plan-grace">{{
+                                        t('admin.plans.form.grace_days')
+                                    }}</Label>
                                     <Input
                                         id="plan-grace"
                                         v-model.number="form.grace_days"
@@ -475,9 +507,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     />
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-video-duration"
-                                        >Video max (sec)</Label
-                                    >
+                                    <Label for="plan-video-duration">{{
+                                        t('admin.plans.form.video_max_seconds')
+                                    }}</Label>
                                     <Input
                                         id="plan-video-duration"
                                         v-model.number="
@@ -489,18 +521,32 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     />
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-tier"
-                                        >Customization tier</Label
-                                    >
+                                    <Label for="plan-tier">{{
+                                        t('admin.plans.form.customization_tier')
+                                    }}</Label>
                                     <select
                                         id="plan-tier"
                                         v-model="form.customization_tier"
                                         class="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
                                     >
-                                        <option value="basic">Basic</option>
-                                        <option value="better">Better</option>
+                                        <option value="basic">
+                                            {{
+                                                t('admin.plans.form.tier.basic')
+                                            }}
+                                        </option>
+                                        <option value="better">
+                                            {{
+                                                t(
+                                                    'admin.plans.form.tier.better',
+                                                )
+                                            }}
+                                        </option>
                                         <option value="advanced">
-                                            Advanced
+                                            {{
+                                                t(
+                                                    'admin.plans.form.tier.advanced',
+                                                )
+                                            }}
                                         </option>
                                     </select>
                                     <p
@@ -514,9 +560,9 @@ const planMeta = (plan: AdminPlanRow): string =>
 
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <div class="space-y-1.5">
-                                    <Label for="plan-photo-size"
-                                        >Photo max (MB)</Label
-                                    >
+                                    <Label for="plan-photo-size">{{
+                                        t('admin.plans.form.photo_max_mb')
+                                    }}</Label>
                                     <Input
                                         id="plan-photo-size"
                                         v-model.number="form.photo_max_size_mb"
@@ -526,9 +572,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                     />
                                 </div>
                                 <div class="space-y-1.5">
-                                    <Label for="plan-video-size"
-                                        >Video max (MB)</Label
-                                    >
+                                    <Label for="plan-video-size">{{
+                                        t('admin.plans.form.video_max_mb')
+                                    }}</Label>
                                     <Input
                                         id="plan-video-size"
                                         v-model.number="form.video_max_size_mb"
@@ -545,7 +591,11 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 <label
                                     class="flex items-center justify-between gap-3 text-sm text-brand-ink"
                                 >
-                                    Full album downloads
+                                    {{
+                                        t(
+                                            'admin.plans.form.toggles.download_all',
+                                        )
+                                    }}
                                     <Switch
                                         v-model="form.download_all_enabled"
                                     />
@@ -553,7 +603,11 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 <label
                                     class="flex items-center justify-between gap-3 text-sm text-brand-ink"
                                 >
-                                    Moderation tools
+                                    {{
+                                        t(
+                                            'admin.plans.form.toggles.moderation_tools',
+                                        )
+                                    }}
                                     <Switch
                                         v-model="form.moderation_tools_enabled"
                                     />
@@ -561,7 +615,11 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 <label
                                     class="flex items-center justify-between gap-3 text-sm text-brand-ink"
                                 >
-                                    Remove app branding
+                                    {{
+                                        t(
+                                            'admin.plans.form.toggles.remove_branding',
+                                        )
+                                    }}
                                     <Switch
                                         v-model="form.remove_app_branding"
                                     />
@@ -569,13 +627,13 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 <label
                                     class="flex items-center justify-between gap-3 text-sm text-brand-ink"
                                 >
-                                    Active
+                                    {{ t('admin.plans.form.toggles.active') }}
                                     <Switch v-model="form.is_active" />
                                 </label>
                                 <label
                                     class="flex items-center justify-between gap-3 text-sm text-brand-ink"
                                 >
-                                    Default plan for its currency
+                                    {{ t('admin.plans.form.toggles.default') }}
                                     <Switch v-model="form.is_default" />
                                 </label>
                                 <p
@@ -591,7 +649,11 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 class="w-full rounded-full bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                                 :disabled="form.processing"
                             >
-                                {{ isEditing ? 'Save changes' : 'Create plan' }}
+                                {{
+                                    isEditing
+                                        ? t('admin.plans.form.save')
+                                        : t('admin.plans.form.create_title')
+                                }}
                             </Button>
                         </form>
                     </section>

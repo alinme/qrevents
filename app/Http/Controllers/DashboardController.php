@@ -494,14 +494,14 @@ class DashboardController extends Controller
                     'kind' => $asset->kind,
                     'guestName' => is_string($metadata['guest_name'] ?? null) && trim((string) $metadata['guest_name']) !== ''
                         ? trim((string) $metadata['guest_name'])
-                        : 'Guest',
+                        : __('public.shared.guest'),
                     'summary' => match ($asset->kind) {
                         'text' => is_string($metadata['text'] ?? null) && trim((string) $metadata['text']) !== ''
                             ? trim((string) $metadata['text'])
-                            : 'Shared a text post',
+                            : __('dashboard.activity.shared_text'),
                         default => is_string($metadata['message'] ?? null) && trim((string) $metadata['message']) !== ''
                             ? trim((string) $metadata['message'])
-                            : 'Shared new media',
+                            : __('dashboard.activity.shared_media'),
                     },
                     'moderationStatus' => $asset->moderation_status,
                     'createdAt' => $asset->created_at?->toIso8601String(),
