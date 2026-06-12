@@ -203,6 +203,9 @@ jobs:
               echo "Reusing existing node_modules on the server"
             fi
 
+            # Prune stale hashed assets, then build; emptyOutDir is off so
+            # pages opened before the deploy keep loading their CSS/JS.
+            find public/build -type f -mtime +14 -delete 2>/dev/null || true
             npm run build
           fi
 

@@ -52,7 +52,7 @@ const primaryNavItems = computed(() => [
         label: t('marketing.nav.how_it_works_simple'),
         href: `${homeUrl}#how-it-works`,
     },
-    { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
+    { label: t('marketing.footer.why_different'), href: `${homeUrl}#proof` },
     { label: t('marketing.footer.album_access'), href: '/album' },
 ]);
 
@@ -61,21 +61,20 @@ const footerProductLinks = computed(() => [
         label: t('marketing.footer.how_it_works'),
         href: `${homeUrl}#how-it-works`,
     },
-    { label: t('marketing.nav.examples'), href: `${homeUrl}#proof` },
-    { label: t('marketing.nav.what_changed'), href: `${homeUrl}#services` },
-]);
-
-const footerUseCaseLinks = computed(() => [
-    { label: t('marketing.nav.weddings'), href: `${homeUrl}#how-it-works` },
-    { label: t('marketing.nav.birthdays'), href: `${homeUrl}#how-it-works` },
-    { label: t('marketing.nav.corporate'), href: `${homeUrl}#proof` },
-    { label: t('marketing.nav.public_events'), href: `${homeUrl}#proof` },
+    { label: t('marketing.footer.what_you_get'), href: `${homeUrl}#services` },
+    { label: t('marketing.footer.why_different'), href: `${homeUrl}#proof` },
+    { label: t('marketing.footer.faq'), href: `${homeUrl}#faq` },
 ]);
 
 const footerSupportLinks = computed(() => [
     { label: t('marketing.footer.album_access'), href: '/album' },
-    { label: t('marketing.footer.faq'), href: `${homeUrl}#faq` },
-    { label: t('marketing.footer.support'), href: `${homeUrl}#cta` },
+    { label: t('marketing.footer.contact'), href: '/contact' },
+]);
+
+const footerLegalLinks = computed(() => [
+    { label: t('marketing.footer.privacy'), href: '/privacy' },
+    { label: t('marketing.footer.terms'), href: '/terms' },
+    { label: t('marketing.footer.gdpr'), href: '/privacy#gdpr' },
 ]);
 
 const selectedLocaleOption = computed(
@@ -136,14 +135,15 @@ const switchMarketingLocale = (nextLocale: string): void => {
                 </Link>
 
                 <nav class="hidden items-center gap-6 lg:flex">
-                    <Link
+                    <component
+                        :is="item.href.includes('#') ? 'a' : Link"
                         v-for="item in primaryNavItems"
                         :key="item.label"
                         :href="item.href"
                         class="text-sm font-medium text-promo-ink/82 transition hover:text-promo-ink"
                     >
                         {{ item.label }}
-                    </Link>
+                    </component>
                 </nav>
 
                 <div class="hidden items-center gap-3 lg:flex">
@@ -321,14 +321,15 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Link
+                                <component
+                                    :is="item.href.includes('#') ? 'a' : Link"
                                     v-for="item in primaryNavItems"
                                     :key="`primary-${item.label}`"
                                     :href="item.href"
                                     class="rounded-[16px] border border-promo-line/80 bg-white px-4 py-3 text-sm text-promo-ink transition hover:bg-promo-surface"
                                 >
                                     {{ item.label }}
-                                </Link>
+                                </component>
                             </div>
 
                             <div
@@ -410,32 +411,14 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             {{ t('marketing.footer.product') }}
                         </div>
                         <div class="mt-4 space-y-3 text-sm text-promo-muted">
-                            <Link
+                            <a
                                 v-for="item in footerProductLinks"
                                 :key="item.label"
                                 :href="item.href"
                                 class="block transition hover:text-promo-ink"
                             >
                                 {{ item.label }}
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div
-                            class="text-xs font-semibold tracking-[0.26em] text-promo-primary uppercase"
-                        >
-                            {{ t('marketing.nav.use_cases') }}
-                        </div>
-                        <div class="mt-4 space-y-3 text-sm text-promo-muted">
-                            <Link
-                                v-for="item in footerUseCaseLinks"
-                                :key="item.label"
-                                :href="item.href"
-                                class="block transition hover:text-promo-ink"
-                            >
-                                {{ item.label }}
-                            </Link>
+                            </a>
                         </div>
                     </div>
 
@@ -454,16 +437,25 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             >
                                 {{ item.label }}
                             </Link>
-                            <Link
-                                href="/privacy"
+                        </div>
+                    </div>
+
+                    <div>
+                        <div
+                            class="text-xs font-semibold tracking-[0.26em] text-promo-primary uppercase"
+                        >
+                            {{ t('marketing.footer.legal') }}
+                        </div>
+                        <div class="mt-4 space-y-3 text-sm text-promo-muted">
+                            <component
+                                :is="item.href.includes('#') ? 'a' : Link"
+                                v-for="item in footerLegalLinks"
+                                :key="item.label"
+                                :href="item.href"
                                 class="block transition hover:text-promo-ink"
-                                >{{ t('marketing.footer.privacy') }}</Link
                             >
-                            <Link
-                                href="/terms"
-                                class="block transition hover:text-promo-ink"
-                                >{{ t('marketing.footer.terms') }}</Link
-                            >
+                                {{ item.label }}
+                            </component>
                         </div>
                     </div>
                 </div>

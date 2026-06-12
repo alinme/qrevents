@@ -101,7 +101,7 @@ const comparisonRows = [1, 2, 3, 4, 5, 6].map((row) => ({
     others: t(`marketing.home.comparison.rows.${row}.others`),
 }));
 
-const faqItems = [1, 2, 3, 4, 5].map((item) => ({
+const faqItems = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => ({
     question: t(`marketing.home.faq.items.${item}.question`),
     answer: t(`marketing.home.faq.items.${item}.answer`),
 }));

@@ -5,6 +5,11 @@ import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    build: {
+        // Keep previous hashed assets so pages opened before a deploy can
+        // still load their CSS/JS; the deploy workflow prunes old files.
+        emptyOutDir: false,
+    },
     plugins: [
         laravel({
             input: ['resources/js/app.ts'],

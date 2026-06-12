@@ -45,7 +45,8 @@ const sections = computed(() =>
                     <section
                         v-for="(section, index) in sections"
                         :key="index"
-                        class="rounded-3xl border border-promo-line bg-promo-surface p-6 shadow-card sm:p-8"
+                        :id="section.title === 'GDPR' ? 'gdpr' : undefined"
+                        class="scroll-mt-24 rounded-3xl border border-promo-line bg-promo-surface p-6 shadow-card sm:p-8"
                     >
                         <h2 class="text-lg font-semibold text-promo-ink">
                             {{ section.title }}

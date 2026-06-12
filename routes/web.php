@@ -23,8 +23,12 @@ Route::inertia('/launch', 'Welcome', [
 Route::inertia('/privacy', 'legal/Legal', [
     'canRegister' => Features::enabled(Features::registration()),
     'page' => 'privacy',
-    'sectionCount' => 7,
+    'sectionCount' => 8,
 ])->name('legal.privacy');
+
+Route::inertia('/contact', 'legal/Contact', [
+    'canRegister' => Features::enabled(Features::registration()),
+])->name('legal.contact');
 
 Route::inertia('/terms', 'legal/Legal', [
     'canRegister' => Features::enabled(Features::registration()),
