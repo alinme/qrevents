@@ -31,6 +31,8 @@ import {
 } from 'lucide-vue-next';
 import type { DateValue } from 'reka-ui';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import SettingGroup from '@/components/events/settings/SettingGroup.vue';
+import SettingRow from '@/components/events/settings/SettingRow.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,6 +85,7 @@ type EventSettingsPayload = {
     hideSideImages: boolean;
     hideQrCode: boolean;
     hideCaption: boolean;
+    captionTheme: 'dark' | 'light';
     disableGuestDownload: boolean;
     welcomeScreenEnabled: boolean;
     welcomeScreenTitle: string;
@@ -301,6 +304,7 @@ const defaults: EventSettingsPayload = {
     hideSideImages: false,
     hideQrCode: false,
     hideCaption: false,
+    captionTheme: 'dark',
     disableGuestDownload: false,
     welcomeScreenEnabled: false,
     welcomeScreenTitle: '',
@@ -538,6 +542,7 @@ const form = useForm({
     hide_side_images: currentSettings.hideSideImages,
     hide_qr_code: currentSettings.hideQrCode,
     hide_caption: currentSettings.hideCaption,
+    caption_theme: currentSettings.captionTheme,
     disable_guest_download: currentSettings.disableGuestDownload,
     welcome_screen_enabled: currentSettings.welcomeScreenEnabled,
     welcome_screen_subtitle: currentSettings.welcomeScreenSubtitle,
@@ -952,6 +957,7 @@ const autoSavePayload = computed(() => ({
     hide_side_images: form.hide_side_images,
     hide_qr_code: form.hide_qr_code,
     hide_caption: form.hide_caption,
+    caption_theme: form.caption_theme,
     disable_guest_download: form.disable_guest_download,
     welcome_screen_enabled: form.welcome_screen_enabled,
     welcome_screen_subtitle: form.welcome_screen_subtitle,
@@ -1468,6 +1474,12 @@ const onAllowedMediaTypesChange = (value: unknown): void => {
     form.allowed_media_types = values;
 };
 
+const onCaptionThemeChange = (value: unknown): void => {
+    if (value === 'dark' || value === 'light') {
+        form.caption_theme = value;
+    }
+};
+
 const onModerationFiltersChange = (value: unknown): void => {
     const values = Array.isArray(value)
         ? value.filter(
@@ -1790,12 +1802,14 @@ function resolveSupportedTimezones(): string[] {
             <form @submit.prevent="submit">
                 <Card class="overflow-hidden">
                     <CardHeader class="border-b px-4 py-0">
-                        <nav class="flex flex-wrap gap-2 pt-2">
+                        <nav
+                            class="flex gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        >
                             <button
                                 v-for="tab in visibleTabItems"
                                 :key="tab.id"
                                 type="button"
-                                class="inline-flex items-center gap-2 border-b-2 px-2 py-3 text-sm font-medium transition-colors"
+                                class="inline-flex shrink-0 items-center gap-2 border-b-2 px-2 py-3 text-sm font-medium whitespace-nowrap transition-colors"
                                 :class="
                                     activeTab === tab.id
                                         ? 'border-primary text-foreground'
@@ -1814,566 +1828,543 @@ function resolveSupportedTimezones(): string[] {
                             v-show="activeTab === 'general'"
                             class="space-y-6"
                         >
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                            <SettingGroup
+                                :eyebrow="t('event_settings.groups.basics')"
                             >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.general.name_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.general.name_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <Input
-                                        id="name"
-                                        v-model="form.name"
-                                        class="h-11"
-                                        :placeholder="
-                                            t(
-                                                'event_settings.general.name_placeholder',
-                                            )
-                                        "
-                                    />
-                                    <InputError :message="form.errors.name" />
-                                </div>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.general.date_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.general.date_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <Popover v-model:open="isDatePickerOpen">
-                                        <PopoverTrigger as-child>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                class="h-11 w-full justify-start text-left font-normal"
-                                            >
-                                                <CalendarIcon
-                                                    class="mr-2 size-4"
-                                                />
-                                                {{ selectedDateLabel }}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            class="w-auto p-0"
-                                            align="start"
-                                        >
-                                            <Calendar
-                                                v-model="selectedEventDate"
-                                                :weekday-format="'short'"
-                                                initial-focus
-                                                @update:model-value="
-                                                    isDatePickerOpen = false
-                                                "
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <Button
-                                        v-if="form.event_date"
-                                        type="button"
-                                        variant="ghost"
-                                        class="h-auto px-3 text-sm"
-                                        @click="clearEventDate"
-                                    >
-                                        {{
-                                            t(
-                                                'event_settings.general.clear_date',
-                                            )
-                                        }}
-                                    </Button>
-                                    <InputError
-                                        :message="form.errors.event_date"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.general.timezone_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.general.timezone_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <Popover
-                                        v-model:open="isTimezonePickerOpen"
-                                    >
-                                        <PopoverTrigger as-child>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                class="h-11 w-full justify-start text-left font-normal"
-                                            >
-                                                {{
-                                                    form.timezone ||
-                                                    t(
-                                                        'event_settings.general.timezone_select',
-                                                    )
-                                                }}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            class="w-[340px] p-2"
-                                            align="start"
-                                        >
-                                            <InputGroup class="mb-2 h-11">
-                                                <InputGroupInput
-                                                    v-model="timezoneQuery"
-                                                    :placeholder="
-                                                        t(
-                                                            'event_settings.general.timezone_search',
-                                                        )
-                                                    "
-                                                />
-                                                <InputGroupAddon
-                                                    align="inline-end"
-                                                >
-                                                    <InputGroupButton
-                                                        v-if="
-                                                            timezoneQuery.length >
-                                                            0
-                                                        "
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        class="h-8"
-                                                        @click="
-                                                            clearTimezoneQuery
-                                                        "
-                                                    >
-                                                        <X class="size-4" />
-                                                    </InputGroupButton>
-                                                </InputGroupAddon>
-                                            </InputGroup>
-                                            <div
-                                                class="max-h-60 overflow-y-auto rounded-md border"
-                                            >
-                                                <button
-                                                    v-for="timezoneValue in filteredTimezoneValues"
-                                                    :key="timezoneValue"
-                                                    type="button"
-                                                    class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-muted"
-                                                    @click="
-                                                        selectTimezone(
-                                                            timezoneValue,
-                                                        )
-                                                    "
-                                                >
-                                                    <span>{{
-                                                        timezoneValue
-                                                    }}</span>
-                                                    <Check
-                                                        v-if="
-                                                            timezoneValue ===
-                                                            form.timezone
-                                                        "
-                                                        class="size-4"
-                                                    />
-                                                </button>
-                                                <p
-                                                    v-if="
-                                                        filteredTimezoneValues.length ===
-                                                        0
-                                                    "
-                                                    class="px-3 py-4 text-sm text-muted-foreground"
-                                                >
-                                                    {{
-                                                        t(
-                                                            'event_settings.general.timezone_empty',
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <InputError
-                                        :message="form.errors.timezone"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.general.type_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.general.type_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <NativeSelect
-                                        v-model="form.type"
-                                        class="h-11"
-                                        name="type"
-                                    >
-                                        <NativeSelectOption
-                                            v-for="typeOption in eventTypes"
-                                            :key="typeOption.value"
-                                            :value="typeOption.value"
-                                        >
-                                            {{ typeOption.label }}
-                                        </NativeSelectOption>
-                                    </NativeSelect>
-                                    <InputError :message="form.errors.type" />
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="isWeddingEventType"
-                                class="grid gap-4 rounded-2xl border border-rose-200/80 bg-rose-50/70 p-4 md:grid-cols-[minmax(0,1fr)_420px] md:items-start"
-                            >
-                                <div class="space-y-2">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.general.wedding_details_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <Badge
-                                            variant="secondary"
-                                            class="border-rose-200 bg-white text-rose-700"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.general.optional',
-                                                )
-                                            }}
-                                        </Badge>
-                                    </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.general.wedding_details_description',
-                                            )
-                                        }}
-                                    </p>
-                                    <p
-                                        v-if="!hasWeddingDetails"
-                                        class="text-sm text-rose-700/80"
-                                    >
-                                        {{
-                                            t(
-                                                'event_settings.general.wedding_details_hint',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-
-                                <div class="space-y-4">
-                                    <div class="grid gap-3 sm:grid-cols-2">
-                                        <div class="space-y-2">
-                                            <label
-                                                class="text-sm font-medium text-slate-700"
-                                                for="partner-one-name"
-                                            >
-                                                {{
-                                                    t(
-                                                        'event_settings.general.partner_one',
-                                                    )
-                                                }}
-                                            </label>
-                                            <Input
-                                                id="partner-one-name"
-                                                v-model="
-                                                    form.wedding_details
-                                                        .partner_one_name
-                                                "
-                                                class="h-11 bg-white"
-                                                :placeholder="
-                                                    t(
-                                                        'event_settings.general.partner_one_placeholder',
-                                                    )
-                                                "
-                                            />
-                                            <InputError
-                                                :message="
-                                                    form.errors[
-                                                        'wedding_details.partner_one_name'
-                                                    ]
-                                                "
-                                            />
-                                        </div>
-                                        <div class="space-y-2">
-                                            <label
-                                                class="text-sm font-medium text-slate-700"
-                                                for="partner-two-name"
-                                            >
-                                                {{
-                                                    t(
-                                                        'event_settings.general.partner_two',
-                                                    )
-                                                }}
-                                            </label>
-                                            <Input
-                                                id="partner-two-name"
-                                                v-model="
-                                                    form.wedding_details
-                                                        .partner_two_name
-                                                "
-                                                class="h-11 bg-white"
-                                                :placeholder="
-                                                    t(
-                                                        'event_settings.general.partner_two_placeholder',
-                                                    )
-                                                "
-                                            />
-                                            <InputError
-                                                :message="
-                                                    form.errors[
-                                                        'wedding_details.partner_two_name'
-                                                    ]
-                                                "
-                                            />
-                                        </div>
-                                    </div>
-
+                                <SettingRow
+                                    :title="
+                                        t('event_settings.general.name_title')
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.general.name_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
                                     <div class="space-y-2">
-                                        <label
-                                            class="text-sm font-medium text-slate-700"
-                                            for="family-name"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.general.family_name',
-                                                )
-                                            }}
-                                        </label>
                                         <Input
-                                            id="family-name"
-                                            v-model="
-                                                form.wedding_details.family_name
-                                            "
-                                            class="h-11 bg-white"
+                                            id="name"
+                                            v-model="form.name"
+                                            class="h-11"
                                             :placeholder="
                                                 t(
-                                                    'event_settings.general.family_name_placeholder',
+                                                    'event_settings.general.name_placeholder',
                                                 )
                                             "
                                         />
-                                        <p
-                                            class="text-xs text-muted-foreground"
+                                        <InputError
+                                            :message="form.errors.name"
+                                        />
+                                    </div>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t('event_settings.general.date_title')
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.general.date_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
+                                    <div class="space-y-2">
+                                        <Popover
+                                            v-model:open="isDatePickerOpen"
+                                        >
+                                            <PopoverTrigger as-child>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    class="h-11 w-full justify-start text-left font-normal"
+                                                >
+                                                    <CalendarIcon
+                                                        class="mr-2 size-4"
+                                                    />
+                                                    {{ selectedDateLabel }}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                class="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    v-model="selectedEventDate"
+                                                    :weekday-format="'short'"
+                                                    initial-focus
+                                                    @update:model-value="
+                                                        isDatePickerOpen = false
+                                                    "
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <Button
+                                            v-if="form.event_date"
+                                            type="button"
+                                            variant="ghost"
+                                            class="h-auto px-3 text-sm"
+                                            @click="clearEventDate"
                                         >
                                             {{
                                                 t(
-                                                    'event_settings.general.family_name_hint',
+                                                    'event_settings.general.clear_date',
+                                                )
+                                            }}
+                                        </Button>
+                                        <InputError
+                                            :message="form.errors.event_date"
+                                        />
+                                    </div>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.general.timezone_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.general.timezone_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
+                                    <div class="space-y-2">
+                                        <Popover
+                                            v-model:open="isTimezonePickerOpen"
+                                        >
+                                            <PopoverTrigger as-child>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    class="h-11 w-full justify-start text-left font-normal"
+                                                >
+                                                    {{
+                                                        form.timezone ||
+                                                        t(
+                                                            'event_settings.general.timezone_select',
+                                                        )
+                                                    }}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                class="w-[340px] p-2"
+                                                align="start"
+                                            >
+                                                <InputGroup class="mb-2 h-11">
+                                                    <InputGroupInput
+                                                        v-model="timezoneQuery"
+                                                        :placeholder="
+                                                            t(
+                                                                'event_settings.general.timezone_search',
+                                                            )
+                                                        "
+                                                    />
+                                                    <InputGroupAddon
+                                                        align="inline-end"
+                                                    >
+                                                        <InputGroupButton
+                                                            v-if="
+                                                                timezoneQuery.length >
+                                                                0
+                                                            "
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            class="h-8"
+                                                            @click="
+                                                                clearTimezoneQuery
+                                                            "
+                                                        >
+                                                            <X class="size-4" />
+                                                        </InputGroupButton>
+                                                    </InputGroupAddon>
+                                                </InputGroup>
+                                                <div
+                                                    class="max-h-60 overflow-y-auto rounded-md border"
+                                                >
+                                                    <button
+                                                        v-for="timezoneValue in filteredTimezoneValues"
+                                                        :key="timezoneValue"
+                                                        type="button"
+                                                        class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-muted"
+                                                        @click="
+                                                            selectTimezone(
+                                                                timezoneValue,
+                                                            )
+                                                        "
+                                                    >
+                                                        <span>{{
+                                                            timezoneValue
+                                                        }}</span>
+                                                        <Check
+                                                            v-if="
+                                                                timezoneValue ===
+                                                                form.timezone
+                                                            "
+                                                            class="size-4"
+                                                        />
+                                                    </button>
+                                                    <p
+                                                        v-if="
+                                                            filteredTimezoneValues.length ===
+                                                            0
+                                                        "
+                                                        class="px-3 py-4 text-sm text-muted-foreground"
+                                                    >
+                                                        {{
+                                                            t(
+                                                                'event_settings.general.timezone_empty',
+                                                            )
+                                                        }}
+                                                    </p>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <InputError
+                                            :message="form.errors.timezone"
+                                        />
+                                    </div>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t('event_settings.general.type_title')
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.general.type_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
+                                    <div class="space-y-2">
+                                        <NativeSelect
+                                            v-model="form.type"
+                                            class="h-11"
+                                            name="type"
+                                        >
+                                            <NativeSelectOption
+                                                v-for="typeOption in eventTypes"
+                                                :key="typeOption.value"
+                                                :value="typeOption.value"
+                                            >
+                                                {{ typeOption.label }}
+                                            </NativeSelectOption>
+                                        </NativeSelect>
+                                        <InputError
+                                            :message="form.errors.type"
+                                        />
+                                    </div>
+                                </SettingRow>
+
+                                <div
+                                    v-if="isWeddingEventType"
+                                    class="grid gap-4 rounded-2xl border border-rose-200/80 bg-rose-50/70 p-4 md:grid-cols-[minmax(0,1fr)_420px] md:items-start"
+                                >
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="text-sm font-semibold">
+                                                {{
+                                                    t(
+                                                        'event_settings.general.wedding_details_title',
+                                                    )
+                                                }}
+                                            </h3>
+                                            <Badge
+                                                variant="secondary"
+                                                class="border-rose-200 bg-white text-rose-700"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.optional',
+                                                    )
+                                                }}
+                                            </Badge>
+                                        </div>
+                                        <p
+                                            class="text-sm text-muted-foreground"
+                                        >
+                                            {{
+                                                t(
+                                                    'event_settings.general.wedding_details_description',
                                                 )
                                             }}
                                         </p>
-                                        <label
-                                            class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
-                                            for="show-family-name"
+                                        <p
+                                            v-if="!hasWeddingDetails"
+                                            class="text-sm text-rose-700/80"
                                         >
-                                            <Switch
-                                                id="show-family-name"
+                                            {{
+                                                t(
+                                                    'event_settings.general.wedding_details_hint',
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div class="grid gap-3 sm:grid-cols-2">
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="text-sm font-medium text-slate-700"
+                                                    for="partner-one-name"
+                                                >
+                                                    {{
+                                                        t(
+                                                            'event_settings.general.partner_one',
+                                                        )
+                                                    }}
+                                                </label>
+                                                <Input
+                                                    id="partner-one-name"
+                                                    v-model="
+                                                        form.wedding_details
+                                                            .partner_one_name
+                                                    "
+                                                    class="h-11 bg-white"
+                                                    :placeholder="
+                                                        t(
+                                                            'event_settings.general.partner_one_placeholder',
+                                                        )
+                                                    "
+                                                />
+                                                <InputError
+                                                    :message="
+                                                        form.errors[
+                                                            'wedding_details.partner_one_name'
+                                                        ]
+                                                    "
+                                                />
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="text-sm font-medium text-slate-700"
+                                                    for="partner-two-name"
+                                                >
+                                                    {{
+                                                        t(
+                                                            'event_settings.general.partner_two',
+                                                        )
+                                                    }}
+                                                </label>
+                                                <Input
+                                                    id="partner-two-name"
+                                                    v-model="
+                                                        form.wedding_details
+                                                            .partner_two_name
+                                                    "
+                                                    class="h-11 bg-white"
+                                                    :placeholder="
+                                                        t(
+                                                            'event_settings.general.partner_two_placeholder',
+                                                        )
+                                                    "
+                                                />
+                                                <InputError
+                                                    :message="
+                                                        form.errors[
+                                                            'wedding_details.partner_two_name'
+                                                        ]
+                                                    "
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="family-name"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.family_name',
+                                                    )
+                                                }}
+                                            </label>
+                                            <Input
+                                                id="family-name"
                                                 v-model="
                                                     form.wedding_details
-                                                        .show_family_name
+                                                        .family_name
+                                                "
+                                                class="h-11 bg-white"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.family_name_placeholder',
+                                                    )
                                                 "
                                             />
-                                            <span class="min-w-0">
-                                                <span
-                                                    class="block text-sm font-medium text-slate-700"
-                                                >
-                                                    {{
-                                                        t(
-                                                            'event_settings.general.show_family_name',
-                                                        )
-                                                    }}
+                                            <p
+                                                class="text-xs text-muted-foreground"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.family_name_hint',
+                                                    )
+                                                }}
+                                            </p>
+                                            <label
+                                                class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
+                                                for="show-family-name"
+                                            >
+                                                <Switch
+                                                    id="show-family-name"
+                                                    v-model="
+                                                        form.wedding_details
+                                                            .show_family_name
+                                                    "
+                                                />
+                                                <span class="min-w-0">
+                                                    <span
+                                                        class="block text-sm font-medium text-slate-700"
+                                                    >
+                                                        {{
+                                                            t(
+                                                                'event_settings.general.show_family_name',
+                                                            )
+                                                        }}
+                                                    </span>
+                                                    <span
+                                                        class="block text-xs text-muted-foreground"
+                                                    >
+                                                        {{
+                                                            t(
+                                                                'event_settings.general.show_family_name_example',
+                                                            )
+                                                        }}
+                                                    </span>
                                                 </span>
-                                                <span
-                                                    class="block text-xs text-muted-foreground"
-                                                >
-                                                    {{
-                                                        t(
-                                                            'event_settings.general.show_family_name_example',
-                                                        )
-                                                    }}
-                                                </span>
-                                            </span>
-                                        </label>
-                                        <InputError
-                                            :message="
-                                                form.errors[
-                                                    'wedding_details.family_name'
-                                                ]
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                form.errors[
-                                                    'wedding_details.show_family_name'
-                                                ]
-                                            "
-                                        />
-                                    </div>
+                                            </label>
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.family_name'
+                                                    ]
+                                                "
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.show_family_name'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="text-sm font-medium text-slate-700"
-                                            for="bride-parents"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.general.bride_parents',
-                                                )
-                                            }}
-                                        </label>
-                                        <Input
-                                            id="bride-parents"
-                                            v-model="
-                                                form.wedding_details
-                                                    .bride_parents
-                                            "
-                                            class="h-11 bg-white"
-                                            :placeholder="
-                                                t(
-                                                    'event_settings.general.bride_parents_placeholder',
-                                                )
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                form.errors[
-                                                    'wedding_details.bride_parents'
-                                                ]
-                                            "
-                                        />
-                                    </div>
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="bride-parents"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.bride_parents',
+                                                    )
+                                                }}
+                                            </label>
+                                            <Input
+                                                id="bride-parents"
+                                                v-model="
+                                                    form.wedding_details
+                                                        .bride_parents
+                                                "
+                                                class="h-11 bg-white"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.bride_parents_placeholder',
+                                                    )
+                                                "
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.bride_parents'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="text-sm font-medium text-slate-700"
-                                            for="groom-parents"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.general.groom_parents',
-                                                )
-                                            }}
-                                        </label>
-                                        <Input
-                                            id="groom-parents"
-                                            v-model="
-                                                form.wedding_details
-                                                    .groom_parents
-                                            "
-                                            class="h-11 bg-white"
-                                            :placeholder="
-                                                t(
-                                                    'event_settings.general.groom_parents_placeholder',
-                                                )
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                form.errors[
-                                                    'wedding_details.groom_parents'
-                                                ]
-                                            "
-                                        />
-                                    </div>
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="groom-parents"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.groom_parents',
+                                                    )
+                                                }}
+                                            </label>
+                                            <Input
+                                                id="groom-parents"
+                                                v-model="
+                                                    form.wedding_details
+                                                        .groom_parents
+                                                "
+                                                class="h-11 bg-white"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.groom_parents_placeholder',
+                                                    )
+                                                "
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.groom_parents'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="text-sm font-medium text-slate-700"
-                                            for="godparents"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.general.godparents',
-                                                )
-                                            }}
-                                        </label>
-                                        <Input
-                                            id="godparents"
-                                            v-model="
-                                                form.wedding_details.godparents
-                                            "
-                                            class="h-11 bg-white"
-                                            :placeholder="
-                                                t(
-                                                    'event_settings.general.godparents_placeholder',
-                                                )
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                form.errors[
-                                                    'wedding_details.godparents'
-                                                ]
-                                            "
-                                        />
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-sm font-medium text-slate-700"
+                                                for="godparents"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.general.godparents',
+                                                    )
+                                                }}
+                                            </label>
+                                            <Input
+                                                id="godparents"
+                                                v-model="
+                                                    form.wedding_details
+                                                        .godparents
+                                                "
+                                                class="h-11 bg-white"
+                                                :placeholder="
+                                                    t(
+                                                        'event_settings.general.godparents_placeholder',
+                                                    )
+                                                "
+                                            />
+                                            <InputError
+                                                :message="
+                                                    form.errors[
+                                                        'wedding_details.godparents'
+                                                    ]
+                                                "
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </SettingGroup>
 
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.album_permissions.title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Pro
-                                        </Badge>
-                                    </div>
+                            <SettingGroup
+                                :eyebrow="
+                                    t('event_settings.groups.album_access')
+                                "
+                                badge="Pro"
+                                class="border-t pt-6"
+                            >
+                                <div class="space-y-3">
                                     <p class="text-sm text-muted-foreground">
                                         {{
                                             t(
@@ -2381,79 +2372,66 @@ function resolveSupportedTimezones(): string[] {
                                             )
                                         }}
                                     </p>
-                                </div>
-                                <div class="grid gap-3 md:grid-cols-3">
-                                    <button
-                                        v-for="permission in albumPermissionCardOptions"
-                                        :key="permission.value"
-                                        type="button"
-                                        class="rounded-xl border p-4 text-left transition"
-                                        :class="
-                                            albumPermissionSelection[
-                                                permission.value
-                                            ]
-                                                ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                        "
-                                        @click="
-                                            toggleAlbumPermissionSelection(
-                                                permission.value,
-                                            )
-                                        "
-                                    >
-                                        <component
-                                            :is="permission.icon"
-                                            class="mb-3 size-5"
+                                    <div class="grid gap-3 md:grid-cols-3">
+                                        <button
+                                            v-for="permission in albumPermissionCardOptions"
+                                            :key="permission.value"
+                                            type="button"
+                                            class="rounded-xl border p-4 text-left transition"
                                             :class="
                                                 albumPermissionSelection[
                                                     permission.value
                                                 ]
-                                                    ? 'text-primary'
-                                                    : 'text-slate-400'
+                                                    ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                             "
-                                        />
-                                        <p class="text-sm font-semibold">
-                                            {{ permission.title }}
-                                        </p>
-                                        <p
-                                            class="mt-2 text-sm text-muted-foreground"
-                                        >
-                                            {{ permission.description }}
-                                        </p>
-                                    </button>
-                                </div>
-                                <InputError
-                                    :message="form.errors.album_permission"
-                                />
-                            </div>
-
-                            <div
-                                id="guest-upload-types"
-                                class="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.uploads.title',
+                                            @click="
+                                                toggleAlbumPermissionSelection(
+                                                    permission.value,
                                                 )
-                                            }}
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Plus
-                                        </Badge>
+                                            "
+                                        >
+                                            <component
+                                                :is="permission.icon"
+                                                class="mb-3 size-5"
+                                                :class="
+                                                    albumPermissionSelection[
+                                                        permission.value
+                                                    ]
+                                                        ? 'text-primary'
+                                                        : 'text-slate-400'
+                                                "
+                                            />
+                                            <p class="text-sm font-semibold">
+                                                {{ permission.title }}
+                                            </p>
+                                            <p
+                                                class="mt-2 text-sm text-muted-foreground"
+                                            >
+                                                {{ permission.description }}
+                                            </p>
+                                        </button>
                                     </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.uploads.description',
-                                            )
-                                        }}
-                                    </p>
+                                    <InputError
+                                        :message="form.errors.album_permission"
+                                    />
                                 </div>
-                                <div class="space-y-2">
+                            </SettingGroup>
+
+                            <SettingGroup
+                                id="guest-upload-types"
+                                :eyebrow="
+                                    t('event_settings.groups.guest_uploads')
+                                "
+                                badge="Plus"
+                                class="border-t pt-6"
+                            >
+                                <p class="text-sm text-muted-foreground">
+                                    {{
+                                        t('event_settings.uploads.description')
+                                    }}
+                                </p>
+                                <div class="max-w-xl space-y-2">
                                     <ToggleGroup
                                         type="multiple"
                                         variant="outline"
@@ -2485,7 +2463,7 @@ function resolveSupportedTimezones(): string[] {
                                         "
                                     />
                                 </div>
-                            </div>
+                            </SettingGroup>
                         </section>
 
                         <section
@@ -2813,31 +2791,25 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
                             </div>
 
-                            <div
+                            <SettingGroup
                                 v-if="props.currentEvent.billing.canManage"
-                                class="space-y-6"
+                                :eyebrow="
+                                    t('event_settings.groups.admin_billing')
+                                "
                             >
-                                <div
-                                    class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.billing.admin_plan_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.billing.admin_plan_description',
+                                        )
+                                    "
+                                    align="start"
                                 >
-                                    <div>
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_plan_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_plan_description',
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
                                     <div class="space-y-2">
                                         <NativeSelect
                                             v-model="billingForm.plan_id"
@@ -2880,55 +2852,38 @@ function resolveSupportedTimezones(): string[] {
                                             "
                                         />
                                     </div>
-                                </div>
+                                </SettingRow>
 
-                                <div
-                                    class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.billing.admin_paid_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.billing.admin_paid_description',
+                                        )
+                                    "
                                 >
-                                    <div>
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_paid_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_paid_description',
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
-                                    <div class="flex justify-end">
+                                    <div class="flex md:justify-end">
                                         <Switch v-model="billingForm.is_paid" />
                                     </div>
-                                </div>
+                                </SettingRow>
 
-                                <div
-                                    class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.billing.admin_due_date_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.billing.admin_due_date_description',
+                                        )
+                                    "
+                                    align="start"
                                 >
-                                    <div>
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_due_date_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_due_date_description',
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
                                     <div class="space-y-2">
                                         <Input
                                             v-model="billingForm.payment_due_at"
@@ -2942,29 +2897,21 @@ function resolveSupportedTimezones(): string[] {
                                             "
                                         />
                                     </div>
-                                </div>
+                                </SettingRow>
 
-                                <div
-                                    class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.billing.admin_paid_at_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.billing.admin_paid_at_description',
+                                        )
+                                    "
+                                    align="start"
                                 >
-                                    <div>
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_paid_at_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_paid_at_description',
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
                                     <div class="space-y-2">
                                         <Input
                                             v-model="billingForm.paid_at"
@@ -2978,29 +2925,21 @@ function resolveSupportedTimezones(): string[] {
                                             "
                                         />
                                     </div>
-                                </div>
+                                </SettingRow>
 
-                                <div
-                                    class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.billing.admin_note_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.billing.admin_note_description',
+                                        )
+                                    "
+                                    align="start"
                                 >
-                                    <div>
-                                        <h3 class="text-sm font-semibold">
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_note_title',
-                                                )
-                                            }}
-                                        </h3>
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{
-                                                t(
-                                                    'event_settings.billing.admin_note_description',
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
                                     <div class="space-y-2">
                                         <Textarea
                                             v-model="billingForm.billing_note"
@@ -3017,7 +2956,7 @@ function resolveSupportedTimezones(): string[] {
                                             "
                                         />
                                     </div>
-                                </div>
+                                </SettingRow>
 
                                 <div class="flex justify-end">
                                     <Button
@@ -3033,7 +2972,7 @@ function resolveSupportedTimezones(): string[] {
                                         }}
                                     </Button>
                                 </div>
-                            </div>
+                            </SettingGroup>
 
                             <div
                                 v-else
@@ -3217,442 +3156,497 @@ function resolveSupportedTimezones(): string[] {
                                 </p>
                             </div>
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                            <SettingGroup
+                                :eyebrow="t('event_settings.groups.branding')"
                             >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.logo_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.logo_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="space-y-2">
-                                    <input
-                                        ref="logoFileInputRef"
-                                        type="file"
-                                        accept="image/*"
-                                        class="sr-only"
-                                        @change="onLogoFileChange"
-                                    />
-                                    <div
-                                        v-if="currentLogoUrl"
-                                        class="relative inline-block"
-                                    >
-                                        <img
-                                            :src="currentLogoUrl"
-                                            :alt="
-                                                t(
-                                                    'public.shared.alt.event_logo',
-                                                )
-                                            "
-                                            class="h-24 w-24 rounded-xl border object-cover"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.logo_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.logo_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
+                                    <div class="space-y-2">
+                                        <input
+                                            ref="logoFileInputRef"
+                                            type="file"
+                                            accept="image/*"
+                                            class="sr-only"
+                                            @change="onLogoFileChange"
                                         />
-                                        <button
-                                            type="button"
-                                            class="absolute -top-2 -right-2 rounded-full border bg-background p-1 shadow"
-                                            :disabled="!canEditLogo"
-                                            @click="removeCurrentLogo"
+                                        <div
+                                            v-if="currentLogoUrl"
+                                            class="relative inline-block"
                                         >
-                                            <X class="size-4" />
-                                        </button>
+                                            <img
+                                                :src="currentLogoUrl"
+                                                :alt="
+                                                    t(
+                                                        'public.shared.alt.event_logo',
+                                                    )
+                                                "
+                                                class="h-24 w-24 rounded-xl border object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                class="absolute -top-2 -right-2 rounded-full border bg-background p-1 shadow"
+                                                :disabled="!canEditLogo"
+                                                @click="removeCurrentLogo"
+                                            >
+                                                <X class="size-4" />
+                                            </button>
+                                        </div>
+                                        <InputGroup v-else class="h-11">
+                                            <InputGroupInput
+                                                :model-value="logoFileName"
+                                                readonly
+                                            />
+                                            <InputGroupAddon align="inline-end">
+                                                <InputGroupButton
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    class="h-8"
+                                                    :disabled="!canEditLogo"
+                                                    @click="openLogoPicker"
+                                                >
+                                                    {{
+                                                        t(
+                                                            'event_settings.shared.browse',
+                                                        )
+                                                    }}
+                                                </InputGroupButton>
+                                            </InputGroupAddon>
+                                        </InputGroup>
+                                        <InputError
+                                            :message="form.errors.logo_file"
+                                        />
+                                        <p
+                                            v-if="!canEditLogo"
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.logo_locked',
+                                                )
+                                            }}
+                                        </p>
                                     </div>
-                                    <InputGroup v-else class="h-11">
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.theme_color_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.theme_color_description',
+                                        )
+                                    "
+                                    align="start"
+                                >
+                                    <InputGroup class="h-11">
+                                        <InputGroupAddon
+                                            align="inline-start"
+                                            class="pr-1"
+                                        >
+                                            <input
+                                                v-model="primaryColorPicker"
+                                                type="color"
+                                                class="h-7 w-7 rounded border-0 bg-transparent p-0"
+                                            />
+                                        </InputGroupAddon>
                                         <InputGroupInput
-                                            :model-value="logoFileName"
-                                            readonly
+                                            v-model="
+                                                form.branding.primary_color
+                                            "
+                                            class="font-mono"
+                                            placeholder="#3B82F6"
                                         />
                                         <InputGroupAddon align="inline-end">
                                             <InputGroupButton
                                                 type="button"
-                                                variant="outline"
+                                                variant="ghost"
                                                 size="sm"
                                                 class="h-8"
-                                                :disabled="!canEditLogo"
-                                                @click="openLogoPicker"
+                                                @click="
+                                                    form.branding.primary_color =
+                                                        ''
+                                                "
                                             >
                                                 {{
                                                     t(
-                                                        'event_settings.shared.browse',
+                                                        'event_settings.shared.reset',
                                                     )
                                                 }}
                                             </InputGroupButton>
                                         </InputGroupAddon>
                                     </InputGroup>
-                                    <InputError
-                                        :message="form.errors.logo_file"
-                                    />
-                                    <p
-                                        v-if="!canEditLogo"
-                                        class="text-xs text-muted-foreground"
-                                    >
-                                        {{
-                                            t(
-                                                'event_settings.appearance.logo_locked',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                            </div>
+                                </SettingRow>
+                            </SettingGroup>
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
+                            <SettingGroup
+                                :eyebrow="
+                                    t('event_settings.groups.guest_experience')
+                                "
+                                class="border-t pt-6"
                             >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.display_language_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.display_language_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <NativeSelect
-                                    v-model="form.display_language"
-                                    class="h-11"
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.display_language_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.display_language_description',
+                                        )
+                                    "
                                 >
-                                    <NativeSelectOption value="automatic">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.language_automatic',
-                                            )
-                                        }}
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="ro">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.language_romanian',
-                                            )
-                                        }}
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="en">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.language_english',
-                                            )
-                                        }}
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="el">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.language_greek',
-                                            )
-                                        }}
-                                    </NativeSelectOption>
-                                </NativeSelect>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-start"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.theme_color_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.theme_color_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <InputGroup class="h-11">
-                                    <InputGroupAddon
-                                        align="inline-start"
-                                        class="pr-1"
+                                    <NativeSelect
+                                        v-model="form.display_language"
+                                        class="h-11"
                                     >
-                                        <input
-                                            v-model="primaryColorPicker"
-                                            type="color"
-                                            class="h-7 w-7 rounded border-0 bg-transparent p-0"
-                                        />
-                                    </InputGroupAddon>
-                                    <InputGroupInput
-                                        v-model="form.branding.primary_color"
-                                        class="font-mono"
-                                        placeholder="#3B82F6"
-                                    />
-                                    <InputGroupAddon align="inline-end">
-                                        <InputGroupButton
+                                        <NativeSelectOption value="automatic">
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.language_automatic',
+                                                )
+                                            }}
+                                        </NativeSelectOption>
+                                        <NativeSelectOption value="ro">
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.language_romanian',
+                                                )
+                                            }}
+                                        </NativeSelectOption>
+                                        <NativeSelectOption value="en">
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.language_english',
+                                                )
+                                            }}
+                                        </NativeSelectOption>
+                                        <NativeSelectOption value="el">
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.language_greek',
+                                                )
+                                            }}
+                                        </NativeSelectOption>
+                                    </NativeSelect>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.welcome_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.welcome_description',
+                                        )
+                                    "
+                                >
+                                    <div
+                                        class="flex items-center gap-2 md:justify-end"
+                                    >
+                                        <Button
                                             type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            class="h-8"
+                                            variant="outline"
+                                            class="h-11 min-w-[120px]"
                                             @click="
-                                                form.branding.primary_color = ''
+                                                isWelcomeScreenDialogOpen = true
                                             "
                                         >
                                             {{
-                                                t('event_settings.shared.reset')
+                                                t(
+                                                    'event_settings.appearance.configure',
+                                                )
                                             }}
-                                        </InputGroupButton>
-                                    </InputGroupAddon>
-                                </InputGroup>
-                            </div>
+                                        </Button>
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.welcome_title',
-                                            )
-                                        }}
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{
-                                            t(
-                                                'event_settings.appearance.welcome_description',
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div
-                                    class="flex items-center justify-end gap-2"
-                                >
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        class="h-11 min-w-[120px]"
-                                        @click="
-                                            isWelcomeScreenDialogOpen = true
-                                        "
-                                    >
-                                        {{
-                                            t(
-                                                'event_settings.appearance.configure',
-                                            )
-                                        }}
-                                    </Button>
-
-                                    <Switch
-                                        v-model="form.welcome_screen_enabled"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        Album Background
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        Choose a preset backdrop, a solid color,
-                                        or let the album rotate through uploaded
-                                        photos.
-                                    </p>
-                                </div>
-                                <div
-                                    class="flex items-center justify-end gap-2"
-                                >
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        class="h-11 min-w-[120px]"
-                                        @click="
-                                            isAlbumBackgroundSheetOpen = true
-                                        "
-                                    >
-                                        Customize
-                                    </Button>
-
-                                    <Switch
-                                        v-model="form.album_background_enabled"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            Text Posts Backgrounds
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Plus
-                                        </Badge>
+                                        <Switch
+                                            v-model="
+                                                form.welcome_screen_enabled
+                                            "
+                                        />
                                     </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        Customize backgrounds for uploading text
-                                        posts.
-                                    </p>
-                                </div>
-                                <div
-                                    class="flex items-center justify-end gap-2"
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.album_background_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.album_background_description',
+                                        )
+                                    "
                                 >
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        class="h-11 min-w-[120px]"
-                                        @click="isTextPostsSheetOpen = true"
+                                    <div
+                                        class="flex items-center gap-2 md:justify-end"
                                     >
-                                        Customize
-                                    </Button>
-                                    <Switch
-                                        v-model="
-                                            form.text_posts_backgrounds_enabled
-                                        "
-                                    />
-                                </div>
-                            </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            class="h-11 min-w-[120px]"
+                                            @click="
+                                                isAlbumBackgroundSheetOpen = true
+                                            "
+                                        >
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.customize',
+                                                )
+                                            }}
+                                        </Button>
+
+                                        <Switch
+                                            v-model="
+                                                form.album_background_enabled
+                                            "
+                                        />
+                                    </div>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.appearance.text_posts_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.appearance.text_posts_description',
+                                        )
+                                    "
+                                    badge="Plus"
+                                >
+                                    <div
+                                        class="flex items-center gap-2 md:justify-end"
+                                    >
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            class="h-11 min-w-[120px]"
+                                            @click="isTextPostsSheetOpen = true"
+                                        >
+                                            {{
+                                                t(
+                                                    'event_settings.appearance.customize',
+                                                )
+                                            }}
+                                        </Button>
+                                        <Switch
+                                            v-model="
+                                                form.text_posts_backgrounds_enabled
+                                            "
+                                        />
+                                    </div>
+                                </SettingRow>
+                            </SettingGroup>
                         </section>
 
                         <section
                             v-show="activeTab === 'photo_wall'"
                             class="space-y-6"
                         >
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
+                            <SettingGroup
+                                :eyebrow="t('event_settings.groups.display')"
                             >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        Hide Side Images
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        Turn on to hide the moving images from
-                                        the sides.
-                                    </p>
-                                </div>
-                                <div class="flex justify-end">
-                                    <Switch v-model="form.hide_side_images" />
-                                </div>
-                            </div>
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.photo_wall.hide_side_images_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.photo_wall.hide_side_images_description',
+                                        )
+                                    "
+                                >
+                                    <div class="flex md:justify-end">
+                                        <Switch
+                                            v-model="form.hide_side_images"
+                                        />
+                                    </div>
+                                </SettingRow>
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        Hide QR Code
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        Turn on to remove the QR code.
-                                    </p>
-                                </div>
-                                <div class="flex justify-end">
-                                    <Switch v-model="form.hide_qr_code" />
-                                </div>
-                            </div>
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.photo_wall.hide_qr_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.photo_wall.hide_qr_description',
+                                        )
+                                    "
+                                >
+                                    <div class="flex md:justify-end">
+                                        <Switch v-model="form.hide_qr_code" />
+                                    </div>
+                                </SettingRow>
+                            </SettingGroup>
 
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
+                            <SettingGroup
+                                :eyebrow="t('event_settings.groups.captions')"
+                                class="border-t pt-6"
                             >
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        Hide Caption
-                                    </h3>
-                                    <p class="text-sm text-muted-foreground">
-                                        Toggle this option to hide media
-                                        captions.
-                                    </p>
-                                </div>
-                                <div class="flex justify-end">
-                                    <Switch v-model="form.hide_caption" />
-                                </div>
-                            </div>
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.photo_wall.hide_caption_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.photo_wall.hide_caption_description',
+                                        )
+                                    "
+                                >
+                                    <div class="flex md:justify-end">
+                                        <Switch v-model="form.hide_caption" />
+                                    </div>
+                                </SettingRow>
+
+                                <SettingRow
+                                    :title="
+                                        t(
+                                            'event_settings.photo_wall.caption_theme_title',
+                                        )
+                                    "
+                                    :description="
+                                        t(
+                                            'event_settings.photo_wall.caption_theme_description',
+                                        )
+                                    "
+                                >
+                                    <div class="space-y-2">
+                                        <ToggleGroup
+                                            type="single"
+                                            variant="outline"
+                                            :model-value="form.caption_theme"
+                                            class="flex w-full"
+                                            @update:model-value="
+                                                onCaptionThemeChange
+                                            "
+                                        >
+                                            <ToggleGroupItem
+                                                value="dark"
+                                                class="h-11 flex-1"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.photo_wall.caption_theme_dark',
+                                                    )
+                                                }}
+                                            </ToggleGroupItem>
+                                            <ToggleGroupItem
+                                                value="light"
+                                                class="h-11 flex-1"
+                                            >
+                                                {{
+                                                    t(
+                                                        'event_settings.photo_wall.caption_theme_light',
+                                                    )
+                                                }}
+                                            </ToggleGroupItem>
+                                        </ToggleGroup>
+                                        <InputError
+                                            :message="form.errors.caption_theme"
+                                        />
+                                    </div>
+                                </SettingRow>
+                            </SettingGroup>
                         </section>
 
                         <section
                             v-show="activeTab === 'moderation'"
                             class="space-y-6"
                         >
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
+                            <SettingRow
+                                :title="
+                                    t('event_settings.moderation.manual_title')
+                                "
+                                :description="
+                                    t(
+                                        'event_settings.moderation.manual_description',
+                                    )
+                                "
+                                badge="Pro"
                             >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            Manually Approve Guest Uploads
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Pro
-                                        </Badge>
+                                <div class="space-y-2">
+                                    <div class="flex md:justify-end">
+                                        <Switch
+                                            v-model="form.moderation_enabled"
+                                        />
                                     </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        Manually approve uploads before they
-                                        appear on Photo Wall and Digital Album.
-                                        <span class="font-medium">
-                                            More Info</span
-                                        >
-                                    </p>
-                                </div>
-                                <div class="flex justify-end">
-                                    <Switch v-model="form.moderation_enabled" />
-                                </div>
-                            </div>
-                            <InputError
-                                :message="form.errors.moderation_enabled"
-                            />
-
-                            <div
-                                class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-center"
-                            >
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold">
-                                            Automatic Content Filter
-                                        </h3>
-                                        <Badge variant="secondary">
-                                            <Sparkles />
-                                            Pro
-                                        </Badge>
-                                    </div>
-                                    <p class="text-sm text-muted-foreground">
-                                        Automatically detect and block adult,
-                                        explicit, violent, or suggestive
-                                        content.
-                                    </p>
-                                </div>
-                                <div
-                                    class="flex items-center justify-end gap-2"
-                                >
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        class="h-11"
-                                        @click="
-                                            isModerationFiltersSheetOpen = true
+                                    <InputError
+                                        :message="
+                                            form.errors.moderation_enabled
                                         "
-                                    >
-                                        Manage Filters
-                                    </Button>
-                                    <Switch
-                                        v-model="form.auto_moderation_enabled"
                                     />
                                 </div>
-                            </div>
-                            <InputError
-                                :message="form.errors.auto_moderation_enabled"
-                            />
+                            </SettingRow>
+
+                            <SettingRow
+                                :title="
+                                    t('event_settings.moderation.auto_title')
+                                "
+                                :description="
+                                    t(
+                                        'event_settings.moderation.auto_description',
+                                    )
+                                "
+                                badge="Pro"
+                            >
+                                <div class="space-y-2">
+                                    <div
+                                        class="flex items-center gap-2 md:justify-end"
+                                    >
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            class="h-11"
+                                            @click="
+                                                isModerationFiltersSheetOpen = true
+                                            "
+                                        >
+                                            {{
+                                                t(
+                                                    'event_settings.moderation.manage_filters',
+                                                )
+                                            }}
+                                        </Button>
+                                        <Switch
+                                            v-model="
+                                                form.auto_moderation_enabled
+                                            "
+                                        />
+                                    </div>
+                                    <InputError
+                                        :message="
+                                            form.errors.auto_moderation_enabled
+                                        "
+                                    />
+                                </div>
+                            </SettingRow>
                         </section>
 
                         <section
@@ -4471,7 +4465,7 @@ function resolveSupportedTimezones(): string[] {
                                     class="h-10"
                                     @click="isWelcomeScreenDialogOpen = false"
                                 >
-                                    Done
+                                    {{ t('event_settings.shared.done') }}
                                 </Button>
                             </DialogFooter>
                         </div>
@@ -4705,7 +4699,11 @@ function resolveSupportedTimezones(): string[] {
                                                     isWelcomeFieldSheetOpen = false
                                                 "
                                             >
-                                                Done
+                                                {{
+                                                    t(
+                                                        'event_settings.shared.done',
+                                                    )
+                                                }}
                                             </Button>
                                         </div>
                                     </SheetFooter>
@@ -4968,7 +4966,7 @@ function resolveSupportedTimezones(): string[] {
                                     class="h-10"
                                     @click="isAlbumBackgroundSheetOpen = false"
                                 >
-                                    Done
+                                    {{ t('event_settings.shared.done') }}
                                 </Button>
                             </SheetFooter>
                         </div>
@@ -5101,7 +5099,7 @@ function resolveSupportedTimezones(): string[] {
                                     class="h-10"
                                     @click="isTextPostsSheetOpen = false"
                                 >
-                                    Done
+                                    {{ t('event_settings.shared.done') }}
                                 </Button>
                             </SheetFooter>
                         </div>
@@ -5184,7 +5182,7 @@ function resolveSupportedTimezones(): string[] {
                                         isModerationFiltersSheetOpen = false
                                     "
                                 >
-                                    Done
+                                    {{ t('event_settings.shared.done') }}
                                 </Button>
                             </SheetFooter>
                         </div>
@@ -5336,7 +5334,7 @@ function resolveSupportedTimezones(): string[] {
                         :disabled="form.processing"
                         class="h-11"
                     >
-                        Save now
+                        {{ t('event_settings.shared.save_now') }}
                     </Button>
                 </div>
             </form>
