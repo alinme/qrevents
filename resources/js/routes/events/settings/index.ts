@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:873
+* @see app/Http/Controllers/EventController.php:895
 * @route '/events/{event}/settings'
 */
 export const update = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -16,7 +16,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:873
+* @see app/Http/Controllers/EventController.php:895
 * @route '/events/{event}/settings'
 */
 update.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ update.url = (args: { event: string | number | { id: string | number } } | [even
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:873
+* @see app/Http/Controllers/EventController.php:895
 * @route '/events/{event}/settings'
 */
 update.patch = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -59,7 +59,7 @@ update.patch = (args: { event: string | number | { id: string | number } } | [ev
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:873
+* @see app/Http/Controllers/EventController.php:895
 * @route '/events/{event}/settings'
 */
 const updateForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -74,7 +74,7 @@ const updateForm = (args: { event: string | number | { id: string | number } } |
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:873
+* @see app/Http/Controllers/EventController.php:895
 * @route '/events/{event}/settings'
 */
 updateForm.patch = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

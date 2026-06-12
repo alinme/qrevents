@@ -131,6 +131,28 @@ class EventController extends Controller
         ]);
     }
 
+    public function assetThumbnail(Request $request, Event $event, EventAsset $asset): StreamedResponse|RedirectResponse
+    {
+        $this->assertCanViewEvent($request, $event);
+        abort_unless($asset->event_id === $event->id, 404);
+
+        $path = $this->assetThumbnailPath($asset);
+        abort_unless($path !== null, 404);
+
+        return $this->streamStorageAsset($asset->disk, $path);
+    }
+
+    public function assetPreview(Request $request, Event $event, EventAsset $asset): StreamedResponse|RedirectResponse
+    {
+        $this->assertCanViewEvent($request, $event);
+        abort_unless($asset->event_id === $event->id, 404);
+
+        $path = $this->assetPreviewPath($asset);
+        abort_unless($path !== null, 404);
+
+        return $this->streamStorageAsset($asset->disk, $path);
+    }
+
     public function printPack(Request $request, Event $event): Response
     {
         $this->assertCanViewEvent($request, $event);
@@ -3625,8 +3647,12 @@ class EventController extends Controller
             return [
                 'id' => $asset->id,
                 'kind' => $asset->kind,
-                'thumbnailUrl' => $this->assetThumbnailUrl($asset),
-                'previewUrl' => $this->assetPreviewUrl($asset),
+                'thumbnailUrl' => $this->assetThumbnailPath($asset) !== null
+                    ? route('events.assets.thumbnail', [$event, $asset])
+                    : null,
+                'previewUrl' => $this->assetPreviewPath($asset) !== null
+                    ? route('events.assets.preview', [$event, $asset])
+                    : null,
                 'videoProcessing' => $this->videoVariantsPending($asset),
                 'originalFilename' => $asset->original_filename,
                 'mimeType' => $asset->mime_type,
@@ -4390,38 +4416,26 @@ class EventController extends Controller
         return $this->storageUrl($asset->disk, $asset->path);
     }
 
-    private function assetPreviewUrl(EventAsset $asset): ?string
+    private function assetPreviewPath(EventAsset $asset): ?string
     {
         if ($asset->kind === 'video') {
             $path = $asset->video_preview_path;
-
-            if ($path === null || $path === '') {
-                return null;
-            }
-
-            return $this->storageUrl($asset->disk, $path);
+        } else {
+            $path = $asset->preview_path ?: $asset->path;
         }
 
-        $path = $asset->preview_path ?: $asset->path;
-
-        return $this->storageUrl($asset->disk, $path);
+        return is_string($path) && trim($path) !== '' ? $path : null;
     }
 
-    private function assetThumbnailUrl(EventAsset $asset): ?string
+    private function assetThumbnailPath(EventAsset $asset): ?string
     {
         if ($asset->kind === 'video') {
             $path = $asset->video_thumbnail_path;
-
-            if ($path === null || $path === '') {
-                return null;
-            }
-
-            return $this->storageUrl($asset->disk, $path);
+        } else {
+            $path = $asset->thumbnail_path ?: $asset->preview_path ?: $asset->path;
         }
 
-        $path = $asset->thumbnail_path ?: $asset->preview_path ?: $asset->path;
-
-        return $this->storageUrl($asset->disk, $path);
+        return is_string($path) && trim($path) !== '' ? $path : null;
     }
 
     private function assetPublicPreviewUrl(EventAsset $asset): ?string

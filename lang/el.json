@@ -1376,5 +1376,8 @@
     "event_settings.collaborators.viewer": "Θεατής",
     "event_settings.collaborators.pending_note": "Ο συνεργάτης παραμένει προσκεκλημένος μέχρι να αποδεχθεί τον σύνδεσμο που στάλθηκε με email.",
     "event_settings.collaborators.inviting": "Αποστολή πρόσκλησης...",
-    "event_settings.collaborators.send_invite": "Αποστολή πρόσκλησης"
+    "event_settings.collaborators.send_invite": "Αποστολή πρόσκλησης",
+    "media.actions.select_upload": "Επιλογή αρχείου από :guest",
+    "media.attendees.toggle_show": "Εμφάνιση συμμετεχόντων",
+    "media.attendees.toggle_hide": "Απόκρυψη συμμετεχόντων"
 }

@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { IconFileText, IconPhoto, IconVideo } from '@tabler/icons-vue';
 import {
+    ChevronDown,
     ChevronLeft,
     ChevronRight,
     Columns2,
@@ -185,6 +186,7 @@ const visibleCount = ref(24);
 const mediaView = ref<MediaViewMode>('balanced');
 const attendeePage = ref(1);
 const previewScope = ref<PreviewScope>('main');
+const attendeesOpen = ref(false);
 
 const pillToggleClass = (active: boolean): string =>
     active
@@ -193,6 +195,15 @@ const pillToggleClass = (active: boolean): string =>
 
 const pillToggleIconClass = (active: boolean): string =>
     active ? 'size-4 text-brand-inverse' : 'size-4 text-brand-muted';
+
+const moderationFilterOptions = computed<
+    Array<{ value: ModerationFilter; label: string }>
+>(() => [
+    { value: 'all', label: t('media.filters.any_status') },
+    { value: 'approved', label: t('media.filters.approved') },
+    { value: 'processing', label: t('media.filters.processing') },
+    { value: 'rejected', label: t('media.filters.rejected') },
+]);
 const copiedAssetId = ref<number | null>(null);
 const previewTouchStartX = ref<number | null>(null);
 const previewTouchStartY = ref<number | null>(null);
@@ -300,14 +311,6 @@ const wallVisibilityMetaText = (
             return t('media.wall_visibility.pending');
     }
 };
-
-const showsWallDecisionOverlay = (asset: MediaAsset): boolean =>
-    props.canManageMedia && asset.wallVisibility === 'pending';
-
-const showsGridAssetChrome = (asset: MediaAsset): boolean =>
-    !showsWallDecisionOverlay(asset);
-
-const showsGridAssetAvatar = (): boolean => mediaView.value === 'relaxed';
 
 const moderationMatchLabel = (
     match: MediaAsset['moderationMatches'][number],
@@ -655,11 +658,11 @@ const canLoadMore = computed(
 const mediaGridClass = computed(() => {
     switch (mediaView.value) {
         case 'relaxed':
-            return 'grid grid-cols-2 gap-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3';
+            return 'grid grid-cols-2 gap-1.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3';
         case 'dense':
-            return 'grid grid-cols-2 gap-1 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6';
+            return 'grid grid-cols-2 gap-1.5 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6';
         default:
-            return 'grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4';
+            return 'grid grid-cols-2 gap-1.5 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4';
     }
 });
 
@@ -1196,9 +1199,26 @@ const statCards = computed(() => [
                             <h1 class="dashboard-title mt-2">
                                 {{ t('media.page.title') }}
                             </h1>
-                            <p class="dashboard-body mt-2">
-                                {{ t('media.page.description') }}
-                            </p>
+                            <div
+                                class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5"
+                            >
+                                <div
+                                    v-for="card in statCards"
+                                    :key="card.key"
+                                    class="flex items-center gap-1.5 text-sm text-brand-muted"
+                                >
+                                    <component
+                                        :is="card.icon"
+                                        class="size-4 text-brand-muted/70"
+                                    />
+                                    <span
+                                        class="font-semibold tracking-tight text-brand-ink"
+                                    >
+                                        {{ card.value }}
+                                    </span>
+                                    <span>{{ card.title }}</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <Button
@@ -1281,34 +1301,7 @@ const statCards = computed(() => [
                         </div>
                     </div>
 
-                    <dl
-                        class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4"
-                    >
-                        <div
-                            v-for="card in statCards"
-                            :key="card.key"
-                            class="dashboard-divider-left"
-                        >
-                            <dt
-                                class="dashboard-eyebrow flex items-center gap-2"
-                            >
-                                <component
-                                    :is="card.icon"
-                                    class="size-3.5 text-brand-muted/70"
-                                />
-                                {{ card.title }}
-                            </dt>
-                            <dd
-                                class="mt-2 text-lg font-semibold tracking-tight text-brand-ink"
-                            >
-                                {{ card.value }}
-                            </dd>
-                        </div>
-                    </dl>
-
-                    <div
-                        class="mt-5 flex flex-col gap-3 border-t border-brand-border/70 pt-4"
-                    >
+                    <div class="mt-5 border-t border-brand-border/70 pt-4">
                         <div class="flex flex-wrap items-center gap-2">
                             <input
                                 v-model="searchQuery"
@@ -1402,52 +1395,24 @@ const statCards = computed(() => [
                                     }}</span>
                                 </button>
                             </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <Button
-                                size="sm"
-                                :variant="
-                                    moderationFilter === 'all'
-                                        ? 'secondary'
-                                        : 'outline'
-                                "
-                                @click="moderationFilter = 'all'"
+                            <div
+                                class="inline-flex flex-wrap items-center gap-1 rounded-full border border-brand-border bg-brand-inverse p-1"
                             >
-                                {{ t('media.filters.any_status') }}
-                            </Button>
-                            <Button
-                                size="sm"
-                                :variant="
-                                    moderationFilter === 'approved'
-                                        ? 'secondary'
-                                        : 'outline'
-                                "
-                                @click="moderationFilter = 'approved'"
-                            >
-                                {{ t('media.filters.approved') }}
-                            </Button>
-                            <Button
-                                size="sm"
-                                :variant="
-                                    moderationFilter === 'processing'
-                                        ? 'secondary'
-                                        : 'outline'
-                                "
-                                @click="moderationFilter = 'processing'"
-                            >
-                                {{ t('media.filters.processing') }}
-                            </Button>
-                            <Button
-                                size="sm"
-                                :variant="
-                                    moderationFilter === 'rejected'
-                                        ? 'secondary'
-                                        : 'outline'
-                                "
-                                @click="moderationFilter = 'rejected'"
-                            >
-                                {{ t('media.filters.rejected') }}
-                            </Button>
+                                <button
+                                    v-for="option in moderationFilterOptions"
+                                    :key="option.value"
+                                    type="button"
+                                    class="h-8 rounded-full px-3 text-xs font-semibold transition"
+                                    :class="
+                                        pillToggleClass(
+                                            moderationFilter === option.value,
+                                        )
+                                    "
+                                    @click="moderationFilter = option.value"
+                                >
+                                    {{ option.label }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1557,7 +1522,7 @@ const statCards = computed(() => [
                         <article
                             v-for="asset in visibleAssets"
                             :key="asset.id"
-                            class="group relative overflow-hidden rounded-none bg-slate-100"
+                            class="group relative overflow-hidden rounded-xl bg-slate-100"
                         >
                             <div
                                 class="relative aspect-[3/4] w-full overflow-hidden"
@@ -1690,172 +1655,211 @@ const statCards = computed(() => [
                                     </div>
 
                                     <div
-                                        v-if="showsGridAssetChrome(asset)"
-                                        class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/68 via-black/22 to-transparent"
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 bg-gradient-to-t from-black/65 via-black/20 to-transparent opacity-0 transition duration-200 group-hover:opacity-100 sm:block"
                                     />
-
                                     <div
-                                        v-if="showsGridAssetChrome(asset)"
-                                        class="absolute top-3 left-3 flex items-center gap-2"
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 hidden p-2.5 opacity-0 transition duration-200 group-hover:opacity-100 sm:block"
                                     >
-                                        <label
-                                            v-if="canManageMedia"
-                                            class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                            :data-test="`asset-select-toggle-${asset.id}`"
-                                            @click.stop
+                                        <p
+                                            class="truncate text-xs font-semibold text-white"
                                         >
-                                            <input
-                                                type="checkbox"
-                                                class="sr-only"
-                                                :data-test="`asset-select-${asset.id}`"
-                                                :checked="
-                                                    selectedAssetIds.includes(
-                                                        asset.id,
-                                                    )
-                                                "
-                                                @click.stop
-                                                @change.stop="
-                                                    toggleAssetSelection(
-                                                        asset.id,
-                                                    )
-                                                "
-                                            />
-                                            <Check
-                                                v-if="
-                                                    selectedAssetIds.includes(
-                                                        asset.id,
-                                                    )
-                                                "
-                                                class="size-4"
-                                            />
-                                        </label>
-                                        <span
-                                            class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                            :title="kindLabel(asset.kind)"
+                                            {{ asset.guestName }}
+                                        </p>
+                                        <p
+                                            class="mt-0.5 truncate text-[10px] text-white/75"
                                         >
-                                            <component
-                                                :is="kindIcon(asset.kind)"
-                                                class="size-4"
-                                            />
-                                        </span>
-                                        <span
-                                            class="inline-flex size-8 items-center justify-center rounded-full"
-                                            :class="
-                                                moderationBadgeClass(
-                                                    asset.moderationStatus,
+                                            {{
+                                                wallVisibilityMetaText(
+                                                    asset.wallVisibility,
                                                 )
-                                            "
-                                            :title="
-                                                moderationStatusLabel(
-                                                    asset.moderationStatus,
-                                                )
-                                            "
-                                        >
-                                            <component
-                                                :is="
-                                                    moderationIcon(
-                                                        asset.moderationStatus,
-                                                    )
-                                                "
-                                                class="size-4"
-                                            />
-                                        </span>
+                                            }}
+                                            ·
+                                            {{
+                                                formatDateTime(asset.createdAt)
+                                            }}
+                                        </p>
                                     </div>
                                 </button>
 
                                 <div
-                                    v-if="showsWallDecisionOverlay(asset)"
-                                    class="absolute inset-0 z-20 grid grid-cols-2 overflow-hidden"
+                                    class="pointer-events-none absolute top-2 right-2 z-10 flex items-center gap-1.5"
                                 >
-                                    <button
-                                        type="button"
-                                        class="flex h-full items-center justify-center bg-rose-500/18 text-white transition hover:bg-rose-500/26 disabled:pointer-events-none disabled:opacity-55"
-                                        :disabled="
-                                            wallVisibilityAssetId === asset.id
+                                    <span
+                                        v-if="asset.kind !== 'photo'"
+                                        class="inline-flex size-6 items-center justify-center rounded-full bg-black/40 text-white"
+                                        :title="kindLabel(asset.kind)"
+                                    >
+                                        <component
+                                            :is="kindIcon(asset.kind)"
+                                            class="size-3.5"
+                                        />
+                                    </span>
+                                    <span
+                                        class="inline-flex size-6 items-center justify-center rounded-full shadow-sm"
+                                        :class="
+                                            moderationBadgeClass(
+                                                asset.moderationStatus,
+                                            )
                                         "
-                                        :aria-label="`Hide ${asset.guestName} upload from photo wall`"
-                                        @click.stop="
-                                            updateWallVisibility(
-                                                asset,
-                                                'rejected',
+                                        :title="
+                                            moderationStatusLabel(
+                                                asset.moderationStatus,
                                             )
                                         "
                                     >
-                                        <ThumbsDown
-                                            class="size-12 sm:size-14"
+                                        <component
+                                            :is="
+                                                moderationIcon(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                            class="size-3.5"
                                         />
-                                    </button>
+                                    </span>
+                                </div>
 
-                                    <button
-                                        type="button"
-                                        class="flex h-full items-center justify-center bg-emerald-500/20 text-white transition hover:bg-emerald-500/28 disabled:pointer-events-none disabled:opacity-55"
-                                        :disabled="
-                                            wallVisibilityAssetId === asset.id
+                                <label
+                                    v-if="canManageMedia"
+                                    class="absolute top-2 left-2 z-10 inline-flex size-7 cursor-pointer items-center justify-center rounded-full border border-white/30 text-white shadow-sm transition focus-within:opacity-100"
+                                    :class="
+                                        selectedAssetIds.includes(asset.id)
+                                            ? 'bg-brand-ink opacity-100'
+                                            : 'bg-black/40 opacity-100 hover:bg-black/55 sm:opacity-0 sm:group-hover:opacity-100'
+                                    "
+                                    :data-test="`asset-select-toggle-${asset.id}`"
+                                    @click.stop
+                                >
+                                    <input
+                                        type="checkbox"
+                                        class="sr-only"
+                                        :data-test="`asset-select-${asset.id}`"
+                                        :aria-label="
+                                            t('media.actions.select_upload', {
+                                                guest: asset.guestName,
+                                            })
                                         "
-                                        :aria-label="`Show ${asset.guestName} upload on photo wall`"
-                                        @click.stop="
-                                            updateWallVisibility(
+                                        :checked="
+                                            selectedAssetIds.includes(asset.id)
+                                        "
+                                        @click.stop
+                                        @change.stop="
+                                            toggleAssetSelection(asset.id)
+                                        "
+                                    />
+                                    <Check
+                                        v-if="
+                                            selectedAssetIds.includes(asset.id)
+                                        "
+                                        class="size-4"
+                                    />
+                                </label>
+
+                                <div
+                                    v-if="canManageMedia"
+                                    class="absolute right-2 bottom-2 z-10 hidden items-center gap-1.5 opacity-0 transition duration-200 group-hover:opacity-100 focus-within:opacity-100 sm:flex"
+                                >
+                                    <template
+                                        v-if="
+                                            asset.wallVisibility === 'pending'
+                                        "
+                                    >
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-7 items-center justify-center rounded-full bg-black/45 text-white shadow-sm transition hover:bg-emerald-500/90 disabled:pointer-events-none disabled:opacity-50"
+                                            :disabled="
+                                                wallVisibilityAssetId ===
+                                                asset.id
+                                            "
+                                            :title="
+                                                t(
+                                                    'media.actions.show_on_wall_short',
+                                                )
+                                            "
+                                            :aria-label="
+                                                wallVisibilityAriaLabel(
+                                                    asset,
+                                                    'approved',
+                                                )
+                                            "
+                                            @click.stop="
+                                                updateWallVisibility(
+                                                    asset,
+                                                    'approved',
+                                                )
+                                            "
+                                        >
+                                            <ThumbsUp class="size-3.5" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-7 items-center justify-center rounded-full bg-black/45 text-white shadow-sm transition hover:bg-rose-500/90 disabled:pointer-events-none disabled:opacity-50"
+                                            :disabled="
+                                                wallVisibilityAssetId ===
+                                                asset.id
+                                            "
+                                            :title="
+                                                t(
+                                                    'media.actions.hide_from_wall_short',
+                                                )
+                                            "
+                                            :aria-label="
+                                                wallVisibilityAriaLabel(
+                                                    asset,
+                                                    'rejected',
+                                                )
+                                            "
+                                            @click.stop="
+                                                updateWallVisibility(
+                                                    asset,
+                                                    'rejected',
+                                                )
+                                            "
+                                        >
+                                            <ThumbsDown class="size-3.5" />
+                                        </button>
+                                    </template>
+                                    <button
+                                        v-if="
+                                            asset.moderationStatus !==
+                                            'approved'
+                                        "
+                                        type="button"
+                                        class="inline-flex size-7 items-center justify-center rounded-full bg-black/45 text-white shadow-sm transition hover:bg-emerald-500/90 disabled:pointer-events-none disabled:opacity-50"
+                                        :disabled="moderationAssetId !== null"
+                                        :title="t('media.actions.approve')"
+                                        :aria-label="
+                                            moderationAriaLabel(
                                                 asset,
                                                 'approved',
                                             )
                                         "
-                                    >
-                                        <ThumbsUp class="size-12 sm:size-14" />
-                                    </button>
-                                </div>
-
-                                <div
-                                    v-if="showsGridAssetChrome(asset)"
-                                    class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
-                                >
-                                    <div
-                                        class="flex min-w-0 items-center"
-                                        :class="
-                                            showsGridAssetAvatar()
-                                                ? 'gap-2'
-                                                : 'gap-0'
+                                        @click.stop="
+                                            updateModeration(asset, 'approved')
                                         "
                                     >
-                                        <Avatar
-                                            v-if="showsGridAssetAvatar()"
-                                            class="size-9 border border-white/20 shadow-sm"
-                                        >
-                                            <AvatarFallback
-                                                :class="
-                                                    avatarFallbackClass(
-                                                        asset.guestName,
-                                                    )
-                                                "
-                                            >
-                                                {{
-                                                    guestInitials(
-                                                        asset.guestName,
-                                                    )
-                                                }}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div class="min-w-0">
-                                            <p
-                                                class="truncate text-sm font-semibold text-white"
-                                            >
-                                                {{ asset.guestName }}
-                                            </p>
-                                            <p
-                                                class="mt-0.5 truncate text-[11px] text-white/70"
-                                            >
-                                                {{
-                                                    wallVisibilityMetaText(
-                                                        asset.wallVisibility,
-                                                    )
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span
-                                        class="shrink-0 text-[11px] text-white/75"
+                                        <Check class="size-3.5" />
+                                    </button>
+                                    <button
+                                        v-if="
+                                            asset.moderationStatus !==
+                                            'rejected'
+                                        "
+                                        type="button"
+                                        class="inline-flex size-7 items-center justify-center rounded-full bg-black/45 text-white shadow-sm transition hover:bg-rose-500/90 disabled:pointer-events-none disabled:opacity-50"
+                                        :disabled="moderationAssetId !== null"
+                                        :title="t('media.actions.reject')"
+                                        :aria-label="
+                                            moderationAriaLabel(
+                                                asset,
+                                                'rejected',
+                                            )
+                                        "
+                                        @click.stop="
+                                            updateModeration(asset, 'rejected')
+                                        "
                                     >
-                                        {{ formatDateTime(asset.createdAt) }}
-                                    </span>
+                                        <X class="size-3.5" />
+                                    </button>
                                 </div>
                             </div>
                         </article>
@@ -1868,148 +1872,190 @@ const statCards = computed(() => [
                     </div>
                 </section>
 
-                <section class="space-y-4">
-                    <div>
-                        <h2 class="text-xl font-semibold">
-                            {{ t('media.attendees.title') }}
-                        </h2>
-                        <p class="mt-1 text-sm text-muted-foreground">
-                            {{ t('media.attendees.description') }}
-                        </p>
-                    </div>
-
-                    <div class="overflow-hidden rounded-2xl border bg-white">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{{
-                                        t('media.attendees.table.attendee')
-                                    }}</TableHead>
-                                    <TableHead>{{
-                                        t('media.attendees.table.photos')
-                                    }}</TableHead>
-                                    <TableHead>{{
-                                        t('media.attendees.table.videos')
-                                    }}</TableHead>
-                                    <TableHead>{{
-                                        t('media.attendees.table.text')
-                                    }}</TableHead>
-                                    <TableHead>{{
-                                        t('media.attendees.table.last_upload')
-                                    }}</TableHead>
-                                    <TableHead class="text-right">{{
-                                        t('media.attendees.table.action')
-                                    }}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableEmpty
-                                    v-if="groupedAttendees.length === 0"
-                                    :colspan="6"
+                <section class="rounded-[1.25rem] bg-brand-panel shadow-card">
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-4 rounded-[1.25rem] p-5 text-left md:p-6"
+                        :aria-expanded="attendeesOpen"
+                        @click="attendeesOpen = !attendeesOpen"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold text-brand-ink">
+                                {{ t('media.attendees.title') }}
+                                <span
+                                    class="ml-1.5 text-sm font-normal text-brand-muted"
+                                    >{{ stats.attendees }}</span
                                 >
-                                    <Empty class="border-0 p-0">
-                                        <EmptyHeader>
-                                            <EmptyMedia variant="icon">
-                                                <UserRound class="size-5" />
-                                            </EmptyMedia>
-                                            <EmptyTitle>{{
-                                                t('media.attendees.empty_title')
-                                            }}</EmptyTitle>
-                                            <EmptyDescription>
-                                                {{
-                                                    t(
-                                                        'media.attendees.empty_description',
-                                                    )
-                                                }}
-                                            </EmptyDescription>
-                                        </EmptyHeader>
-                                    </Empty>
-                                </TableEmpty>
-                                <TableRow
-                                    v-for="attendee in paginatedAttendees"
-                                    :key="attendee.key"
-                                >
-                                    <TableCell>
-                                        <div>
-                                            <p
-                                                class="font-medium text-slate-900"
-                                            >
-                                                {{ attendee.guestName }}
-                                            </p>
-                                            <p
-                                                v-if="attendee.guestEmail"
-                                                class="text-xs text-muted-foreground"
-                                            >
-                                                {{ attendee.guestEmail }}
-                                            </p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{{
-                                        attendee.photoCount
-                                    }}</TableCell>
-                                    <TableCell>{{
-                                        attendee.videoCount
-                                    }}</TableCell>
-                                    <TableCell>{{
-                                        attendee.textCount
-                                    }}</TableCell>
-                                    <TableCell>{{
-                                        formatDateTime(attendee.latestCreatedAt)
-                                    }}</TableCell>
-                                    <TableCell class="text-right">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            @click="openAttendee(attendee.key)"
-                                        >
-                                            {{
-                                                t(
-                                                    'media.attendees.view_uploads',
-                                                )
-                                            }}
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
+                            </h2>
+                            <p class="mt-1 text-sm text-brand-muted">
+                                {{ t('media.attendees.description') }}
+                            </p>
+                        </div>
+                        <span
+                            class="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-brand-border text-brand-muted"
+                        >
+                            <ChevronDown
+                                class="size-4 transition-transform"
+                                :class="attendeesOpen ? 'rotate-180' : ''"
+                            />
+                            <span class="sr-only">{{
+                                attendeesOpen
+                                    ? t('media.attendees.toggle_hide')
+                                    : t('media.attendees.toggle_show')
+                            }}</span>
+                        </span>
+                    </button>
 
                     <div
-                        v-if="groupedAttendees.length > attendeesPerPage"
-                        class="flex items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3"
+                        v-if="attendeesOpen"
+                        class="space-y-4 px-5 pb-5 md:px-6 md:pb-6"
                     >
-                        <p class="text-sm text-slate-500">
-                            {{
-                                t('media.attendees.page_of', {
-                                    page: attendeePage,
-                                    total: attendeePageCount,
-                                })
-                            }}
-                        </p>
-                        <div class="flex items-center gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                :disabled="!attendeeHasPreviousPage"
-                                @click="
-                                    attendeePage = Math.max(1, attendeePage - 1)
-                                "
-                            >
-                                {{ t('media.attendees.previous') }}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                :disabled="!attendeeHasNextPage"
-                                @click="
-                                    attendeePage = Math.min(
-                                        attendeePageCount,
-                                        attendeePage + 1,
-                                    )
-                                "
-                            >
-                                {{ t('media.attendees.next') }}
-                            </Button>
+                        <div
+                            class="overflow-hidden rounded-2xl border bg-white"
+                        >
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>{{
+                                            t('media.attendees.table.attendee')
+                                        }}</TableHead>
+                                        <TableHead>{{
+                                            t('media.attendees.table.photos')
+                                        }}</TableHead>
+                                        <TableHead>{{
+                                            t('media.attendees.table.videos')
+                                        }}</TableHead>
+                                        <TableHead>{{
+                                            t('media.attendees.table.text')
+                                        }}</TableHead>
+                                        <TableHead>{{
+                                            t(
+                                                'media.attendees.table.last_upload',
+                                            )
+                                        }}</TableHead>
+                                        <TableHead class="text-right">{{
+                                            t('media.attendees.table.action')
+                                        }}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableEmpty
+                                        v-if="groupedAttendees.length === 0"
+                                        :colspan="6"
+                                    >
+                                        <Empty class="border-0 p-0">
+                                            <EmptyHeader>
+                                                <EmptyMedia variant="icon">
+                                                    <UserRound class="size-5" />
+                                                </EmptyMedia>
+                                                <EmptyTitle>{{
+                                                    t(
+                                                        'media.attendees.empty_title',
+                                                    )
+                                                }}</EmptyTitle>
+                                                <EmptyDescription>
+                                                    {{
+                                                        t(
+                                                            'media.attendees.empty_description',
+                                                        )
+                                                    }}
+                                                </EmptyDescription>
+                                            </EmptyHeader>
+                                        </Empty>
+                                    </TableEmpty>
+                                    <TableRow
+                                        v-for="attendee in paginatedAttendees"
+                                        :key="attendee.key"
+                                    >
+                                        <TableCell>
+                                            <div>
+                                                <p
+                                                    class="font-medium text-slate-900"
+                                                >
+                                                    {{ attendee.guestName }}
+                                                </p>
+                                                <p
+                                                    v-if="attendee.guestEmail"
+                                                    class="text-xs text-muted-foreground"
+                                                >
+                                                    {{ attendee.guestEmail }}
+                                                </p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{{
+                                            attendee.photoCount
+                                        }}</TableCell>
+                                        <TableCell>{{
+                                            attendee.videoCount
+                                        }}</TableCell>
+                                        <TableCell>{{
+                                            attendee.textCount
+                                        }}</TableCell>
+                                        <TableCell>{{
+                                            formatDateTime(
+                                                attendee.latestCreatedAt,
+                                            )
+                                        }}</TableCell>
+                                        <TableCell class="text-right">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="
+                                                    openAttendee(attendee.key)
+                                                "
+                                            >
+                                                {{
+                                                    t(
+                                                        'media.attendees.view_uploads',
+                                                    )
+                                                }}
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <div
+                            v-if="groupedAttendees.length > attendeesPerPage"
+                            class="flex items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3"
+                        >
+                            <p class="text-sm text-slate-500">
+                                {{
+                                    t('media.attendees.page_of', {
+                                        page: attendeePage,
+                                        total: attendeePageCount,
+                                    })
+                                }}
+                            </p>
+                            <div class="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    :disabled="!attendeeHasPreviousPage"
+                                    @click="
+                                        attendeePage = Math.max(
+                                            1,
+                                            attendeePage - 1,
+                                        )
+                                    "
+                                >
+                                    {{ t('media.attendees.previous') }}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    :disabled="!attendeeHasNextPage"
+                                    @click="
+                                        attendeePage = Math.min(
+                                            attendeePageCount,
+                                            attendeePage + 1,
+                                        )
+                                    "
+                                >
+                                    {{ t('media.attendees.next') }}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -2106,7 +2152,7 @@ const statCards = computed(() => [
                         <article
                             v-for="asset in selectedAttendeeAssets"
                             :key="`attendee-asset-${asset.id}`"
-                            class="group relative overflow-hidden rounded-none bg-slate-100"
+                            class="group relative overflow-hidden rounded-xl bg-slate-100"
                         >
                             <div
                                 class="relative aspect-[3/4] w-full overflow-hidden"
@@ -2247,81 +2293,55 @@ const statCards = computed(() => [
                                     </div>
 
                                     <div
-                                        class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 hidden h-16 bg-gradient-to-t from-black/65 to-transparent opacity-0 transition duration-200 group-hover:opacity-100 sm:block"
                                     />
-
                                     <div
-                                        class="absolute top-3 left-3 flex items-center gap-2"
+                                        class="pointer-events-none absolute inset-x-0 bottom-0 hidden p-2.5 opacity-0 transition duration-200 group-hover:opacity-100 sm:block"
                                     >
-                                        <span
-                                            class="inline-flex size-8 items-center justify-center rounded-full border border-white/16 bg-black/32 text-white"
-                                            :title="kindLabel(asset.kind)"
+                                        <p
+                                            class="truncate text-[10px] text-white/80"
                                         >
-                                            <component
-                                                :is="kindIcon(asset.kind)"
-                                                class="size-4"
-                                            />
-                                        </span>
-                                        <span
-                                            class="inline-flex size-8 items-center justify-center rounded-full"
-                                            :class="
-                                                moderationBadgeClass(
-                                                    asset.moderationStatus,
-                                                )
-                                            "
-                                            :title="
-                                                moderationStatusLabel(
-                                                    asset.moderationStatus,
-                                                )
-                                            "
-                                        >
-                                            <component
-                                                :is="
-                                                    moderationIcon(
-                                                        asset.moderationStatus,
-                                                    )
-                                                "
-                                                class="size-4"
-                                            />
-                                        </span>
+                                            {{
+                                                formatDateTime(asset.createdAt)
+                                            }}
+                                        </p>
                                     </div>
                                 </button>
 
                                 <div
-                                    class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3"
+                                    class="pointer-events-none absolute top-2 right-2 z-10 flex items-center gap-1.5"
                                 >
-                                    <div
-                                        class="flex min-w-0 items-center gap-2"
-                                    >
-                                        <Avatar
-                                            class="size-9 border border-white/20 shadow-sm"
-                                        >
-                                            <AvatarFallback
-                                                :class="
-                                                    avatarFallbackClass(
-                                                        asset.guestName,
-                                                    )
-                                                "
-                                            >
-                                                {{
-                                                    guestInitials(
-                                                        asset.guestName,
-                                                    )
-                                                }}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div class="min-w-0">
-                                            <p
-                                                class="truncate text-sm font-semibold text-white"
-                                            >
-                                                {{ asset.guestName }}
-                                            </p>
-                                        </div>
-                                    </div>
                                     <span
-                                        class="shrink-0 text-[11px] text-white/75"
+                                        v-if="asset.kind !== 'photo'"
+                                        class="inline-flex size-6 items-center justify-center rounded-full bg-black/40 text-white"
+                                        :title="kindLabel(asset.kind)"
                                     >
-                                        {{ formatDateTime(asset.createdAt) }}
+                                        <component
+                                            :is="kindIcon(asset.kind)"
+                                            class="size-3.5"
+                                        />
+                                    </span>
+                                    <span
+                                        class="inline-flex size-6 items-center justify-center rounded-full shadow-sm"
+                                        :class="
+                                            moderationBadgeClass(
+                                                asset.moderationStatus,
+                                            )
+                                        "
+                                        :title="
+                                            moderationStatusLabel(
+                                                asset.moderationStatus,
+                                            )
+                                        "
+                                    >
+                                        <component
+                                            :is="
+                                                moderationIcon(
+                                                    asset.moderationStatus,
+                                                )
+                                            "
+                                            class="size-3.5"
+                                        />
                                     </span>
                                 </div>
                             </div>

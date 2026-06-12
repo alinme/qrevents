@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:1219
+* @see app/Http/Controllers/EventController.php:1241
 * @route '/events/{event}/billing'
 */
 export const update = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -16,7 +16,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:1219
+* @see app/Http/Controllers/EventController.php:1241
 * @route '/events/{event}/billing'
 */
 update.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ update.url = (args: { event: string | number | { id: string | number } } | [even
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:1219
+* @see app/Http/Controllers/EventController.php:1241
 * @route '/events/{event}/billing'
 */
 update.patch = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -59,7 +59,7 @@ update.patch = (args: { event: string | number | { id: string | number } } | [ev
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:1219
+* @see app/Http/Controllers/EventController.php:1241
 * @route '/events/{event}/billing'
 */
 const updateForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -74,7 +74,7 @@ const updateForm = (args: { event: string | number | { id: string | number } } |
 
 /**
 * @see \App\Http\Controllers\EventController::update
-* @see app/Http/Controllers/EventController.php:1219
+* @see app/Http/Controllers/EventController.php:1241
 * @route '/events/{event}/billing'
 */
 updateForm.patch = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -91,7 +91,7 @@ update.form = updateForm
 
 /**
 * @see \App\Http\Controllers\EventController::checkout
-* @see app/Http/Controllers/EventController.php:1252
+* @see app/Http/Controllers/EventController.php:1274
 * @route '/events/{event}/billing/checkout'
 */
 export const checkout = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -106,7 +106,7 @@ checkout.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::checkout
-* @see app/Http/Controllers/EventController.php:1252
+* @see app/Http/Controllers/EventController.php:1274
 * @route '/events/{event}/billing/checkout'
 */
 checkout.url = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
@@ -139,7 +139,7 @@ checkout.url = (args: { event: string | number | { id: string | number } } | [ev
 
 /**
 * @see \App\Http\Controllers\EventController::checkout
-* @see app/Http/Controllers/EventController.php:1252
+* @see app/Http/Controllers/EventController.php:1274
 * @route '/events/{event}/billing/checkout'
 */
 checkout.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ checkout.post = (args: { event: string | number | { id: string | number } } | [e
 
 /**
 * @see \App\Http\Controllers\EventController::checkout
-* @see app/Http/Controllers/EventController.php:1252
+* @see app/Http/Controllers/EventController.php:1274
 * @route '/events/{event}/billing/checkout'
 */
 const checkoutForm = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -159,7 +159,7 @@ const checkoutForm = (args: { event: string | number | { id: string | number } }
 
 /**
 * @see \App\Http\Controllers\EventController::checkout
-* @see app/Http/Controllers/EventController.php:1252
+* @see app/Http/Controllers/EventController.php:1274
 * @route '/events/{event}/billing/checkout'
 */
 checkoutForm.post = (args: { event: string | number | { id: string | number } } | [event: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
