@@ -20,6 +20,18 @@ Route::inertia('/launch', 'Welcome', [
     'pwaLaunch' => true,
 ])->name('launch');
 
+Route::inertia('/privacy', 'legal/Legal', [
+    'canRegister' => Features::enabled(Features::registration()),
+    'page' => 'privacy',
+    'sectionCount' => 7,
+])->name('legal.privacy');
+
+Route::inertia('/terms', 'legal/Legal', [
+    'canRegister' => Features::enabled(Features::registration()),
+    'page' => 'terms',
+    'sectionCount' => 8,
+])->name('legal.terms');
+
 Route::get('auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 

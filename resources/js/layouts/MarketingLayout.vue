@@ -4,7 +4,6 @@ import {
     ArrowRight,
     CircleHelp,
     Languages,
-    Instagram,
     Menu,
     Star,
 } from 'lucide-vue-next';
@@ -396,12 +395,6 @@ const switchMarketingLocale = (nextLocale: string): void => {
 
                         <div class="mt-6 flex items-center gap-3">
                             <a
-                                href="#"
-                                class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
-                            >
-                                <Instagram class="size-4" />
-                            </a>
-                            <a
                                 href="#faq"
                                 class="inline-flex size-10 items-center justify-center rounded-full border border-promo-line bg-promo-surface text-promo-ink transition hover:bg-white"
                             >
@@ -461,15 +454,15 @@ const switchMarketingLocale = (nextLocale: string): void => {
                             >
                                 {{ item.label }}
                             </Link>
-                            <a
-                                href="#"
+                            <Link
+                                href="/privacy"
                                 class="block transition hover:text-promo-ink"
-                                >{{ t('marketing.footer.privacy') }}</a
+                                >{{ t('marketing.footer.privacy') }}</Link
                             >
-                            <a
-                                href="#"
+                            <Link
+                                href="/terms"
                                 class="block transition hover:text-promo-ink"
-                                >{{ t('marketing.footer.terms') }}</a
+                                >{{ t('marketing.footer.terms') }}</Link
                             >
                         </div>
                     </div>
