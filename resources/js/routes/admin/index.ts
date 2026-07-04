@@ -3,6 +3,7 @@ import events735790 from './events'
 import plansDaef78 from './plans'
 import users48860f from './users'
 import impersonate from './impersonate'
+import settings from './settings'
 /**
 * @see \App\Http\Controllers\AdminController::overview
  * @see app/Http/Controllers/AdminController.php:22
@@ -400,6 +401,7 @@ plans: Object.assign(plans, plansDaef78),
 users: Object.assign(users, users48860f),
 impersonate: Object.assign(impersonate, impersonate),
 audit: Object.assign(audit, audit),
+settings: Object.assign(settings, settings),
 }
 
 export default admin

@@ -38,7 +38,7 @@ test('super admins can list and search users', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/Users')
             ->where('pagination.total', 3)
-            ->has('adminNavigation', 5)
+            ->has('adminNavigation', 6)
         );
 
     $this->actingAs($admin)

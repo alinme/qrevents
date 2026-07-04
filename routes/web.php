@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\EventModerationController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BusinessController;
@@ -79,6 +80,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('admin/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.impersonate.start');
 
     Route::get('admin/audit', [AuditLogController::class, 'index'])->name('admin.audit');
+
+    Route::redirect('admin/settings', 'admin/settings/general');
+    Route::get('admin/settings/general', [SettingsController::class, 'general'])->name('admin.settings.general');
+    Route::put('admin/settings/general', [SettingsController::class, 'updateGeneral'])->name('admin.settings.general.update');
+    Route::get('admin/settings/email', [SettingsController::class, 'email'])->name('admin.settings.email');
+    Route::put('admin/settings/email', [SettingsController::class, 'updateEmail'])->name('admin.settings.email.update');
+    Route::post('admin/settings/email/test', [SettingsController::class, 'testEmail'])
+        ->middleware('throttle:6,1')->name('admin.settings.email.test');
+    Route::get('admin/settings/seo', [SettingsController::class, 'seo'])->name('admin.settings.seo');
+    Route::put('admin/settings/seo', [SettingsController::class, 'updateSeo'])->name('admin.settings.seo.update');
+    Route::get('admin/settings/integrations', [SettingsController::class, 'integrations'])->name('admin.settings.integrations');
+    Route::put('admin/settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('admin.settings.integrations.update');
+    Route::get('admin/settings/health', [SettingsController::class, 'health'])->name('admin.settings.health');
+    Route::get('admin/settings/health/data', [SettingsController::class, 'healthData'])->name('admin.settings.health.data');
+    Route::post('admin/settings/health/retry-failed', [SettingsController::class, 'retryFailedJobs'])->name('admin.settings.health.retry-failed');
+    Route::post('admin/settings/health/flush-failed', [SettingsController::class, 'flushFailedJobs'])->name('admin.settings.health.flush-failed');
+    Route::get('admin/settings/devtools', [SettingsController::class, 'devtools'])->name('admin.settings.devtools');
+    Route::post('admin/settings/devtools/run', [SettingsController::class, 'runDevtool'])
+        ->middleware('throttle:20,1')->name('admin.settings.devtools.run');
 
     Route::post('admin/events/{event}/suspend', [EventModerationController::class, 'suspend'])->name('admin.events.suspend');
     Route::patch('admin/events/{event}/extend', [EventModerationController::class, 'extend'])->name('admin.events.extend');

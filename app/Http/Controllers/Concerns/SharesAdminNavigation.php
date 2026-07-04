@@ -45,6 +45,11 @@ trait SharesAdminNavigation
                     'href' => route('admin.audit'),
                     'icon' => 'audit',
                 ],
+                [
+                    'title' => __('app.nav.settings'),
+                    'href' => route('admin.settings.general'),
+                    'icon' => 'settings',
+                ],
             ],
             'sidebarLabel' => 'Admin',
         ];

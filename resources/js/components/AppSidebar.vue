@@ -44,6 +44,7 @@ const adminIconMap: Record<string, typeof LayoutGrid> = {
     events: CalendarDays,
     plans: Package,
     audit: ScrollText,
+    settings: Settings,
 };
 
 type CurrentEvent = {
