@@ -32,6 +32,10 @@ const emit = defineEmits<{
 const open = ref(false);
 const calendarValue = ref<DateValue | undefined>();
 
+// Events need at least 3 full days of lead time, so the earliest selectable
+// date is 4 days from today (today, past dates, and the next 3 days are off).
+const minSelectable = computed(() => today(getLocalTimeZone()).add({ days: 4 }));
+
 const displayValue = computed(() => {
     if (props.modelValue.trim() === '') {
         return props.placeholder ?? t('onboarding.datepicker.placeholder');
@@ -70,8 +74,8 @@ const updateValue = (value: DateValue | undefined): void => {
     open.value = false;
 };
 
-const pickToday = (): void => {
-    const value = today(getLocalTimeZone());
+const pickEarliest = (): void => {
+    const value = minSelectable.value;
     updateValue(new CalendarDate(value.year, value.month, value.day));
 };
 
@@ -124,9 +128,11 @@ const clearValue = (): void => {
         </PopoverTrigger>
 
         <PopoverContent
-            align="start"
+            align="center"
             :side-offset="10"
-            class="w-[22rem] rounded-[28px] border-promo-line bg-white p-0 shadow-[0_24px_70px_rgba(232,79,154,0.14)]"
+            :collision-padding="16"
+            :avoid-collisions="true"
+            class="w-[min(22rem,calc(100vw-1.5rem))] rounded-[28px] border-promo-line bg-white p-0 shadow-[0_24px_70px_rgba(232,79,154,0.14)]"
         >
             <div
                 class="border-b border-promo-line bg-promo-surface/55 px-5 py-4"
@@ -144,9 +150,8 @@ const clearValue = (): void => {
             <div class="p-4">
                 <Calendar
                     :model-value="calendarValue"
-                    :default-placeholder="
-                        calendarValue ?? today(getLocalTimeZone())
-                    "
+                    :default-placeholder="calendarValue ?? minSelectable"
+                    :min-value="minSelectable"
                     :weekday-format="'short'"
                     layout="month-and-year"
                     initial-focus
@@ -174,9 +179,9 @@ const clearValue = (): void => {
                     <Button
                         type="button"
                         class="rounded-full bg-promo-primary px-4 text-white hover:bg-promo-primary-strong"
-                        @click="pickToday"
+                        @click="pickEarliest"
                     >
-                        {{ t('onboarding.datepicker.today') }}
+                        {{ t('onboarding.datepicker.earliest') }}
                     </Button>
                 </div>
             </div>

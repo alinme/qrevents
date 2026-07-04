@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\BusinessController::checkout
- * @see app/Http/Controllers/BusinessController.php:170
+ * @see app/Http/Controllers/BusinessController.php:180
  * @route '/dashboard/business/wallet/checkout'
  */
 export const checkout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ checkout.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::checkout
- * @see app/Http/Controllers/BusinessController.php:170
+ * @see app/Http/Controllers/BusinessController.php:180
  * @route '/dashboard/business/wallet/checkout'
  */
 checkout.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ checkout.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::checkout
- * @see app/Http/Controllers/BusinessController.php:170
+ * @see app/Http/Controllers/BusinessController.php:180
  * @route '/dashboard/business/wallet/checkout'
  */
 checkout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ checkout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\BusinessController::checkout
- * @see app/Http/Controllers/BusinessController.php:170
+ * @see app/Http/Controllers/BusinessController.php:180
  * @route '/dashboard/business/wallet/checkout'
  */
     const checkoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ checkout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\BusinessController::checkout
- * @see app/Http/Controllers/BusinessController.php:170
+ * @see app/Http/Controllers/BusinessController.php:180
  * @route '/dashboard/business/wallet/checkout'
  */
         checkoutForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

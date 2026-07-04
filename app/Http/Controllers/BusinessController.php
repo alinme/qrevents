@@ -40,12 +40,14 @@ class BusinessController extends Controller
                 'createdAt' => $tx->created_at?->toIso8601String(),
             ])->values()->all();
 
-        $events = $user->events()
+        $ownedEvents = $user->events()
             ->with('plan:id,name')
             ->withCount('assets')
             ->latest('id')
-            ->limit(20)
-            ->get()
+            ->get();
+
+        $events = $ownedEvents
+            ->take(20)
             ->map(fn (Event $event): array => [
                 'id' => $event->id,
                 'name' => $event->name,
@@ -54,6 +56,13 @@ class BusinessController extends Controller
                 'assetCount' => (int) ($event->assets_count ?? 0),
                 'links' => ['open' => route('events.show', $event)],
             ])->values()->all();
+
+        $stats = [
+            'events' => $ownedEvents->count(),
+            'liveEvents' => $ownedEvents->where('status', Event::STATUS_LIVE)->count(),
+            'uploads' => (int) $ownedEvents->sum('assets_count'),
+            'credits' => (int) ($user->business_wallet_credits ?? 0),
+        ];
 
         return Inertia::render('business/Dashboard', [
             'profile' => [
@@ -66,13 +75,14 @@ class BusinessController extends Controller
                 'credits' => (int) ($user->business_wallet_credits ?? 0),
                 'currency' => (string) ($user->business_wallet_currency ?? 'EUR'),
             ],
+            'stats' => $stats,
             'topUpPacks' => $walletManager->topUpPacks(),
             'currencies' => (array) config('business.supported_checkout_currencies', ['EUR']),
             'transactions' => $transactions,
             'events' => $events,
             'walletCheckoutUrl' => route('dashboard.business.wallet.checkout'),
             'editProfileUrl' => route('dashboard.business.onboarding'),
-            'createEventUrl' => route('onboarding.create'),
+            'createEventUrl' => route('onboarding.create', ['restart' => 1]),
             'checkoutResult' => (string) $request->string('wallet_checkout'),
         ]);
     }

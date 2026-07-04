@@ -38,6 +38,12 @@ const props = defineProps<{
         billingEmail: string;
         logoUrl: string | null;
     };
+    stats: {
+        events: number;
+        liveEvents: number;
+        uploads: number;
+        credits: number;
+    };
     wallet: { credits: number; currency: string };
     topUpPacks: Pack[];
     currencies: string[];
@@ -111,19 +117,48 @@ const buyPack = (pack: Pack): void => {
                         </div>
                         <div class="flex gap-2">
                             <Button as-child size="sm" variant="outline">
-                                <a :href="editProfileUrl">Edit profile</a>
+                                <Link :href="editProfileUrl">Edit profile</Link>
                             </Button>
                             <Button
                                 as-child
                                 size="sm"
                                 class="rounded-full bg-brand-ink text-brand-inverse hover:bg-brand-accent"
                             >
-                                <a :href="createEventUrl">
+                                <Link :href="createEventUrl">
                                     <Plus class="size-4" /> New event
-                                </a>
+                                </Link>
                             </Button>
                         </div>
                     </div>
+
+                    <dl
+                        class="mt-6 grid gap-x-6 gap-y-4 border-t border-brand-border/70 pt-5 sm:grid-cols-2 xl:grid-cols-4"
+                    >
+                        <div>
+                            <dt class="dashboard-eyebrow">Events</dt>
+                            <dd class="mt-1 text-xl font-bold text-brand-ink">
+                                {{ stats.events }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="dashboard-eyebrow">Live now</dt>
+                            <dd class="mt-1 text-xl font-bold text-brand-ink">
+                                {{ stats.liveEvents }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="dashboard-eyebrow">Total uploads</dt>
+                            <dd class="mt-1 text-xl font-bold text-brand-ink">
+                                {{ stats.uploads }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="dashboard-eyebrow">Wallet credits</dt>
+                            <dd class="mt-1 text-xl font-bold text-brand-ink">
+                                {{ stats.credits }}
+                            </dd>
+                        </div>
+                    </dl>
                 </section>
 
                 <section class="dashboard-panel">

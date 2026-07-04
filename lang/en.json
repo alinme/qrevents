@@ -2141,6 +2141,7 @@
     "onboarding.datepicker.description": "Choose the calendar day for your event.",
     "onboarding.datepicker.clear": "Clear",
     "onboarding.datepicker.today": "Today",
+    "onboarding.datepicker.earliest": "Earliest date",
     "onboarding.photos.dashboard_hint": "Customize your album page, branding, and moderation from your dashboard.",
     "onboarding.photos.share_title": "Share with guests",
     "app.nav.create_event": "Create event",
