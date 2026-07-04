@@ -598,9 +598,7 @@ onUnmounted(() => {
                     </div>
                 </section>
 
-                <section
-                    class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
-                >
+                <section>
                     <div
                         class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
                     >
@@ -708,11 +706,9 @@ onUnmounted(() => {
                 </section>
 
                 <div
-                    class="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]"
+                    class="grid gap-5 border-t border-brand-border/70 pt-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]"
                 >
-                    <section
-                        class="flex min-h-0 flex-col rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
-                    >
+                    <section class="flex min-h-0 flex-col">
                         <div
                             class="flex items-end justify-between gap-4 border-b border-black/5 pb-4"
                         >
@@ -815,7 +811,7 @@ onUnmounted(() => {
                     </section>
 
                     <aside
-                        class="rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-sm md:p-6"
+                        class="border-t border-brand-border/70 pt-6 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-6"
                     >
                         <div class="border-b border-black/5 pb-4">
                             <h2
@@ -1113,11 +1109,9 @@ onUnmounted(() => {
                     </aside>
                 </div>
 
-                <section
-                    class="mt-5 overflow-hidden rounded-[1.75rem] border border-black/5 bg-brand-ink text-white shadow-card"
-                >
+                <section class="border-t border-brand-border/70 pt-8">
                     <div
-                        class="flex flex-col gap-5 px-5 py-6 md:px-6 lg:flex-row lg:items-center lg:justify-between"
+                        class="flex flex-col gap-5 overflow-hidden rounded-[1.75rem] bg-brand-ink px-5 py-6 text-white md:px-6 lg:flex-row lg:items-center lg:justify-between"
                     >
                         <div class="max-w-3xl">
                             <p

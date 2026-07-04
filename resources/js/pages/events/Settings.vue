@@ -37,7 +37,6 @@ import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
@@ -1800,8 +1799,8 @@ function resolveSupportedTimezones(): string[] {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4">
             <form @submit.prevent="submit">
-                <Card class="overflow-hidden">
-                    <CardHeader class="border-b px-4 py-0">
+                <div>
+                    <div class="border-b border-brand-border/70">
                         <nav
                             class="flex gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                         >
@@ -1821,9 +1820,9 @@ function resolveSupportedTimezones(): string[] {
                                 {{ tab.label }}
                             </button>
                         </nav>
-                    </CardHeader>
+                    </div>
 
-                    <CardContent class="space-y-8 p-4 md:p-6">
+                    <div class="space-y-8 pt-8">
                         <section
                             v-show="activeTab === 'general'"
                             class="space-y-6"
@@ -2470,9 +2469,7 @@ function resolveSupportedTimezones(): string[] {
                             v-show="activeTab === 'billing'"
                             class="space-y-6"
                         >
-                            <div
-                                class="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                            >
+                            <div>
                                 <div
                                     class="flex flex-wrap items-start justify-between gap-3"
                                 >
@@ -3125,9 +3122,7 @@ function resolveSupportedTimezones(): string[] {
                             v-show="activeTab === 'appearance'"
                             class="space-y-6"
                         >
-                            <div
-                                class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600"
-                            >
+                            <div class="text-sm text-slate-600">
                                 <p class="font-semibold text-slate-900">
                                     {{
                                         t(
@@ -3807,8 +3802,8 @@ function resolveSupportedTimezones(): string[] {
                                 </div>
                             </div>
                         </section>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 <Dialog v-model:open="isWelcomeScreenDialogOpen">
                     <DialogContent
