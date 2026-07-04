@@ -2372,5 +2372,9 @@
     "admin.audit.table.details": "Details",
     "admin.audit.pagination.page": "Page :current of :last",
     "admin.audit.pagination.previous": "Previous",
-    "admin.audit.pagination.next": "Next"
+    "admin.audit.pagination.next": "Next",
+    "admin.events.actions.menu": "Actions",
+    "admin.events.delete_dialog.title": "Delete this event?",
+    "admin.events.delete_dialog.body": "\":name\" and all its media will be permanently deleted. This cannot be undone.",
+    "admin.events.delete_dialog.confirm": "Delete event"
 }

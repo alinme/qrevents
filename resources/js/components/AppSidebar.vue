@@ -2,10 +2,9 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     CirclePlus,
-    Activity,
     ArrowLeft,
+    CalendarDays,
     Camera,
-    CreditCard,
     FolderKanban,
     LayoutGrid,
     Package,
@@ -36,6 +35,15 @@ import type { NavItem } from '@/types';
 type EventNavItem = {
     title: string;
     href: string;
+    icon?: string;
+};
+
+const adminIconMap: Record<string, typeof LayoutGrid> = {
+    overview: LayoutGrid,
+    users: Users,
+    events: CalendarDays,
+    plans: Package,
+    audit: ScrollText,
 };
 
 type CurrentEvent = {
@@ -179,20 +187,7 @@ const mainNavItems = computed<NavItem[]>(() => {
         return adminNavigation.value.map((item) => ({
             title: translatedNavTitle(item.title),
             href: item.href,
-            icon:
-                item.title === 'Overview'
-                    ? LayoutGrid
-                    : item.title === 'Users'
-                      ? Users
-                      : item.title === 'Events'
-                        ? Camera
-                        : item.title === 'Plans'
-                          ? Package
-                          : item.title === 'Billing'
-                            ? CreditCard
-                            : item.title === 'Cleanup'
-                              ? Activity
-                              : Shield,
+            icon: adminIconMap[item.icon ?? ''] ?? Shield,
         }));
     }
 

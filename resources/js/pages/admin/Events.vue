@@ -1,8 +1,23 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Search } from 'lucide-vue-next';
+import { MoreHorizontal, Search } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -64,7 +79,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const search = ref(props.filters.search);
-const confirmingDeleteId = ref<number | null>(null);
+const deleteTarget = ref<AdminEventRow | null>(null);
 
 const query = (overrides: Record<string, string>): void => {
     const params: Record<string, string> = {};
@@ -95,10 +110,14 @@ const extendEvent = (event: AdminEventRow): void => {
     router.patch(event.links.extend, { days: 30 }, { preserveScroll: true });
 };
 
-const deleteEvent = (event: AdminEventRow): void => {
-    router.delete(event.links.destroy, {
+const confirmDelete = (): void => {
+    if (!deleteTarget.value) {
+        return;
+    }
+
+    router.delete(deleteTarget.value.links.destroy, {
         preserveScroll: true,
-        onFinish: () => (confirmingDeleteId.value = null),
+        onFinish: () => (deleteTarget.value = null),
     });
 };
 </script>
@@ -243,71 +262,52 @@ const deleteEvent = (event: AdminEventRow): void => {
                                     <td class="py-3 pr-4 text-brand-muted">
                                         {{ formatDateTime(event.createdAt) }}
                                     </td>
-                                    <td class="py-3">
-                                        <div
-                                            class="flex flex-wrap items-center justify-end gap-1.5"
-                                        >
-                                            <Button
-                                                as-child
-                                                size="sm"
-                                                variant="outline"
-                                            >
-                                                <Link
-                                                    :href="event.links.settings"
-                                                >
-                                                    {{ t('admin.events.actions.open') }}
-                                                </Link>
-                                            </Button>
-                                            <Button
-                                                v-if="!event.isSuspended"
-                                                size="sm"
-                                                variant="outline"
-                                                @click="suspendEvent(event)"
-                                            >
-                                                {{ t('admin.events.actions.suspend') }}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                @click="extendEvent(event)"
-                                            >
-                                                {{ t('admin.events.actions.extend') }}
-                                            </Button>
-                                            <template
-                                                v-if="
-                                                    confirmingDeleteId ===
-                                                    event.id
-                                                "
-                                            >
+                                    <td class="py-3 text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger as-child>
                                                 <Button
-                                                    size="sm"
-                                                    class="bg-rose-600 text-white hover:bg-rose-700"
-                                                    @click="deleteEvent(event)"
-                                                >
-                                                    {{ t('admin.events.actions.delete_yes') }}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
+                                                    size="icon"
                                                     variant="ghost"
-                                                    @click="
-                                                        confirmingDeleteId = null
+                                                    class="size-8"
+                                                    :aria-label="
+                                                        t('admin.events.actions.menu')
                                                     "
                                                 >
-                                                    {{ t('admin.events.actions.cancel') }}
+                                                    <MoreHorizontal
+                                                        class="size-4"
+                                                    />
                                                 </Button>
-                                            </template>
-                                            <Button
-                                                v-else
-                                                size="sm"
-                                                variant="outline"
-                                                class="border-rose-300 text-rose-600 hover:bg-rose-50"
-                                                @click="
-                                                    confirmingDeleteId = event.id
-                                                "
-                                            >
-                                                {{ t('admin.events.actions.delete') }}
-                                            </Button>
-                                        </div>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem as-child>
+                                                    <Link
+                                                        :href="
+                                                            event.links.settings
+                                                        "
+                                                    >
+                                                        {{ t('admin.events.actions.open') }}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    v-if="!event.isSuspended"
+                                                    @click="suspendEvent(event)"
+                                                >
+                                                    {{ t('admin.events.actions.suspend') }}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    @click="extendEvent(event)"
+                                                >
+                                                    {{ t('admin.events.actions.extend') }}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    class="text-rose-600 focus:text-rose-600"
+                                                    @click="deleteTarget = event"
+                                                >
+                                                    {{ t('admin.events.actions.delete') }}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </td>
                                 </tr>
                             </tbody>
@@ -358,5 +358,34 @@ const deleteEvent = (event: AdminEventRow): void => {
                 </section>
             </div>
         </div>
+
+        <Dialog
+            :open="deleteTarget !== null"
+            @update:open="(value) => { if (!value) deleteTarget = null }"
+        >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{{ t('admin.events.delete_dialog.title') }}</DialogTitle>
+                    <DialogDescription>
+                        {{
+                            t('admin.events.delete_dialog.body', {
+                                name: deleteTarget?.name ?? '',
+                            })
+                        }}
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteTarget = null">
+                        {{ t('admin.events.actions.cancel') }}
+                    </Button>
+                    <Button
+                        class="bg-rose-600 text-white hover:bg-rose-700"
+                        @click="confirmDelete"
+                    >
+                        {{ t('admin.events.delete_dialog.confirm') }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

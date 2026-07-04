@@ -82,6 +82,17 @@ class HandleInertiaRequests extends Middleware
             return [];
         }
 
+        // Super admins operate entirely inside /admin — they are not event hosts,
+        // so they don't get the "Events / Create event" host navigation.
+        if ($user->canAccessAdmin()) {
+            return [
+                [
+                    'title' => __('app.nav.admin'),
+                    'href' => route('admin.overview'),
+                ],
+            ];
+        }
+
         $navigation = [
             [
                 'title' => __('app.nav.events'),
@@ -97,13 +108,6 @@ class HandleInertiaRequests extends Middleware
             $navigation[] = [
                 'title' => __('app.nav.business'),
                 'href' => route('dashboard.business'),
-            ];
-        }
-
-        if ($user->canAccessAdmin()) {
-            $navigation[] = [
-                'title' => __('app.nav.admin'),
-                'href' => route('admin.overview'),
             ];
         }
 

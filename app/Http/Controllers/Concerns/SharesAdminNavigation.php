@@ -23,27 +23,28 @@ trait SharesAdminNavigation
                 [
                     'title' => __('app.nav.overview'),
                     'href' => route('admin.overview'),
+                    'icon' => 'overview',
                 ],
                 [
                     'title' => __('app.nav.users'),
                     'href' => route('admin.users'),
+                    'icon' => 'users',
                 ],
                 [
                     'title' => __('app.nav.events'),
                     'href' => route('admin.events'),
+                    'icon' => 'events',
                 ],
                 [
                     'title' => __('app.nav.plans'),
                     'href' => route('admin.plans'),
+                    'icon' => 'plans',
                 ],
                 [
                     'title' => __('app.nav.audit_log'),
                     'href' => route('admin.audit'),
+                    'icon' => 'audit',
                 ],
-            ],
-            'backNavigation' => [
-                'title' => __('app.nav.dashboard'),
-                'href' => route('dashboard'),
             ],
             'sidebarLabel' => 'Admin',
         ];

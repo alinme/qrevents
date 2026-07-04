@@ -127,19 +127,15 @@ const stats = computed(() => [
                     </p>
 
                     <dl
-                        class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+                        class="mt-8 grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4 xl:grid-cols-8"
                     >
-                        <div
-                            v-for="stat in stats"
-                            :key="stat.label"
-                            class="flex flex-col rounded-2xl border border-brand-border/60 bg-brand-canvas/40 p-4"
-                        >
+                        <div v-for="stat in stats" :key="stat.label">
                             <dt
-                                class="dashboard-eyebrow flex min-h-[2.5rem] items-start gap-2 leading-tight"
+                                class="flex min-h-[2.25rem] items-start gap-1.5 text-[0.7rem] leading-tight font-semibold tracking-wide text-brand-muted uppercase"
                             >
                                 <component
                                     :is="stat.icon"
-                                    class="mt-0.5 size-3.5 shrink-0 text-brand-muted/70"
+                                    class="mt-0.5 size-3.5 shrink-0 text-brand-muted/60"
                                 />
                                 <span>{{ stat.label }}</span>
                             </dt>

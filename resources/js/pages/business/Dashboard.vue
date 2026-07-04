@@ -12,6 +12,7 @@ type Pack = {
     bonus_percent: number;
     bonus_credits: number;
     total_credits: number;
+    prices: Record<string, string>;
 };
 
 type Transaction = {
@@ -230,7 +231,7 @@ const payWithCredits = (event: EventRow, plan: BusinessPlan): void => {
                                     </span>
                                 </div>
                                 <p class="dashboard-meta">
-                                    €{{ pack.credits }}
+                                    {{ pack.prices[currency] ?? '—' }}
                                     <span
                                         v-if="pack.bonus_percent > 0"
                                         class="font-semibold text-emerald-600"

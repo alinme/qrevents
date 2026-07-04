@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -57,6 +65,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const editingPlanId = ref<number | null>(null);
+const formOpen = ref(false);
 
 const form = useForm({
     name: '',
@@ -94,8 +103,14 @@ const resetForm = (): void => {
     form.clearErrors();
 };
 
+const openCreate = (): void => {
+    resetForm();
+    formOpen.value = true;
+};
+
 const editPlan = (plan: AdminPlanRow): void => {
     editingPlanId.value = plan.id;
+    formOpen.value = true;
     form.clearErrors();
     form.name = plan.name;
     form.slug = plan.slug;
@@ -123,10 +138,15 @@ const submit = (): void => {
         (plan) => plan.id === editingPlanId.value,
     );
 
+    const onSuccess = (): void => {
+        resetForm();
+        formOpen.value = false;
+    };
+
     if (editingPlan) {
         form.patch(editingPlan.links.update, {
             preserveScroll: true,
-            onSuccess: resetForm,
+            onSuccess,
         });
 
         return;
@@ -134,7 +154,7 @@ const submit = (): void => {
 
     form.post(props.planStoreUrl, {
         preserveScroll: true,
-        onSuccess: resetForm,
+        onSuccess,
     });
 };
 
@@ -202,12 +222,12 @@ const planMeta = (plan: AdminPlanRow): string =>
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
-            <div class="dashboard-shell max-w-6xl">
-                <div
-                    class="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)]"
-                >
-                    <section class="dashboard-panel">
-                        <div class="dashboard-panel-divider pb-4">
+            <div class="dashboard-shell max-w-4xl">
+                <section class="dashboard-panel">
+                    <div
+                        class="dashboard-panel-divider flex flex-col gap-4 pb-4 sm:flex-row sm:items-end sm:justify-between"
+                    >
+                        <div>
                             <p class="dashboard-eyebrow">
                                 {{ t('admin.shared.admin') }}
                             </p>
@@ -218,6 +238,15 @@ const planMeta = (plan: AdminPlanRow): string =>
                                 {{ t('admin.plans.description') }}
                             </p>
                         </div>
+                        <Button
+                            size="sm"
+                            class="shrink-0 rounded-full bg-brand-ink text-brand-inverse hover:bg-brand-accent"
+                            @click="openCreate"
+                        >
+                            <Plus class="size-4" />
+                            {{ t('admin.plans.form.create_title') }}
+                        </Button>
+                    </div>
 
                         <div
                             v-if="plans.length === 0"
@@ -333,24 +362,19 @@ const planMeta = (plan: AdminPlanRow): string =>
                         </div>
                     </section>
 
-                    <section class="dashboard-panel">
-                        <div
-                            class="dashboard-panel-divider flex items-center justify-between pb-4"
+                    <Sheet v-model:open="formOpen">
+                        <SheetContent
+                            side="right"
+                            class="w-full overflow-y-auto sm:max-w-xl"
                         >
-                            <h2 class="dashboard-section-title">
-                                {{ formTitle }}
-                            </h2>
-                            <Button
-                                v-if="isEditing"
-                                size="sm"
-                                variant="ghost"
-                                @click="resetForm"
-                            >
-                                {{ t('admin.plans.form.new_instead') }}
-                            </Button>
-                        </div>
+                            <SheetHeader>
+                                <SheetTitle>{{ formTitle }}</SheetTitle>
+                                <SheetDescription>
+                                    {{ t('admin.plans.description') }}
+                                </SheetDescription>
+                            </SheetHeader>
 
-                        <form class="space-y-4 pt-4" @submit.prevent="submit">
+                            <form class="mt-6 space-y-4" @submit.prevent="submit">
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <div class="space-y-1.5">
                                     <Label for="plan-name">{{
@@ -655,9 +679,9 @@ const planMeta = (plan: AdminPlanRow): string =>
                                         : t('admin.plans.form.create_title')
                                 }}
                             </Button>
-                        </form>
-                    </section>
-                </div>
+                            </form>
+                        </SheetContent>
+                    </Sheet>
             </div>
         </div>
     </AppLayout>

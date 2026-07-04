@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
 const props = defineProps<{
+    isEditing: boolean;
     profile: {
         companyName: string;
         brandName: string;
@@ -23,7 +24,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Business', href: '/dashboard/business' },
-    { title: 'Set up profile', href: '#' },
+    { title: props.isEditing ? 'Edit profile' : 'Set up profile', href: '#' },
 ];
 
 const form = useForm({
@@ -55,7 +56,13 @@ const submit = (): void => {
             <div class="dashboard-shell max-w-3xl">
                 <section class="dashboard-panel">
                     <p class="dashboard-eyebrow">Business</p>
-                    <h1 class="dashboard-title mt-2">Set up your business profile</h1>
+                    <h1 class="dashboard-title mt-2">
+                        {{
+                            isEditing
+                                ? 'Edit your business profile'
+                                : 'Set up your business profile'
+                        }}
+                    </h1>
                     <p class="dashboard-body mt-2">
                         Tell us about your company. This branding is used across
                         your events and on invoices.

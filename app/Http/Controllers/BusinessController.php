@@ -74,6 +74,40 @@ class BusinessController extends Controller
                 'creditCost' => (int) $plan->business_credit_cost,
             ])->values()->all();
 
+        // Each pack costs `credits` EUR at base; convert to every checkout currency
+        // so the displayed price actually changes when the currency is switched.
+        $currencies = (array) config('business.supported_checkout_currencies', ['EUR']);
+        $exchange = app(\App\Support\ExchangeRateManager::class);
+        $symbols = ['EUR' => '€', 'RON' => 'lei ', 'GBP' => '£', 'USD' => '$'];
+        $rates = [];
+        foreach ($currencies as $currency) {
+            try {
+                $rates[$currency] = $exchange->latestRate($currency);
+            } catch (\Throwable) {
+                $rates[$currency] = null;
+            }
+        }
+
+        $topUpPacks = collect($walletManager->topUpPacks())->map(function (array $pack) use ($currencies, $exchange, $rates, $symbols): array {
+            $baseCents = (int) $pack['credits'] * 100;
+            $prices = [];
+            foreach ($currencies as $currency) {
+                if ($currency !== 'EUR' && $rates[$currency] === null) {
+                    continue;
+                }
+                $cents = $exchange->convertEuroCentsToCurrencyCents($baseCents, $currency, $rates[$currency]);
+                $prefix = $symbols[$currency] ?? ($currency.' ');
+                $prices[$currency] = $prefix.number_format($cents / 100, 2);
+            }
+
+            return array_merge($pack, ['prices' => $prices]);
+        })->all();
+
+        $currencies = array_values(array_filter(
+            $currencies,
+            fn (string $currency): bool => $currency === 'EUR' || $rates[$currency] !== null,
+        ));
+
         $stats = [
             'events' => $ownedEvents->count(),
             'liveEvents' => $ownedEvents->where('status', Event::STATUS_LIVE)->count(),
@@ -94,8 +128,8 @@ class BusinessController extends Controller
             ],
             'stats' => $stats,
             'businessPlans' => $businessPlans,
-            'topUpPacks' => $walletManager->topUpPacks(),
-            'currencies' => (array) config('business.supported_checkout_currencies', ['EUR']),
+            'topUpPacks' => $topUpPacks,
+            'currencies' => $currencies,
             'transactions' => $transactions,
             'events' => $events,
             'walletCheckoutUrl' => route('dashboard.business.wallet.checkout'),
@@ -127,13 +161,13 @@ class BusinessController extends Controller
         $user = $request->user();
         abort_unless($user !== null && $user->isBusinessAccount(), 403);
 
-        if ($user->hasCompletedBusinessOnboarding()) {
-            return to_route('dashboard.business');
-        }
-
+        // Note: onboarded users are NOT redirected away — this same screen doubles
+        // as the "Edit profile" form (pre-filled with the existing profile).
         $profile = is_array($user->business_profile) ? $user->business_profile : [];
+        $isEditing = $user->hasCompletedBusinessOnboarding();
 
         return Inertia::render('business/Onboarding', [
+            'isEditing' => $isEditing,
             'profile' => [
                 'companyName' => (string) ($profile['company_name'] ?? ''),
                 'brandName' => (string) ($profile['brand_name'] ?? ''),

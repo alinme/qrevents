@@ -110,55 +110,43 @@ const summarizeMeta = (meta: Record<string, unknown> | null): string => {
                         {{ t('admin.audit.empty') }}
                     </div>
 
-                    <div v-else class="overflow-x-auto pt-2">
-                        <table class="w-full min-w-[820px] text-left text-sm">
-                            <thead>
-                                <tr
-                                    class="border-b border-brand-border/70 text-[0.72rem] font-semibold tracking-wide text-brand-muted uppercase"
-                                >
-                                    <th class="py-3 pr-4">
-                                        {{ t('admin.audit.table.when') }}
-                                    </th>
-                                    <th class="py-3 pr-4">
-                                        {{ t('admin.audit.table.admin') }}
-                                    </th>
-                                    <th class="py-3 pr-4">
-                                        {{ t('admin.audit.table.action') }}
-                                    </th>
-                                    <th class="py-3 pr-4">
-                                        {{ t('admin.audit.table.target') }}
-                                    </th>
-                                    <th class="py-3">
-                                        {{ t('admin.audit.table.details') }}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-brand-border/70">
-                                <tr v-for="entry in entries" :key="entry.id">
-                                    <td class="py-3 pr-4 text-brand-muted whitespace-nowrap">
-                                        {{ formatDateTime(entry.createdAt) }}
-                                    </td>
-                                    <td class="py-3 pr-4">
-                                        <p class="font-semibold text-brand-ink">
-                                            {{ entry.adminName }}
-                                        </p>
-                                        <p class="dashboard-meta">
-                                            {{ entry.ipAddress }}
-                                        </p>
-                                    </td>
-                                    <td class="py-3 pr-4 font-mono text-[0.78rem] text-brand-ink">
+                    <ul v-else class="divide-y divide-brand-border/70">
+                        <li
+                            v-for="entry in entries"
+                            :key="entry.id"
+                            class="flex flex-col gap-1.5 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                        >
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span
+                                        class="rounded-md bg-brand-canvas px-2 py-0.5 font-mono text-[0.75rem] font-medium text-brand-ink"
+                                    >
                                         {{ entry.action }}
-                                    </td>
-                                    <td class="py-3 pr-4 text-brand-muted">
-                                        {{ entry.targetLabel ?? '—' }}
-                                    </td>
-                                    <td class="py-3 text-brand-muted">
-                                        {{ summarizeMeta(entry.meta) }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                    </span>
+                                    <span
+                                        v-if="entry.targetLabel"
+                                        class="truncate text-sm font-medium text-brand-ink"
+                                    >
+                                        {{ entry.targetLabel }}
+                                    </span>
+                                </div>
+                                <p class="dashboard-meta mt-1">
+                                    {{ entry.adminName }}
+                                    <template v-if="summarizeMeta(entry.meta)">
+                                        · {{ summarizeMeta(entry.meta) }}
+                                    </template>
+                                </p>
+                            </div>
+                            <p
+                                class="dashboard-meta shrink-0 whitespace-nowrap sm:text-right"
+                            >
+                                {{ formatDateTime(entry.createdAt) }}
+                                <span v-if="entry.ipAddress" class="opacity-70">
+                                    · {{ entry.ipAddress }}
+                                </span>
+                            </p>
+                        </li>
+                    </ul>
 
                     <div
                         v-if="pagination.lastPage > 1"
