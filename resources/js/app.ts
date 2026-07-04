@@ -5,6 +5,7 @@ import { createApp, Fragment, h } from 'vue';
 import 'vue-sonner/style.css';
 import '../css/app.css';
 import AppFlashToasts from '@/components/AppFlashToasts.vue';
+import AppImpersonationBanner from '@/components/AppImpersonationBanner.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from '@/composables/useAppearance';
 
@@ -21,6 +22,7 @@ createInertiaApp({
         createApp({
             render: () =>
                 h(Fragment, [
+                    h(AppImpersonationBanner),
                     h(App, props),
                     h(Toaster, {
                         position: 'top-right',
