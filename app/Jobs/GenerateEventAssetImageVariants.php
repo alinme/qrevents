@@ -51,13 +51,19 @@ class GenerateEventAssetImageVariants implements ShouldQueue
             return;
         }
 
-        $format = $this->normalizedFormat();
+        // Display variants (thumb/preview) are only ever shown in-app → WebP for smaller files.
+        // The downloadable watermarked file stays JPEG for maximum device compatibility.
+        $displayFormat = $this->displayFormat();
+        $downloadFormat = $this->normalizedFormat();
+        $displayQuality = max(40, min(95, (int) config('events.image_variants.display_quality', 78)));
+        $downloadQuality = max(40, min(95, (int) config('events.image_variants.quality', 82)));
+
         $baseDirectory = sprintf('events/%d/variants/%d', $asset->event_id, $asset->id);
-        $thumbnailPath = sprintf('%s/thumb.%s', $baseDirectory, $format);
-        $previewPath = sprintf('%s/preview.%s', $baseDirectory, $format);
-        $watermarkedThumbnailPath = sprintf('%s/thumb-watermarked.%s', $baseDirectory, $format);
-        $watermarkedPreviewPath = sprintf('%s/preview-watermarked.%s', $baseDirectory, $format);
-        $watermarkedDownloadPath = sprintf('%s/download-watermarked.%s', $baseDirectory, $format);
+        $thumbnailPath = sprintf('%s/thumb.%s', $baseDirectory, $displayFormat);
+        $previewPath = sprintf('%s/preview.%s', $baseDirectory, $displayFormat);
+        $watermarkedThumbnailPath = sprintf('%s/thumb-watermarked.%s', $baseDirectory, $displayFormat);
+        $watermarkedPreviewPath = sprintf('%s/preview-watermarked.%s', $baseDirectory, $displayFormat);
+        $watermarkedDownloadPath = sprintf('%s/download-watermarked.%s', $baseDirectory, $downloadFormat);
         $watermarkFactory = new MediaWatermarkFactory;
 
         try {
@@ -65,19 +71,22 @@ class GenerateEventAssetImageVariants implements ShouldQueue
                 $asset,
                 $originalContents,
                 max(160, (int) config('events.image_variants.thumbnail_max_pixels', 640)),
-                $format,
+                $displayFormat,
+                $displayQuality,
             );
             $previewBlob = $this->variantBlob(
                 $asset,
                 $originalContents,
                 max(480, (int) config('events.image_variants.preview_max_pixels', 1600)),
-                $format,
+                $displayFormat,
+                $displayQuality,
             );
             $watermarkedThumbnailBlob = $this->variantBlob(
                 $asset,
                 $originalContents,
                 max(160, (int) config('events.image_variants.thumbnail_max_pixels', 640)),
-                $format,
+                $displayFormat,
+                $displayQuality,
                 true,
                 $watermarkFactory,
             );
@@ -85,7 +94,8 @@ class GenerateEventAssetImageVariants implements ShouldQueue
                 $asset,
                 $originalContents,
                 max(480, (int) config('events.image_variants.preview_max_pixels', 1600)),
-                $format,
+                $displayFormat,
+                $displayQuality,
                 true,
                 $watermarkFactory,
             );
@@ -93,7 +103,8 @@ class GenerateEventAssetImageVariants implements ShouldQueue
                 $asset,
                 $originalContents,
                 max(800, (int) config('events.image_variants.watermarked_download_max_pixels', 2400)),
-                $format,
+                $downloadFormat,
+                $downloadQuality,
                 true,
                 $watermarkFactory,
             );
@@ -136,6 +147,7 @@ class GenerateEventAssetImageVariants implements ShouldQueue
         string $contents,
         int $maxPixels,
         string $format,
+        int $quality,
         bool $watermarked = false,
         ?MediaWatermarkFactory $watermarkFactory = null,
     ): string {
@@ -189,9 +201,7 @@ class GenerateEventAssetImageVariants implements ShouldQueue
         }
 
         $image->setImageFormat($targetFormat);
-        $image->setImageCompressionQuality(
-            max(40, min(95, (int) config('events.image_variants.quality', 82))),
-        );
+        $image->setImageCompressionQuality(max(40, min(95, $quality)));
 
         $blob = $image->getImagesBlob();
         $image->clear();
@@ -207,6 +217,26 @@ class GenerateEventAssetImageVariants implements ShouldQueue
         return in_array($format, ['jpg', 'jpeg', 'webp', 'png'], true)
             ? $format
             : 'jpg';
+    }
+
+    /**
+     * Format for in-app display variants (thumb/preview). Prefers WebP for size, but
+     * gracefully falls back to the download format if this Imagick build has no WebP
+     * delegate — otherwise setImageFormat('webp') would throw and skip all variants.
+     */
+    private function displayFormat(): string
+    {
+        $format = Str::lower((string) config('events.image_variants.display_format', 'webp'));
+
+        if (! in_array($format, ['jpg', 'jpeg', 'webp', 'png'], true)) {
+            $format = 'webp';
+        }
+
+        if ($format === 'webp' && Imagick::queryFormats('WEBP') === []) {
+            return $this->normalizedFormat();
+        }
+
+        return $format;
     }
 
     private function writeVariantToStorage(string $disk, string $path, string $contents): bool

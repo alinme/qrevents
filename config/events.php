@@ -5,15 +5,22 @@ return [
     'upload_temporary_urls' => (bool) env('EVENTS_UPLOAD_TEMPORARY_URLS', false),
     'upload_temporary_url_ttl_minutes' => (int) env('EVENTS_UPLOAD_TEMPORARY_URL_TTL_MINUTES', 30),
     'image_variants' => [
-        'upload_max_pixels' => (int) env('EVENTS_IMAGE_UPLOAD_MAX_PIXELS', 2560),
+        // Stored original: 2048px / q80 is visually indistinguishable from 2560/84 for a
+        // keepsake gallery but ~30-40% smaller on the largest file per photo.
+        'upload_max_pixels' => (int) env('EVENTS_IMAGE_UPLOAD_MAX_PIXELS', 2048),
         'upload_processing_max_bytes' => (int) env('EVENTS_IMAGE_UPLOAD_PROCESSING_MAX_BYTES', 157286400),
-        'upload_quality' => (int) env('EVENTS_IMAGE_UPLOAD_QUALITY', 84),
+        'upload_quality' => (int) env('EVENTS_IMAGE_UPLOAD_QUALITY', 80),
         'upload_format' => env('EVENTS_IMAGE_UPLOAD_FORMAT', 'jpg'),
         'thumbnail_max_pixels' => (int) env('EVENTS_IMAGE_THUMBNAIL_MAX_PIXELS', 640),
         'preview_max_pixels' => (int) env('EVENTS_IMAGE_PREVIEW_MAX_PIXELS', 1600),
         'watermarked_download_max_pixels' => (int) env('EVENTS_IMAGE_WATERMARKED_DOWNLOAD_MAX_PIXELS', 2400),
         'quality' => (int) env('EVENTS_IMAGE_VARIANT_QUALITY', 82),
         'format' => env('EVENTS_IMAGE_VARIANT_FORMAT', 'jpg'),
+        // In-app display variants (thumb/preview, clean & watermarked) are never downloaded,
+        // so they use WebP for ~30% smaller files. The watermarked *download* stays JPEG for
+        // device compatibility. Falls back to `format` if the server's Imagick lacks WebP.
+        'display_format' => env('EVENTS_IMAGE_DISPLAY_VARIANT_FORMAT', 'webp'),
+        'display_quality' => (int) env('EVENTS_IMAGE_DISPLAY_VARIANT_QUALITY', 78),
         'watermark_text' => env('EVENTS_IMAGE_WATERMARK_TEXT', 'EventSmart Preview'),
         'watermark_font' => env('EVENTS_IMAGE_WATERMARK_FONT'),
     ],
