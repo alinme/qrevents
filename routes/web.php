@@ -81,7 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('admin/audit', [AuditLogController::class, 'index'])->name('admin.audit');
 
-    Route::redirect('admin/settings', 'admin/settings/general');
+    Route::redirect('admin/settings', '/admin/settings/general');
     Route::get('admin/settings/general', [SettingsController::class, 'general'])->name('admin.settings.general');
     Route::put('admin/settings/general', [SettingsController::class, 'updateGeneral'])->name('admin.settings.general.update');
     Route::get('admin/settings/email', [SettingsController::class, 'email'])->name('admin.settings.email');
