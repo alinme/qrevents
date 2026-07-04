@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Models\Event;
+use App\Models\User;
 use App\Support\FrontendLocalization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -54,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'accountNavigation' => $this->sharedAccountNavigation($request),
             'sidebarLabel' => $this->sharedSidebarLabel($request),
+            'impersonation' => $this->sharedImpersonation($request),
             'flash' => [
                 'success' => fn (): mixed => $request->session()->get('success'),
                 'error' => fn (): mixed => $request->session()->get('error'),
@@ -98,6 +101,32 @@ class HandleInertiaRequests extends Middleware
         }
 
         return $navigation;
+    }
+
+    /**
+     * When an admin is impersonating a user, expose the banner data so the
+     * frontend can show a persistent "return to admin" bar.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function sharedImpersonation(Request $request): ?array
+    {
+        $impersonatorId = $request->session()->get(ImpersonationController::SESSION_KEY);
+
+        if ($impersonatorId === null) {
+            return null;
+        }
+
+        $user = $request->user();
+        $admin = User::query()->find($impersonatorId);
+
+        return [
+            'active' => true,
+            'userName' => $user?->name,
+            'userEmail' => $user?->email,
+            'adminName' => $admin?->name,
+            'stopUrl' => route('impersonate.stop'),
+        ];
     }
 
     private function sharedSidebarLabel(Request $request): ?string

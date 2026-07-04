@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\EventModerationController;
+use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
@@ -58,6 +62,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/plans', [AdminController::class, 'plans'])->name('admin.plans');
     Route::post('admin/plans', [AdminController::class, 'storePlan'])->name('admin.plans.store');
     Route::patch('admin/plans/{plan}', [AdminController::class, 'updatePlan'])->name('admin.plans.update');
+
+    Route::get('admin/users', [AdminUserController::class, 'index'])->name('admin.users');
+    Route::get('admin/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
+    Route::patch('admin/users/{user}/account-type', [AdminUserController::class, 'updateAccountType'])->name('admin.users.account-type');
+    Route::post('admin/users/{user}/verify', [AdminUserController::class, 'verify'])->name('admin.users.verify');
+    Route::delete('admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('admin/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.impersonate.start');
+
+    Route::get('admin/audit', [AuditLogController::class, 'index'])->name('admin.audit');
+
+    Route::post('admin/events/{event}/suspend', [EventModerationController::class, 'suspend'])->name('admin.events.suspend');
+    Route::patch('admin/events/{event}/extend', [EventModerationController::class, 'extend'])->name('admin.events.extend');
+    Route::delete('admin/events/{event}', [EventModerationController::class, 'destroy'])->name('admin.events.destroy');
+
+    Route::post('impersonate/stop', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
 
     Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('events/{event}/print-pack', [EventController::class, 'printPack'])->name('events.print-pack');

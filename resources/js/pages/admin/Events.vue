@@ -22,10 +22,15 @@ type AdminEventRow = {
     billingLabel: string;
     billingTone: Tone;
     isPaid: boolean;
+    status: string;
+    isSuspended: boolean;
     assetCount: number;
     createdAt: string | null;
     links: {
         settings: string;
+        suspend: string;
+        extend: string;
+        destroy: string;
     };
 };
 
@@ -57,6 +62,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const search = ref(props.filters.search);
+const confirmingDeleteId = ref<number | null>(null);
 
 const submitSearch = (): void => {
     router.get(
@@ -67,6 +73,21 @@ const submitSearch = (): void => {
             replace: true,
         },
     );
+};
+
+const suspendEvent = (event: AdminEventRow): void => {
+    router.post(event.links.suspend, {}, { preserveScroll: true });
+};
+
+const extendEvent = (event: AdminEventRow): void => {
+    router.patch(event.links.extend, { days: 30 }, { preserveScroll: true });
+};
+
+const deleteEvent = (event: AdminEventRow): void => {
+    router.delete(event.links.destroy, {
+        preserveScroll: true,
+        onFinish: () => (confirmingDeleteId.value = null),
+    });
 };
 </script>
 
@@ -193,20 +214,71 @@ const submitSearch = (): void => {
                                     <td class="py-3 pr-4 text-brand-muted">
                                         {{ formatDateTime(event.createdAt) }}
                                     </td>
-                                    <td class="py-3 text-right">
-                                        <Button
-                                            as-child
-                                            size="sm"
-                                            variant="outline"
+                                    <td class="py-3">
+                                        <div
+                                            class="flex flex-wrap items-center justify-end gap-1.5"
                                         >
-                                            <Link :href="event.links.settings">
-                                                {{
-                                                    t(
-                                                        'admin.events.billing_settings',
-                                                    )
-                                                }}
-                                            </Link>
-                                        </Button>
+                                            <Button
+                                                as-child
+                                                size="sm"
+                                                variant="outline"
+                                            >
+                                                <Link
+                                                    :href="event.links.settings"
+                                                >
+                                                    {{ t('admin.events.actions.open') }}
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                v-if="!event.isSuspended"
+                                                size="sm"
+                                                variant="outline"
+                                                @click="suspendEvent(event)"
+                                            >
+                                                {{ t('admin.events.actions.suspend') }}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                @click="extendEvent(event)"
+                                            >
+                                                {{ t('admin.events.actions.extend') }}
+                                            </Button>
+                                            <template
+                                                v-if="
+                                                    confirmingDeleteId ===
+                                                    event.id
+                                                "
+                                            >
+                                                <Button
+                                                    size="sm"
+                                                    class="bg-rose-600 text-white hover:bg-rose-700"
+                                                    @click="deleteEvent(event)"
+                                                >
+                                                    {{ t('admin.events.actions.delete_yes') }}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    @click="
+                                                        confirmingDeleteId = null
+                                                    "
+                                                >
+                                                    {{ t('admin.events.actions.cancel') }}
+                                                </Button>
+                                            </template>
+                                            <Button
+                                                v-else
+                                                size="sm"
+                                                variant="outline"
+                                                class="border-rose-300 text-rose-600 hover:bg-rose-50"
+                                                @click="
+                                                    confirmingDeleteId = event.id
+                                                "
+                                            >
+                                                {{ t('admin.events.actions.delete') }}
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>

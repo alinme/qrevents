@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SharesAdminNavigation;
 use App\Http\Requests\UpsertPlanRequest;
 use App\Models\Event;
 use App\Models\EventAsset;
@@ -16,12 +17,14 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
+    use SharesAdminNavigation;
+
     public function index(Request $request): Response
     {
         $this->assertSuperAdmin($request);
 
         return Inertia::render('admin/Overview', [
-            ...$this->sharedPageProps(),
+            ...$this->adminPanelProps(),
             'summary' => $this->summary(),
             'recentEvents' => $this->eventRows(
                 Event::query()
@@ -59,7 +62,7 @@ class AdminController extends Controller
             ->withQueryString();
 
         return Inertia::render('admin/Events', [
-            ...$this->sharedPageProps(),
+            ...$this->adminPanelProps(),
             'events' => $this->eventRows($events->getCollection()),
             'pagination' => [
                 'currentPage' => $events->currentPage(),
@@ -79,7 +82,7 @@ class AdminController extends Controller
         $this->assertSuperAdmin($request);
 
         return Inertia::render('admin/Plans', [
-            ...$this->sharedPageProps(),
+            ...$this->adminPanelProps(),
             'plans' => $this->planRows(),
             'planStoreUrl' => route('admin.plans.store'),
         ]);
@@ -109,39 +112,6 @@ class AdminController extends Controller
         });
 
         return back()->with('success', "{$plan->fresh()->name} package updated.");
-    }
-
-    private function assertSuperAdmin(Request $request): void
-    {
-        abort_unless($request->user()?->canAccessAdmin(), 403);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function sharedPageProps(): array
-    {
-        return [
-            'adminNavigation' => [
-                [
-                    'title' => __('app.nav.overview'),
-                    'href' => route('admin.overview'),
-                ],
-                [
-                    'title' => __('app.nav.events'),
-                    'href' => route('admin.events'),
-                ],
-                [
-                    'title' => __('app.nav.plans'),
-                    'href' => route('admin.plans'),
-                ],
-            ],
-            'backNavigation' => [
-                'title' => __('app.nav.dashboard'),
-                'href' => route('dashboard'),
-            ],
-            'sidebarLabel' => 'Admin',
-        ];
     }
 
     /**
@@ -204,10 +174,15 @@ class AdminController extends Controller
                     'billingLabel' => $billingLabel,
                     'billingTone' => $billingTone,
                     'isPaid' => (bool) $event->is_paid,
+                    'status' => (string) $event->status,
+                    'isSuspended' => $event->status === Event::STATUS_LOCKED,
                     'assetCount' => (int) ($event->assets_count ?? 0),
                     'createdAt' => $event->created_at?->toIso8601String(),
                     'links' => [
                         'settings' => route('events.settings', $event),
+                        'suspend' => route('admin.events.suspend', $event),
+                        'extend' => route('admin.events.extend', $event),
+                        'destroy' => route('admin.events.destroy', $event),
                     ],
                 ];
             })

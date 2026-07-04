@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::start
-* @see app/Http/Controllers/EventController.php:705
-* @route '/events/{event}/exports/media'
-*/
+ * @see app/Http/Controllers/EventController.php:705
+ * @route '/events/{event}/exports/media'
+ */
 export const start = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: start.url(args, options),
     method: 'post',
@@ -16,31 +16,31 @@ start.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::start
-* @see app/Http/Controllers/EventController.php:705
-* @route '/events/{event}/exports/media'
-*/
+ * @see app/Http/Controllers/EventController.php:705
+ * @route '/events/{event}/exports/media'
+ */
 start.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
 
-    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-        args = { event: args.id }
-    }
-
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { event: args.id }
+        }
+    
     if (Array.isArray(args)) {
         args = {
-            event: args[0],
-        }
+                    event: args[0],
+                }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-        event: typeof args.event === 'object'
-        ? args.event.id
-        : args.event,
-    }
+                        event: typeof args.event === 'object'
+                ? args.event.id
+                : args.event,
+                }
 
     return start.definition.url
             .replace('{event}', parsedArgs.event.toString())
@@ -49,41 +49,40 @@ start.url = (args: { event: number | { id: number } } | [event: number | { id: n
 
 /**
 * @see \App\Http\Controllers\EventController::start
-* @see app/Http/Controllers/EventController.php:705
-* @route '/events/{event}/exports/media'
-*/
+ * @see app/Http/Controllers/EventController.php:705
+ * @route '/events/{event}/exports/media'
+ */
 start.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: start.url(args, options),
     method: 'post',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\EventController::start
-* @see app/Http/Controllers/EventController.php:705
-* @route '/events/{event}/exports/media'
-*/
-const startForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: start.url(args, options),
-    method: 'post',
-})
+ * @see app/Http/Controllers/EventController.php:705
+ * @route '/events/{event}/exports/media'
+ */
+    const startForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: start.url(args, options),
+        method: 'post',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\EventController::start
-* @see app/Http/Controllers/EventController.php:705
-* @route '/events/{event}/exports/media'
-*/
-startForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: start.url(args, options),
-    method: 'post',
-})
-
-start.form = startForm
-
+ * @see app/Http/Controllers/EventController.php:705
+ * @route '/events/{event}/exports/media'
+ */
+        startForm.post = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: start.url(args, options),
+            method: 'post',
+        })
+    
+    start.form = startForm
 /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
 export const download = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: download.url(args, options),
     method: 'get',
@@ -96,31 +95,31 @@ download.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
 download.url = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { event: args }
     }
 
-    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-        args = { event: args.id }
-    }
-
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { event: args.id }
+        }
+    
     if (Array.isArray(args)) {
         args = {
-            event: args[0],
-        }
+                    event: args[0],
+                }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-        event: typeof args.event === 'object'
-        ? args.event.id
-        : args.event,
-    }
+                        event: typeof args.event === 'object'
+                ? args.event.id
+                : args.event,
+                }
 
     return download.definition.url
             .replace('{event}', parsedArgs.event.toString())
@@ -129,64 +128,61 @@ download.url = (args: { event: number | { id: number } } | [event: number | { id
 
 /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
 download.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: download.url(args, options),
     method: 'get',
 })
-
 /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
 download.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: download.url(args, options),
     method: 'head',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
-const downloadForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: download.url(args, options),
-    method: 'get',
-})
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
+    const downloadForm = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: download.url(args, options),
+        method: 'get',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
-downloadForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: download.url(args, options),
-    method: 'get',
-})
-
-/**
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
+        downloadForm.get = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: download.url(args, options),
+            method: 'get',
+        })
+            /**
 * @see \App\Http\Controllers\EventController::download
-* @see app/Http/Controllers/EventController.php:745
-* @route '/events/{event}/exports/media/download'
-*/
-downloadForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: download.url(args, {
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-download.form = downloadForm
-
+ * @see app/Http/Controllers/EventController.php:745
+ * @route '/events/{event}/exports/media/download'
+ */
+        downloadForm.head = (args: { event: number | { id: number } } | [event: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: download.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    download.form = downloadForm
 const media = {
     start: Object.assign(start, start),
-    download: Object.assign(download, download),
+download: Object.assign(download, download),
 }
 
 export default media

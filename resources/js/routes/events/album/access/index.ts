@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
 export const show = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(options),
     method: 'get',
@@ -16,75 +16,72 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
 show.url = (options?: RouteQueryOptions) => {
     return show.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
 show.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(options),
     method: 'get',
 })
-
 /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
 show.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(options),
     method: 'head',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
-const showForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: show.url(options),
-    method: 'get',
-})
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
+    const showForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(options),
+        method: 'get',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
-showForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: show.url(options),
-    method: 'get',
-})
-
-/**
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
+        showForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(options),
+            method: 'get',
+        })
+            /**
 * @see \App\Http\Controllers\EventController::show
-* @see app/Http/Controllers/EventController.php:77
-* @route '/album'
-*/
-showForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: show.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-show.form = showForm
-
+ * @see app/Http/Controllers/EventController.php:77
+ * @route '/album'
+ */
+        showForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\EventController::resolve
-* @see app/Http/Controllers/EventController.php:88
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:88
+ * @route '/album'
+ */
 export const resolve = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(options),
     method: 'post',
@@ -97,41 +94,41 @@ resolve.definition = {
 
 /**
 * @see \App\Http\Controllers\EventController::resolve
-* @see app/Http/Controllers/EventController.php:88
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:88
+ * @route '/album'
+ */
 resolve.url = (options?: RouteQueryOptions) => {
     return resolve.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\EventController::resolve
-* @see app/Http/Controllers/EventController.php:88
-* @route '/album'
-*/
+ * @see app/Http/Controllers/EventController.php:88
+ * @route '/album'
+ */
 resolve.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(options),
     method: 'post',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\EventController::resolve
-* @see app/Http/Controllers/EventController.php:88
-* @route '/album'
-*/
-const resolveForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: resolve.url(options),
-    method: 'post',
-})
+ * @see app/Http/Controllers/EventController.php:88
+ * @route '/album'
+ */
+    const resolveForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: resolve.url(options),
+        method: 'post',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\EventController::resolve
-* @see app/Http/Controllers/EventController.php:88
-* @route '/album'
-*/
-resolveForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-    action: resolve.url(options),
-    method: 'post',
-})
-
-resolve.form = resolveForm
+ * @see app/Http/Controllers/EventController.php:88
+ * @route '/album'
+ */
+        resolveForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: resolve.url(options),
+            method: 'post',
+        })
+    
+    resolve.form = resolveForm

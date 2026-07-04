@@ -2,18 +2,19 @@ import SocialAuthController from './SocialAuthController'
 import EventOnboardingController from './EventOnboardingController'
 import DashboardController from './DashboardController'
 import AdminController from './AdminController'
+import Admin from './Admin'
 import EventController from './EventController'
 import StripeWebhookController from './StripeWebhookController'
 import Settings from './Settings'
-
 const Controllers = {
     SocialAuthController: Object.assign(SocialAuthController, SocialAuthController),
-    EventOnboardingController: Object.assign(EventOnboardingController, EventOnboardingController),
-    DashboardController: Object.assign(DashboardController, DashboardController),
-    AdminController: Object.assign(AdminController, AdminController),
-    EventController: Object.assign(EventController, EventController),
-    StripeWebhookController: Object.assign(StripeWebhookController, StripeWebhookController),
-    Settings: Object.assign(Settings, Settings),
+EventOnboardingController: Object.assign(EventOnboardingController, EventOnboardingController),
+DashboardController: Object.assign(DashboardController, DashboardController),
+AdminController: Object.assign(AdminController, AdminController),
+Admin: Object.assign(Admin, Admin),
+EventController: Object.assign(EventController, EventController),
+StripeWebhookController: Object.assign(StripeWebhookController, StripeWebhookController),
+Settings: Object.assign(Settings, Settings),
 }
 
 export default Controllers

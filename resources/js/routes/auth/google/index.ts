@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
 export const redirect = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: redirect.url(options),
     method: 'get',
@@ -16,75 +16,72 @@ redirect.definition = {
 
 /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
 redirect.url = (options?: RouteQueryOptions) => {
     return redirect.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
 redirect.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: redirect.url(options),
     method: 'get',
 })
-
 /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
 redirect.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: redirect.url(options),
     method: 'head',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
-const redirectForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: redirect.url(options),
-    method: 'get',
-})
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
+    const redirectForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: redirect.url(options),
+        method: 'get',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
-redirectForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: redirect.url(options),
-    method: 'get',
-})
-
-/**
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
+        redirectForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: redirect.url(options),
+            method: 'get',
+        })
+            /**
 * @see \App\Http\Controllers\SocialAuthController::redirect
-* @see app/Http/Controllers/SocialAuthController.php:27
-* @route '/auth/google/redirect'
-*/
-redirectForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: redirect.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-redirect.form = redirectForm
-
+ * @see app/Http/Controllers/SocialAuthController.php:27
+ * @route '/auth/google/redirect'
+ */
+        redirectForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: redirect.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    redirect.form = redirectForm
 /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
 export const callback = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: callback.url(options),
     method: 'get',
@@ -97,73 +94,70 @@ callback.definition = {
 
 /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
 callback.url = (options?: RouteQueryOptions) => {
     return callback.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
 callback.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: callback.url(options),
     method: 'get',
 })
-
 /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
 callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: callback.url(options),
     method: 'head',
 })
 
-/**
+    /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
-const callbackForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: callback.url(options),
-    method: 'get',
-})
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
+    const callbackForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: callback.url(options),
+        method: 'get',
+    })
 
-/**
+            /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
-callbackForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: callback.url(options),
-    method: 'get',
-})
-
-/**
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
+        callbackForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: callback.url(options),
+            method: 'get',
+        })
+            /**
 * @see \App\Http\Controllers\SocialAuthController::callback
-* @see app/Http/Controllers/SocialAuthController.php:50
-* @route '/auth/google/callback'
-*/
-callbackForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: callback.url({
-        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-            _method: 'HEAD',
-            ...(options?.query ?? options?.mergeQuery ?? {}),
-        }
-    }),
-    method: 'get',
-})
-
-callback.form = callbackForm
-
+ * @see app/Http/Controllers/SocialAuthController.php:50
+ * @route '/auth/google/callback'
+ */
+        callbackForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: callback.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    callback.form = callbackForm
 const google = {
     redirect: Object.assign(redirect, redirect),
-    callback: Object.assign(callback, callback),
+callback: Object.assign(callback, callback),
 }
 
 export default google

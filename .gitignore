@@ -13,9 +13,17 @@
 /bootstrap/cache/*.php
 
 /.env
+/env
 /.env.backup
 /.env.production
 /.phpunit.result.cache
+
+# Database dumps / backups (contain secrets & PII — never commit)
+*.sql
+*.sql.gz
+*.dump
+*.tgz
+eventsmart-backup*
 
 /.cursor
 /.codex

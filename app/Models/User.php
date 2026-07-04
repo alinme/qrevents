@@ -114,6 +114,20 @@ class User extends Authenticatable
         };
     }
 
+    /**
+     * Account types an administrator may assign through the admin panel.
+     *
+     * @return list<string>
+     */
+    public static function assignableAccountTypes(): array
+    {
+        return [
+            self::ACCOUNT_TYPE_USER,
+            self::ACCOUNT_TYPE_BUSINESS,
+            self::ACCOUNT_TYPE_SUPER_ADMIN,
+        ];
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->accountType() === self::ACCOUNT_TYPE_SUPER_ADMIN;

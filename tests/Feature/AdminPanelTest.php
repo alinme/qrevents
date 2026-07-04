@@ -68,7 +68,7 @@ test('super admins see platform stats and recent events on the overview', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/Overview')
             ->where('sidebarLabel', 'Admin')
-            ->has('adminNavigation', 3)
+            ->has('adminNavigation', 5)
             ->where('summary.totalUsers', 2)
             ->where('summary.totalEvents', 2)
             ->where('summary.totalUploads', 2)
