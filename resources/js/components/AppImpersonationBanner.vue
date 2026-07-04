@@ -13,7 +13,7 @@ type Impersonation = {
 
 const page = usePage();
 const impersonation = computed(
-    () => (page.props.impersonation as Impersonation | null) ?? null,
+    () => (page?.props?.impersonation as Impersonation | null) ?? null,
 );
 
 const stopImpersonating = (): void => {
