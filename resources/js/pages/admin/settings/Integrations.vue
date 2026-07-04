@@ -1,12 +1,5 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import {
-    Facebook,
-    Instagram,
-    Linkedin,
-    Twitter,
-    Youtube,
-} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/InputError.vue';
@@ -19,7 +12,6 @@ type SettingsTab = { key: string; title: string; href: string };
 const props = defineProps<{
     settingsTabs: SettingsTab[];
     activeTab: string;
-    social: Record<string, string>;
     storage: {
         access_key: string;
         region: string;
@@ -29,24 +21,7 @@ const props = defineProps<{
     storageSecretSet: boolean;
 }>();
 
-const socialFields = [
-    { key: 'facebook', label: 'Facebook', icon: Facebook },
-    { key: 'instagram', label: 'Instagram', icon: Instagram },
-    { key: 'linkedin', label: 'LinkedIn', icon: Linkedin },
-    { key: 'twitter', label: 'X / Twitter', icon: Twitter },
-    { key: 'youtube', label: 'YouTube', icon: Youtube },
-    { key: 'tiktok', label: 'TikTok', icon: null },
-];
-
 const form = useForm({
-    social: {
-        facebook: props.social.facebook ?? '',
-        instagram: props.social.instagram ?? '',
-        linkedin: props.social.linkedin ?? '',
-        twitter: props.social.twitter ?? '',
-        youtube: props.social.youtube ?? '',
-        tiktok: props.social.tiktok ?? '',
-    } as Record<string, string>,
     storage: {
         access_key: props.storage.access_key,
         secret: '',
@@ -66,38 +41,9 @@ const submit = (): void => {
         :tabs="settingsTabs"
         :active-tab="activeTab"
         title="Integrations & Storage"
-        description="Social profiles and third-party cloud storage."
+        description="Third-party cloud storage for guest media."
     >
         <form @submit.prevent="submit">
-            <SettingsSection
-                title="Social links"
-                description="Public profile URLs shown in the footer and share cards."
-            >
-                <div class="grid gap-5 sm:grid-cols-2">
-                    <div
-                        v-for="field in socialFields"
-                        :key="field.key"
-                        class="space-y-1.5"
-                    >
-                        <Label :for="`social-${field.key}`" class="flex items-center gap-1.5">
-                            <component
-                                :is="field.icon"
-                                v-if="field.icon"
-                                class="size-3.5 text-brand-muted/70"
-                            />
-                            {{ field.label }}
-                        </Label>
-                        <Input
-                            :id="`social-${field.key}`"
-                            v-model="form.social[field.key]"
-                            type="url"
-                            placeholder="https://"
-                        />
-                        <InputError :message="form.errors[`social.${field.key}` as never]" />
-                    </div>
-                </div>
-            </SettingsSection>
-
             <SettingsSection
                 title="Cloud storage — Scaleway"
                 description="S3-compatible object storage for guest media. The secret key is stored encrypted."
@@ -120,7 +66,7 @@ const submit = (): void => {
                     </div>
                     <div class="space-y-1.5">
                         <Label for="storage-region">Region</Label>
-                        <Input id="storage-region" v-model="form.storage.region" placeholder="nl-ams" />
+                        <Input id="storage-region" v-model="form.storage.region" placeholder="fr-par" />
                         <InputError :message="form.errors['storage.region' as never]" />
                     </div>
                     <div class="space-y-1.5">
@@ -134,7 +80,7 @@ const submit = (): void => {
                             id="storage-endpoint"
                             v-model="form.storage.endpoint"
                             type="url"
-                            placeholder="https://s3.nl-ams.scw.cloud"
+                            placeholder="https://s3.fr-par.scw.cloud"
                         />
                         <InputError :message="form.errors['storage.endpoint' as never]" />
                     </div>

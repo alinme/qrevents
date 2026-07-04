@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
+import {
+    Facebook,
+    Instagram,
+    Linkedin,
+    Twitter,
+    Youtube,
+} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +17,7 @@ import {
     TabsTrigger,
 } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import SettingsFileUpload from '@/components/settings/SettingsFileUpload.vue';
 import SettingsSection from '@/components/settings/SettingsSection.vue';
 import SettingsShell from '@/components/settings/SettingsShell.vue';
 
@@ -21,6 +29,8 @@ const props = defineProps<{
     activeTab: string;
     values: Record<string, SeoValue>;
     locales: string[];
+    social: Record<string, string>;
+    shareImageUrl: string | null;
 }>();
 
 const localeLabels: Record<string, string> = {
@@ -28,6 +38,15 @@ const localeLabels: Record<string, string> = {
     ro: 'Română',
     el: 'Ελληνικά',
 };
+
+const socialFields = [
+    { key: 'facebook', label: 'Facebook', icon: Facebook },
+    { key: 'instagram', label: 'Instagram', icon: Instagram },
+    { key: 'linkedin', label: 'LinkedIn', icon: Linkedin },
+    { key: 'twitter', label: 'X / Twitter', icon: Twitter },
+    { key: 'youtube', label: 'YouTube', icon: Youtube },
+    { key: 'tiktok', label: 'TikTok', icon: null },
+];
 
 const form = useForm({
     values: Object.fromEntries(
@@ -39,10 +58,21 @@ const form = useForm({
             },
         ]),
     ) as Record<string, SeoValue>,
+    social: {
+        facebook: props.social.facebook ?? '',
+        instagram: props.social.instagram ?? '',
+        linkedin: props.social.linkedin ?? '',
+        twitter: props.social.twitter ?? '',
+        youtube: props.social.youtube ?? '',
+        tiktok: props.social.tiktok ?? '',
+    } as Record<string, string>,
+    share_image: null as File | null,
 });
 
 const submit = (): void => {
-    form.put('/admin/settings/seo', { preserveScroll: true });
+    form
+        .transform((data) => ({ ...data, _method: 'put' }))
+        .post('/admin/settings/seo', { forceFormData: true, preserveScroll: true });
 };
 </script>
 
@@ -97,6 +127,46 @@ const submit = (): void => {
                         </div>
                     </TabsContent>
                 </Tabs>
+
+                <div class="space-y-1.5 border-t border-brand-border/70 pt-5">
+                    <Label>Share image (Open Graph)</Label>
+                    <SettingsFileUpload
+                        v-model="form.share_image"
+                        :preview-url="shareImageUrl"
+                        hint="Shown when a page is shared on social. 1200×630 recommended."
+                    />
+                </div>
+            </SettingsSection>
+
+            <SettingsSection
+                title="Social links"
+                description="Public profile URLs shown in the footer and share cards."
+            >
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div
+                        v-for="field in socialFields"
+                        :key="field.key"
+                        class="space-y-1.5"
+                    >
+                        <Label
+                            :for="`social-${field.key}`"
+                            class="flex items-center gap-1.5"
+                        >
+                            <component
+                                :is="field.icon"
+                                v-if="field.icon"
+                                class="size-3.5 text-brand-muted/70"
+                            />
+                            {{ field.label }}
+                        </Label>
+                        <Input
+                            :id="`social-${field.key}`"
+                            v-model="form.social[field.key]"
+                            type="url"
+                            placeholder="https://"
+                        />
+                    </div>
+                </div>
             </SettingsSection>
 
             <div class="flex justify-end border-t border-brand-border/70 pt-6">

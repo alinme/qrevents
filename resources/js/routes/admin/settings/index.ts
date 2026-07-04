@@ -7,7 +7,7 @@ import healthC4695b from './health'
 import devtoolsE8467b from './devtools'
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
 export const general = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -22,7 +22,7 @@ general.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
 general.url = (options?: RouteQueryOptions) => {
@@ -31,7 +31,7 @@ general.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
 general.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -40,7 +40,7 @@ general.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
 general.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -50,7 +50,7 @@ general.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
     const generalForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -60,7 +60,7 @@ general.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
         generalForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -69,7 +69,7 @@ general.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::general
- * @see app/Http/Controllers/Admin/SettingsController.php:30
+ * @see app/Http/Controllers/Admin/SettingsController.php:32
  * @route '/admin/settings/general'
  */
         generalForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -85,7 +85,7 @@ general.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     general.form = generalForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
 export const email = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -100,7 +100,7 @@ email.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
 email.url = (options?: RouteQueryOptions) => {
@@ -109,7 +109,7 @@ email.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
 email.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -118,7 +118,7 @@ email.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
 email.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -128,7 +128,7 @@ email.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
     const emailForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -138,7 +138,7 @@ email.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
         emailForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -147,7 +147,7 @@ email.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::email
- * @see app/Http/Controllers/Admin/SettingsController.php:82
+ * @see app/Http/Controllers/Admin/SettingsController.php:94
  * @route '/admin/settings/email'
  */
         emailForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -163,7 +163,7 @@ email.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     email.form = emailForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
 export const seo = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -178,7 +178,7 @@ seo.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
 seo.url = (options?: RouteQueryOptions) => {
@@ -187,7 +187,7 @@ seo.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
 seo.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -196,7 +196,7 @@ seo.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
 seo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -206,7 +206,7 @@ seo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
     const seoForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -216,7 +216,7 @@ seo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
         seoForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -225,7 +225,7 @@ seo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::seo
- * @see app/Http/Controllers/Admin/SettingsController.php:152
+ * @see app/Http/Controllers/Admin/SettingsController.php:164
  * @route '/admin/settings/seo'
  */
         seoForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -241,7 +241,7 @@ seo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     seo.form = seoForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
 export const integrations = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -256,7 +256,7 @@ integrations.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
 integrations.url = (options?: RouteQueryOptions) => {
@@ -265,7 +265,7 @@ integrations.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
 integrations.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -274,7 +274,7 @@ integrations.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
 integrations.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -284,7 +284,7 @@ integrations.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
     const integrationsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -294,7 +294,7 @@ integrations.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
         integrationsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -303,7 +303,7 @@ integrations.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::integrations
- * @see app/Http/Controllers/Admin/SettingsController.php:194
+ * @see app/Http/Controllers/Admin/SettingsController.php:231
  * @route '/admin/settings/integrations'
  */
         integrationsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -319,7 +319,7 @@ integrations.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     integrations.form = integrationsForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
 export const health = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -334,7 +334,7 @@ health.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
 health.url = (options?: RouteQueryOptions) => {
@@ -343,7 +343,7 @@ health.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
 health.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -352,7 +352,7 @@ health.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
 health.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -362,7 +362,7 @@ health.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
     const healthForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -372,7 +372,7 @@ health.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
         healthForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -381,7 +381,7 @@ health.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::health
- * @see app/Http/Controllers/Admin/SettingsController.php:256
+ * @see app/Http/Controllers/Admin/SettingsController.php:273
  * @route '/admin/settings/health'
  */
         healthForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -397,7 +397,7 @@ health.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     health.form = healthForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
 export const devtools = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -412,7 +412,7 @@ devtools.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
 devtools.url = (options?: RouteQueryOptions) => {
@@ -421,7 +421,7 @@ devtools.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
 devtools.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -430,7 +430,7 @@ devtools.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
 devtools.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -440,7 +440,7 @@ devtools.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
     const devtoolsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -450,7 +450,7 @@ devtools.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
         devtoolsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -459,7 +459,7 @@ devtools.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::devtools
- * @see app/Http/Controllers/Admin/SettingsController.php:299
+ * @see app/Http/Controllers/Admin/SettingsController.php:316
  * @route '/admin/settings/devtools'
  */
         devtoolsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

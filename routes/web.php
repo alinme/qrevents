@@ -99,6 +99,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/settings/devtools', [SettingsController::class, 'devtools'])->name('admin.settings.devtools');
     Route::post('admin/settings/devtools/run', [SettingsController::class, 'runDevtool'])
         ->middleware('throttle:20,1')->name('admin.settings.devtools.run');
+    Route::get('admin/settings/devtools/sql-backup', [SettingsController::class, 'backupSql'])
+        ->middleware('throttle:10,1')->name('admin.settings.devtools.backup');
 
     Route::post('admin/events/{event}/suspend', [EventModerationController::class, 'suspend'])->name('admin.events.suspend');
     Route::patch('admin/events/{event}/extend', [EventModerationController::class, 'extend'])->name('admin.events.extend');

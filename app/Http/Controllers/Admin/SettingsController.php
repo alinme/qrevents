@@ -13,7 +13,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,6 +68,8 @@ class SettingsController extends Controller
             'general.business_address' => $validated['business_address'] ?? null,
         ]);
 
+        $brandingChanged = $request->hasFile('logo') || $request->hasFile('favicon');
+
         if ($request->hasFile('logo')) {
             $this->settings->set('general.logo_path', $request->file('logo')->store('settings/branding', 'public'), 'general');
         }
@@ -74,7 +78,15 @@ class SettingsController extends Controller
             $this->settings->set('general.favicon_path', $request->file('favicon')->store('settings/branding', 'public'), 'general');
         }
 
-        return $this->saved($request, 'general', 'General settings saved.');
+        AdminAuditLog::record($request->user(), 'settings.general.updated', null, 'general', [], $request->ip());
+
+        $redirect = back()->with('success', 'General settings saved.');
+
+        if ($brandingChanged) {
+            $redirect->with('info', 'Logo or favicon changed — run "Regenerate PWA icons" in DevTools so installed apps pick up the new icon.');
+        }
+
+        return $redirect;
     }
 
     // ---- Email / SMTP --------------------------------------------------
@@ -165,6 +177,15 @@ class SettingsController extends Controller
         return $this->render('admin/settings/Seo', 'seo', [
             'values' => $values,
             'locales' => $locales,
+            'social' => [
+                'facebook' => (string) $this->settings->get('social.facebook', ''),
+                'instagram' => (string) $this->settings->get('social.instagram', ''),
+                'linkedin' => (string) $this->settings->get('social.linkedin', ''),
+                'twitter' => (string) $this->settings->get('social.twitter', ''),
+                'youtube' => (string) $this->settings->get('social.youtube', ''),
+                'tiktok' => (string) $this->settings->get('social.tiktok', ''),
+            ],
+            'shareImageUrl' => $this->fileUrl('seo.share_image'),
         ]);
     }
 
@@ -176,6 +197,9 @@ class SettingsController extends Controller
             'values' => ['required', 'array'],
             'values.*.title' => ['nullable', 'string', 'max:180'],
             'values.*.description' => ['nullable', 'string', 'max:320'],
+            'social' => ['array'],
+            'social.*' => ['nullable', 'url', 'max:255'],
+            'share_image' => ['nullable', 'image', 'max:4096'],
         ]);
 
         $payload = [];
@@ -183,10 +207,23 @@ class SettingsController extends Controller
             $payload["seo.title.{$locale}"] = $validated['values'][$locale]['title'] ?? null;
             $payload["seo.description.{$locale}"] = $validated['values'][$locale]['description'] ?? null;
         }
-
         $this->settings->setMany('seo', $payload);
 
-        return $this->saved($request, 'seo', 'SEO settings saved.');
+        $social = $validated['social'] ?? [];
+        $this->settings->setMany('integrations', [
+            'social.facebook' => $social['facebook'] ?? null,
+            'social.instagram' => $social['instagram'] ?? null,
+            'social.linkedin' => $social['linkedin'] ?? null,
+            'social.twitter' => $social['twitter'] ?? null,
+            'social.youtube' => $social['youtube'] ?? null,
+            'social.tiktok' => $social['tiktok'] ?? null,
+        ]);
+
+        if ($request->hasFile('share_image')) {
+            $this->settings->set('seo.share_image', $request->file('share_image')->store('settings/seo', 'public'), 'seo');
+        }
+
+        return $this->saved($request, 'seo', 'Localization & SEO saved.');
     }
 
     // ---- Integrations / Storage ---------------------------------------
@@ -196,14 +233,6 @@ class SettingsController extends Controller
         $this->assertSuperAdmin($request);
 
         return $this->render('admin/settings/Integrations', 'integrations', [
-            'social' => [
-                'facebook' => (string) $this->settings->get('social.facebook', ''),
-                'instagram' => (string) $this->settings->get('social.instagram', ''),
-                'linkedin' => (string) $this->settings->get('social.linkedin', ''),
-                'twitter' => (string) $this->settings->get('social.twitter', ''),
-                'youtube' => (string) $this->settings->get('social.youtube', ''),
-                'tiktok' => (string) $this->settings->get('social.tiktok', ''),
-            ],
             'storage' => [
                 'access_key' => (string) $this->settings->get('storage.access_key', ''),
                 'region' => (string) $this->settings->get('storage.region', ''),
@@ -219,24 +248,12 @@ class SettingsController extends Controller
         $this->assertSuperAdmin($request);
 
         $validated = $request->validate([
-            'social' => ['array'],
-            'social.*' => ['nullable', 'url', 'max:255'],
             'storage' => ['array'],
             'storage.access_key' => ['nullable', 'string', 'max:255'],
             'storage.secret' => ['nullable', 'string', 'max:400'],
             'storage.region' => ['nullable', 'string', 'max:60'],
             'storage.bucket' => ['nullable', 'string', 'max:120'],
             'storage.endpoint' => ['nullable', 'url', 'max:255'],
-        ]);
-
-        $social = $validated['social'] ?? [];
-        $this->settings->setMany('integrations', [
-            'social.facebook' => $social['facebook'] ?? null,
-            'social.instagram' => $social['instagram'] ?? null,
-            'social.linkedin' => $social['linkedin'] ?? null,
-            'social.twitter' => $social['twitter'] ?? null,
-            'social.youtube' => $social['youtube'] ?? null,
-            'social.tiktok' => $social['tiktok'] ?? null,
         ]);
 
         $storage = $validated['storage'] ?? [];
@@ -313,6 +330,7 @@ class SettingsController extends Controller
         return $this->render('admin/settings/DevTools', 'devtools', [
             'operations' => $operations,
             'runUrl' => route('admin.settings.devtools.run'),
+            'backupUrl' => route('admin.settings.devtools.backup'),
             'lastResult' => $request->session()->get('devtoolsResult'),
         ]);
     }
@@ -342,6 +360,44 @@ class SettingsController extends Controller
             'ok' => $result['ok'],
             'output' => $result['output'],
         ]);
+    }
+
+    public function backupSql(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $this->assertSuperAdmin($request);
+
+        $conn = (array) config('database.connections.'.config('database.default'));
+
+        if (($conn['driver'] ?? null) !== 'mysql') {
+            return back()->with('error', 'SQL backup is only available for MySQL databases.');
+        }
+
+        $dir = storage_path('app/private/backups');
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $file = $dir.'/eventsmart-'.now()->format('Ymd-His').'.sql';
+
+        $result = Process::timeout(300)
+            ->env(['MYSQL_PWD' => (string) ($conn['password'] ?? '')])
+            ->run([
+                'mysqldump', '--single-transaction', '--no-tablespaces',
+                '-h', (string) ($conn['host'] ?? '127.0.0.1'),
+                '-P', (string) ($conn['port'] ?? 3306),
+                '-u', (string) ($conn['username'] ?? ''),
+                (string) ($conn['database'] ?? ''),
+            ]);
+
+        if (! $result->successful()) {
+            return back()->with('error', 'Backup failed: '.trim($result->errorOutput() ?: 'mysqldump error'));
+        }
+
+        file_put_contents($file, $result->output());
+
+        AdminAuditLog::record($request->user(), 'settings.devtools.sql_backup', null, basename($file), [], $request->ip());
+
+        return response()->download($file, basename($file), ['Content-Type' => 'application/sql'])
+            ->deleteFileAfterSend();
     }
 
     // ---- Shared helpers ------------------------------------------------

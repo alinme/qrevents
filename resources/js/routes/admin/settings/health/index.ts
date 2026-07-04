@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
 export const data = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ data.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
 data.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ data.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
 data.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ data.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
 data.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ data.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
     const dataForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ data.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
         dataForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ data.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::data
- * @see app/Http/Controllers/Admin/SettingsController.php:270
+ * @see app/Http/Controllers/Admin/SettingsController.php:287
  * @route '/admin/settings/health/data'
  */
         dataForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ data.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     data.form = dataForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::retryFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:277
+ * @see app/Http/Controllers/Admin/SettingsController.php:294
  * @route '/admin/settings/health/retry-failed'
  */
 export const retryFailed = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ retryFailed.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::retryFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:277
+ * @see app/Http/Controllers/Admin/SettingsController.php:294
  * @route '/admin/settings/health/retry-failed'
  */
 retryFailed.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ retryFailed.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::retryFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:277
+ * @see app/Http/Controllers/Admin/SettingsController.php:294
  * @route '/admin/settings/health/retry-failed'
  */
 retryFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ retryFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::retryFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:277
+ * @see app/Http/Controllers/Admin/SettingsController.php:294
  * @route '/admin/settings/health/retry-failed'
  */
     const retryFailedForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ retryFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::retryFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:277
+ * @see app/Http/Controllers/Admin/SettingsController.php:294
  * @route '/admin/settings/health/retry-failed'
  */
         retryFailedForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ retryFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     retryFailed.form = retryFailedForm
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::flushFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:287
+ * @see app/Http/Controllers/Admin/SettingsController.php:304
  * @route '/admin/settings/health/flush-failed'
  */
 export const flushFailed = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ flushFailed.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::flushFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:287
+ * @see app/Http/Controllers/Admin/SettingsController.php:304
  * @route '/admin/settings/health/flush-failed'
  */
 flushFailed.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ flushFailed.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::flushFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:287
+ * @see app/Http/Controllers/Admin/SettingsController.php:304
  * @route '/admin/settings/health/flush-failed'
  */
 flushFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ flushFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::flushFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:287
+ * @see app/Http/Controllers/Admin/SettingsController.php:304
  * @route '/admin/settings/health/flush-failed'
  */
     const flushFailedForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ flushFailed.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::flushFailed
- * @see app/Http/Controllers/Admin/SettingsController.php:287
+ * @see app/Http/Controllers/Admin/SettingsController.php:304
  * @route '/admin/settings/health/flush-failed'
  */
         flushFailedForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { CheckCircle2, Terminal, TriangleAlert, XCircle } from 'lucide-vue-next';
+import {
+    CheckCircle2,
+    Database,
+    Terminal,
+    TriangleAlert,
+    XCircle,
+} from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +35,7 @@ const props = defineProps<{
     activeTab: string;
     operations: Operation[];
     runUrl: string;
+    backupUrl: string;
     lastResult: LastResult;
 }>();
 
@@ -103,6 +110,18 @@ const confirmRun = (): void => {
                     </Button>
                 </div>
             </div>
+        </SettingsSection>
+
+        <SettingsSection
+            title="Database"
+            description="Download a full SQL dump of the database for safekeeping."
+        >
+            <Button as-child variant="outline" class="self-start">
+                <a :href="backupUrl">
+                    <Database class="size-4" />
+                    Download SQL backup
+                </a>
+            </Button>
         </SettingsSection>
 
         <SettingsSection

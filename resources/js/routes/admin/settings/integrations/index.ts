@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::update
- * @see app/Http/Controllers/Admin/SettingsController.php:217
+ * @see app/Http/Controllers/Admin/SettingsController.php:246
  * @route '/admin/settings/integrations'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -16,7 +16,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::update
- * @see app/Http/Controllers/Admin/SettingsController.php:217
+ * @see app/Http/Controllers/Admin/SettingsController.php:246
  * @route '/admin/settings/integrations'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingsController::update
- * @see app/Http/Controllers/Admin/SettingsController.php:217
+ * @see app/Http/Controllers/Admin/SettingsController.php:246
  * @route '/admin/settings/integrations'
  */
 update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -35,7 +35,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingsController::update
- * @see app/Http/Controllers/Admin/SettingsController.php:217
+ * @see app/Http/Controllers/Admin/SettingsController.php:246
  * @route '/admin/settings/integrations'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingsController::update
- * @see app/Http/Controllers/Admin/SettingsController.php:217
+ * @see app/Http/Controllers/Admin/SettingsController.php:246
  * @route '/admin/settings/integrations'
  */
         updateForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

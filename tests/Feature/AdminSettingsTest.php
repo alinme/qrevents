@@ -125,30 +125,30 @@ test('seo settings save per language', function () {
             'ro' => ['title' => 'RO title', 'description' => 'RO desc'],
             'el' => ['title' => 'EL title', 'description' => 'EL desc'],
         ],
+        'social' => ['facebook' => 'https://facebook.com/eventsmart'],
     ])->assertRedirect();
 
     $repo = app(SettingsRepository::class);
     expect($repo->get('seo.title.ro'))->toBe('RO title');
     expect($repo->get('seo.description.el'))->toBe('EL desc');
+    expect($repo->get('social.facebook'))->toBe('https://facebook.com/eventsmart');
 });
 
 test('integrations save and encrypt the storage secret', function () {
     $admin = settingsAdmin();
 
     $this->actingAs($admin)->put(route('admin.settings.integrations.update'), [
-        'social' => ['facebook' => 'https://facebook.com/eventsmart'],
         'storage' => [
             'access_key' => 'AKIAXXXX',
             'secret' => 'the-secret',
-            'region' => 'nl-ams',
-            'bucket' => 'eventsaas',
-            'endpoint' => 'https://s3.nl-ams.scw.cloud',
+            'region' => 'fr-par',
+            'bucket' => 'eventsmart',
+            'endpoint' => 'https://s3.fr-par.scw.cloud',
         ],
     ])->assertRedirect();
 
     $repo = app(SettingsRepository::class);
-    expect($repo->get('social.facebook'))->toBe('https://facebook.com/eventsmart');
-    expect($repo->get('storage.bucket'))->toBe('eventsaas');
+    expect($repo->get('storage.bucket'))->toBe('eventsmart');
     expect($repo->get('storage.secret'))->toBe('the-secret');
     expect(SiteSetting::query()->where('key', 'storage.secret')->first()->is_encrypted)->toBeTrue();
 });
