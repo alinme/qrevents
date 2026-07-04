@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBusinessOnboardingRequest;
 use App\Http\Requests\StoreBusinessWalletCheckoutRequest;
+use App\Models\BusinessWalletTransaction;
+use App\Models\Event;
 use App\Support\BusinessWalletManager;
 use App\Support\StripeCheckoutGateway;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +17,66 @@ use Inertia\Response;
 
 class BusinessController extends Controller
 {
+    public function dashboard(Request $request, BusinessWalletManager $walletManager): Response|RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null && $user->isBusinessAccount(), 403);
+
+        if (! $user->hasCompletedBusinessOnboarding()) {
+            return to_route('dashboard.business.onboarding');
+        }
+
+        $profile = is_array($user->business_profile) ? $user->business_profile : [];
+
+        $transactions = $user->businessWalletTransactions()
+            ->latest('id')
+            ->limit(25)
+            ->get()
+            ->map(fn (BusinessWalletTransaction $tx): array => [
+                'id' => $tx->id,
+                'kind' => (string) $tx->kind,
+                'credits' => (int) $tx->credits,
+                'description' => (string) $tx->description,
+                'createdAt' => $tx->created_at?->toIso8601String(),
+            ])->values()->all();
+
+        $events = $user->events()
+            ->with('plan:id,name')
+            ->withCount('assets')
+            ->latest('id')
+            ->limit(20)
+            ->get()
+            ->map(fn (Event $event): array => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'status' => (string) $event->status,
+                'planName' => $event->plan?->name ?? 'Custom plan',
+                'assetCount' => (int) ($event->assets_count ?? 0),
+                'links' => ['open' => route('events.show', $event)],
+            ])->values()->all();
+
+        return Inertia::render('business/Dashboard', [
+            'profile' => [
+                'companyName' => (string) ($profile['company_name'] ?? ''),
+                'brandName' => (string) ($profile['brand_name'] ?? ''),
+                'billingEmail' => (string) ($profile['billing_email'] ?? $user->email),
+                'logoUrl' => $this->businessLogoUrl($profile),
+            ],
+            'wallet' => [
+                'credits' => (int) ($user->business_wallet_credits ?? 0),
+                'currency' => (string) ($user->business_wallet_currency ?? 'EUR'),
+            ],
+            'topUpPacks' => $walletManager->topUpPacks(),
+            'currencies' => (array) config('business.supported_checkout_currencies', ['EUR']),
+            'transactions' => $transactions,
+            'events' => $events,
+            'walletCheckoutUrl' => route('dashboard.business.wallet.checkout'),
+            'editProfileUrl' => route('dashboard.business.onboarding'),
+            'createEventUrl' => route('onboarding.create'),
+            'checkoutResult' => (string) $request->string('wallet_checkout'),
+        ]);
+    }
+
     public function activate(Request $request): RedirectResponse
     {
         $user = $request->user();

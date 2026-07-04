@@ -862,6 +862,7 @@
     "app.nav.shared_events": "Shared Events",
     "app.nav.recent_activity": "Recent Activity",
     "app.nav.admin": "Admin",
+    "app.nav.business": "Business",
     "app.nav.users": "Users",
     "app.nav.audit_log": "Audit log",
     "app.nav.account": "Account",

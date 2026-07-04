@@ -1,6 +1,6 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
 export const legacy = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -14,7 +14,7 @@ legacy.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
 legacy.url = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -41,7 +41,7 @@ legacy.url = (args: { shareToken: string | number } | [shareToken: string | numb
 }
 
 /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
 legacy.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -49,7 +49,7 @@ legacy.get = (args: { shareToken: string | number } | [shareToken: string | numb
     method: 'get',
 })
 /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
 legacy.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -58,7 +58,7 @@ legacy.head = (args: { shareToken: string | number } | [shareToken: string | num
 })
 
     /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
     const legacyForm = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -67,7 +67,7 @@ legacy.head = (args: { shareToken: string | number } | [shareToken: string | num
     })
 
             /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
         legacyForm.get = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -75,7 +75,7 @@ legacy.head = (args: { shareToken: string | number } | [shareToken: string | num
             method: 'get',
         })
             /**
- * @see routes/web.php:163
+ * @see routes/web.php:170
  * @route '/wall/{shareToken}'
  */
         legacyForm.head = (args: { shareToken: string | number } | [shareToken: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -93,6 +93,13 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
 
+        if ($user->accountType() === User::ACCOUNT_TYPE_BUSINESS) {
+            $navigation[] = [
+                'title' => __('app.nav.business'),
+                'href' => route('dashboard.business'),
+            ];
+        }
+
         if ($user->canAccessAdmin()) {
             $navigation[] = [
                 'title' => __('app.nav.admin'),

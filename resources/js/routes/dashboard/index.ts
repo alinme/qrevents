@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+import businessE58f3e from './business'
 /**
 * @see \App\Http\Controllers\DashboardController::events
  * @see app/Http/Controllers/DashboardController.php:65
@@ -155,9 +156,88 @@ activity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     activity.form = activityForm
+/**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+export const business = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: business.url(options),
+    method: 'get',
+})
+
+business.definition = {
+    methods: ["get","head"],
+    url: '/dashboard/business',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+business.url = (options?: RouteQueryOptions) => {
+    return business.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: business.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: business.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+    const businessForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: business.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+        businessForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: business.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\BusinessController::business
+ * @see app/Http/Controllers/BusinessController.php:20
+ * @route '/dashboard/business'
+ */
+        businessForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: business.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    business.form = businessForm
 const dashboard = {
     events: Object.assign(events, events),
 activity: Object.assign(activity, activity),
+business: Object.assign(business, businessE58f3e),
 }
 
 export default dashboard

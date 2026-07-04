@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\EventModerationController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventOnboardingController;
@@ -56,6 +57,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/events', [DashboardController::class, 'ownedEvents'])->name('dashboard.events');
     Route::get('dashboard/activity', [DashboardController::class, 'recentActivity'])->name('dashboard.activity');
+
+    Route::get('dashboard/business', [BusinessController::class, 'dashboard'])->name('dashboard.business');
+    Route::get('dashboard/business/onboarding', [BusinessController::class, 'onboarding'])->name('dashboard.business.onboarding');
+    Route::post('dashboard/business/onboarding', [BusinessController::class, 'storeOnboarding'])->name('dashboard.business.onboarding.store');
+    Route::post('dashboard/business/onboarding/cancel', [BusinessController::class, 'cancelOnboarding'])->name('dashboard.business.onboarding.cancel');
+    Route::post('dashboard/business/wallet/checkout', [BusinessController::class, 'createWalletCheckout'])->name('dashboard.business.wallet.checkout');
 
     Route::get('admin', [AdminController::class, 'index'])->name('admin.overview');
     Route::get('admin/events', [AdminController::class, 'events'])->name('admin.events');
