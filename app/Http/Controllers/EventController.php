@@ -1271,6 +1271,44 @@ class EventController extends Controller
         return back()->with('success', 'Billing updated.');
     }
 
+    public function payWithBusinessCredits(Request $request, Event $event): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Only the business owner of the event may spend their own wallet credits.
+        abort_unless($user !== null && $user->id === $event->user_id, 403);
+        abort_unless($user->isBusinessAccount() && $user->hasCompletedBusinessOnboarding(), 403);
+
+        $plan = Plan::query()
+            ->whereKey((int) $request->integer('plan_id'))
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        if (! $plan->business_enabled || (int) $plan->business_credit_cost <= 0) {
+            return back()->with('error', 'That plan cannot be paid with business credits.');
+        }
+
+        $walletManager = app(\App\Support\BusinessWalletManager::class);
+
+        if (! $walletManager->canAffordPlan($user, $plan)) {
+            return back()->with('error', 'You do not have enough business credits for this plan.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $event, $plan, $walletManager): void {
+            $walletManager->debitForEvent($user, $event, $plan);
+            app(EventBillingManager::class)->applyAdminUpdate(
+                $event,
+                $plan,
+                true,
+                null,
+                now($event->timezone ?: config('events.default_timezone', 'UTC'))->toImmutable(),
+                'Paid with business credits',
+            );
+        });
+
+        return back()->with('success', "{$event->name} is now on the {$plan->name} plan, paid with business credits.");
+    }
+
     public function createBillingCheckout(
         CreateEventCheckoutSessionRequest $request,
         Event $event,

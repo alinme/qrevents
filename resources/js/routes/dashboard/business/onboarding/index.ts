@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\BusinessController::store
- * @see app/Http/Controllers/BusinessController.php:146
+ * @see app/Http/Controllers/BusinessController.php:164
  * @route '/dashboard/business/onboarding'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::store
- * @see app/Http/Controllers/BusinessController.php:146
+ * @see app/Http/Controllers/BusinessController.php:164
  * @route '/dashboard/business/onboarding'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::store
- * @see app/Http/Controllers/BusinessController.php:146
+ * @see app/Http/Controllers/BusinessController.php:164
  * @route '/dashboard/business/onboarding'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\BusinessController::store
- * @see app/Http/Controllers/BusinessController.php:146
+ * @see app/Http/Controllers/BusinessController.php:164
  * @route '/dashboard/business/onboarding'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\BusinessController::store
- * @see app/Http/Controllers/BusinessController.php:146
+ * @see app/Http/Controllers/BusinessController.php:164
  * @route '/dashboard/business/onboarding'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\BusinessController::cancel
- * @see app/Http/Controllers/BusinessController.php:134
+ * @see app/Http/Controllers/BusinessController.php:152
  * @route '/dashboard/business/onboarding/cancel'
  */
 export const cancel = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -71,7 +71,7 @@ cancel.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::cancel
- * @see app/Http/Controllers/BusinessController.php:134
+ * @see app/Http/Controllers/BusinessController.php:152
  * @route '/dashboard/business/onboarding/cancel'
  */
 cancel.url = (options?: RouteQueryOptions) => {
@@ -80,7 +80,7 @@ cancel.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::cancel
- * @see app/Http/Controllers/BusinessController.php:134
+ * @see app/Http/Controllers/BusinessController.php:152
  * @route '/dashboard/business/onboarding/cancel'
  */
 cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -90,7 +90,7 @@ cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\BusinessController::cancel
- * @see app/Http/Controllers/BusinessController.php:134
+ * @see app/Http/Controllers/BusinessController.php:152
  * @route '/dashboard/business/onboarding/cancel'
  */
     const cancelForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -100,7 +100,7 @@ cancel.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\BusinessController::cancel
- * @see app/Http/Controllers/BusinessController.php:134
+ * @see app/Http/Controllers/BusinessController.php:152
  * @route '/dashboard/business/onboarding/cancel'
  */
         cancelForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

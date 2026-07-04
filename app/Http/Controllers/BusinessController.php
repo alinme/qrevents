@@ -6,6 +6,7 @@ use App\Http\Requests\StoreBusinessOnboardingRequest;
 use App\Http\Requests\StoreBusinessWalletCheckoutRequest;
 use App\Models\BusinessWalletTransaction;
 use App\Models\Event;
+use App\Models\Plan;
 use App\Support\BusinessWalletManager;
 use App\Support\StripeCheckoutGateway;
 use Illuminate\Http\RedirectResponse;
@@ -53,8 +54,24 @@ class BusinessController extends Controller
                 'name' => $event->name,
                 'status' => (string) $event->status,
                 'planName' => $event->plan?->name ?? 'Custom plan',
+                'isPaid' => (bool) $event->is_paid,
                 'assetCount' => (int) ($event->assets_count ?? 0),
-                'links' => ['open' => route('events.show', $event)],
+                'links' => [
+                    'open' => route('events.show', $event),
+                    'payCredits' => route('events.billing.pay-credits', $event),
+                ],
+            ])->values()->all();
+
+        $businessPlans = Plan::query()
+            ->where('business_enabled', true)
+            ->where('is_active', true)
+            ->where('business_credit_cost', '>', 0)
+            ->orderBy('business_credit_cost')
+            ->get()
+            ->map(fn (Plan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'creditCost' => (int) $plan->business_credit_cost,
             ])->values()->all();
 
         $stats = [
@@ -76,6 +93,7 @@ class BusinessController extends Controller
                 'currency' => (string) ($user->business_wallet_currency ?? 'EUR'),
             ],
             'stats' => $stats,
+            'businessPlans' => $businessPlans,
             'topUpPacks' => $walletManager->topUpPacks(),
             'currencies' => (array) config('business.supported_checkout_currencies', ['EUR']),
             'transactions' => $transactions,

@@ -27,8 +27,15 @@ type EventRow = {
     name: string;
     status: string;
     planName: string;
+    isPaid: boolean;
     assetCount: number;
-    links: { open: string };
+    links: { open: string; payCredits: string };
+};
+
+type BusinessPlan = {
+    id: number;
+    name: string;
+    creditCost: number;
 };
 
 const props = defineProps<{
@@ -44,6 +51,7 @@ const props = defineProps<{
         uploads: number;
         credits: number;
     };
+    businessPlans: BusinessPlan[];
     wallet: { credits: number; currency: string };
     topUpPacks: Pack[];
     currencies: string[];
@@ -69,6 +77,20 @@ const buyPack = (pack: Pack): void => {
         {
             onStart: () => (buying.value = pack.credits),
             onFinish: () => (buying.value = null),
+        },
+    );
+};
+
+const payingEventId = ref<number | null>(null);
+
+const payWithCredits = (event: EventRow, plan: BusinessPlan): void => {
+    router.post(
+        event.links.payCredits,
+        { plan_id: plan.id },
+        {
+            preserveScroll: true,
+            onStart: () => (payingEventId.value = event.id),
+            onFinish: () => (payingEventId.value = null),
         },
     );
 };
@@ -241,20 +263,52 @@ const buyPack = (pack: Pack): void => {
                         <div
                             v-for="event in events"
                             :key="event.id"
-                            class="flex items-center justify-between gap-3 py-3"
+                            class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
                         >
                             <div class="min-w-0">
-                                <p class="text-sm font-semibold text-brand-ink">
-                                    {{ event.name }}
-                                </p>
+                                <div class="flex items-center gap-2">
+                                    <p
+                                        class="text-sm font-semibold text-brand-ink"
+                                    >
+                                        {{ event.name }}
+                                    </p>
+                                    <span
+                                        v-if="event.isPaid"
+                                        class="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-700"
+                                    >
+                                        Paid
+                                    </span>
+                                </div>
                                 <p class="dashboard-meta">
                                     {{ event.status }} · {{ event.planName }} ·
                                     {{ event.assetCount }} uploads
                                 </p>
                             </div>
-                            <Button as-child size="sm" variant="outline">
-                                <Link :href="event.links.open">Open</Link>
-                            </Button>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <template v-if="!event.isPaid">
+                                    <Button
+                                        v-for="plan in businessPlans"
+                                        :key="plan.id"
+                                        size="sm"
+                                        variant="outline"
+                                        :disabled="
+                                            payingEventId === event.id ||
+                                            wallet.credits < plan.creditCost
+                                        "
+                                        :title="
+                                            wallet.credits < plan.creditCost
+                                                ? 'Not enough credits'
+                                                : ''
+                                        "
+                                        @click="payWithCredits(event, plan)"
+                                    >
+                                        {{ plan.name }} · {{ plan.creditCost }} cr
+                                    </Button>
+                                </template>
+                                <Button as-child size="sm" variant="outline">
+                                    <Link :href="event.links.open">Open</Link>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </section>

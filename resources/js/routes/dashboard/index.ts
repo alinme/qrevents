@@ -158,7 +158,7 @@ activity.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     activity.form = activityForm
 /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
 export const business = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -173,7 +173,7 @@ business.definition = {
 
 /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
 business.url = (options?: RouteQueryOptions) => {
@@ -182,7 +182,7 @@ business.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
 business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -191,7 +191,7 @@ business.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
 business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -201,7 +201,7 @@ business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
     const businessForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -211,7 +211,7 @@ business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
         businessForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -220,7 +220,7 @@ business.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\BusinessController::business
- * @see app/Http/Controllers/BusinessController.php:20
+ * @see app/Http/Controllers/BusinessController.php:21
  * @route '/dashboard/business'
  */
         businessForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
