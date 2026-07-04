@@ -1188,7 +1188,7 @@ const statCards = computed(() => [
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-7xl">
-                <section class="dashboard-panel">
+                <section>
                     <div
                         class="flex flex-wrap items-start justify-between gap-4"
                     >

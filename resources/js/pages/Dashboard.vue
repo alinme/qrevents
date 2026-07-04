@@ -196,8 +196,8 @@ const planCapabilities = (event: DashboardEvent): string[] => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
-            <div class="dashboard-shell max-w-6xl">
-                <section class="dashboard-panel">
+            <div class="mx-auto max-w-6xl p-4 md:p-6">
+                <section>
                     <div
                         class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
                     >
@@ -274,9 +274,9 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                 </section>
 
                 <div
-                    class="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.9fr)]"
+                    class="mt-8 grid gap-5 border-t border-brand-border/70 pt-8 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.9fr)]"
                 >
-                    <section id="events" class="dashboard-panel">
+                    <section id="events">
                         <div
                             class="dashboard-panel-divider flex flex-col gap-2 pb-4 sm:flex-row sm:items-end sm:justify-between"
                         >
@@ -615,7 +615,10 @@ const planCapabilities = (event: DashboardEvent): string[] => {
                         </div>
                     </section>
 
-                    <aside id="activity" class="dashboard-panel flex min-h-0">
+                    <aside
+                        id="activity"
+                        class="flex min-h-0 border-t border-brand-border/70 pt-6 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-6"
+                    >
                         <div class="flex min-h-0 w-full flex-col">
                             <div
                                 class="dashboard-panel-divider flex flex-col gap-2 pb-4"
