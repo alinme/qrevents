@@ -45,7 +45,9 @@ const props = defineProps<{
     };
     filters: {
         search: string;
+        status: string;
     };
+    statusOptions: { value: string; label: string }[];
 }>();
 
 const { t } = useTranslations();
@@ -64,16 +66,26 @@ const breadcrumbs: BreadcrumbItem[] = [
 const search = ref(props.filters.search);
 const confirmingDeleteId = ref<number | null>(null);
 
-const submitSearch = (): void => {
-    router.get(
-        '/admin/events',
-        search.value.trim() === '' ? {} : { search: search.value.trim() },
-        {
-            preserveState: true,
-            replace: true,
-        },
-    );
+const query = (overrides: Record<string, string>): void => {
+    const params: Record<string, string> = {};
+    const nextSearch =
+        overrides.search !== undefined ? overrides.search : search.value.trim();
+    const nextStatus =
+        overrides.status !== undefined ? overrides.status : props.filters.status;
+
+    if (nextSearch !== '') {
+        params.search = nextSearch;
+    }
+    if (nextStatus !== '') {
+        params.status = nextStatus;
+    }
+
+    router.get('/admin/events', params, { preserveState: true, replace: true });
 };
+
+const submitSearch = (): void => query({ search: search.value.trim() });
+const filterByStatus = (status: string): void =>
+    query({ status: props.filters.status === status ? '' : status });
 
 const suspendEvent = (event: AdminEventRow): void => {
     router.post(event.links.suspend, {}, { preserveScroll: true });
@@ -138,6 +150,23 @@ const deleteEvent = (event: AdminEventRow): void => {
                                 {{ t('admin.events.search.submit') }}
                             </Button>
                         </form>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-4">
+                        <button
+                            v-for="option in statusOptions"
+                            :key="option.value"
+                            type="button"
+                            class="inline-flex rounded-full border px-3 py-1 text-[0.72rem] font-semibold transition"
+                            :class="
+                                filters.status === option.value
+                                    ? 'border-brand-ink bg-brand-ink text-brand-inverse'
+                                    : 'border-brand-border/70 text-brand-muted hover:border-brand-ink'
+                            "
+                            @click="filterByStatus(option.value)"
+                        >
+                            {{ option.label }}
+                        </button>
                     </div>
 
                     <div

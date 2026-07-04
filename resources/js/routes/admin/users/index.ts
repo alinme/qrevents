@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
 export const show = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
 show.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ show.url = (args: { user: number | { id: number } } | [user: number | { id: numb
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
 show.get = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -58,7 +58,7 @@ show.get = (args: { user: number | { id: number } } | [user: number | { id: numb
 })
 /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
 show.head = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -68,7 +68,7 @@ show.head = (args: { user: number | { id: number } } | [user: number | { id: num
 
     /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
     const showForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -78,7 +78,7 @@ show.head = (args: { user: number | { id: number } } | [user: number | { id: num
 
             /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
         showForm.get = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -87,7 +87,7 @@ show.head = (args: { user: number | { id: number } } | [user: number | { id: num
         })
             /**
 * @see \App\Http\Controllers\Admin\UserController::show
- * @see app/Http/Controllers/Admin/UserController.php:63
+ * @see app/Http/Controllers/Admin/UserController.php:64
  * @route '/admin/users/{user}'
  */
         showForm.head = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -103,7 +103,7 @@ show.head = (args: { user: number | { id: number } } | [user: number | { id: num
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Admin\UserController::accountType
- * @see app/Http/Controllers/Admin/UserController.php:116
+ * @see app/Http/Controllers/Admin/UserController.php:118
  * @route '/admin/users/{user}/account-type'
  */
 export const accountType = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -118,7 +118,7 @@ accountType.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::accountType
- * @see app/Http/Controllers/Admin/UserController.php:116
+ * @see app/Http/Controllers/Admin/UserController.php:118
  * @route '/admin/users/{user}/account-type'
  */
 accountType.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -151,7 +151,7 @@ accountType.url = (args: { user: number | { id: number } } | [user: number | { i
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::accountType
- * @see app/Http/Controllers/Admin/UserController.php:116
+ * @see app/Http/Controllers/Admin/UserController.php:118
  * @route '/admin/users/{user}/account-type'
  */
 accountType.patch = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -161,7 +161,7 @@ accountType.patch = (args: { user: number | { id: number } } | [user: number | {
 
     /**
 * @see \App\Http\Controllers\Admin\UserController::accountType
- * @see app/Http/Controllers/Admin/UserController.php:116
+ * @see app/Http/Controllers/Admin/UserController.php:118
  * @route '/admin/users/{user}/account-type'
  */
     const accountTypeForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -176,7 +176,7 @@ accountType.patch = (args: { user: number | { id: number } } | [user: number | {
 
             /**
 * @see \App\Http\Controllers\Admin\UserController::accountType
- * @see app/Http/Controllers/Admin/UserController.php:116
+ * @see app/Http/Controllers/Admin/UserController.php:118
  * @route '/admin/users/{user}/account-type'
  */
         accountTypeForm.patch = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -192,7 +192,7 @@ accountType.patch = (args: { user: number | { id: number } } | [user: number | {
     accountType.form = accountTypeForm
 /**
 * @see \App\Http\Controllers\Admin\UserController::verify
- * @see app/Http/Controllers/Admin/UserController.php:151
+ * @see app/Http/Controllers/Admin/UserController.php:177
  * @route '/admin/users/{user}/verify'
  */
 export const verify = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -207,7 +207,7 @@ verify.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::verify
- * @see app/Http/Controllers/Admin/UserController.php:151
+ * @see app/Http/Controllers/Admin/UserController.php:177
  * @route '/admin/users/{user}/verify'
  */
 verify.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -240,7 +240,7 @@ verify.url = (args: { user: number | { id: number } } | [user: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::verify
- * @see app/Http/Controllers/Admin/UserController.php:151
+ * @see app/Http/Controllers/Admin/UserController.php:177
  * @route '/admin/users/{user}/verify'
  */
 verify.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -250,7 +250,7 @@ verify.post = (args: { user: number | { id: number } } | [user: number | { id: n
 
     /**
 * @see \App\Http\Controllers\Admin\UserController::verify
- * @see app/Http/Controllers/Admin/UserController.php:151
+ * @see app/Http/Controllers/Admin/UserController.php:177
  * @route '/admin/users/{user}/verify'
  */
     const verifyForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -260,7 +260,7 @@ verify.post = (args: { user: number | { id: number } } | [user: number | { id: n
 
             /**
 * @see \App\Http\Controllers\Admin\UserController::verify
- * @see app/Http/Controllers/Admin/UserController.php:151
+ * @see app/Http/Controllers/Admin/UserController.php:177
  * @route '/admin/users/{user}/verify'
  */
         verifyForm.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -270,8 +270,87 @@ verify.post = (args: { user: number | { id: number } } | [user: number | { id: n
     
     verify.form = verifyForm
 /**
+* @see \App\Http\Controllers\Admin\UserController::sendReset
+ * @see app/Http/Controllers/Admin/UserController.php:153
+ * @route '/admin/users/{user}/send-reset'
+ */
+export const sendReset = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: sendReset.url(args, options),
+    method: 'post',
+})
+
+sendReset.definition = {
+    methods: ["post"],
+    url: '/admin/users/{user}/send-reset',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Admin\UserController::sendReset
+ * @see app/Http/Controllers/Admin/UserController.php:153
+ * @route '/admin/users/{user}/send-reset'
+ */
+sendReset.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { user: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { user: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    user: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        user: typeof args.user === 'object'
+                ? args.user.id
+                : args.user,
+                }
+
+    return sendReset.definition.url
+            .replace('{user}', parsedArgs.user.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\UserController::sendReset
+ * @see app/Http/Controllers/Admin/UserController.php:153
+ * @route '/admin/users/{user}/send-reset'
+ */
+sendReset.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: sendReset.url(args, options),
+    method: 'post',
+})
+
+    /**
+* @see \App\Http\Controllers\Admin\UserController::sendReset
+ * @see app/Http/Controllers/Admin/UserController.php:153
+ * @route '/admin/users/{user}/send-reset'
+ */
+    const sendResetForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: sendReset.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\UserController::sendReset
+ * @see app/Http/Controllers/Admin/UserController.php:153
+ * @route '/admin/users/{user}/send-reset'
+ */
+        sendResetForm.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: sendReset.url(args, options),
+            method: 'post',
+        })
+    
+    sendReset.form = sendResetForm
+/**
 * @see \App\Http\Controllers\Admin\UserController::destroy
- * @see app/Http/Controllers/Admin/UserController.php:173
+ * @see app/Http/Controllers/Admin/UserController.php:199
  * @route '/admin/users/{user}'
  */
 export const destroy = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -286,7 +365,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::destroy
- * @see app/Http/Controllers/Admin/UserController.php:173
+ * @see app/Http/Controllers/Admin/UserController.php:199
  * @route '/admin/users/{user}'
  */
 destroy.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -319,7 +398,7 @@ destroy.url = (args: { user: number | { id: number } } | [user: number | { id: n
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::destroy
- * @see app/Http/Controllers/Admin/UserController.php:173
+ * @see app/Http/Controllers/Admin/UserController.php:199
  * @route '/admin/users/{user}'
  */
 destroy.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -329,7 +408,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
 
     /**
 * @see \App\Http\Controllers\Admin\UserController::destroy
- * @see app/Http/Controllers/Admin/UserController.php:173
+ * @see app/Http/Controllers/Admin/UserController.php:199
  * @route '/admin/users/{user}'
  */
     const destroyForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -344,7 +423,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
 
             /**
 * @see \App\Http\Controllers\Admin\UserController::destroy
- * @see app/Http/Controllers/Admin/UserController.php:173
+ * @see app/Http/Controllers/Admin/UserController.php:199
  * @route '/admin/users/{user}'
  */
         destroyForm.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -362,6 +441,7 @@ const users = {
     show: Object.assign(show, show),
 accountType: Object.assign(accountType, accountType),
 verify: Object.assign(verify, verify),
+sendReset: Object.assign(sendReset, sendReset),
 destroy: Object.assign(destroy, destroy),
 }
 

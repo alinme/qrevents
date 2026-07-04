@@ -17,11 +17,21 @@ class AuditLogController extends Controller
     {
         $this->assertSuperAdmin($request);
 
+        $action = (string) $request->string('action');
+
         $entries = AdminAuditLog::query()
             ->with('admin:id,name,email')
+            ->when($action !== '', fn ($query) => $query->where('action', $action))
             ->latest('id')
             ->paginate(30)
             ->withQueryString();
+
+        $actionOptions = AdminAuditLog::query()
+            ->select('action')
+            ->distinct()
+            ->orderBy('action')
+            ->pluck('action')
+            ->all();
 
         return Inertia::render('admin/AuditLog', [
             ...$this->adminPanelProps(),
@@ -42,6 +52,10 @@ class AuditLogController extends Controller
                 'prevPageUrl' => $entries->previousPageUrl(),
                 'nextPageUrl' => $entries->nextPageUrl(),
             ],
+            'filters' => [
+                'action' => $action,
+            ],
+            'actionOptions' => $actionOptions,
         ]);
     }
 }

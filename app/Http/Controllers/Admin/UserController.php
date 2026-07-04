@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -107,6 +108,7 @@ class UserController extends Controller
             'links' => [
                 'updateAccountType' => route('admin.users.account-type', $user),
                 'verify' => route('admin.users.verify', $user),
+                'sendReset' => route('admin.users.send-reset', $user),
                 'impersonate' => route('admin.impersonate.start', $user),
                 'destroy' => route('admin.users.destroy', $user),
             ],
@@ -146,6 +148,30 @@ class UserController extends Controller
         );
 
         return back()->with('success', "{$user->name} is now a ".$this->accountTypeLabel($newType).'.');
+    }
+
+    public function sendPasswordReset(Request $request, User $user): RedirectResponse
+    {
+        $this->assertSuperAdmin($request);
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+        $sent = $status === Password::RESET_LINK_SENT;
+
+        AdminAuditLog::record(
+            $request->user(),
+            'user.password_reset.sent',
+            $user,
+            $user->email,
+            ['status' => $status],
+            $request->ip(),
+        );
+
+        return back()->with(
+            $sent ? 'success' : 'error',
+            $sent
+                ? "Password reset link sent to {$user->email}."
+                : 'Could not send a reset link to that address.',
+        );
     }
 
     public function verify(Request $request, User $user): RedirectResponse

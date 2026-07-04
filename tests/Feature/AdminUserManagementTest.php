@@ -5,6 +5,8 @@ use App\Models\AdminAuditLog;
 use App\Models\Event;
 use App\Models\Plan;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -166,4 +168,17 @@ test('regular users cannot impersonate anyone', function () {
     $this->actingAs($user)
         ->post(route('admin.impersonate.start', $target))
         ->assertForbidden();
+});
+
+test('super admins can send a password reset link', function () {
+    Notification::fake();
+    $admin = makeAdmin();
+    $user = User::factory()->create(['email' => 'reset@example.com']);
+
+    $this->actingAs($admin)
+        ->post(route('admin.users.send-reset', $user))
+        ->assertRedirect();
+
+    Notification::assertSentTo($user, ResetPassword::class);
+    expect(AdminAuditLog::query()->where('action', 'user.password_reset.sent')->count())->toBe(1);
 });

@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Camera, FolderKanban, HardDrive, Users } from 'lucide-vue-next';
+import {
+    Briefcase,
+    Camera,
+    CreditCard,
+    FolderKanban,
+    HardDrive,
+    UserPlus,
+    Users,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -39,6 +47,10 @@ const props = defineProps<{
         totalUploads: number;
         storageUsedBytes: number;
         storageUsedLabel: string;
+        businessAccounts: number;
+        paidEvents: number;
+        unpaidEvents: number;
+        newUsers7d: number;
         eventsByStatus: StatusCount[];
     };
     recentEvents: AdminEventRow[];
@@ -73,6 +85,26 @@ const stats = computed(() => [
         label: t('admin.overview.stats.storage_used'),
         value: props.summary.storageUsedLabel,
         icon: HardDrive,
+    },
+    {
+        label: t('admin.overview.stats.business'),
+        value: props.summary.businessAccounts,
+        icon: Briefcase,
+    },
+    {
+        label: t('admin.overview.stats.paid_events'),
+        value: props.summary.paidEvents,
+        icon: CreditCard,
+    },
+    {
+        label: t('admin.overview.stats.unpaid_events'),
+        value: props.summary.unpaidEvents,
+        icon: FolderKanban,
+    },
+    {
+        label: t('admin.overview.stats.new_users'),
+        value: props.summary.newUsers7d,
+        icon: UserPlus,
     },
 ]);
 </script>

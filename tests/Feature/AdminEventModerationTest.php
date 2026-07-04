@@ -86,6 +86,22 @@ test('super admins can delete an event', function () {
     expect(AdminAuditLog::query()->where('action', 'event.deleted')->count())->toBe(1);
 });
 
+test('admin events can be filtered by status', function () {
+    $admin = moderationAdmin();
+    $plan = Plan::factory()->create();
+    Event::factory()->for(User::factory())->for($plan)->create(['status' => Event::STATUS_LIVE, 'name' => 'Live One']);
+    Event::factory()->for(User::factory())->for($plan)->create(['status' => Event::STATUS_LOCKED, 'name' => 'Locked One']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.events', ['status' => 'locked']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('events', 1)
+            ->where('events.0.name', 'Locked One')
+            ->where('filters.status', 'locked')
+        );
+});
+
 test('super admins can view the audit log', function () {
     $admin = moderationAdmin();
     $plan = Plan::factory()->create();

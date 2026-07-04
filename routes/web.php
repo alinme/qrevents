@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
     Route::patch('admin/users/{user}/account-type', [AdminUserController::class, 'updateAccountType'])->name('admin.users.account-type');
     Route::post('admin/users/{user}/verify', [AdminUserController::class, 'verify'])->name('admin.users.verify');
+    Route::post('admin/users/{user}/send-reset', [AdminUserController::class, 'sendPasswordReset'])->name('admin.users.send-reset');
     Route::delete('admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('admin/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.impersonate.start');
 

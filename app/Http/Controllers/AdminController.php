@@ -42,6 +42,12 @@ class AdminController extends Controller
         $this->assertSuperAdmin($request);
 
         $search = trim((string) $request->string('search'));
+        $status = (string) $request->string('status');
+        $validStatuses = [
+            Event::STATUS_DRAFT, Event::STATUS_SCHEDULED, Event::STATUS_LIVE,
+            Event::STATUS_GRACE, Event::STATUS_LOCKED, Event::STATUS_EXPIRED,
+        ];
+        $status = in_array($status, $validStatuses, true) ? $status : '';
 
         $events = Event::query()
             ->with(['user:id,name,email', 'plan:id,name,currency,price_cents'])
@@ -57,6 +63,7 @@ class AdminController extends Controller
                         });
                 });
             })
+            ->when($status !== '', fn ($query) => $query->where('status', $status))
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -73,6 +80,15 @@ class AdminController extends Controller
             ],
             'filters' => [
                 'search' => $search,
+                'status' => $status,
+            ],
+            'statusOptions' => [
+                ['value' => Event::STATUS_LIVE, 'label' => __('admin.status.live')],
+                ['value' => Event::STATUS_SCHEDULED, 'label' => __('admin.status.scheduled')],
+                ['value' => Event::STATUS_GRACE, 'label' => __('admin.status.grace')],
+                ['value' => Event::STATUS_LOCKED, 'label' => __('admin.status.locked')],
+                ['value' => Event::STATUS_EXPIRED, 'label' => __('admin.status.expired')],
+                ['value' => Event::STATUS_DRAFT, 'label' => __('admin.status.draft')],
             ],
         ]);
     }
@@ -125,13 +141,19 @@ class AdminController extends Controller
             ->pluck('total', 'status');
 
         $storageUsedBytes = (int) (Event::query()->sum('storage_used_bytes') ?? 0);
+        $totalEvents = Event::query()->count();
+        $paidEvents = Event::query()->where('is_paid', true)->count();
 
         return [
             'totalUsers' => User::query()->count(),
-            'totalEvents' => Event::query()->count(),
+            'totalEvents' => $totalEvents,
             'totalUploads' => EventAsset::query()->count(),
             'storageUsedBytes' => $storageUsedBytes,
             'storageUsedLabel' => $this->humanBytes($storageUsedBytes),
+            'businessAccounts' => User::query()->where('account_type', User::ACCOUNT_TYPE_BUSINESS)->count(),
+            'paidEvents' => $paidEvents,
+            'unpaidEvents' => max(0, $totalEvents - $paidEvents),
+            'newUsers7d' => User::query()->where('created_at', '>=', now()->subDays(7))->count(),
             'eventsByStatus' => collect([
                 Event::STATUS_DRAFT => [__('admin.status.draft'), 'amber'],
                 Event::STATUS_SCHEDULED => [__('admin.status.scheduled'), 'violet'],

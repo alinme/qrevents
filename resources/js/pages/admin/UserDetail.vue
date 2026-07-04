@@ -62,6 +62,7 @@ const props = defineProps<{
     links: {
         updateAccountType: string;
         verify: string;
+        sendReset: string;
         impersonate: string;
         destroy: string;
     };
@@ -97,6 +98,10 @@ const saveAccountType = (): void => {
 
 const verifyUser = (): void => {
     router.post(props.links.verify, {}, { preserveScroll: true });
+};
+
+const sendPasswordReset = (): void => {
+    router.post(props.links.sendReset, {}, { preserveScroll: true });
 };
 
 const impersonateUser = (): void => {
@@ -256,6 +261,15 @@ const deleteUser = (): void => {
                             >
                                 <BadgeCheck class="size-4" />
                                 {{ t('admin.users.actions.verify') }}
+                            </Button>
+
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="sendPasswordReset"
+                            >
+                                <KeyRound class="size-4" />
+                                {{ t('admin.users.actions.send_reset') }}
                             </Button>
 
                             <template v-if="canDelete">

@@ -157,7 +157,7 @@ events.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     events.form = eventsForm
 /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
 export const plans = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ plans.definition = {
 
 /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
 plans.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ plans.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
 plans.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -190,7 +190,7 @@ plans.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
 plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -200,7 +200,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
     const plansForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -210,7 +210,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
         plansForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\AdminController::plans
- * @see app/Http/Controllers/AdminController.php:80
+ * @see app/Http/Controllers/AdminController.php:96
  * @route '/admin/plans'
  */
         plansForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -235,7 +235,7 @@ plans.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     plans.form = plansForm
 /**
 * @see \App\Http\Controllers\AdminController::storePlan
- * @see app/Http/Controllers/AdminController.php:91
+ * @see app/Http/Controllers/AdminController.php:107
  * @route '/admin/plans'
  */
 export const storePlan = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -250,7 +250,7 @@ storePlan.definition = {
 
 /**
 * @see \App\Http\Controllers\AdminController::storePlan
- * @see app/Http/Controllers/AdminController.php:91
+ * @see app/Http/Controllers/AdminController.php:107
  * @route '/admin/plans'
  */
 storePlan.url = (options?: RouteQueryOptions) => {
@@ -259,7 +259,7 @@ storePlan.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AdminController::storePlan
- * @see app/Http/Controllers/AdminController.php:91
+ * @see app/Http/Controllers/AdminController.php:107
  * @route '/admin/plans'
  */
 storePlan.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -269,7 +269,7 @@ storePlan.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\AdminController::storePlan
- * @see app/Http/Controllers/AdminController.php:91
+ * @see app/Http/Controllers/AdminController.php:107
  * @route '/admin/plans'
  */
     const storePlanForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -279,7 +279,7 @@ storePlan.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\AdminController::storePlan
- * @see app/Http/Controllers/AdminController.php:91
+ * @see app/Http/Controllers/AdminController.php:107
  * @route '/admin/plans'
  */
         storePlanForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -290,7 +290,7 @@ storePlan.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     storePlan.form = storePlanForm
 /**
 * @see \App\Http\Controllers\AdminController::updatePlan
- * @see app/Http/Controllers/AdminController.php:105
+ * @see app/Http/Controllers/AdminController.php:121
  * @route '/admin/plans/{plan}'
  */
 export const updatePlan = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -305,7 +305,7 @@ updatePlan.definition = {
 
 /**
 * @see \App\Http\Controllers\AdminController::updatePlan
- * @see app/Http/Controllers/AdminController.php:105
+ * @see app/Http/Controllers/AdminController.php:121
  * @route '/admin/plans/{plan}'
  */
 updatePlan.url = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -338,7 +338,7 @@ updatePlan.url = (args: { plan: number | { id: number } } | [plan: number | { id
 
 /**
 * @see \App\Http\Controllers\AdminController::updatePlan
- * @see app/Http/Controllers/AdminController.php:105
+ * @see app/Http/Controllers/AdminController.php:121
  * @route '/admin/plans/{plan}'
  */
 updatePlan.patch = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -348,7 +348,7 @@ updatePlan.patch = (args: { plan: number | { id: number } } | [plan: number | { 
 
     /**
 * @see \App\Http\Controllers\AdminController::updatePlan
- * @see app/Http/Controllers/AdminController.php:105
+ * @see app/Http/Controllers/AdminController.php:121
  * @route '/admin/plans/{plan}'
  */
     const updatePlanForm = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -363,7 +363,7 @@ updatePlan.patch = (args: { plan: number | { id: number } } | [plan: number | { 
 
             /**
 * @see \App\Http\Controllers\AdminController::updatePlan
- * @see app/Http/Controllers/AdminController.php:105
+ * @see app/Http/Controllers/AdminController.php:121
  * @route '/admin/plans/{plan}'
  */
         updatePlanForm.patch = (args: { plan: number | { id: number } } | [plan: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

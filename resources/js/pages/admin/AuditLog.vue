@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -17,7 +17,7 @@ type AuditRow = {
     createdAt: string | null;
 };
 
-defineProps<{
+const props = defineProps<{
     entries: AuditRow[];
     pagination: {
         currentPage: number;
@@ -26,9 +26,21 @@ defineProps<{
         prevPageUrl: string | null;
         nextPageUrl: string | null;
     };
+    filters: { action: string };
+    actionOptions: string[];
 }>();
 
 const { t } = useTranslations();
+
+const filterByAction = (event: Event): void => {
+    const value = (event.target as HTMLSelectElement).value;
+    router.get('/admin/audit', value === '' ? {} : { action: value }, {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+void props;
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: t('admin.shared.admin'), href: '/admin' },
@@ -53,16 +65,42 @@ const summarizeMeta = (meta: Record<string, unknown> | null): string => {
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-6xl">
                 <section class="dashboard-panel">
-                    <div class="dashboard-panel-divider pb-4">
-                        <p class="dashboard-eyebrow">
-                            {{ t('admin.shared.admin') }}
-                        </p>
-                        <h1 class="dashboard-title mt-2">
-                            {{ t('admin.audit.title') }}
-                        </h1>
-                        <p class="dashboard-body mt-2">
-                            {{ t('admin.audit.description') }}
-                        </p>
+                    <div
+                        class="dashboard-panel-divider flex flex-col gap-4 pb-4 lg:flex-row lg:items-end lg:justify-between"
+                    >
+                        <div>
+                            <p class="dashboard-eyebrow">
+                                {{ t('admin.shared.admin') }}
+                            </p>
+                            <h1 class="dashboard-title mt-2">
+                                {{ t('admin.audit.title') }}
+                            </h1>
+                            <p class="dashboard-body mt-2">
+                                {{ t('admin.audit.description') }}
+                            </p>
+                        </div>
+
+                        <label class="w-full max-w-xs">
+                            <span class="dashboard-eyebrow">
+                                {{ t('admin.audit.filter.label') }}
+                            </span>
+                            <select
+                                :value="filters.action"
+                                class="mt-1 h-9 w-full rounded-md border border-brand-border bg-transparent px-3 text-sm"
+                                @change="filterByAction"
+                            >
+                                <option value="">
+                                    {{ t('admin.audit.filter.all') }}
+                                </option>
+                                <option
+                                    v-for="option in actionOptions"
+                                    :key="option"
+                                    :value="option"
+                                >
+                                    {{ option }}
+                                </option>
+                            </select>
+                        </label>
                     </div>
 
                     <div
