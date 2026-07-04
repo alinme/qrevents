@@ -53,10 +53,9 @@ const submit = (): void => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
-            <div class="dashboard-shell max-w-3xl">
-                <section class="dashboard-panel">
-                    <p class="dashboard-eyebrow">Business</p>
-                    <h1 class="dashboard-title mt-2">
+            <div class="mx-auto max-w-3xl p-4 md:p-6">
+                <div>
+                    <h1 class="dashboard-title">
                         {{
                             isEditing
                                 ? 'Edit your business profile'
@@ -68,7 +67,7 @@ const submit = (): void => {
                         your events and on invoices.
                     </p>
 
-                    <form class="mt-6 flex flex-col gap-5" @submit.prevent="submit">
+                    <form class="mt-8 flex flex-col gap-5" @submit.prevent="submit">
                         <div class="grid gap-5 sm:grid-cols-2">
                             <label class="flex flex-col gap-1">
                                 <span class="dashboard-eyebrow">Company name</span>
@@ -150,7 +149,7 @@ const submit = (): void => {
                             </a>
                         </div>
                     </form>
-                </section>
+                </div>
             </div>
         </div>
     </AppLayout>

@@ -129,11 +129,10 @@ const payWithCredits = (event: EventRow, plan: BusinessPlan): void => {
                             class="h-12 w-12 rounded-lg object-contain"
                         />
                         <div>
-                            <p class="dashboard-eyebrow">Business</p>
-                            <h1 class="dashboard-title mt-1">
+                            <h1 class="dashboard-title">
                                 {{ profile.companyName || profile.brandName }}
                             </h1>
-                            <p class="dashboard-meta">{{ profile.billingEmail }}</p>
+                            <p class="dashboard-meta mt-1">{{ profile.billingEmail }}</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
