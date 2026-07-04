@@ -1,18 +1,35 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Coins, Plus, Wallet } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { Coins, Minus, Plus, Wallet } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDateTime } from '@/lib/dashboard';
 import type { BreadcrumbItem } from '@/types';
 
-type Pack = {
-    credits: number;
-    bonus_percent: number;
-    bonus_credits: number;
+type Preset = {
+    amount_eur: number;
     total_credits: number;
+    credits_purchased: number;
+    bonus_credits: number;
+    discount_percent: number;
+    price_per_credit_cents: number;
     prices: Record<string, string>;
+};
+
+type Tier = {
+    min_eur: number;
+    price_per_credit_cents: number;
+    discount_percent: number;
+};
+
+type TopUp = {
+    min: number;
+    step: number;
+    presets: Preset[];
+    tiers: Tier[];
+    fxRates: Record<string, number>;
+    symbols: Record<string, string>;
 };
 
 type Transaction = {
@@ -54,7 +71,7 @@ const props = defineProps<{
     };
     businessPlans: BusinessPlan[];
     wallet: { credits: number; currency: string };
-    topUpPacks: Pack[];
+    topUp: TopUp;
     currencies: string[];
     transactions: Transaction[];
     events: EventRow[];
@@ -69,18 +86,51 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const currency = ref(props.currencies[0] ?? 'EUR');
-const buying = ref<number | null>(null);
+const buying = ref(false);
+const customAmount = ref(props.topUp.min);
 
-const buyPack = (pack: Pack): void => {
+const buyAmount = (amount: number): void => {
     router.post(
         props.walletCheckoutUrl,
-        { credits: pack.credits, currency: currency.value },
+        { amount, currency: currency.value },
         {
-            onStart: () => (buying.value = pack.credits),
-            onFinish: () => (buying.value = null),
+            onStart: () => (buying.value = true),
+            onFinish: () => (buying.value = false),
         },
     );
 };
+
+// Highest tier whose threshold the amount clears (tiers ascend).
+const tierFor = (amount: number): Tier =>
+    props.topUp.tiers.reduce(
+        (best, tier) => (amount >= tier.min_eur ? tier : best),
+        props.topUp.tiers[0],
+    );
+
+const money = (euroCents: number): string => {
+    const rate = props.topUp.fxRates[currency.value] ?? 1;
+    const symbol = props.topUp.symbols[currency.value] ?? '';
+    return symbol + (Math.round(euroCents * rate) / 100).toFixed(2);
+};
+
+const stepDown = (): void => {
+    customAmount.value = Math.max(props.topUp.min, customAmount.value - props.topUp.step);
+};
+
+const stepUp = (): void => {
+    customAmount.value = customAmount.value + props.topUp.step;
+};
+
+const customQuote = computed(() => {
+    const amount = Math.max(props.topUp.min, customAmount.value || props.topUp.min);
+    const tier = tierFor(amount);
+    return {
+        amount,
+        credits: Math.floor((amount * 100) / tier.price_per_credit_cents),
+        discount: tier.discount_percent,
+        price: money(amount * 100),
+    };
+});
 
 const payingEventId = ref<number | null>(null);
 
@@ -220,35 +270,93 @@ const payWithCredits = (event: EventRow, plan: BusinessPlan): void => {
                                     </select>
                                 </label>
                             </div>
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                <div
-                                    v-for="pack in topUpPacks"
-                                    :key="pack.credits"
-                                    class="flex flex-col gap-2 rounded-xl border border-brand-border/70 p-4"
+                            <p class="dashboard-meta -mt-1 leading-relaxed">
+                                Prepay a euro amount and get credits at a wholesale
+                                rate — the more you prepay, the cheaper each credit.
+                                One credit pays €1 of an event.
+                            </p>
+
+                            <!-- Preset tiers -->
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <button
+                                    v-for="(preset, i) in topUp.presets"
+                                    :key="preset.amount_eur"
+                                    type="button"
+                                    :disabled="buying"
+                                    class="flex flex-col gap-1.5 rounded-xl border p-4 text-left transition hover:border-brand-ink/40 disabled:opacity-60"
+                                    :class="
+                                        i === topUp.presets.length - 1
+                                            ? 'border-brand-accent/50 bg-brand-panel-strong/10'
+                                            : 'border-brand-border/70'
+                                    "
+                                    @click="buyAmount(preset.amount_eur)"
                                 >
-                                    <div class="flex items-center gap-2">
-                                        <Coins class="size-4 text-brand-accent" />
+                                    <div class="flex items-center justify-between gap-2">
                                         <span class="text-lg font-bold text-brand-ink">
-                                            {{ pack.total_credits }} credits
+                                            {{ preset.prices[currency] ?? '—' }}
+                                        </span>
+                                        <span
+                                            class="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.7rem] font-semibold text-emerald-700"
+                                        >
+                                            {{ preset.discount_percent }}% off
                                         </span>
                                     </div>
-                                    <p class="dashboard-meta">
-                                        {{ pack.prices[currency] ?? '—' }}
-                                        <span
-                                            v-if="pack.bonus_percent > 0"
-                                            class="font-semibold text-emerald-600"
-                                        >
-                                            +{{ pack.bonus_percent }}% bonus
-                                        </span>
-                                    </p>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        :disabled="buying === pack.credits"
-                                        @click="buyPack(pack)"
+                                    <span class="flex items-center gap-1.5 text-sm text-brand-muted">
+                                        <Coins class="size-4 text-brand-accent" />
+                                        {{ preset.total_credits }} credits
+                                    </span>
+                                    <span
+                                        v-if="i === topUp.presets.length - 1"
+                                        class="text-[0.7rem] font-semibold tracking-wide text-brand-accent uppercase"
                                     >
-                                        Buy
-                                    </Button>
+                                        Best value
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Custom amount -->
+                            <div class="rounded-xl border border-brand-border/70 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-semibold text-brand-ink">
+                                            Custom amount
+                                        </p>
+                                        <p class="dashboard-meta mt-0.5">
+                                            {{ customQuote.credits }} credits ·
+                                            {{ customQuote.discount }}% off · you pay
+                                            {{ customQuote.price }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center rounded-full border border-brand-border">
+                                            <button
+                                                type="button"
+                                                class="grid size-8 place-items-center text-brand-muted hover:text-brand-ink disabled:opacity-40"
+                                                :disabled="customQuote.amount <= topUp.min"
+                                                @click="stepDown"
+                                            >
+                                                <Minus class="size-4" />
+                                            </button>
+                                            <span class="min-w-[3.5rem] text-center text-sm font-semibold text-brand-ink">
+                                                €{{ customQuote.amount }}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                class="grid size-8 place-items-center text-brand-muted hover:text-brand-ink"
+                                                @click="stepUp"
+                                            >
+                                                <Plus class="size-4" />
+                                            </button>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            :disabled="buying"
+                                            @click="buyAmount(customQuote.amount)"
+                                        >
+                                            Buy
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

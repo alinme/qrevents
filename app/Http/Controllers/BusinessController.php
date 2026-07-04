@@ -74,8 +74,8 @@ class BusinessController extends Controller
                 'creditCost' => (int) $plan->business_credit_cost,
             ])->values()->all();
 
-        // Each pack costs `credits` EUR at base; convert to every checkout currency
-        // so the displayed price actually changes when the currency is switched.
+        // Build per-currency pricing for the wallet top-up. A business prepays a
+        // euro amount and receives credits at a volume-discounted rate.
         $currencies = (array) config('business.supported_checkout_currencies', ['EUR']);
         $exchange = app(\App\Support\ExchangeRateManager::class);
         $symbols = ['EUR' => '€', 'RON' => 'lei ', 'GBP' => '£', 'USD' => '$'];
@@ -88,25 +88,43 @@ class BusinessController extends Controller
             }
         }
 
-        $topUpPacks = collect($walletManager->topUpPacks())->map(function (array $pack) use ($currencies, $exchange, $rates, $symbols): array {
-            $baseCents = (int) $pack['credits'] * 100;
-            $prices = [];
-            foreach ($currencies as $currency) {
-                if ($currency !== 'EUR' && $rates[$currency] === null) {
-                    continue;
-                }
-                $cents = $exchange->convertEuroCentsToCurrencyCents($baseCents, $currency, $rates[$currency]);
-                $prefix = $symbols[$currency] ?? ($currency.' ');
-                $prices[$currency] = $prefix.number_format($cents / 100, 2);
-            }
-
-            return array_merge($pack, ['prices' => $prices]);
-        })->all();
-
         $currencies = array_values(array_filter(
             $currencies,
             fn (string $currency): bool => $currency === 'EUR' || $rates[$currency] !== null,
         ));
+
+        $priceFor = function (int $euroCents) use ($currencies, $exchange, $rates, $symbols): array {
+            $prices = [];
+            foreach ($currencies as $currency) {
+                $cents = $exchange->convertEuroCentsToCurrencyCents($euroCents, $currency, $rates[$currency] ?? null);
+                $prefix = $symbols[$currency] ?? ($currency.' ');
+                $prices[$currency] = $prefix.number_format($cents / 100, 2);
+            }
+
+            return $prices;
+        };
+
+        $presets = array_map(
+            fn (array $quote): array => array_merge($quote, ['prices' => $priceFor((int) $quote['base_amount_cents'])]),
+            $walletManager->presets(),
+        );
+
+        // FX multipliers + symbols so the "custom amount" stepper can price live client-side.
+        $fxRates = [];
+        $symbolMap = [];
+        foreach ($currencies as $currency) {
+            $fxRates[$currency] = $currency === 'EUR' ? 1.0 : (float) ($rates[$currency] ?? 1.0);
+            $symbolMap[$currency] = $symbols[$currency] ?? ($currency.' ');
+        }
+
+        $topUp = [
+            'min' => $walletManager->minTopUpEuros(),
+            'step' => $walletManager->topUpStepEuros(),
+            'presets' => $presets,
+            'tiers' => array_values((array) config('business.credit_tiers', [])),
+            'fxRates' => $fxRates,
+            'symbols' => $symbolMap,
+        ];
 
         $stats = [
             'events' => $ownedEvents->count(),
@@ -128,7 +146,7 @@ class BusinessController extends Controller
             ],
             'stats' => $stats,
             'businessPlans' => $businessPlans,
-            'topUpPacks' => $topUpPacks,
+            'topUp' => $topUp,
             'currencies' => $currencies,
             'transactions' => $transactions,
             'events' => $events,
@@ -243,7 +261,7 @@ class BusinessController extends Controller
 
         $purchase = $businessWalletManager->createPurchaseIntent(
             $user,
-            (int) $request->integer('credits'),
+            (int) $request->integer('amount'),
             (string) $request->string('currency'),
         );
 
@@ -279,7 +297,7 @@ class BusinessController extends Controller
                     'currency' => strtolower((string) $purchase->checkout_currency),
                     'unit_amount' => (int) $purchase->localized_amount_cents,
                     'product_data' => [
-                        'name' => "{$purchase->credits_purchased} business credits",
+                        'name' => "{$purchase->total_credits} business credits",
                         'description' => 'EventSmart business wallet top-up',
                     ],
                 ],
