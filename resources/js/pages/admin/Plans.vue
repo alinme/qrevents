@@ -223,7 +223,7 @@ const planMeta = (plan: AdminPlanRow): string =>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-4xl">
-                <section class="dashboard-panel">
+                <section>
                     <div
                         class="dashboard-panel-divider flex flex-col gap-4 pb-4 sm:flex-row sm:items-end sm:justify-between"
                     >

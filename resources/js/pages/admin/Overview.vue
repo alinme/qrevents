@@ -115,7 +115,7 @@ const stats = computed(() => [
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-6xl">
-                <section class="dashboard-panel">
+                <section>
                     <p class="dashboard-eyebrow">
                         {{ t('admin.shared.admin') }}
                     </p>
@@ -162,7 +162,7 @@ const stats = computed(() => [
                     </div>
                 </section>
 
-                <section class="dashboard-panel">
+                <section class="mt-8 border-t border-brand-border/70 pt-8">
                     <div
                         class="dashboard-panel-divider flex flex-col gap-2 pb-4 sm:flex-row sm:items-end sm:justify-between"
                     >

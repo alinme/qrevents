@@ -82,7 +82,7 @@ const filterByType = (type: string): void =>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-6xl">
-                <section class="dashboard-panel">
+                <section>
                     <div
                         class="dashboard-panel-divider flex flex-col gap-4 pb-4 lg:flex-row lg:items-end lg:justify-between"
                     >

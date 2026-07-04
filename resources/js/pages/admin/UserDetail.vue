@@ -119,7 +119,7 @@ const deleteUser = (): void => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="dashboard-page">
             <div class="dashboard-shell max-w-5xl">
-                <section class="dashboard-panel">
+                <section>
                     <div
                         class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
                     >
@@ -203,7 +203,7 @@ const deleteUser = (): void => {
                     </dl>
                 </section>
 
-                <section class="dashboard-panel">
+                <section class="mt-8 border-t border-brand-border/70 pt-8">
                     <h2 class="dashboard-section-title">
                         {{ t('admin.users.detail.controls') }}
                     </h2>
@@ -310,7 +310,7 @@ const deleteUser = (): void => {
                     </div>
                 </section>
 
-                <section class="dashboard-panel">
+                <section class="mt-8 border-t border-brand-border/70 pt-8">
                     <h2 class="dashboard-section-title">
                         {{ t('admin.users.detail.events_title') }}
                     </h2>
@@ -344,7 +344,7 @@ const deleteUser = (): void => {
                     </div>
                 </section>
 
-                <section class="dashboard-panel">
+                <section class="mt-8 border-t border-brand-border/70 pt-8">
                     <h2 class="dashboard-section-title">
                         {{ t('admin.users.detail.audit_title') }}
                     </h2>
