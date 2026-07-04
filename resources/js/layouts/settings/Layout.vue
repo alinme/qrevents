@@ -26,6 +26,10 @@ const sidebarNavItems: NavItem[] = [
         title: t('account_settings.layout.two_factor'),
         href: show(),
     },
+    {
+        title: t('account_settings.layout.billing'),
+        href: '/settings/billing',
+    },
 ];
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
