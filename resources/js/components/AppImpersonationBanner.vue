@@ -28,7 +28,7 @@ const stopImpersonating = (): void => {
 <template>
     <div
         v-if="impersonation?.active"
-        class="fixed inset-x-0 top-0 z-[100] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950 shadow-md"
+        class="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-amber-600 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950 shadow-[0_-2px_10px_rgba(0,0,0,0.12)]"
     >
         <span class="inline-flex items-center gap-2">
             <UserRoundCog class="size-4" />
