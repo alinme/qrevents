@@ -92,6 +92,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('admin/settings/seo', [SettingsController::class, 'updateSeo'])->name('admin.settings.seo.update');
     Route::get('admin/settings/integrations', [SettingsController::class, 'integrations'])->name('admin.settings.integrations');
     Route::put('admin/settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('admin.settings.integrations.update');
+    Route::get('admin/settings/payments', [SettingsController::class, 'payments'])->name('admin.settings.payments');
+    Route::put('admin/settings/payments', [SettingsController::class, 'updatePayments'])->name('admin.settings.payments.update');
     Route::get('admin/settings/health', [SettingsController::class, 'health'])->name('admin.settings.health');
     Route::get('admin/settings/health/data', [SettingsController::class, 'healthData'])->name('admin.settings.health.data');
     Route::post('admin/settings/health/retry-failed', [SettingsController::class, 'retryFailedJobs'])->name('admin.settings.health.retry-failed');

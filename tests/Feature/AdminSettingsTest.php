@@ -24,6 +24,7 @@ test('regular users cannot access site settings', function (string $route) {
     'admin.settings.email',
     'admin.settings.seo',
     'admin.settings.integrations',
+    'admin.settings.payments',
     'admin.settings.health',
     'admin.settings.devtools',
 ]);
@@ -37,7 +38,7 @@ test('super admins can view general settings with the tab bar', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/settings/General')
             ->where('activeTab', 'general')
-            ->has('settingsTabs', 6)
+            ->has('settingsTabs', 7)
         );
 });
 
@@ -151,6 +152,65 @@ test('integrations save and encrypt the storage secret', function () {
     expect($repo->get('storage.bucket'))->toBe('eventsmart');
     expect($repo->get('storage.secret'))->toBe('the-secret');
     expect(SiteSetting::query()->where('key', 'storage.secret')->first()->is_encrypted)->toBeTrue();
+});
+
+test('stripe keys save with secrets encrypted and the publishable key in the clear', function () {
+    $admin = settingsAdmin();
+
+    $this->actingAs($admin)->put(route('admin.settings.payments.update'), [
+        'key' => 'pk_test_123',
+        'secret' => 'sk_test_supersecret',
+        'webhook_secret' => 'whsec_topsecret',
+    ])->assertRedirect();
+
+    $repo = app(SettingsRepository::class);
+    expect($repo->get('stripe.key'))->toBe('pk_test_123');
+    expect($repo->get('stripe.secret'))->toBe('sk_test_supersecret');
+    expect($repo->get('stripe.webhook_secret'))->toBe('whsec_topsecret');
+
+    // secrets encrypted at rest; publishable key stored plain
+    expect(SiteSetting::query()->where('key', 'stripe.secret')->first()->is_encrypted)->toBeTrue();
+    expect(SiteSetting::query()->where('key', 'stripe.webhook_secret')->first()->is_encrypted)->toBeTrue();
+    expect(SiteSetting::query()->where('key', 'stripe.key')->first()->is_encrypted)->toBeFalse();
+
+    // the page masks the secret (only booleans) and detects test mode
+    $this->actingAs($admin)
+        ->get(route('admin.settings.payments'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('secretSet', true)
+            ->where('webhookSecretSet', true)
+            ->where('mode', 'test')
+            ->where('publishableKey', 'pk_test_123')
+            ->missing('secret')
+        );
+});
+
+test('a blank stripe secret keeps the existing one', function () {
+    $admin = settingsAdmin();
+    app(SettingsRepository::class)->set('stripe.secret', 'sk_live_original', 'payments', true);
+
+    $this->actingAs($admin)->put(route('admin.settings.payments.update'), [
+        'key' => 'pk_live_abc',
+        'secret' => '',
+        'webhook_secret' => '',
+    ])->assertRedirect();
+
+    expect(app(SettingsRepository::class)->get('stripe.secret'))->toBe('sk_live_original');
+});
+
+test('stripe settings from the store override runtime config', function () {
+    app(SettingsRepository::class)->setMany('payments', [
+        'stripe.key' => 'pk_live_runtime',
+        'stripe.secret' => 'sk_live_runtime',
+        'stripe.webhook_secret' => 'whsec_runtime',
+    ], encryptedKeys: ['stripe.secret', 'stripe.webhook_secret']);
+
+    (new App\Providers\SettingsServiceProvider(app()))->boot();
+
+    expect(config('services.stripe.secret'))->toBe('sk_live_runtime');
+    expect(config('services.stripe.key'))->toBe('pk_live_runtime');
+    expect(config('services.stripe.webhook_secret'))->toBe('whsec_runtime');
 });
 
 test('health data returns a json snapshot', function () {

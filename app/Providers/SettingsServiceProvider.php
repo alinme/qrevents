@@ -26,6 +26,7 @@ class SettingsServiceProvider extends ServiceProvider
 
         $this->applyMailOverrides($settings);
         $this->applyStorageOverrides($settings);
+        $this->applyStripeOverrides($settings);
     }
 
     private function applyMailOverrides(SettingsRepository $settings): void
@@ -71,5 +72,20 @@ class SettingsServiceProvider extends ServiceProvider
             'filesystems.disks.s3.bucket' => $bucket,
             'filesystems.disks.s3.endpoint' => $settings->get('storage.endpoint') ?: config('filesystems.disks.s3.endpoint'),
         ]);
+    }
+
+    private function applyStripeOverrides(SettingsRepository $settings): void
+    {
+        $secret = $settings->get('stripe.secret');
+
+        if (! is_string($secret) || $secret === '') {
+            return; // not configured in the UI — keep .env
+        }
+
+        config(array_filter([
+            'services.stripe.secret' => $secret,
+            'services.stripe.key' => $settings->get('stripe.key') ?: config('services.stripe.key'),
+            'services.stripe.webhook_secret' => $settings->get('stripe.webhook_secret') ?: config('services.stripe.webhook_secret'),
+        ], fn ($value): bool => $value !== null && $value !== ''));
     }
 }

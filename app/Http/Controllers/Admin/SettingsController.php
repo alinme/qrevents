@@ -268,6 +268,59 @@ class SettingsController extends Controller
         return $this->saved($request, 'integrations', 'Integrations saved.');
     }
 
+    // ---- Payments / Stripe --------------------------------------------
+
+    public function payments(Request $request): Response
+    {
+        $this->assertSuperAdmin($request);
+
+        $publishable = (string) $this->settings->get('stripe.key', '');
+
+        return $this->render('admin/settings/Payments', 'payments', [
+            'publishableKey' => $publishable,
+            'secretSet' => $this->settings->isFilled('stripe.secret'),
+            'webhookSecretSet' => $this->settings->isFilled('stripe.webhook_secret'),
+            // Detected from the (public) publishable key, or the secret's prefix
+            // server-side — the secret itself is never sent to the browser.
+            'mode' => $this->stripeMode($publishable, (string) $this->settings->get('stripe.secret', '')),
+            'webhookUrl' => route('stripe.webhook'),
+        ]);
+    }
+
+    public function updatePayments(Request $request): RedirectResponse
+    {
+        $this->assertSuperAdmin($request);
+
+        $validated = $request->validate([
+            'key' => ['nullable', 'string', 'max:255'],
+            'secret' => ['nullable', 'string', 'max:255'],
+            'webhook_secret' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $this->settings->setMany('payments', [
+            'stripe.key' => $validated['key'] ?? null,
+            'stripe.secret' => $validated['secret'] ?? null,
+            'stripe.webhook_secret' => $validated['webhook_secret'] ?? null,
+        ], encryptedKeys: ['stripe.secret', 'stripe.webhook_secret']);
+
+        return $this->saved($request, 'payments', 'Payment settings saved.');
+    }
+
+    private function stripeMode(string $publishable, string $secret): ?string
+    {
+        $probe = $publishable !== '' ? $publishable : $secret;
+
+        if (str_contains($probe, '_live_')) {
+            return 'live';
+        }
+
+        if (str_contains($probe, '_test_')) {
+            return 'test';
+        }
+
+        return null;
+    }
+
     // ---- System Health -------------------------------------------------
 
     public function health(Request $request, HealthMonitor $monitor): Response
@@ -439,6 +492,7 @@ class SettingsController extends Controller
             ['key' => 'email', 'title' => 'Email & SMTP', 'href' => route('admin.settings.email')],
             ['key' => 'seo', 'title' => 'Localization & SEO', 'href' => route('admin.settings.seo')],
             ['key' => 'integrations', 'title' => 'Integrations & Storage', 'href' => route('admin.settings.integrations')],
+            ['key' => 'payments', 'title' => 'Payments', 'href' => route('admin.settings.payments')],
             ['key' => 'health', 'title' => 'System Health', 'href' => route('admin.settings.health')],
             ['key' => 'devtools', 'title' => 'DevTools', 'href' => route('admin.settings.devtools')],
         ];
