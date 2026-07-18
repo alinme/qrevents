@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="400" viewBox="0 0 1200 400"
+     role="img" aria-labelledby="hero-title hero-desc">
+  <title id="hero-title">QRevents — event albums with QR photo sharing</title>
+  <desc id="hero-desc">EventSmart platform: create beautiful event albums, branded welcome screens, guest forms, and QR-code photo sharing.</desc>
+
+  <defs>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="85%" stop-color="#fdf2f4"/>
+      <stop offset="100%" stop-color="#fff5f7"/>
+    </linearGradient>
+    <linearGradient id="accent-bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff385c"/>
+      <stop offset="100%" stop-color="#ff6b81"/>
+    </linearGradient>
+    <linearGradient id="btn-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff385c"/>
+      <stop offset="100%" stop-color="#e91e4a"/>
+    </linearGradient>
+    <linearGradient id="phone-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff6b81"/>
+      <stop offset="40%" stop-color="#ff385c"/>
+      <stop offset="100%" stop-color="#c41230"/>
+    </linearGradient>
+    <linearGradient id="photo-overlay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+      <stop offset="60%" stop-color="rgba(0,0,0,0.4)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.7)"/>
+    </linearGradient>
+    <filter id="card-shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="rgba(0,0,0,0.08)"/>
+    </filter>
+    <filter id="phone-shadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="24" flood-color="rgba(0,0,0,0.12)"/>
+    </filter>
+    <clipPath id="phone-clip">
+      <rect x="788" y="50" width="230" height="340" rx="28"/>
+    </clipPath>
+    <clipPath id="photo-clip">
+      <rect x="788" y="50" width="230" height="200" rx="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" rx="26" fill="url(#bg-grad)"/>
+
+  <!-- Subtle decorative circles -->
+  <circle cx="960" cy="200" r="280" fill="#ff385c" opacity="0.03"/>
+  <circle cx="1100" cy="120" r="180" fill="#ff385c" opacity="0.04"/>
+
+  <!-- Left side: Content -->
+  <g transform="translate(56, 0)">
+
+    <!-- Category badge -->
+    <rect x="0" y="56" width="108" height="28" rx="14" fill="#ff385c" opacity="0.1"/>
+    <text x="54" y="74" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#ff385c" letter-spacing="0.3">EVENT PLATFORM</text>
+
+    <!-- Project name -->
+    <text x="0" y="130" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="48" font-weight="700" fill="#222222" letter-spacing="-1.2">QRevents</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="172" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="500" fill="#6a6a6a" letter-spacing="-0.2">Event photo albums, reimagined</text>
+
+    <!-- Tagline -->
+    <text x="0" y="202" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#929292">Create beautiful event albums with branded welcome screens,</text>
+    <text x="0" y="222" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#929292">guest forms, and QR-code photo sharing. No app required.</text>
+
+    <!-- Feature pills -->
+    <g transform="translate(0, 258)">
+      <rect x="0" y="0" width="130" height="30" rx="15" fill="#f2f2f2"/>
+      <text x="65" y="20" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#222222">📸 Guest Upload</text>
+
+      <rect x="142" y="0" width="120" height="30" rx="15" fill="#f2f2f2"/>
+      <text x="202" y="20" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#222222">📱 QR Sharing</text>
+
+      <rect x="274" y="0" width="110" height="30" rx="15" fill="#f2f2f2"/>
+      <text x="329" y="20" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#222222">🎨 Branding</text>
+
+      <rect x="396" y="0" width="120" height="30" rx="15" fill="#f2f2f2"/>
+      <text x="456" y="20" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#222222">💳 Billing</text>
+    </g>
+
+    <!-- Metadata -->
+    <g transform="translate(0, 318)">
+      <rect x="0" y="0" width="80" height="24" rx="6" fill="#ebebeb"/>
+      <text x="40" y="16" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="500" fill="#6a6a6a">Laravel 12</text>
+
+      <rect x="90" y="0" width="70" height="24" rx="6" fill="#ebebeb"/>
+      <text x="125" y="16" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="500" fill="#6a6a6a">Vue 3</text>
+
+      <rect x="170" y="0" width="80" height="24" rx="6" fill="#ebebeb"/>
+      <text x="210" y="16" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="500" fill="#6a6a6a">Inertia 2</text>
+
+      <rect x="260" y="0" width="85" height="24" rx="6" fill="#ebebeb"/>
+      <text x="302" y="16" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="500" fill="#6a6a6a">Tailwind 4</text>
+    </g>
+
+    <!-- Accent bar -->
+    <rect x="0" y="370" width="60" height="4" rx="2" fill="url(#accent-bar)"/>
+  </g>
+
+  <!-- Right side: Phone mockup -->
+  <g transform="translate(0, 0)" filter="url(#phone-shadow)">
+    <!-- Phone body -->
+    <rect x="788" y="50" width="230" height="340" rx="28" fill="#ffffff"/>
+    <!-- Phone screen -->
+    <rect x="795" y="57" width="216" height="326" rx="24" fill="#222222"/>
+
+    <!-- Event photo background area -->
+    <g clip-path="url(#photo-clip)">
+      <!-- Warm golden photo gradient simulating a party/event -->
+      <rect x="788" y="50" width="230" height="200" fill="#2d1810"/>
+      <circle cx="830" cy="130" r="60" fill="#ff6b35" opacity="0.3"/>
+      <circle cx="930" cy="100" r="45" fill="#ff385c" opacity="0.15"/>
+      <circle cx="880" cy="160" r="50" fill="#ffb347" opacity="0.2"/>
+      <!-- Confetti dots -->
+      <circle cx="820" cy="90" r="3" fill="#ff6b81" opacity="0.8"/>
+      <circle cx="950" cy="85" r="2.5" fill="#ffb347" opacity="0.9"/>
+      <circle cx="860" cy="75" r="2" fill="#ffffff" opacity="0.6"/>
+      <circle cx="910" cy="110" r="3" fill="#ff6b81" opacity="0.7"/>
+      <circle cx="980" cy="120" r="2" fill="#ffffff" opacity="0.5"/>
+      <circle cx="840" cy="145" r="2" fill="#ffb347" opacity="0.8"/>
+      <circle cx="970" cy="95" r="2.5" fill="#ff6b81" opacity="0.6"/>
+    </g>
+
+    <!-- Dark overlay on photo for readability -->
+    <g clip-path="url(#photo-clip)">
+      <rect x="788" y="130" width="230" height="120" fill="url(#photo-overlay)"/>
+    </g>
+
+    <!-- Made with Kululu badge -->
+    <rect x="812" y="68" width="100" height="20" rx="10" fill="#ffffff" opacity="0.2"/>
+    <text x="862" y="82" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="9" font-weight="500" fill="#ffffff">💜 Made with Kululu</text>
+
+    <!-- Avatar circle -->
+    <circle cx="903" cy="120" r="18" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="903" cy="120" r="16" fill="#ff385c" opacity="0.3"/>
+
+    <!-- Welcome text -->
+    <text x="903" y="162" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#ffffff" letter-spacing="-0.3">My Wedding</text>
+    <text x="903" y="182" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="400" fill="#ffffff" opacity="0.85">Share your photos &amp; videos</text>
+
+    <!-- Name input -->
+    <rect x="815" y="210" width="176" height="38" rx="12" fill="#ffffff" opacity="0.15"/>
+    <text x="828" y="234" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="400" fill="#ffffff" opacity="0.6">Name</text>
+
+    <!-- Continue button -->
+    <rect x="815" y="260" width="176" height="42" rx="12" fill="#ff385c"/>
+    <text x="903" y="286" text-anchor="middle" font-family="Instrument Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="600" fill="#ffffff">Continue</text>
+
+    <!-- Home indicator -->
+    <rect x="870" y="350" width="56" height="4" rx="2" fill="#ffffff" opacity="0.3"/>
+  </g>
+
+  <!-- QR code motif: small decorative element -->
+  <g transform="translate(730, 340)" opacity="0.15">
+    <rect x="0" y="0" width="32" height="32" rx="3" fill="none" stroke="#ff385c" stroke-width="1.5"/>
+    <rect x="2" y="2" width="12" height="12" rx="1" fill="#ff385c"/>
+    <rect x="18" y="2" width="12" height="12" rx="1" fill="#ff385c"/>
+    <rect x="2" y="18" width="5" height="5" rx="0.5" fill="#ff385c"/>
+    <rect x="18" y="18" width="5" height="5" rx="0.5" fill="#ff385c"/>
+    <rect x="25" y="18" width="5" height="5" rx="0.5" fill="#ff385c"/>
+    <rect x="10" y="10" width="3" height="3" rx="0.5" fill="#ff385c"/>
+    <rect x="10" y="25" width="3" height="3" rx="0.5" fill="#ff385c"/>
+  </g>
+</svg>
